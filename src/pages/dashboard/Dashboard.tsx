@@ -40,7 +40,7 @@ export const Dashboard: React.FC = () => {
   });
 
   const stats = [
-    { label: 'Applications', value: 0, icon: WorkIcon, color: '#7C3AED' },
+    { label: 'Applications', value: 0, icon: WorkIcon, color: '#1D4ED8' },
     { label: 'Saved Jobs', value: 0, icon: BookmarkIcon, color: '#10B981' },
     { label: 'Notifications', value: 0, icon: NotificationsIcon, color: '#F59E0B' },
   ];
@@ -96,7 +96,7 @@ export const Dashboard: React.FC = () => {
         </Grid>
 
         {profileCompletion < 80 && (
-          <Card sx={{ mb: 4, background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
+          <Card sx={{ mb: 4, background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>Complete Your Profile</Typography>
@@ -155,7 +155,7 @@ export const Dashboard: React.FC = () => {
 
           {/* Subscription Status */}
           <Grid item xs={12} md={6}>
-            <Card sx={{ background: subscription ? 'rgba(16, 185, 129, 0.1)' : 'rgba(124, 58, 237, 0.1)' }}>
+            <Card sx={{ background: subscription ? '#ECFDF5' : '#EFF6FF' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                   Subscription Status

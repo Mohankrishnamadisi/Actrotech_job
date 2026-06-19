@@ -5,10 +5,13 @@
 }
 
 :root {
-  --color-dark-blue: #0f172a;
-  --color-purple: #7c3aed;
-  --color-white: #ffffff;
-  --color-text-secondary: #cbd5e1;
+  --color-page: #f6f8fb;
+  --color-surface: #ffffff;
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e3a8a;
+  --color-text: #172033;
+  --color-text-secondary: #5b677a;
+  --color-border: #e4e9f2;
 }
 
 html {
@@ -16,8 +19,8 @@ html {
 }
 
 body {
-  background-color: var(--color-dark-blue);
-  color: var(--color-white);
+  background-color: var(--color-page);
+  color: var(--color-text);
   font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -28,61 +31,53 @@ body {
   min-height: 100vh;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: #eef2f7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: #b8c4d6;
   border-radius: 10px;
+  border: 2px solid #eef2f7;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  background: #8ea0ba;
 }
 
-/* Selection */
-::selection {
-  background-color: #7c3aed;
-  color: #ffffff;
-}
-
+::selection,
 ::-moz-selection {
-  background-color: #7c3aed;
-  color: #ffffff;
+  background-color: #dbeafe;
+  color: #1e3a8a;
 }
 
-/* Links */
 a {
-  color: #7c3aed;
+  color: var(--color-primary);
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.2s ease;
 }
 
 a:hover {
-  color: #a78bfa;
+  color: var(--color-primary-dark);
 }
 
-/* Placeholder */
 ::placeholder {
-  color: rgba(203, 213, 225, 0.5);
+  color: #8a97aa;
 }
 
 ::-moz-placeholder {
-  color: rgba(203, 213, 225, 0.5);
+  color: #8a97aa;
 }
 
 :-ms-input-placeholder {
-  color: rgba(203, 213, 225, 0.5);
+  color: #8a97aa;
 }
 
 ::-ms-input-placeholder {
-  color: rgba(203, 213, 225, 0.5);
+  color: #8a97aa;
 }
-

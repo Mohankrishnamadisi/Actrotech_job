@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { WorkOutline as WorkIcon } from '@mui/icons-material';
 import { ROUTES } from '@constants/index';
 
 interface LogoProps {
@@ -11,12 +10,12 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) => {
   const sizes = {
-    small: { icon: 28, font: '1.1rem' },
-    medium: { icon: 36, font: '1.5rem' },
-    large: { icon: 48, font: '2rem' },
+    small: { width: 132, height: 40 },
+    medium: { width: 168, height: 50 },
+    large: { width: 220, height: 66 },
   };
 
-  const { icon, font } = sizes[size];
+  const { width, height } = sizes[size];
 
   return (
     <Box
@@ -25,39 +24,23 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
         textDecoration: 'none',
-        transition: 'transform 0.3s ease',
+        transition: 'transform 0.2s ease',
         '&:hover': { transform: 'scale(1.02)' },
       }}
     >
-      <Box
-        sx={{
-          width: icon,
-          height: icon,
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
-        }}
-      >
-        <WorkIcon sx={{ color: '#fff', fontSize: icon * 0.55 }} />
-      </Box>
       {showText && (
-        <Typography
+        <Box
+          component="img"
+          src="/job_logo.png"
+          alt="Actotech Jobs"
           sx={{
-            fontWeight: 800,
-            fontSize: font,
-            background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            letterSpacing: -0.5,
+            width: { xs: Math.min(width, 142), sm: width },
+            height,
+            display: 'block',
+            objectFit: 'contain',
           }}
-        >
-          Actotech Jobs
-        </Typography>
+        />
       )}
     </Box>
   );

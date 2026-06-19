@@ -1,7 +1,12 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Link, Divider } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { Facebook as FacebookIcon, Twitter as TwitterIcon, LinkedIn as LinkedInIcon, GitHub as GitHubIcon } from '@mui/icons-material';
+import {
+  Facebook as FacebookIcon,
+  Twitter as TwitterIcon,
+  LinkedIn as LinkedInIcon,
+  GitHub as GitHubIcon,
+} from '@mui/icons-material';
 import { ROUTES } from '@constants/index';
 
 export const Footer: React.FC = () => {
@@ -40,9 +45,9 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        background: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(10px)',
-        borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+        background: '#FFFFFF',
+        borderTop: '1px solid',
+        borderColor: 'divider',
         py: 6,
         mt: 10,
       }}
@@ -50,16 +55,7 @@ export const Footer: React.FC = () => {
       <Container maxWidth="lg">
         <Grid container spacing={4} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                mb: 2,
-                background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
               Actotech Jobs
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -67,41 +63,37 @@ export const Footer: React.FC = () => {
               recruiters.
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Link href="#" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
-                <FacebookIcon fontSize="small" />
-              </Link>
-              <Link href="#" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
-                <TwitterIcon fontSize="small" />
-              </Link>
-              <Link href="#" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
-                <LinkedInIcon fontSize="small" />
-              </Link>
-              <Link href="#" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
-                <GitHubIcon fontSize="small" />
-              </Link>
+              {[FacebookIcon, TwitterIcon, LinkedInIcon, GitHubIcon].map((Icon, index) => (
+                <Link
+                  key={index}
+                  href="#"
+                  sx={{
+                    color: 'text.secondary',
+                    display: 'inline-flex',
+                    '&:hover': { color: 'primary.main' },
+                  }}
+                >
+                  <Icon fontSize="small" />
+                </Link>
+              ))}
             </Box>
           </Grid>
 
           {footerSections.map((section) => (
             <Grid item xs={12} sm={6} md={3} key={section.title}>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 650, mb: 2 }}>
                 {section.title}
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
                 {section.items.map((item) => (
-                  <Typography
-                    key={item.label}
-                    component="li"
-                    variant="body2"
-                    sx={{ mb: 1 }}
-                  >
+                  <Typography key={item.label} component="li" variant="body2" sx={{ mb: 1 }}>
                     <Link
                       component={RouterLink}
                       to={item.to}
                       sx={{
                         color: 'text.secondary',
                         textDecoration: 'none',
-                        transition: 'color 0.3s',
+                        transition: 'color 0.2s',
                         '&:hover': {
                           color: 'primary.main',
                         },
@@ -116,14 +108,22 @@ export const Footer: React.FC = () => {
           ))}
         </Grid>
 
-        <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)', my: 3 }} />
+        <Divider sx={{ borderColor: 'divider', my: 3 }} />
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            © {currentYear} Actotech Jobs. All rights reserved.
+            Copyright {currentYear} Actotech Jobs. All rights reserved.
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Made with ❤️ for job seekers and recruiters
+            Built for job seekers and recruiters
           </Typography>
         </Box>
       </Container>

@@ -34,7 +34,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
             position: 'absolute',
             top: 12,
             right: 12,
-            background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+            background: '#DBEAFE',
+            color: 'primary.dark',
             borderRadius: '4px',
             px: 1.5,
             py: 0.5,
@@ -108,7 +109,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
       </CardContent>
 
       {/* Actions */}
-      <Box sx={{ display: 'flex', gap: 1, p: 2, borderTop: '1px solid rgba(148, 163, 184, 0.1)' }}>
+      <Box sx={{ display: 'flex', gap: 1, p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         <Button
           component={RouterLink}
           to={ROUTES.JOB_DETAILS.replace(':id', job.id)}

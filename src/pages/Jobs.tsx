@@ -156,8 +156,11 @@ export const Jobs: React.FC = () => {
                 p: 3,
                 position: { md: 'sticky' },
                 top: 80,
-                background: 'rgba(30, 41, 59, 0.8)',
-                backdropFilter: 'blur(10px)',
+                background: '#FFFFFF',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                boxShadow: '0 12px 28px rgba(15, 23, 42, 0.06)',
               }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

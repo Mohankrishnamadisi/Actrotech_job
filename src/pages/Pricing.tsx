@@ -46,7 +46,7 @@ export const Pricing: React.FC = () => {
                   flexDirection: 'column',
                   position: 'relative',
                   border: plan.recommended ? '2px solid' : '1px solid',
-                  borderColor: plan.recommended ? 'primary.main' : 'rgba(148, 163, 184, 0.1)',
+                  borderColor: plan.recommended ? 'primary.main' : 'divider',
                   transform: plan.recommended ? 'scale(1.05)' : 'scale(1)',
                 }}
               >
@@ -57,10 +57,11 @@ export const Pricing: React.FC = () => {
                       top: -12,
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+                      background: '#1D4ED8',
+                      color: '#FFFFFF',
                       px: 2,
                       py: 0.5,
-                      borderRadius: '20px',
+                      borderRadius: '16px',
                     }}
                   >
                     <Typography variant="caption" sx={{ fontWeight: 600 }}>
@@ -108,7 +109,7 @@ export const Pricing: React.FC = () => {
           <TableContainer>
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
+                <TableRow sx={{ backgroundColor: '#F1F5F9' }}>
                   <TableCell sx={{ fontWeight: 600 }}>Feature</TableCell>
                   <TableCell align="center" sx={{ fontWeight: 600 }}>
                     Free

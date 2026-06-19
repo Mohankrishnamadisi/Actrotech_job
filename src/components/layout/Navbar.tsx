@@ -48,12 +48,12 @@ export const Navbar: React.FC = () => {
       text: 'Are you sure you want to logout?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#7C3AED',
-      cancelButtonColor: '#64748b',
+      confirmButtonColor: '#1D4ED8',
+      cancelButtonColor: '#64748B',
       confirmButtonText: 'Yes, logout',
       cancelButtonText: 'Cancel',
-      background: '#1E293B',
-      color: '#fff',
+      background: '#FFFFFF',
+      color: '#172033',
     });
 
     if (result.isConfirmed) {
@@ -66,8 +66,8 @@ export const Navbar: React.FC = () => {
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#1E293B',
-          color: '#fff',
+          background: '#FFFFFF',
+          color: '#172033',
         });
       } catch (error) {
         console.error('Logout failed:', error);
@@ -75,8 +75,8 @@ export const Navbar: React.FC = () => {
           title: 'Error!',
           text: 'Failed to logout',
           icon: 'error',
-          background: '#1E293B',
-          color: '#fff',
+          background: '#FFFFFF',
+          color: '#172033',
         });
       }
     }
@@ -103,11 +103,11 @@ export const Navbar: React.FC = () => {
                 startIcon={<WorkIcon />}
                 sx={{
                   display: { xs: 'none', sm: 'flex' },
-                  borderColor: 'rgba(124, 58, 237, 0.5)',
-                  color: 'primary.light',
+                  borderColor: 'divider',
+                  color: 'primary.dark',
                   '&:hover': {
                     borderColor: 'primary.main',
-                    background: 'rgba(124, 58, 237, 0.1)',
+                    background: 'primary.light',
                   },
                 }}
               >
@@ -149,8 +149,8 @@ export const Navbar: React.FC = () => {
                     sx={{
                       width: 36,
                       height: 36,
-                      background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-                      border: '2px solid rgba(124, 58, 237, 0.3)',
+                      background: '#1D4ED8',
+                      border: '2px solid #DBEAFE',
                     }}
                   >
                     {generateInitials(user.name)}
@@ -164,10 +164,10 @@ export const Navbar: React.FC = () => {
                   anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   PaperProps={{
                     sx: {
-                      background: 'rgba(30, 41, 59, 0.95)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(148, 163, 184, 0.15)',
+                      background: '#FFFFFF',
+                      border: '1px solid #E4E9F2',
                       borderRadius: 2,
+                      boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
                       minWidth: 200,
                       mt: 1,
                     },
@@ -181,7 +181,7 @@ export const Navbar: React.FC = () => {
                       {user.email}
                     </Typography>
                   </Box>
-                  <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+                  <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem
                     component={RouterLink}
                     to={dashboardRoute}
@@ -196,7 +196,7 @@ export const Navbar: React.FC = () => {
                   >
                     <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} /> My Profile
                   </MenuItem>
-                  <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+                  <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
                     <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} /> Logout
                   </MenuItem>

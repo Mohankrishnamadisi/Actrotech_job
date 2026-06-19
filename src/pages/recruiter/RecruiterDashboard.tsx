@@ -39,7 +39,7 @@ export const RecruiterDashboard: React.FC = () => {
   }, [user?.id]);
 
   const stats = [
-    { label: 'Active Jobs', value: jobCount, icon: WorkIcon, color: '#7C3AED' },
+    { label: 'Active Jobs', value: jobCount, icon: WorkIcon, color: '#1D4ED8' },
     { label: 'Total Applicants', value: 0, icon: PeopleIcon, color: '#10B981' },
     { label: 'Profile Views', value: 0, icon: TrendingUpIcon, color: '#F59E0B' },
   ];
@@ -146,7 +146,7 @@ export const RecruiterDashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Card sx={{ background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
+            <Card sx={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                   Subscription Status

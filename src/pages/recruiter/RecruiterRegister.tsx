@@ -157,7 +157,7 @@ export const RecruiterRegister: React.FC = () => {
         sx={{
           minHeight: '100vh',
           py: 4,
-          background: 'linear-gradient(180deg, rgba(124, 58, 237, 0.08) 0%, transparent 50%)',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFC 55%)',
         }}
       >
         <Container maxWidth="md">
@@ -165,11 +165,9 @@ export const RecruiterRegister: React.FC = () => {
             <Typography
               variant="h3"
               sx={{
-                fontWeight: 800,
+                fontWeight: 750,
                 mb: 1,
-                background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: 'text.primary',
               }}
             >
               Recruiter Registration

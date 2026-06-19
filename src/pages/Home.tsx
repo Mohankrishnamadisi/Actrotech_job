@@ -14,6 +14,7 @@ import {
   Paper,
   Card,
   CardContent,
+  Chip,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -21,7 +22,6 @@ import {
   Search as SearchIcon,
   LocationOn as LocationOnIcon,
   WorkOutline as WorkIcon,
-  School as SchoolIcon,
   Code as CodeIcon,
   Storage as StorageIcon,
   Brush as BrushIcon,
@@ -30,7 +30,7 @@ import {
   DataObject as DataIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { ROUTES, JOB_CATEGORIES, EDUCATION_OPTIONS, FRESHNESS_OPTIONS } from '@constants/index';
+import { ROUTES, JOB_CATEGORIES } from '@constants/index';
 
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
@@ -53,12 +53,21 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 const categoryColors = [
-  'rgba(124, 58, 237, 0.15)',
-  'rgba(16, 185, 129, 0.15)',
-  'rgba(245, 158, 11, 0.15)',
-  'rgba(59, 130, 246, 0.15)',
-  'rgba(236, 72, 153, 0.15)',
-  'rgba(139, 92, 246, 0.15)',
+  'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)',
+  'linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 100%)',
+  'linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 100%)',
+  'linear-gradient(180deg, #F0FDFA 0%, #FFFFFF 100%)',
+  'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)',
+  'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)',
+];
+
+const categoryIconColors = [
+  '#2563EB',
+  '#0F766E',
+  '#B7791F',
+  '#0E7490',
+  '#475569',
+  '#4F46E5',
 ];
 
 export const Home: React.FC = () => {
@@ -66,16 +75,12 @@ export const Home: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [experience, setExperience] = useState('');
-  const [education, setEducation] = useState('');
-  const [freshness, setFreshness] = useState('');
 
   const handleSearch = () => {
     const filters = new URLSearchParams();
     if (searchKeyword) filters.append('keyword', searchKeyword);
     if (searchLocation) filters.append('location', searchLocation);
     if (experience) filters.append('experience', experience);
-    if (education) filters.append('education', education);
-    if (freshness) filters.append('freshness', freshness);
     navigate(`${ROUTES.JOBS}?${filters.toString()}`);
   };
 
@@ -95,8 +100,13 @@ export const Home: React.FC = () => {
     <Layout>
       <MotionBox
         sx={{
-          background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(59, 130, 246, 0.08) 100%)',
-          py: { xs: 8, md: 12 },
+          background: `
+            linear-gradient(115deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 253, 250, 0.88) 42%, rgba(239, 246, 255, 0.96) 100%),
+            repeating-linear-gradient(135deg, rgba(37, 99, 235, 0.07) 0 1px, transparent 1px 34px)
+          `,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          py: { xs: 7, md: 11 },
           mb: 6,
           position: 'relative',
           overflow: 'hidden',
@@ -105,45 +115,35 @@ export const Home: React.FC = () => {
         initial="hidden"
         animate="visible"
       >
-        {[...Array(3)].map((_, i) => (
-          <Box
-            key={i}
-            component={motion.div}
-            animate={{
-              y: [0, 20, 0],
-              x: [0, 10, 0],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{ duration: 6 + i * 2, repeat: Infinity, ease: 'easeInOut' }}
-            sx={{
-              position: 'absolute',
-              width: 200 + i * 100,
-              height: 200 + i * 100,
-              borderRadius: '50%',
-              background: `radial-gradient(circle, rgba(124, 58, 237, ${0.05 + i * 0.03}) 0%, transparent 70%)`,
-              top: i === 0 ? '-10%' : i === 1 ? '60%' : '20%',
-              right: i === 0 ? '-5%' : i === 1 ? '70%' : '10%',
-              left: i === 2 ? '-10%' : 'auto',
-            }}
-          />
-        ))}
-
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <MotionBox sx={{ textAlign: 'center', mb: 5 }} variants={itemVariants}>
+            <Chip
+              label="India's Career Gateway"
+              color="secondary"
+              variant="outlined"
+              sx={{
+                mb: 2,
+                px: 1,
+                background: 'rgba(255, 255, 255, 0.72)',
+                borderColor: 'rgba(14, 116, 144, 0.24)',
+                color: 'secondary.dark',
+              }}
+            />
             <MotionTypography
               variant="h1"
               sx={{
                 fontSize: { xs: '2.5rem', md: '4.5rem' },
                 fontWeight: 800,
                 mb: 2,
-                background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 50%, #60A5FA 100%)',
+                background: 'linear-gradient(90deg, #172033 0%, #2563EB 45%, #0F766E 100%)',
+                backgroundSize: '220% 100%',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.03em',
+                letterSpacing: 0,
                 lineHeight: 1.1,
               }}
               animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-              transition={{ duration: 8, repeat: Infinity }}
+              transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             >
               Find Your Dream Job
             </MotionTypography>
@@ -163,20 +163,25 @@ export const Home: React.FC = () => {
             </MotionTypography>
           </MotionBox>
 
-          <MotionBox variants={itemVariants}>
+          <MotionBox variants={itemVariants} whileHover={{ y: -4 }}>
             <Paper
               elevation={0}
               sx={{
                 p: { xs: 2.5, md: 4 },
-                background: 'rgba(30, 41, 59, 0.7)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(148, 163, 184, 0.15)',
-                borderRadius: 4,
-                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+                background: 'rgba(255, 255, 255, 0.88)',
+                backdropFilter: 'blur(18px)',
+                border: '1px solid',
+                borderColor: 'rgba(255, 255, 255, 0.76)',
+                borderRadius: 2,
+                boxShadow: '0 24px 60px rgba(15, 23, 42, 0.12)',
+                transition: 'box-shadow 0.25s ease, transform 0.25s ease',
+                '&:hover': {
+                  boxShadow: '0 30px 70px rgba(15, 23, 42, 0.16)',
+                },
               }}
             >
               <Grid container spacing={2} alignItems="stretch">
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <TextField
                     fullWidth
                     placeholder="Job Title"
@@ -193,7 +198,7 @@ export const Home: React.FC = () => {
                     sx={{ '& .MuiOutlinedInput-root': { height: 56 } }}
                   />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <TextField
                     fullWidth
                     placeholder="Location"
@@ -210,7 +215,7 @@ export const Home: React.FC = () => {
                     sx={{ '& .MuiOutlinedInput-root': { height: 56 } }}
                   />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <FormControl fullWidth>
                     <InputLabel>Experience</InputLabel>
                     <Select
@@ -226,50 +231,21 @@ export const Home: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Education</InputLabel>
-                    <Select
-                      value={education}
-                      onChange={(e) => setEducation(e.target.value)}
-                      label="Education"
-                      startAdornment={
-                        <InputAdornment position="start" sx={{ ml: 1 }}>
-                          <SchoolIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                        </InputAdornment>
-                      }
-                    >
-                      <MenuItem value="">All Education Levels</MenuItem>
-                      {EDUCATION_OPTIONS.map((option) => (
-                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Freshness</InputLabel>
-                    <Select
-                      value={freshness}
-                      onChange={(e) => setFreshness(e.target.value)}
-                      label="Freshness"
-                    >
-                      <MenuItem value="">All Time</MenuItem>
-                      {FRESHNESS_OPTIONS.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} md={3}>
                   <MotionButton
                     variant="contained"
                     size="large"
                     onClick={handleSearch}
                     fullWidth
-                    whileHover={{ scale: 1.01, boxShadow: '0 20px 40px rgba(124, 58, 237, 0.4)' }}
+                    whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
-                    sx={{ py: 1.75, fontSize: '1.1rem', fontWeight: 600, borderRadius: 2 }}
+                    sx={{
+                      height: 56,
+                      py: 1.75,
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      borderRadius: 2,
+                    }}
                   >
                     <SearchIcon sx={{ mr: 1 }} /> Search Jobs
                   </MotionButton>
@@ -316,11 +292,12 @@ export const Home: React.FC = () => {
                     sx={{
                       cursor: 'pointer',
                       background: categoryColors[index % categoryColors.length],
-                      border: '1px solid rgba(148, 163, 184, 0.1)',
-                      transition: 'all 0.3s ease',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      transition: 'all 0.2s ease',
                       '&:hover': {
-                        borderColor: 'primary.main',
-                        boxShadow: '0 12px 30px rgba(124, 58, 237, 0.2)',
+                        borderColor: '#AFC1DD',
+                        boxShadow: '0 12px 28px rgba(15, 23, 42, 0.08)',
                       },
                     }}
                   >
@@ -330,7 +307,8 @@ export const Home: React.FC = () => {
                           width: 48,
                           height: 48,
                           borderRadius: 2,
-                          background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+                          background: categoryIconColors[index % categoryIconColors.length],
+                          boxShadow: '0 12px 22px rgba(15, 23, 42, 0.12)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -356,12 +334,15 @@ export const Home: React.FC = () => {
             textAlign: 'center',
             mt: 8,
             p: { xs: 4, md: 6 },
-            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
-            borderRadius: 4,
-            border: '1px solid rgba(124, 58, 237, 0.2)',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFA 46%, #EFF6FF 100%)',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'rgba(203, 213, 225, 0.8)',
+            boxShadow: '0 20px 42px rgba(15, 23, 42, 0.08)',
           }}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          whileHover={{ y: -4 }}
           viewport={{ once: true }}
         >
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
@@ -378,7 +359,7 @@ export const Home: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             sx={{ px: 5, py: 1.5 }}
           >
-            Explore Jobs Now →
+            Explore Jobs Now
           </MotionButton>
         </MotionBox>
       </Container>

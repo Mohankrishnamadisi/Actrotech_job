@@ -239,7 +239,7 @@ export const ProfilePage: React.FC = () => {
                   backgroundColor: 'rgba(148, 163, 184, 0.2)',
                   '& .MuiLinearProgress-bar': {
                     borderRadius: 4,
-                    background: 'linear-gradient(90deg, #7C3AED 0%, #A78BFA 100%)',
+                    background: '#1D4ED8',
                   },
                 }}
               />
@@ -255,8 +255,8 @@ export const ProfilePage: React.FC = () => {
                   src={profileImage ? URL.createObjectURL(profileImage) : profileImageUrl}
                   sx={{
                     width: 100, height: 100, mx: 'auto', mb: 2,
-                    background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-                    fontSize: '2.5rem', border: '3px solid rgba(124, 58, 237, 0.3)',
+                    background: '#1D4ED8',
+                    fontSize: '2.5rem', border: '3px solid #DBEAFE',
                   }}
                 >
                   {formData.fullName.charAt(0).toUpperCase()}

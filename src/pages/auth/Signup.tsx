@@ -248,7 +248,7 @@ export const Signup: React.FC = () => {
         sx={{
           minHeight: '100vh',
           py: 4,
-          background: 'linear-gradient(180deg, rgba(124, 58, 237, 0.08) 0%, transparent 50%)',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFC 55%)',
         }}
       >
         <Container maxWidth="md">
@@ -256,11 +256,9 @@ export const Signup: React.FC = () => {
             <Typography
               variant="h3"
               sx={{
-                fontWeight: 800,
+                fontWeight: 750,
                 mb: 1,
-                background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: 'text.primary',
               }}
             >
               Create Your Account
@@ -285,8 +283,8 @@ export const Signup: React.FC = () => {
                         justifyContent: 'center',
                         background:
                           activeStep >= index
-                            ? 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)'
-                            : 'rgba(148, 163, 184, 0.2)',
+                            ? '#1D4ED8'
+                            : '#D9E2EF',
                         color: '#fff',
                         fontSize: '0.85rem',
                         fontWeight: 600,
@@ -464,7 +462,7 @@ export const Signup: React.FC = () => {
                   <Box sx={{
                     p: 3, border: '2px dashed', borderColor: errors.resume ? 'error.main' : 'primary.main',
                     borderRadius: 2, textAlign: 'center',
-                    background: 'rgba(124, 58, 237, 0.05)',
+                    background: '#F8FAFC',
                   }}>
                     <input type="file" id="resume-upload" accept=".pdf,.doc,.docx" hidden
                       onChange={(e) => handleFileChange(e, 'resume')} />
