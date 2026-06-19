@@ -13,17 +13,17 @@ export const Footer: React.FC = () => {
       items: [
         { label: 'Jobs', to: ROUTES.JOBS },
         { label: 'Pricing', to: ROUTES.PRICING },
-        { label: 'About Us', to: ROUTES.ABOUT },
-        { label: 'Contact Us', to: ROUTES.CONTACT },
+        { label: 'Privacy Policy', to: ROUTES.PRIVACY_POLICY },
+        { label: 'Terms & Conditions', to: ROUTES.TERMS_CONDITIONS },
       ],
     },
     {
       title: 'For Recruiters',
       items: [
-        { label: 'Post a Job', to: ROUTES.RECRUITER_DASHBOARD },
-        { label: 'Browse Candidates', to: ROUTES.RECRUITER_DASHBOARD },
+        { label: 'Post a Job', to: ROUTES.RECRUITER_REGISTER },
+        { label: 'Recruiter Dashboard', to: ROUTES.RECRUITER_DASHBOARD },
         { label: 'Pricing', to: ROUTES.PRICING },
-        { label: 'Sign Up', to: ROUTES.SIGNUP },
+        { label: 'Register', to: ROUTES.SIGNUP },
       ],
     },
     {

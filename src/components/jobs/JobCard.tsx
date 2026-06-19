@@ -1,10 +1,13 @@
 import React from 'react';
 import { Card, CardContent, Box, Typography, Chip, Button } from '@mui/material';
+import { motion } from 'framer-motion';
 import { LocationOn as LocationOnIcon, Work as WorkIcon, TrendingUp as TrendingUpIcon } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
-import { formatDate, getTimeAgo, formatJobSalary } from '@utils/index';
+import { getTimeAgo, formatJobSalary } from '@utils/index';
 import { ROUTES } from '@constants/index';
 import type { Job } from '@types/index';
+
+const MotionCard = motion(Card);
 
 interface JobCardProps {
   job: Job;
@@ -14,7 +17,9 @@ interface JobCardProps {
 
 export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }) => {
   return (
-    <Card
+    <MotionCard
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.3 }}
       sx={{
         height: '100%',
         display: 'flex',
@@ -123,6 +128,6 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
           </Button>
         )}
       </Box>
-    </Card>
+    </MotionCard>
   );
 };

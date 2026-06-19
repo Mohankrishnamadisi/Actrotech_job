@@ -1,328 +1,386 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
   Typography,
   Button,
   Grid,
-  Card,
-  CardContent,
   TextField,
   InputAdornment,
-  Chip,
-  Rating,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
+  Card,
+  CardContent,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import { Search as SearchIcon, LocationOn as LocationOnIcon, TrendingUp as TrendingUpIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  Search as SearchIcon,
+  LocationOn as LocationOnIcon,
+  WorkOutline as WorkIcon,
+  School as SchoolIcon,
+  Code as CodeIcon,
+  Storage as StorageIcon,
+  Brush as BrushIcon,
+  Analytics as AnalyticsIcon,
+  Settings as SettingsIcon,
+  DataObject as DataIcon,
+} from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { JobCard } from '@components/jobs/JobCard';
-import { Loading } from '@components/common/Loading';
-import { jobService } from '@services/api';
-import { JOB_CATEGORIES, ROUTES, SUBSCRIPTION_PLANS } from '@constants/index';
-import type { Job } from '@types/index';
+import { ROUTES, JOB_CATEGORIES, EDUCATION_OPTIONS, FRESHNESS_OPTIONS } from '@constants/index';
+
+const MotionBox = motion(Box);
+const MotionTypography = motion(Typography);
+const MotionButton = motion(Button);
+const MotionCard = motion(Card);
+
+const categoryIcons: Record<string, React.ElementType> = {
+  'Frontend Developer': CodeIcon,
+  'React Developer': CodeIcon,
+  'Vue Developer': CodeIcon,
+  'Angular Developer': CodeIcon,
+  'Full Stack Developer': StorageIcon,
+  'Backend Developer': StorageIcon,
+  'Python Developer': DataIcon,
+  'Java Developer': DataIcon,
+  'Testing': SettingsIcon,
+  'DevOps': SettingsIcon,
+  'Data Analyst': AnalyticsIcon,
+  'UI/UX Designer': BrushIcon,
+};
+
+const categoryColors = [
+  'rgba(124, 58, 237, 0.15)',
+  'rgba(16, 185, 129, 0.15)',
+  'rgba(245, 158, 11, 0.15)',
+  'rgba(59, 130, 246, 0.15)',
+  'rgba(236, 72, 153, 0.15)',
+  'rgba(139, 92, 246, 0.15)',
+];
 
 export const Home: React.FC = () => {
-  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
-  const [latestJobs, setLatestJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const [featured, latest] = await Promise.all([
-          jobService.getFeaturedJobs(6),
-          jobService.getLatestJobs(12),
-        ]);
-        setFeaturedJobs(featured);
-        setLatestJobs(latest);
-      } catch (error) {
-        console.error('Failed to fetch jobs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJobs();
-  }, []);
+  const [experience, setExperience] = useState('');
+  const [education, setEducation] = useState('');
+  const [freshness, setFreshness] = useState('');
 
   const handleSearch = () => {
-    // Navigate to jobs page with filters
     const filters = new URLSearchParams();
     if (searchKeyword) filters.append('keyword', searchKeyword);
     if (searchLocation) filters.append('location', searchLocation);
-    window.location.href = `${ROUTES.JOBS}?${filters.toString()}`;
+    if (experience) filters.append('experience', experience);
+    if (education) filters.append('education', education);
+    if (freshness) filters.append('freshness', freshness);
+    navigate(`${ROUTES.JOBS}?${filters.toString()}`);
   };
 
-  if (loading) return <Loading />;
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
+  const experienceOptions = Array.from({ length: 26 }, (_, i) => `${i} years`);
 
   return (
     <Layout>
-      {/* Hero Section */}
-      <Box
+      <MotionBox
         sx={{
-          background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
-          py: { xs: 4, md: 8 },
+          background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(59, 130, 246, 0.08) 100%)',
+          py: { xs: 8, md: 12 },
           mb: 6,
+          position: 'relative',
+          overflow: 'hidden',
         }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography
+        {[...Array(3)].map((_, i) => (
+          <Box
+            key={i}
+            component={motion.div}
+            animate={{
+              y: [0, 20, 0],
+              x: [0, 10, 0],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{ duration: 6 + i * 2, repeat: Infinity, ease: 'easeInOut' }}
+            sx={{
+              position: 'absolute',
+              width: 200 + i * 100,
+              height: 200 + i * 100,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, rgba(124, 58, 237, ${0.05 + i * 0.03}) 0%, transparent 70%)`,
+              top: i === 0 ? '-10%' : i === 1 ? '60%' : '20%',
+              right: i === 0 ? '-5%' : i === 1 ? '70%' : '10%',
+              left: i === 2 ? '-10%' : 'auto',
+            }}
+          />
+        ))}
+
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <MotionBox sx={{ textAlign: 'center', mb: 5 }} variants={itemVariants}>
+            <MotionTypography
               variant="h1"
               sx={{
-                fontSize: { xs: '2rem', md: '3.5rem' },
-                fontWeight: 700,
+                fontSize: { xs: '2.5rem', md: '4.5rem' },
+                fontWeight: 800,
                 mb: 2,
-                background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 50%, #60A5FA 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                letterSpacing: '-0.03em',
+                lineHeight: 1.1,
               }}
+              animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+              transition={{ duration: 8, repeat: Infinity }}
             >
               Find Your Dream Job
-            </Typography>
-            <Typography variant="h5" sx={{ color: 'text.secondary', mb: 4 }}>
-              Search and apply for top jobs across India's leading companies
-            </Typography>
-          </Box>
+            </MotionTypography>
+            <MotionTypography
+              variant="h5"
+              sx={{
+                color: 'text.secondary',
+                mb: 1,
+                fontSize: { xs: '1rem', md: '1.35rem' },
+                fontWeight: 400,
+                maxWidth: 600,
+                mx: 'auto',
+              }}
+              variants={itemVariants}
+            >
+              Search and apply for top jobs across India's leading companies.
+            </MotionTypography>
+          </MotionBox>
 
-          {/* Search Box */}
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                placeholder="Job title, keyword..."
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: 'primary.main' }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                placeholder="City or location..."
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LocationOnIcon sx={{ color: 'primary.main' }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
-
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleSearch}
-            fullWidth
-            sx={{ py: 1.5, fontSize: '1rem' }}
-          >
-            Search Jobs
-          </Button>
-
-          {/* Browse by Category */}
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Popular categories:
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {JOB_CATEGORIES.slice(0, 6).map((category) => (
-                <Chip
-                  key={category}
-                  label={category}
-                  variant="outlined"
-                  clickable
-                  onClick={() => {
-                    setSearchKeyword(category);
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* Featured Jobs Section */}
-      <Container maxWidth="lg" sx={{ mb: 8 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Box>
-            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              Featured Jobs
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Handpicked opportunities from top companies
-            </Typography>
-          </Box>
-          <Button component={RouterLink} to={ROUTES.JOBS} variant="text">
-            View All →
-          </Button>
-        </Box>
-
-        <Grid container spacing={3}>
-          {featuredJobs.map((job) => (
-            <Grid item xs={12} sm={6} md={4} key={job.id}>
-              <JobCard job={job} />
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Latest Jobs Section */}
-      <Container maxWidth="lg" sx={{ mb: 8 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 4 }}>
-          Latest Jobs
-        </Typography>
-
-        <Grid container spacing={3}>
-          {latestJobs.map((job) => (
-            <Grid item xs={12} sm={6} md={4} key={job.id}>
-              <JobCard job={job} />
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Pricing Plans Section */}
-      <Box sx={{ py: 8, background: 'rgba(124, 58, 237, 0.05)', mb: 8 }}>
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-              Choose Your Plan
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Unlock premium features and access exclusive job listings
-            </Typography>
-          </Box>
-
-          <Grid container spacing={3}>
-            {SUBSCRIPTION_PLANS.map((plan) => (
-              <Grid item xs={12} sm={6} md={4} key={plan.id}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    border: plan.recommended ? '2px solid' : '1px solid',
-                    borderColor: plan.recommended ? 'primary.main' : 'rgba(148, 163, 184, 0.1)',
-                    transform: plan.recommended ? 'scale(1.05)' : 'scale(1)',
-                  }}
-                >
-                  {plan.recommended && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: -12,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-                        px: 2,
-                        py: 0.5,
-                        borderRadius: '20px',
-                        whiteSpace: 'nowrap',
-                      }}
+          <MotionBox variants={itemVariants}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2.5, md: 4 },
+                background: 'rgba(30, 41, 59, 0.7)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(148, 163, 184, 0.15)',
+                borderRadius: 4,
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+              }}
+            >
+              <Grid container spacing={2} alignItems="stretch">
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    placeholder="Job Title"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: 'primary.main' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ '& .MuiOutlinedInput-root': { height: 56 } }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    placeholder="Location"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LocationOnIcon sx={{ color: 'primary.main' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ '& .MuiOutlinedInput-root': { height: 56 } }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Experience</InputLabel>
+                    <Select
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)}
+                      label="Experience"
+                      sx={{ height: 56 }}
                     >
-                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                        Most Popular
-                      </Typography>
-                    </Box>
-                  )}
+                      <MenuItem value="">All Experience</MenuItem>
+                      {experienceOptions.map((option) => (
+                        <MenuItem key={option} value={option}>{option}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Education</InputLabel>
+                    <Select
+                      value={education}
+                      onChange={(e) => setEducation(e.target.value)}
+                      label="Education"
+                      startAdornment={
+                        <InputAdornment position="start" sx={{ ml: 1 }}>
+                          <SchoolIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                        </InputAdornment>
+                      }
+                    >
+                      <MenuItem value="">All Education Levels</MenuItem>
+                      {EDUCATION_OPTIONS.map((option) => (
+                        <MenuItem key={option} value={option}>{option}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Freshness</InputLabel>
+                    <Select
+                      value={freshness}
+                      onChange={(e) => setFreshness(e.target.value)}
+                      label="Freshness"
+                    >
+                      <MenuItem value="">All Time</MenuItem>
+                      {FRESHNESS_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <MotionButton
+                    variant="contained"
+                    size="large"
+                    onClick={handleSearch}
+                    fullWidth
+                    whileHover={{ scale: 1.01, boxShadow: '0 20px 40px rgba(124, 58, 237, 0.4)' }}
+                    whileTap={{ scale: 0.98 }}
+                    sx={{ py: 1.75, fontSize: '1.1rem', fontWeight: 600, borderRadius: 2 }}
+                  >
+                    <SearchIcon sx={{ mr: 1 }} /> Search Jobs
+                  </MotionButton>
+                </Grid>
+              </Grid>
+            </Paper>
+          </MotionBox>
+        </Container>
+      </MotionBox>
 
-                  <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', pt: plan.recommended ? 3 : 2 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-                      {plan.name}
-                    </Typography>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography
-                        variant="h3"
+      <Container maxWidth="lg" sx={{ pb: 8 }}>
+        <MotionBox
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 700, mb: 1, textAlign: 'center' }}
+          >
+            Browse by Category
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{ color: 'text.secondary', mb: 4, textAlign: 'center' }}
+          >
+            Explore opportunities in your field of expertise
+          </Typography>
+
+          <Grid container spacing={2.5}>
+            {JOB_CATEGORIES.map((category, index) => {
+              const Icon = categoryIcons[category] || WorkIcon;
+              return (
+                <Grid item xs={6} sm={4} md={3} key={category}>
+                  <MotionCard
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      const filters = new URLSearchParams();
+                      filters.append('keyword', category);
+                      navigate(`${ROUTES.JOBS}?${filters.toString()}`);
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      background: categoryColors[index % categoryColors.length],
+                      border: '1px solid rgba(148, 163, 184, 0.1)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        boxShadow: '0 12px 30px rgba(124, 58, 237, 0.2)',
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Box
                         sx={{
-                          fontWeight: 700,
-                          color: 'primary.main',
-                          display: 'inline',
+                          width: 48,
+                          height: 48,
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mx: 'auto',
+                          mb: 1.5,
                         }}
                       >
-                        ₹{plan.price}
+                        <Icon sx={{ color: '#fff', fontSize: 24 }} />
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                        {category}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        /{plan.period}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ mb: 3, flex: 1 }}>
-                      {plan.features.map((feature) => (
-                        <Typography key={feature} variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
-                          ✓ {feature}
-                        </Typography>
-                      ))}
-                    </Box>
-
-                    <Button variant={plan.recommended ? 'contained' : 'outlined'} fullWidth>
-                      Get Started
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                    </CardContent>
+                  </MotionCard>
+                </Grid>
+              );
+            })}
           </Grid>
-        </Container>
-      </Box>
+        </MotionBox>
 
-      {/* Testimonials Section */}
-      <Container maxWidth="lg" sx={{ mb: 8 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, textAlign: 'center', mb: 6 }}>
-          What Users Say
-        </Typography>
-
-        <Grid container spacing={3}>
-          {[
-            {
-              name: 'Rahul Kumar',
-              role: 'Frontend Developer',
-              comment: 'Got my dream job through Actotech Jobs! Great platform and excellent support.',
-              rating: 5,
-            },
-            {
-              name: 'Priya Sharma',
-              role: 'UI/UX Designer',
-              comment: 'Easy to navigate and found relevant job opportunities quickly.',
-              rating: 5,
-            },
-            {
-              name: 'Vikram Singh',
-              role: 'Backend Developer',
-              comment: 'The filter options make it easy to find jobs that match my requirements.',
-              rating: 4,
-            },
-          ].map((testimonial, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card>
-                <CardContent>
-                  <Rating value={testimonial.rating} readOnly sx={{ mb: 2 }} />
-                  <Typography variant="body2" sx={{ mb: 2, fontStyle: 'italic' }}>
-                    "{testimonial.comment}"
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {testimonial.name}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {testimonial.role}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        <MotionBox
+          sx={{
+            textAlign: 'center',
+            mt: 8,
+            p: { xs: 4, md: 6 },
+            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
+            borderRadius: 4,
+            border: '1px solid rgba(124, 58, 237, 0.2)',
+          }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+            Ready to start your job search?
+          </Typography>
+          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4 }}>
+            Join thousands of job seekers who have found their dream jobs on Actotech Jobs
+          </Typography>
+          <MotionButton
+            variant="contained"
+            size="large"
+            onClick={() => navigate(ROUTES.JOBS)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            sx={{ px: 5, py: 1.5 }}
+          >
+            Explore Jobs Now →
+          </MotionButton>
+        </MotionBox>
       </Container>
     </Layout>
   );

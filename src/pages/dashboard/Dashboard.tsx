@@ -11,22 +11,38 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  LinearProgress,
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { Work as WorkIcon, Bookmark as BookmarkIcon, Notifications as NotificationsIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import {
+  Work as WorkIcon,
+  Bookmark as BookmarkIcon,
+  Notifications as NotificationsIcon,
+  Person as PersonIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
+import { calculateProfileCompletion } from '@utils/index';
+
+const MotionCard = motion(Card);
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
 
+  const profileCompletion = calculateProfileCompletion({
+    fullName: user?.name,
+    email: user?.email,
+  });
+
   const stats = [
-    { label: 'Applications', value: 12, icon: WorkIcon },
-    { label: 'Saved Jobs', value: 24, icon: BookmarkIcon },
-    { label: 'Notifications', value: 3, icon: NotificationsIcon },
+    { label: 'Applications', value: 0, icon: WorkIcon, color: '#7C3AED' },
+    { label: 'Saved Jobs', value: 0, icon: BookmarkIcon, color: '#10B981' },
+    { label: 'Notifications', value: 0, icon: NotificationsIcon, color: '#F59E0B' },
   ];
 
   return (
@@ -44,9 +60,13 @@ export const Dashboard: React.FC = () => {
 
         {/* Stats */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          {stats.map((stat) => (
-            <Grid item xs={12} sm={6} md={3} key={stat.label}>
-              <Card>
+          {stats.map((stat, index) => (
+            <Grid item xs={12} sm={6} md={4} key={stat.label}>
+              <MotionCard
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
                 <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
@@ -56,12 +76,39 @@ export const Dashboard: React.FC = () => {
                       {stat.value}
                     </Typography>
                   </Box>
-                  <stat.icon sx={{ fontSize: 32, color: 'primary.main', opacity: 0.3 }} />
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2,
+                      background: `${stat.color}20`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <stat.icon sx={{ color: stat.color, fontSize: 28 }} />
+                  </Box>
                 </CardContent>
-              </Card>
+              </MotionCard>
             </Grid>
           ))}
         </Grid>
+
+        {profileCompletion < 80 && (
+          <Card sx={{ mb: 4, background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>Complete Your Profile</Typography>
+                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700 }}>{profileCompletion}%</Typography>
+              </Box>
+              <LinearProgress variant="determinate" value={profileCompletion} sx={{ mb: 2, height: 6, borderRadius: 3 }} />
+              <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" startIcon={<PersonIcon />}>
+                Update Profile
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <Grid container spacing={3}>
           {/* Quick Actions */}
@@ -93,21 +140,13 @@ export const Dashboard: React.FC = () => {
                   </Button>
                   <Button
                     component={RouterLink}
-                    to={ROUTES.DASHBOARD_RESUME}
+                    to={ROUTES.JOBS}
                     variant="outlined"
                     fullWidth
+                    startIcon={<SearchIcon />}
                     sx={{ justifyContent: 'flex-start' }}
                   >
-                    Upload Resume
-                  </Button>
-                  <Button
-                    component={RouterLink}
-                    to={ROUTES.DASHBOARD_SAVED_JOBS}
-                    variant="outlined"
-                    fullWidth
-                    sx={{ justifyContent: 'flex-start' }}
-                  >
-                    View Saved Jobs
+                    Search Jobs
                   </Button>
                 </Box>
               </CardContent>

@@ -83,6 +83,50 @@ export const JOB_APPLICATION_STATUS = {
   ACCEPTED: 'accepted',
 };
 
+export const EDUCATION_OPTIONS = [
+  '10th',
+  '12th',
+  'Diploma',
+  "Bachelor's",
+  "Master's",
+  'PhD',
+];
+
+export const FRESHNESS_OPTIONS = [
+  { label: 'Last 1 Day', value: '1d' },
+  { label: 'Last 3 Days', value: '3d' },
+  { label: 'Last 7 Days', value: '7d' },
+  { label: 'Last 15 Days', value: '15d' },
+  { label: 'Last 30 Days', value: '30d' },
+];
+
+export const GENDER_OPTIONS = ['Male', 'Female', 'Other', 'Prefer not to say'];
+
+export const NOTICE_PERIOD_OPTIONS = [
+  'Immediate',
+  '15 Days',
+  '30 Days',
+  '60 Days',
+  '90 Days',
+  'Serving Notice',
+];
+
+export const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh',
+];
+
+export const INDUSTRY_TYPES = [
+  'IT & Software', 'Finance & Banking', 'Healthcare', 'Education',
+  'Manufacturing', 'Retail & E-commerce', 'Consulting', 'Media & Entertainment',
+  'Real Estate', 'Telecommunications', 'Automotive', 'Pharmaceuticals',
+  'Hospitality', 'Logistics', 'Energy', 'Other',
+];
+
 export const ROUTES = {
   HOME: '/',
   JOBS: '/jobs',
@@ -92,6 +136,7 @@ export const ROUTES = {
   CONTACT: '/contact',
   LOGIN: '/login',
   SIGNUP: '/signup',
+  RECRUITER_REGISTER: '/recruiter/register',
   FORGOT_PASSWORD: '/forgot-password',
   VERIFY_EMAIL: '/verify-email/:token',
   DASHBOARD: '/dashboard',

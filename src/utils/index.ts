@@ -40,9 +40,75 @@ export const validateEmail = (email: string) => {
 };
 
 export const validatePassword = (password: string) => {
-  // At least 8 characters, one uppercase, one lowercase, one number
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
   return regex.test(password);
+};
+
+export const validatePhone = (phone: string) => {
+  const regex = /^[6-9]\d{9}$/;
+  return regex.test(phone.replace(/\s/g, ''));
+};
+
+export const validateURL = (url: string) => {
+  if (!url) return true;
+  try {
+    new URL(url.startsWith('http') ? url : `https://${url}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const validateGST = (gst: string) => {
+  const regex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  return regex.test(gst.toUpperCase());
+};
+
+export const validateDateOfBirth = (dob: string) => {
+  const date = new Date(dob);
+  if (isNaN(date.getTime())) return false;
+  const age = (Date.now() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  return age >= 16 && age <= 80;
+};
+
+export const validateFileSize = (file: File, maxMB: number) => {
+  return file.size <= maxMB * 1024 * 1024;
+};
+
+export const validateFileType = (file: File, allowedTypes: string[]) => {
+  return allowedTypes.includes(file.type);
+};
+
+export const getFreshnessDate = (freshness: string): string | null => {
+  const daysMap: Record<string, number> = {
+    '1d': 1,
+    '3d': 3,
+    '7d': 7,
+    '15d': 15,
+    '30d': 30,
+  };
+  const days = daysMap[freshness];
+  if (!days) return null;
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+};
+
+export const calculateProfileCompletion = (profile: Record<string, unknown>): number => {
+  const fields = [
+    'fullName', 'email', 'phone', 'gender', 'dateOfBirth',
+    'address', 'city', 'state', 'country', 'bio', 'experience',
+    'currentCompany', 'skills', 'education', 'workExperience',
+    'resumeUrl', 'socialLinks',
+  ];
+  let filled = 0;
+  fields.forEach((field) => {
+    const value = profile[field];
+    if (Array.isArray(value) ? value.length > 0 : value && String(value).trim()) {
+      filled++;
+    }
+  });
+  return Math.round((filled / fields.length) * 100);
 };
 
 export const truncateText = (text: string, length: number) => {

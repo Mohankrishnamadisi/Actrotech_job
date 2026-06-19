@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import type { User, JobSeeker, Recruiter, Job, JobApplication, Subscription } from '@types/index';
+import type { JobSeeker, Recruiter, Job, JobApplication, Subscription } from '@types/index';
+import { getFreshnessDate } from '@utils/index';
 
 // User operations
 export const userService = {
@@ -18,14 +19,14 @@ export const userService = {
       .select('*')
       .eq('id', userId)
       .single();
-    if (error) throw error;
-    return data;
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
   },
 
   async updateProfile(userId: string, updates: Record<string, unknown>) {
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', userId)
       .select();
     if (error) throw error;
@@ -42,12 +43,57 @@ export const userService = {
     const { data: publicData } = supabase.storage.from('resumes').getPublicUrl(data.path);
     return publicData.publicUrl;
   },
+
+  async uploadProfileImage(userId: string, file: File) {
+    const fileName = `${userId}-avatar-${Date.now()}.${file.name.split('.').pop()}`;
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+    if (error) throw error;
+
+    const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(data.path);
+    return publicData.publicUrl;
+  },
+
+  async uploadCompanyLogo(userId: string, file: File) {
+    const fileName = `${userId}-logo-${Date.now()}.${file.name.split('.').pop()}`;
+    const { data, error } = await supabase.storage
+      .from('company-logos')
+      .upload(fileName, file);
+    if (error) throw error;
+
+    const { data: publicData } = supabase.storage.from('company-logos').getPublicUrl(data.path);
+    return publicData.publicUrl;
+  },
+};
+
+// Recruiter operations
+export const recruiterService = {
+  async createRecruiterProfile(userId: string, profileData: Partial<Recruiter>) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([{ id: userId, role: 'recruiter', ...profileData }])
+      .select();
+    if (error) throw error;
+    return data[0];
+  },
+
+  async getRecruiterProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .eq('role', 'recruiter')
+      .single();
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
+  },
 };
 
 // Job operations
 export const jobService = {
   async getJobs(filters?: Record<string, unknown>, page = 1, limit = 20) {
-    let query = supabase.from('jobs').select('*').eq('status', 'published');
+    let query = supabase.from('jobs').select('*', { count: 'exact' }).eq('status', 'published');
 
     if (filters?.title) {
       query = query.ilike('title', `%${filters.title}%`);
@@ -61,13 +107,25 @@ export const jobService = {
     if (filters?.category) {
       query = query.contains('skills', [filters.category]);
     }
+    if (filters?.experience) {
+      query = query.ilike('experience', `%${filters.experience}%`);
+    }
+    if (filters?.education) {
+      query = query.ilike('education', `%${filters.education}%`);
+    }
+    if (filters?.freshness) {
+      const fromDate = getFreshnessDate(filters.freshness as string);
+      if (fromDate) {
+        query = query.gte('created_at', fromDate);
+      }
+    }
 
     const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw error;
-    return { data, total: count || 0 };
+    return { data: data || [], total: count || 0 };
   },
 
   async getJobById(id: string) {

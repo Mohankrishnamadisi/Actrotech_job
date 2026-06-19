@@ -8,21 +8,128 @@ export interface User {
   updatedAt: string;
 }
 
+export interface Education {
+  id: string;
+  degree: string;
+  school: string;
+  year: string;
+  field?: string;
+}
+
+export interface WorkExperience {
+  id: string;
+  company: string;
+  position: string;
+  duration: string;
+  description?: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  year: string;
+  url?: string;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  url?: string;
+  technologies?: string[];
+}
+
+export interface SocialLinks {
+  linkedin?: string;
+  portfolio?: string;
+  github?: string;
+  twitter?: string;
+}
+
+export interface JobSeekerProfile {
+  fullName: string;
+  email: string;
+  phone: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  bio?: string;
+  skills: string[];
+  experience?: string;
+  currentCompany?: string;
+  currentCtc?: string;
+  expectedCtc?: string;
+  noticePeriod?: string;
+  education: Education[];
+  workExperience: WorkExperience[];
+  certifications: Certification[];
+  projects: Project[];
+  resumeUrl?: string;
+  profileImageUrl?: string;
+  socialLinks: SocialLinks;
+}
+
 export interface JobSeeker extends User {
   phone?: string;
   bio?: string;
   location?: string;
   skills: string[];
   resumeUrl?: string;
+  profileImageUrl?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  experience?: string;
+  currentCompany?: string;
+  currentCtc?: string;
+  expectedCtc?: string;
+  noticePeriod?: string;
+  education?: Education[];
+  workExperience?: WorkExperience[];
+  certifications?: Certification[];
+  projects?: Project[];
+  socialLinks?: SocialLinks;
   subscriptionPlan?: 'basic' | 'premium' | 'pro';
   subscriptionExpiry?: string;
 }
 
+export interface RecruiterProfile {
+  companyName: string;
+  gstNumber: string;
+  cinNumber?: string;
+  companyEmail: string;
+  companyPhone: string;
+  companyWebsite: string;
+  companyAddress: string;
+  companyDescription: string;
+  industryType: string;
+  companyLogoUrl?: string;
+  hrContactPerson: string;
+  hrEmail: string;
+  hrPhone: string;
+}
+
 export interface Recruiter extends User {
   companyName: string;
+  gstNumber?: string;
+  cinNumber?: string;
+  companyEmail?: string;
+  companyPhone?: string;
   companyWebsite?: string;
-  companyLogo?: string;
+  companyAddress?: string;
+  companyDescription?: string;
   industry?: string;
+  companyLogo?: string;
+  hrContactPerson?: string;
+  hrEmail?: string;
+  hrPhone?: string;
   employeeCount?: string;
   subscriptionPlan?: 'basic' | 'premium' | 'pro';
   subscriptionExpiry?: string;

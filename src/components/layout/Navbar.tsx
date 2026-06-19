@@ -8,23 +8,30 @@ import {
   Menu,
   MenuItem,
   IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
   Avatar,
+  Typography,
+  Divider,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Menu as MenuIcon, Close as CloseIcon, AccountCircle as AccountCircleIcon, Logout as LogoutIcon } from '@mui/icons-material';
+import {
+  Person as PersonIcon,
+  Logout as LogoutIcon,
+  Dashboard as DashboardIcon,
+  WorkOutline as WorkIcon,
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import Swal from 'sweetalert2';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
-import { ROUTES } from '@constants/index';
+import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
+import { Logo } from '@components/common/Logo';
+
+const MotionBox = motion(Box);
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -36,146 +43,186 @@ export const Navbar: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await authService.signOut();
-      logout();
-      navigate(ROUTES.HOME);
-    } catch (error) {
-      console.error('Logout failed:', error);
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#7C3AED',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      background: '#1E293B',
+      color: '#fff',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await authService.signOut();
+        logout();
+        navigate(ROUTES.HOME);
+        Swal.fire({
+          title: 'Logged out successfully!',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#1E293B',
+          color: '#fff',
+        });
+      } catch (error) {
+        console.error('Logout failed:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to logout',
+          icon: 'error',
+          background: '#1E293B',
+          color: '#fff',
+        });
+      }
     }
   };
 
-  const navItems = [
-    { label: 'Jobs', to: ROUTES.JOBS },
-    { label: 'Pricing', to: ROUTES.PRICING },
-    { label: 'About', to: ROUTES.ABOUT },
-    { label: 'Contact', to: ROUTES.CONTACT },
-  ];
+  const dashboardRoute =
+    user?.role === USER_ROLES.RECRUITER
+      ? ROUTES.RECRUITER_DASHBOARD
+      : ROUTES.DASHBOARD;
 
   return (
-    <>
-      <AppBar position="sticky" elevation={0}>
-        <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Box
-              component={RouterLink}
-              to={ROUTES.HOME}
-              sx={{
-                textDecoration: 'none',
-                fontWeight: 700,
-                fontSize: '1.5rem',
-                color: 'primary.main',
-                letterSpacing: -0.5,
-              }}
-            >
-              Actotech Jobs
-            </Box>
+    <AppBar position="sticky" elevation={0}>
+      <Container maxWidth="lg">
+        <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+          <Logo size="medium" />
 
-            {/* Desktop Navigation */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3, alignItems: 'center' }}>
-              {navItems.map((item) => (
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Button
+                component={RouterLink}
+                to={ROUTES.RECRUITER_REGISTER}
+                variant="outlined"
+                size="small"
+                startIcon={<WorkIcon />}
+                sx={{
+                  display: { xs: 'none', sm: 'flex' },
+                  borderColor: 'rgba(124, 58, 237, 0.5)',
+                  color: 'primary.light',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    background: 'rgba(124, 58, 237, 0.1)',
+                  },
+                }}
+              >
+                Post a Job
+              </Button>
+            </MotionBox>
+
+            {!user ? (
+              <>
                 <Button
-                  key={item.to}
                   component={RouterLink}
-                  to={item.to}
+                  to={ROUTES.LOGIN}
+                  variant="text"
+                  sx={{ color: 'text.primary' }}
+                >
+                  Login
+                </Button>
+                <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button component={RouterLink} to={ROUTES.SIGNUP} variant="contained">
+                    Register
+                  </Button>
+                </MotionBox>
+              </>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Typography
+                  variant="body2"
                   sx={{
+                    fontWeight: 600,
+                    display: { xs: 'none', sm: 'block' },
                     color: 'text.primary',
-                    textTransform: 'none',
-                    fontSize: '0.95rem',
-                    '&:hover': {
-                      color: 'primary.main',
+                  }}
+                >
+                  {user.name}
+                </Typography>
+                <IconButton onClick={handleMenuOpen} size="small">
+                  <Avatar
+                    src={user.avatar}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+                      border: '2px solid rgba(124, 58, 237, 0.3)',
+                    }}
+                  >
+                    {generateInitials(user.name)}
+                  </Avatar>
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  PaperProps={{
+                    sx: {
+                      background: 'rgba(30, 41, 59, 0.95)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(148, 163, 184, 0.15)',
+                      borderRadius: 2,
+                      minWidth: 200,
+                      mt: 1,
                     },
                   }}
                 >
-                  {item.label}
-                </Button>
-              ))}
-            </Box>
-
-            {/* Auth Buttons */}
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              {!user ? (
-                <>
-                  <Button
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      {user.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {user.email}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+                  <MenuItem
                     component={RouterLink}
-                    to={ROUTES.LOGIN}
-                    variant="text"
-                    sx={{ display: { xs: 'none', sm: 'block' } }}
+                    to={dashboardRoute}
+                    onClick={handleMenuClose}
                   >
-                    Login
-                  </Button>
-                  <Button component={RouterLink} to={ROUTES.SIGNUP} variant="contained">
-                    Sign Up
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <IconButton onClick={handleMenuOpen} size="small">
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
-                      }}
-                    >
-                      {generateInitials(user.name)}
-                    </Avatar>
-                  </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                    PaperProps={{
-                      sx: {
-                        background: 'rgba(30, 41, 59, 0.95)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(148, 163, 184, 0.1)',
-                      },
-                    }}
+                    <DashboardIcon sx={{ mr: 1.5, fontSize: 20 }} /> Dashboard
+                  </MenuItem>
+                  <MenuItem
+                    component={RouterLink}
+                    to={ROUTES.DASHBOARD_PROFILE}
+                    onClick={handleMenuClose}
                   >
-                    <MenuItem
-                      component={RouterLink}
-                      to={ROUTES.DASHBOARD}
-                      onClick={handleMenuClose}
-                    >
-                      <AccountCircleIcon sx={{ mr: 1 }} /> Dashboard
-                    </MenuItem>
-                    <MenuItem onClick={handleLogout}>
-                      <LogoutIcon sx={{ mr: 1 }} /> Logout
-                    </MenuItem>
-                  </Menu>
-                </>
-              )}
-
-              {/* Mobile Menu */}
-              <IconButton
-                sx={{ display: { xs: 'block', md: 'none' } }}
-                onClick={() => setMobileOpen(!mobileOpen)}
-              >
-                {mobileOpen ? <CloseIcon /> : <MenuIcon />}
-              </IconButton>
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
-
-      {/* Mobile Drawer */}
-      <Drawer open={mobileOpen} onClose={() => setMobileOpen(false)}>
-        <Box sx={{ width: 250, pt: 2 }}>
-          <List>
-            {navItems.map((item) => (
-              <ListItem
-                key={item.to}
-                component={RouterLink}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-              >
-                <ListItemText primary={item.label} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
-    </>
+                    <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} /> My Profile
+                  </MenuItem>
+                  <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+                  <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                    <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} /> Logout
+                  </MenuItem>
+                </Menu>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleLogout}
+                  startIcon={<LogoutIcon />}
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    borderColor: 'rgba(239, 68, 68, 0.4)',
+                    color: 'error.main',
+                    '&:hover': {
+                      borderColor: 'error.main',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                    },
+                  }}
+                >
+                  Logout
+                </Button>
+              </Box>
+            )}
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 };

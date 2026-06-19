@@ -11,25 +11,31 @@ import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { ProtectedRoute } from '@components/common/ProtectedRoute';
 
-// Pages
 import { Home } from '@pages/Home';
 import { Jobs } from '@pages/Jobs';
 import { JobDetails } from '@pages/JobDetails';
 import { Pricing } from '@pages/Pricing';
-import { About } from '@pages/About';
-import { Contact } from '@pages/Contact';
 import { PrivacyPolicy } from '@pages/PrivacyPolicy';
 import { TermsConditions } from '@pages/TermsConditions';
 import { Login } from '@pages/auth/Login';
 import { Signup } from '@pages/auth/Signup';
 import { Dashboard } from '@pages/dashboard/Dashboard';
 import { ProfilePage } from '@pages/dashboard/Profile';
+import { RecruiterRegister } from '@pages/recruiter/RecruiterRegister';
+import { RecruiterDashboard } from '@pages/recruiter/RecruiterDashboard';
+
+const RoleDashboard: React.FC = () => {
+  const { user } = useAuthStore();
+  if (user?.role === USER_ROLES.RECRUITER) {
+    return <Navigate to={ROUTES.RECRUITER_DASHBOARD} replace />;
+  }
+  return <Dashboard />;
+};
 
 export const App: React.FC = () => {
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
-    // Initialize auth
     const initAuth = async () => {
       setLoading(true);
       try {
@@ -40,6 +46,7 @@ export const App: React.FC = () => {
             email: session.user.email || '',
             name: session.user.user_metadata?.name || 'User',
             role: session.user.user_metadata?.role || USER_ROLES.JOB_SEEKER,
+            avatar: session.user.user_metadata?.avatar_url,
             createdAt: session.user.created_at || new Date().toISOString(),
             updatedAt: session.user.updated_at || new Date().toISOString(),
           });
@@ -53,16 +60,17 @@ export const App: React.FC = () => {
 
     initAuth();
 
-    // Subscribe to auth changes
     const unsubscribe = authService.onAuthStateChange((session) => {
-      if (session?.user) {
+      const s = session as { user?: { id: string; email?: string; user_metadata?: Record<string, string>; created_at?: string; updated_at?: string } } | null;
+      if (s?.user) {
         setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || 'User',
-          role: session.user.user_metadata?.role || USER_ROLES.JOB_SEEKER,
-          createdAt: session.user.created_at || new Date().toISOString(),
-          updatedAt: session.user.updated_at || new Date().toISOString(),
+          id: s.user.id,
+          email: s.user.email || '',
+          name: s.user.user_metadata?.name || 'User',
+          role: (s.user.user_metadata?.role as 'job_seeker' | 'recruiter' | 'admin') || USER_ROLES.JOB_SEEKER,
+          avatar: s.user.user_metadata?.avatar_url,
+          createdAt: s.user.created_at || new Date().toISOString(),
+          updatedAt: s.user.updated_at || new Date().toISOString(),
         });
       } else {
         setUser(null);
@@ -70,7 +78,8 @@ export const App: React.FC = () => {
     });
 
     return () => {
-      unsubscribe?.subscription?.unsubscribe();
+      const sub = unsubscribe as { data?: { subscription?: { unsubscribe: () => void } } };
+      sub?.data?.subscription?.unsubscribe();
     };
   }, [setUser, setLoading]);
 
@@ -81,26 +90,22 @@ export const App: React.FC = () => {
         <Toaster position="top-center" />
         <Router>
           <Routes>
-            {/* Public Routes */}
             <Route path={ROUTES.HOME} element={<Home />} />
             <Route path={ROUTES.JOBS} element={<Jobs />} />
             <Route path={ROUTES.JOB_DETAILS} element={<JobDetails />} />
             <Route path={ROUTES.PRICING} element={<Pricing />} />
-            <Route path={ROUTES.ABOUT} element={<About />} />
-            <Route path={ROUTES.CONTACT} element={<Contact />} />
             <Route path={ROUTES.PRIVACY_POLICY} element={<PrivacyPolicy />} />
             <Route path={ROUTES.TERMS_CONDITIONS} element={<TermsConditions />} />
 
-            {/* Auth Routes */}
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.SIGNUP} element={<Signup />} />
+            <Route path={ROUTES.RECRUITER_REGISTER} element={<RecruiterRegister />} />
 
-            {/* Protected Routes */}
             <Route
               path={ROUTES.DASHBOARD}
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <RoleDashboard />
                 </ProtectedRoute>
               }
             />
@@ -112,8 +117,15 @@ export const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path={ROUTES.RECRUITER_DASHBOARD}
+              element={
+                <ProtectedRoute requiredRole={USER_ROLES.RECRUITER}>
+                  <RecruiterDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
           </Routes>
         </Router>

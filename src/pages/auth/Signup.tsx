@@ -7,230 +7,499 @@ import {
   Button,
   Typography,
   Link,
-  Divider,
+  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Alert,
+  Stepper,
+  Step,
+  StepLabel,
+  Chip,
+  InputAdornment,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Google as GoogleIcon } from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import {
+  CloudUpload as CloudUploadIcon,
+  Add as AddIcon,
+  Person as PersonIcon,
+  School as SchoolIcon,
+  Work as WorkIcon,
+} from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
-import { ROUTES, USER_ROLES } from '@constants/index';
-import { validateEmail, validatePassword } from '@utils/index';
+import { userService } from '@services/api';
+import {
+  ROUTES,
+  USER_ROLES,
+  GENDER_OPTIONS,
+  INDIAN_STATES,
+  NOTICE_PERIOD_OPTIONS,
+  EXPERIENCE_LEVELS,
+} from '@constants/index';
+import {
+  validateEmail,
+  validatePassword,
+  validatePhone,
+  validateURL,
+  validateDateOfBirth,
+  validateFileSize,
+} from '@utils/index';
 import toast from 'react-hot-toast';
+
+const MotionCard = motion(Card);
+const steps = ['Personal Info', 'Education & Skills', 'Professional Details'];
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
-  const { setUser, setLoading, setError } = useAuthStore();
+  const { setUser, setLoading } = useAuthStore();
+  const [activeStep, setActiveStep] = useState(0);
+  const [loading, setLoadingState] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [skillInput, setSkillInput] = useState('');
+  const [resume, setResume] = useState<File | null>(null);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    name: '',
-    role: USER_ROLES.JOB_SEEKER,
+    gender: '',
+    dateOfBirth: '',
+    address: '',
+    city: '',
+    state: '',
+    country: 'India',
+    education: '',
+    skills: [] as string[],
+    experience: '',
+    currentCompany: '',
+    currentCtc: '',
+    expectedCtc: '',
+    noticePeriod: '',
+    linkedinUrl: '',
+    portfolioUrl: '',
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoadingState] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value } = e.target as any;
+    const { name, value } = e.target as { name: string; value: unknown };
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  };
+
+  const handleAddSkill = () => {
+    if (skillInput.trim() && !formData.skills.includes(skillInput.trim())) {
+      setFormData((prev) => ({ ...prev, skills: [...prev.skills, skillInput.trim()] }));
+      setSkillInput('');
     }
   };
 
-  const validateForm = () => {
+  const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+    if (step === 0) {
+      if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+      if (!validateEmail(formData.email)) newErrors.email = 'Valid email is required';
+      if (!validatePhone(formData.phone)) newErrors.phone = 'Valid 10-digit mobile number required';
+      if (!validatePassword(formData.password)) {
+        newErrors.password = 'Min 8 chars with uppercase, lowercase & number';
+      }
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+      if (!formData.gender) newErrors.gender = 'Gender is required';
+      if (!formData.dateOfBirth) {
+        newErrors.dateOfBirth = 'Date of birth is required';
+      } else if (!validateDateOfBirth(formData.dateOfBirth)) {
+        newErrors.dateOfBirth = 'Must be between 16 and 80 years old';
+      }
+      if (!formData.address.trim()) newErrors.address = 'Address is required';
+      if (!formData.city.trim()) newErrors.city = 'City is required';
+      if (!formData.state) newErrors.state = 'State is required';
+      if (!formData.country.trim()) newErrors.country = 'Country is required';
     }
 
-    if (!validateEmail(formData.email)) {
-      newErrors.email = 'Invalid email address';
+    if (step === 1) {
+      if (!formData.education) newErrors.education = 'Education is required';
+      if (formData.skills.length === 0) newErrors.skills = 'Add at least one skill';
     }
 
-    if (!validatePassword(formData.password)) {
-      newErrors.password = 'Password must be at least 8 characters with uppercase, lowercase, and number';
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+    if (step === 2) {
+      if (!formData.experience) newErrors.experience = 'Experience is required';
+      if (!formData.noticePeriod) newErrors.noticePeriod = 'Notice period is required';
+      if (formData.linkedinUrl && !validateURL(formData.linkedinUrl)) {
+        newErrors.linkedinUrl = 'Invalid LinkedIn URL';
+      }
+      if (formData.portfolioUrl && !validateURL(formData.portfolioUrl)) {
+        newErrors.portfolioUrl = 'Invalid portfolio URL';
+      }
+      if (!resume) newErrors.resume = 'Resume upload is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNext = () => {
+    if (validateStep(activeStep)) setActiveStep((prev) => prev + 1);
+  };
 
-    if (!validateForm()) {
-      return;
-    }
+  const handleBack = () => setActiveStep((prev) => prev - 1);
+
+  const handleSignup = async () => {
+    if (!validateStep(2)) return;
 
     setLoadingState(true);
     setLoading(true);
 
     try {
       const response = await authService.signUp(formData.email, formData.password, {
-        name: formData.name,
-        role: formData.role,
+        name: formData.fullName,
+        role: USER_ROLES.JOB_SEEKER,
       });
 
       if (response.user) {
+        let resumeUrl = '';
+        let profileImageUrl = '';
+
+        if (resume) {
+          resumeUrl = await userService.uploadResume(response.user.id, resume);
+        }
+        if (profileImage) {
+          profileImageUrl = await userService.uploadProfileImage(response.user.id, profileImage);
+        }
+
+        await userService.createProfile(response.user.id, {
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          role: USER_ROLES.JOB_SEEKER,
+          gender: formData.gender,
+          date_of_birth: formData.dateOfBirth,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          country: formData.country,
+          education: formData.education,
+          skills: formData.skills,
+          experience: formData.experience,
+          current_company: formData.currentCompany,
+          current_ctc: formData.currentCtc,
+          expected_ctc: formData.expectedCtc,
+          notice_period: formData.noticePeriod,
+          resume_url: resumeUrl,
+          profile_image_url: profileImageUrl,
+          linkedin_url: formData.linkedinUrl,
+          portfolio_url: formData.portfolioUrl,
+        } as Record<string, unknown>);
+
         setUser({
           id: response.user.id,
-          email: response.user.email || formData.email,
-          name: formData.name,
-          role: formData.role as any,
+          email: formData.email,
+          name: formData.fullName,
+          role: USER_ROLES.JOB_SEEKER,
+          avatar: profileImageUrl || undefined,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
 
-        toast.success('Sign up successful! Please verify your email.');
+        toast.success('Registration successful! Welcome to Actotech Jobs.');
         navigate(ROUTES.DASHBOARD);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const msg = error instanceof Error ? error.message : 'Registration failed';
+      toast.error(msg);
     } finally {
       setLoadingState(false);
       setLoading(false);
     }
   };
 
-  const handleGoogleSignup = async () => {
-    setLoadingState(true);
-    try {
-      const response = await authService.signInWithGoogle();
-      if (response) {
-        toast.success('Signed up with Google');
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'resume' | 'profile'
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'resume') {
+      if (!validateFileSize(file, 10)) {
+        toast.error('Resume must be under 10MB');
+        return;
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Google sign up failed';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingState(false);
+      setResume(file);
+      if (errors.resume) setErrors((prev) => ({ ...prev, resume: '' }));
+    } else {
+      if (!validateFileSize(file, 5)) {
+        toast.error('Image must be under 5MB');
+        return;
+      }
+      setProfileImage(file);
     }
   };
 
   return (
     <Layout footer={false}>
-      <Container maxWidth="sm" sx={{ py: 6 }}>
-        <Card sx={{ p: 4 }}>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          py: 4,
+          background: 'linear-gradient(180deg, rgba(124, 58, 237, 0.08) 0%, transparent 50%)',
+        }}
+      >
+        <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              Create Account
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 800,
+                mb: 1,
+                background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Create Your Account
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Join thousands of job seekers and recruiters
+              Join India's leading job portal — complete your profile in 3 easy steps
             </Typography>
           </Box>
 
-          <form onSubmit={handleSignup}>
-            <TextField
-              fullWidth
-              label="Full Name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              error={!!errors.name}
-              helperText={errors.name}
-              sx={{ mb: 2 }}
-            />
+          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {steps.map((label, index) => (
+              <Step key={label}>
+                <StepLabel
+                  StepIconComponent={() => (
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background:
+                          activeStep >= index
+                            ? 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)'
+                            : 'rgba(148, 163, 184, 0.2)',
+                        color: '#fff',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {index === 0 ? <PersonIcon sx={{ fontSize: 18 }} /> :
+                       index === 1 ? <SchoolIcon sx={{ fontSize: 18 }} /> :
+                       <WorkIcon sx={{ fontSize: 18 }} />}
+                    </Box>
+                  )}
+                >
+                  {label}
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
 
-            <TextField
-              fullWidth
-              label="Email Address"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={!!errors.email}
-              helperText={errors.email}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={!!errors.password}
-              helperText={errors.password}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword}
-              sx={{ mb: 2 }}
-            />
-
-            <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>I am a</InputLabel>
-              <Select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                label="I am a"
-              >
-                <MenuItem value={USER_ROLES.JOB_SEEKER}>Job Seeker</MenuItem>
-                <MenuItem value={USER_ROLES.RECRUITER}>Recruiter</MenuItem>
-              </Select>
-            </FormControl>
-
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              disabled={loading}
-              sx={{ py: 1.5, mb: 2 }}
-            >
-              {loading ? 'Creating Account...' : 'Sign Up'}
-            </Button>
-          </form>
-
-          <Divider sx={{ my: 3 }}>OR</Divider>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<GoogleIcon />}
-            onClick={handleGoogleSignup}
-            disabled={loading}
-            sx={{ mb: 3 }}
+          <MotionCard
+            sx={{ p: { xs: 3, md: 4 } }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            Sign Up with Google
-          </Button>
+            {activeStep === 0 && (
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Full Name *" name="fullName" value={formData.fullName}
+                    onChange={handleChange} error={!!errors.fullName} helperText={errors.fullName} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Email *" name="email" type="email" value={formData.email}
+                    onChange={handleChange} error={!!errors.email} helperText={errors.email} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Mobile Number *" name="phone" value={formData.phone}
+                    onChange={handleChange} error={!!errors.phone} helperText={errors.phone}
+                    placeholder="10-digit mobile number"
+                    InputProps={{ startAdornment: <InputAdornment position="start">+91</InputAdornment> }} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth error={!!errors.gender}>
+                    <InputLabel>Gender *</InputLabel>
+                    <Select name="gender" value={formData.gender} onChange={handleChange} label="Gender *">
+                      {GENDER_OPTIONS.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
+                    </Select>
+                    {errors.gender && <Typography variant="caption" color="error">{errors.gender}</Typography>}
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Password *" name="password" type="password" value={formData.password}
+                    onChange={handleChange} error={!!errors.password} helperText={errors.password} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Confirm Password *" name="confirmPassword" type="password"
+                    value={formData.confirmPassword} onChange={handleChange}
+                    error={!!errors.confirmPassword} helperText={errors.confirmPassword} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Date of Birth *" name="dateOfBirth" type="date"
+                    value={formData.dateOfBirth} onChange={handleChange}
+                    error={!!errors.dateOfBirth} helperText={errors.dateOfBirth}
+                    InputLabelProps={{ shrink: true }} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Box>
+                    <input type="file" id="profile-img" accept="image/*" hidden
+                      onChange={(e) => handleFileChange(e, 'profile')} />
+                    <Button component="label" htmlFor="profile-img" variant="outlined" fullWidth
+                      startIcon={<CloudUploadIcon />} sx={{ height: 56 }}>
+                      Profile Photo (Optional)
+                    </Button>
+                    {profileImage && (
+                      <Typography variant="caption" color="success.main">✓ {profileImage.name}</Typography>
+                    )}
+                  </Box>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField fullWidth label="Address *" name="address" value={formData.address}
+                    onChange={handleChange} error={!!errors.address} helperText={errors.address} multiline rows={2} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="City *" name="city" value={formData.city}
+                    onChange={handleChange} error={!!errors.city} helperText={errors.city} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth error={!!errors.state}>
+                    <InputLabel>State *</InputLabel>
+                    <Select name="state" value={formData.state} onChange={handleChange} label="State *">
+                      {INDIAN_STATES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Country *" name="country" value={formData.country}
+                    onChange={handleChange} error={!!errors.country} helperText={errors.country} />
+                </Grid>
+              </Grid>
+            )}
 
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Already have an account?{' '}
-              <Link component={RouterLink} to={ROUTES.LOGIN}>
-                Login
-              </Link>
-            </Typography>
-          </Box>
-        </Card>
-      </Container>
+            {activeStep === 1 && (
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <FormControl fullWidth error={!!errors.education}>
+                    <InputLabel>Highest Education *</InputLabel>
+                    <Select name="education" value={formData.education} onChange={handleChange} label="Highest Education *">
+                      {['10th', '12th', 'Diploma', "Bachelor's", "Master's", 'PhD'].map((e) => (
+                        <MenuItem key={e} value={e}>{e}</MenuItem>
+                      ))}
+                    </Select>
+                    {errors.education && <Typography variant="caption" color="error">{errors.education}</Typography>}
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Skills *</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <TextField fullWidth size="small" placeholder="e.g. React, Python, SQL"
+                      value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())} />
+                    <Button variant="contained" onClick={handleAddSkill} startIcon={<AddIcon />}>Add</Button>
+                  </Box>
+                  {errors.skills && <Typography variant="caption" color="error" sx={{ display: 'block', mb: 1 }}>{errors.skills}</Typography>}
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.skills.map((skill) => (
+                      <Chip key={skill} label={skill} color="primary" variant="outlined"
+                        onDelete={() => setFormData((prev) => ({
+                          ...prev, skills: prev.skills.filter((s) => s !== skill),
+                        }))} />
+                    ))}
+                  </Box>
+                </Grid>
+              </Grid>
+            )}
+
+            {activeStep === 2 && (
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth error={!!errors.experience}>
+                    <InputLabel>Total Experience *</InputLabel>
+                    <Select name="experience" value={formData.experience} onChange={handleChange} label="Total Experience *">
+                      {EXPERIENCE_LEVELS.map((l) => <MenuItem key={l} value={l}>{l}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth error={!!errors.noticePeriod}>
+                    <InputLabel>Notice Period *</InputLabel>
+                    <Select name="noticePeriod" value={formData.noticePeriod} onChange={handleChange} label="Notice Period *">
+                      {NOTICE_PERIOD_OPTIONS.map((n) => <MenuItem key={n} value={n}>{n}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Current Company" name="currentCompany"
+                    value={formData.currentCompany} onChange={handleChange} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Current CTC (LPA)" name="currentCtc"
+                    value={formData.currentCtc} onChange={handleChange} placeholder="e.g. 8" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="Expected CTC (LPA)" name="expectedCtc"
+                    value={formData.expectedCtc} onChange={handleChange} placeholder="e.g. 12" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField fullWidth label="LinkedIn URL" name="linkedinUrl"
+                    value={formData.linkedinUrl} onChange={handleChange}
+                    error={!!errors.linkedinUrl} helperText={errors.linkedinUrl} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField fullWidth label="Portfolio URL" name="portfolioUrl"
+                    value={formData.portfolioUrl} onChange={handleChange}
+                    error={!!errors.portfolioUrl} helperText={errors.portfolioUrl} />
+                </Grid>
+                <Grid item xs={12}>
+                  <Box sx={{
+                    p: 3, border: '2px dashed', borderColor: errors.resume ? 'error.main' : 'primary.main',
+                    borderRadius: 2, textAlign: 'center',
+                    background: 'rgba(124, 58, 237, 0.05)',
+                  }}>
+                    <input type="file" id="resume-upload" accept=".pdf,.doc,.docx" hidden
+                      onChange={(e) => handleFileChange(e, 'resume')} />
+                    <Button component="label" htmlFor="resume-upload" variant="contained"
+                      startIcon={<CloudUploadIcon />}>Upload Resume *</Button>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+                      PDF or Word document (Max 10MB)
+                    </Typography>
+                    {resume && <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1 }}>✓ {resume.name}</Typography>}
+                    {errors.resume && <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>{errors.resume}</Typography>}
+                  </Box>
+                </Grid>
+              </Grid>
+            )}
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+              <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">Back</Button>
+              {activeStep < steps.length - 1 ? (
+                <Button variant="contained" onClick={handleNext}>Continue</Button>
+              ) : (
+                <Button variant="contained" onClick={handleSignup} disabled={loading}>
+                  {loading ? 'Creating Account...' : 'Complete Registration'}
+                </Button>
+              )}
+            </Box>
+
+            <Box sx={{ textAlign: 'center', mt: 3 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Already have an account?{' '}
+                <Link component={RouterLink} to={ROUTES.LOGIN}>Login</Link>
+              </Typography>
+            </Box>
+          </MotionCard>
+        </Container>
+      </Box>
     </Layout>
   );
 };
