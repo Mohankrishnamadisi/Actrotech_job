@@ -9,6 +9,10 @@ const normalizeJob = (job: Record<string, any>): Job => ({
   workMode: job.workMode || job.work_mode || undefined,
   salaryMin: job.salaryMin ?? job.salary_min,
   salaryMax: job.salaryMax ?? job.salary_max,
+  positionsAvailable: job.positionsAvailable ?? job.positions_available ?? job.number_of_positions,
+  positions_available: job.positions_available ?? job.positionsAvailable ?? job.number_of_positions,
+  screeningQuestions: job.screeningQuestions || job.screening_questions || [],
+  screening_questions: job.screening_questions || job.screeningQuestions || [],
   createdAt: job.createdAt ?? job.created_at,
   updatedAt: job.updatedAt ?? job.updated_at,
 } as Job);
@@ -318,7 +322,16 @@ export const jobService = {
 
 // Job Application operations
 export const applicationService = {
-  async applyForJob(jobId: string, userId: string, resumeUrl: string, coverLetter?: string) {
+  async applyForJob(
+    jobId: string,
+    userId: string,
+    resumeUrl: string,
+    coverLetter?: string,
+    screeningAnswers?: Array<{ question: string; answer: string }>,
+    currentCtc?: string,
+    expectedCtc?: string,
+    noticePeriod?: string
+  ) {
     const { data, error } = await supabase
       .from('job_applications')
       .insert([
@@ -327,6 +340,10 @@ export const applicationService = {
           user_id: userId,
           resume_url: resumeUrl,
           cover_letter: coverLetter,
+          screening_answers: screeningAnswers,
+          current_ctc: currentCtc,
+          expected_ctc: expectedCtc,
+          notice_period: noticePeriod,
           status: 'applied',
         },
       ])

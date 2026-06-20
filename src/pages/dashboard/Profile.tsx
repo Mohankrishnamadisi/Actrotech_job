@@ -172,7 +172,7 @@ export const ProfilePage: React.FC = () => {
       if (resume) newResumeUrl = await userService.uploadResume(user.id, resume);
       if (profileImage) newImageUrl = await userService.uploadProfileImage(user.id, profileImage);
 
-      await userService.updateProfile(user.id, {
+      const updatedProfile = await userService.updateProfile(user.id, {
         name: formData.fullName,
         phone: formData.phone,
         gender: formData.gender,
@@ -195,8 +195,29 @@ export const ProfilePage: React.FC = () => {
         profile_image_url: newImageUrl,
       });
 
-      setResumeUrl(newResumeUrl);
-      setProfileImageUrl(newImageUrl);
+      setResumeUrl(updatedProfile.resume_url || updatedProfile.resumeUrl || newResumeUrl);
+      setProfileImageUrl(updatedProfile.profile_image_url || updatedProfile.profileImageUrl || newImageUrl);
+      setFormData((prev) => ({
+        ...prev,
+        fullName: updatedProfile.name || prev.fullName,
+        phone: updatedProfile.phone || prev.phone,
+        gender: updatedProfile.gender || prev.gender,
+        dateOfBirth: updatedProfile.date_of_birth || updatedProfile.dateOfBirth || prev.dateOfBirth,
+        address: updatedProfile.address || prev.address,
+        city: updatedProfile.city || prev.city,
+        state: updatedProfile.state || prev.state,
+        country: updatedProfile.country || prev.country,
+        bio: updatedProfile.bio || prev.bio,
+        experience: updatedProfile.experience || prev.experience,
+        skills: updatedProfile.skills || prev.skills,
+        education: updatedProfile.education_details || updatedProfile.education || prev.education,
+        workExperience: updatedProfile.work_experience || updatedProfile.workExperience || prev.workExperience,
+        certifications: updatedProfile.certifications || prev.certifications,
+        projects: updatedProfile.projects || prev.projects,
+        linkedinUrl: updatedProfile.linkedin_url || updatedProfile.linkedinUrl || prev.linkedinUrl,
+        portfolioUrl: updatedProfile.portfolio_url || updatedProfile.portfolioUrl || prev.portfolioUrl,
+        githubUrl: updatedProfile.github_url || updatedProfile.githubUrl || prev.githubUrl,
+      }));
       setUser({ ...user, name: formData.fullName, avatar: newImageUrl || user.avatar });
       toast.success('Profile updated successfully!');
     } catch {

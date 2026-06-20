@@ -7,10 +7,19 @@ import {
   LinkedIn as LinkedInIcon,
   GitHub as GitHubIcon,
 } from '@mui/icons-material';
-import { ROUTES } from '@constants/index';
+import { ROUTES, USER_ROLES } from '@constants/index';
+import { useAuthStore } from '@store/index';
 
 export const Footer: React.FC = () => {
+  const { user } = useAuthStore();
   const currentYear = new Date().getFullYear();
+
+  const recruiterLinks = [
+    { label: 'Post a Job', to: ROUTES.RECRUITER_REGISTER },
+    { label: 'Recruiter Dashboard', to: ROUTES.RECRUITER_DASHBOARD },
+    { label: 'Pricing', to: ROUTES.PRICING },
+    { label: 'Register', to: ROUTES.SIGNUP },
+  ];
 
   const footerSections = [
     {
@@ -22,15 +31,19 @@ export const Footer: React.FC = () => {
         { label: 'Terms & Conditions', to: ROUTES.TERMS_CONDITIONS },
       ],
     },
-    {
-      title: 'For Recruiters',
-      items: [
-        { label: 'Post a Job', to: ROUTES.RECRUITER_REGISTER },
-        { label: 'Recruiter Dashboard', to: ROUTES.RECRUITER_DASHBOARD },
-        { label: 'Pricing', to: ROUTES.PRICING },
-        { label: 'Register', to: ROUTES.SIGNUP },
-      ],
-    },
+    ...(user?.role !== USER_ROLES.JOB_SEEKER
+      ? [
+          {
+            title: 'For Recruiters',
+            items: [
+              { label: 'Post a Job', to: ROUTES.RECRUITER_REGISTER },
+              { label: 'Recruiter Dashboard', to: ROUTES.RECRUITER_DASHBOARD },
+              { label: 'Pricing', to: ROUTES.PRICING },
+              { label: 'Register', to: ROUTES.SIGNUP },
+            ],
+          },
+        ]
+      : []),
     {
       title: 'Legal',
       items: [
@@ -106,6 +119,33 @@ export const Footer: React.FC = () => {
               </Box>
             </Grid>
           ))}
+          {user?.role === 'recruiter' && (
+            <Grid item xs={12} sm={6} md={3}>
+              <Typography variant="h6" sx={{ fontWeight: 650, mb: 2 }}>
+                Recruiter Links
+              </Typography>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                {recruiterLinks.map((item) => (
+                  <Typography key={item.label} component="li" variant="body2" sx={{ mb: 1 }}>
+                    <Link
+                      component={RouterLink}
+                      to={item.to}
+                      sx={{
+                        color: 'text.secondary',
+                        textDecoration: 'none',
+                        transition: 'color 0.2s',
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  </Typography>
+                ))}
+              </Box>
+            </Grid>
+          )}
         </Grid>
 
         <Divider sx={{ borderColor: 'divider', my: 3 }} />

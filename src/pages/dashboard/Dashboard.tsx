@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -27,17 +27,46 @@ import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
 import { calculateProfileCompletion } from '@utils/index';
+import { userService } from '@services/api';
 
 const MotionCard = motion(Card);
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
+  const [profileCompletion, setProfileCompletion] = useState(0);
 
-  const profileCompletion = calculateProfileCompletion({
-    fullName: user?.name,
-    email: user?.email,
-  });
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+      try {
+        const profile = await userService.getProfile(user.id);
+        setProfileCompletion(
+          calculateProfileCompletion({
+            fullName: profile?.name || user.name,
+            email: profile?.email || user.email,
+            phone: profile?.phone,
+            gender: profile?.gender,
+            dateOfBirth: profile?.date_of_birth || profile?.dateOfBirth,
+            address: profile?.address,
+            city: profile?.city,
+            state: profile?.state,
+            country: profile?.country,
+            bio: profile?.bio,
+            experience: profile?.experience,
+            skills: profile?.skills || [],
+            education: profile?.education_details || profile?.education || [],
+            workExperience: profile?.work_experience || profile?.workExperience || [],
+            resumeUrl: profile?.resume_url || profile?.resumeUrl,
+            socialLinks: profile?.linkedin_url || profile?.portfolio_url || profile?.github_url,
+          })
+        );
+      } catch (err) {
+        console.error('Failed to load profile for dashboard completion:', err);
+      }
+    };
+    loadProfile();
+  }, [user?.id, user?.name, user?.email]);
 
   const stats = [
     { label: 'Applications', value: 0, icon: WorkIcon, color: '#1D4ED8' },

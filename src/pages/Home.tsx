@@ -141,8 +141,10 @@ export const Home: React.FC = () => {
                 WebkitTextFillColor: 'transparent',
                 letterSpacing: 0,
                 lineHeight: 1.1,
+                cursor: 'default',
               }}
               animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+              whileHover={{ letterSpacing: '0.35em', scale: 1.02 }}
               transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             >
               Find Your Dream Job

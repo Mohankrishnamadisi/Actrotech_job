@@ -43,6 +43,7 @@ interface JobFormData {
   experience: string;
   education: string;
   application_deadline: string;
+  positions_available: string;
 }
 
 export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, recruiterId, onJobCreated }) => {
@@ -50,6 +51,8 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
   const [error, setError] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
+  const [screeningQuestions, setScreeningQuestions] = useState<string[]>([]);
+  const [questionInput, setQuestionInput] = useState('');
 
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
@@ -65,6 +68,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     experience: '',
     education: '',
     application_deadline: '',
+    positions_available: '1',
   });
 
   const handleChange = (
@@ -87,6 +91,17 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     setSkills(skills.filter((s) => s !== skill));
   };
 
+  const handleAddQuestion = () => {
+    if (questionInput.trim() && !screeningQuestions.includes(questionInput.trim())) {
+      setScreeningQuestions([...screeningQuestions, questionInput.trim()]);
+      setQuestionInput('');
+    }
+  };
+
+  const handleRemoveQuestion = (question: string) => {
+    setScreeningQuestions(screeningQuestions.filter((q) => q !== question));
+  };
+
   const validateForm = () => {
     if (!formData.company_name.trim()) return 'Company name is required';
     if (!formData.title.trim()) return 'Job title is required';
@@ -94,6 +109,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     if (!formData.location.trim()) return 'Location is required';
     if (!formData.job_type) return 'Job type is required';
     if (!formData.work_mode) return 'Work mode is required';
+    if (!formData.positions_available || Number(formData.positions_available) <= 0) return 'Number of positions must be at least 1';
     if (skills.length === 0) return 'At least one skill is required';
     if (!formData.category) return 'Job category is required';
     if (!formData.experience) return 'Experience level is required';
@@ -126,8 +142,10 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
         currency: formData.currency,
         salary_min: formData.salary_min ? Number(formData.salary_min) : undefined,
         salary_max: formData.salary_max ? Number(formData.salary_max) : undefined,
+        positions_available: formData.positions_available ? Number(formData.positions_available) : 1,
         experience: formData.experience,
         skills,
+        screening_questions: screeningQuestions,
         posted_by: recruiterId,
         status: 'published',
       });
@@ -159,9 +177,12 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
       experience: '',
       education: '',
       application_deadline: '',
+      positions_available: '1',
     });
     setSkills([]);
     setSkillInput('');
+    setScreeningQuestions([]);
+    setQuestionInput('');
     setError('');
     onClose();
   };
@@ -288,6 +309,19 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                label="Number of Positions"
+                name="positions_available"
+                type="number"
+                value={formData.positions_available}
+                onChange={handleChange}
+                inputProps={{ min: 1 }}
+                placeholder="1"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 label="Minimum Salary"
                 name="salary_min"
                 type="number"
@@ -338,6 +372,41 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
                     label={skill}
                     onDelete={() => handleRemoveSkill(skill)}
                     color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Custom Screening Questions
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'flex-end' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={questionInput}
+                  onChange={(e) => setQuestionInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddQuestion();
+                    }
+                  }}
+                  placeholder="Enter a screening question"
+                />
+                <Button variant="outlined" onClick={handleAddQuestion}>
+                  Add
+                </Button>
+              </Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {screeningQuestions.map((question) => (
+                  <Chip
+                    key={question}
+                    label={question}
+                    onDelete={() => handleRemoveQuestion(question)}
+                    color="secondary"
                     variant="outlined"
                   />
                 ))}

@@ -94,26 +94,28 @@ export const Navbar: React.FC = () => {
           <Logo size="medium" />
 
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                component={RouterLink}
-                to={ROUTES.RECRUITER_REGISTER}
-                variant="outlined"
-                size="small"
-                startIcon={<WorkIcon />}
-                sx={{
-                  display: { xs: 'none', sm: 'flex' },
-                  borderColor: 'divider',
-                  color: 'primary.dark',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    background: 'primary.light',
-                  },
-                }}
-              >
-                Post a Job
-              </Button>
-            </MotionBox>
+            {(!user || user.role === USER_ROLES.RECRUITER) && (
+              <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Button
+                  component={RouterLink}
+                  to={user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_DASHBOARD : ROUTES.RECRUITER_REGISTER}
+                  variant="outlined"
+                  size="small"
+                  startIcon={<WorkIcon />}
+                  sx={{
+                    display: { xs: 'none', sm: 'flex' },
+                    borderColor: 'divider',
+                    color: 'primary.dark',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      background: 'primary.light',
+                    },
+                  }}
+                >
+                  Post a Job
+                </Button>
+              </MotionBox>
+            )}
 
             {!user ? (
               <>

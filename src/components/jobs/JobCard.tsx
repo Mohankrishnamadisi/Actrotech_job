@@ -13,9 +13,11 @@ interface JobCardProps {
   job: Job;
   onSave?: (jobId: string) => void;
   isSaved?: boolean;
+  isPremiumUser?: boolean;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }) => {
+export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, isPremiumUser = false }) => {
+  const showRemotePremium = job.workMode === 'Remote' && !isPremiumUser;
   return (
     <MotionCard
       whileHover={{ y: -6 }}
@@ -28,13 +30,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
         overflow: 'hidden',
       }}
     >
-      {job.featured && (
+      {(job.featured || showRemotePremium) && (
         <Box
           sx={{
             position: 'absolute',
             top: 12,
             right: 12,
-            background: '#DBEAFE',
+            background: showRemotePremium ? '#DBEAFE' : '#DBEAFE',
             color: 'primary.dark',
             borderRadius: '4px',
             px: 1.5,
@@ -44,9 +46,9 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
             gap: 0.5,
           }}
         >
-          <TrendingUpIcon sx={{ fontSize: 16 }} />
+          {job.featured ? <TrendingUpIcon sx={{ fontSize: 16 }} /> : null}
           <Typography variant="caption" sx={{ fontWeight: 600 }}>
-            Featured
+            {showRemotePremium ? 'Premium Remote' : 'Featured'}
           </Typography>
         </Box>
       )}
@@ -85,6 +87,11 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
               />
             ) : null}
           </Box>
+          {(job.positionsAvailable || job.positions_available) && (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Hiring {job.positionsAvailable || job.positions_available} position{(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}
+            </Typography>
+          )}
           <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 500 }}>
             {formatJobSalary(job.salaryMin, job.salaryMax)}
           </Typography>

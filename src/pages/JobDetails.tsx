@@ -16,7 +16,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { LocationOn as LocationOnIcon, Work as WorkIcon, MonetizationOn as MonetizationOnIcon, BookmarkBorder as BookmarkBorderIcon, Bookmark as BookmarkIcon, Share as ShareIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
-import { jobService } from '@services/api';
+import { jobService, userService, applicationService } from '@services/api';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
@@ -36,6 +36,13 @@ export const JobDetails: React.FC = () => {
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeUrl, setResumeUrl] = useState('');
+  const [currentCtc, setCurrentCtc] = useState('');
+  const [expectedCtc, setExpectedCtc] = useState('');
+  const [noticePeriod, setNoticePeriod] = useState('');
+  const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
+  const [profileLoading, setProfileLoading] = useState(false);
   const isSaved = false;
 
   useEffect(() => {
@@ -55,6 +62,28 @@ export const JobDetails: React.FC = () => {
     fetchJob();
   }, [id]);
 
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user?.id) return;
+      setProfileLoading(true);
+      try {
+        const profile = await userService.getProfile(user.id);
+        if (profile) {
+          setResumeUrl(profile.resume_url || profile.resumeUrl || '');
+          setCurrentCtc(profile.current_ctc || profile.currentCtc || '');
+          setExpectedCtc(profile.expected_ctc || profile.expectedCtc || '');
+          setNoticePeriod(profile.notice_period || profile.noticePeriod || '');
+        }
+      } catch (err) {
+        console.error('Failed to load candidate profile for application:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfileData();
+  }, [user?.id]);
+
   if (loading) return <Loading />;
   if (!job || error)
     return (
@@ -67,8 +96,8 @@ export const JobDetails: React.FC = () => {
 
   const jobTypeLabel = job.jobType || job.job_type || 'Job';
   const workModeLabel = job.workMode || job.work_mode || 'Onsite';
-  const requiresSubscription = ['Remote', 'Hybrid'].includes(workModeLabel);
-  const hasAccess = !requiresSubscription || subscription;
+  const requiresSubscription = workModeLabel === 'Remote';
+  const hasAccess = !requiresSubscription || !!subscription;
 
   const handleApply = async () => {
     if (!user) {
@@ -78,16 +107,44 @@ export const JobDetails: React.FC = () => {
     }
 
     if (requiresSubscription && !subscription) {
-      toast.error('This job requires a premium subscription');
+      toast.error('Remote Jobs are available only for Premium Members.');
       navigate(ROUTES.PRICING);
       return;
     }
 
     setApplyLoading(true);
     try {
-      // TODO: Upload resume and apply
+      let finalResumeUrl = resumeUrl;
+      if (resumeFile) {
+        finalResumeUrl = await userService.uploadResume(user.id, resumeFile);
+        await userService.updateProfile(user.id, { resume_url: finalResumeUrl });
+        setResumeUrl(finalResumeUrl);
+      }
+
+      if (!finalResumeUrl) {
+        toast.error('Please upload a resume before applying.');
+        return;
+      }
+
+      const answers = job.screeningQuestions?.map((question) => ({
+        question,
+        answer: screeningAnswers[question] || '',
+      }))?.filter((item) => item.answer.trim()) || [];
+
+      await applicationService.applyForJob(
+        job.id,
+        user.id,
+        finalResumeUrl,
+        coverLetter,
+        answers,
+        currentCtc,
+        expectedCtc,
+        noticePeriod
+      );
+
       toast.success('Application submitted successfully!');
       setApplyDialogOpen(false);
+      navigate(ROUTES.JOBS);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to apply');
     } finally {
@@ -137,6 +194,14 @@ export const JobDetails: React.FC = () => {
                       {formatJobSalary(job.salaryMin, job.salaryMax)}
                     </Typography>
                   </Box>
+                  {job.positionsAvailable || job.positions_available ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <WorkIcon sx={{ color: 'primary.main' }} />
+                      <Typography variant="body2">
+                        Hiring {job.positionsAvailable || job.positions_available} position{(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}
+                      </Typography>
+                    </Box>
+                  ) : null}
                 </Box>
 
                 {/* Skills */}
@@ -151,21 +216,52 @@ export const JobDetails: React.FC = () => {
                   </Box>
                 </Box>
 
-                {/* Description */}
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                    Job Description
-                  </Typography>
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: 'text.secondary' }}>
-                    {job.description}
-                  </Typography>
-                </Box>
+                {!hasAccess && requiresSubscription ? (
+                  <Box sx={{ p: 3, border: '1px solid rgba(186, 230, 253, 1)', borderRadius: 2, background: '#EFF6FF' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                      Premium Remote Job
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Remote Jobs are available only for Premium Members. Upgrade to access full job details and apply.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <>
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                        Job Description
+                      </Typography>
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: 'text.secondary' }}>
+                        {job.description}
+                      </Typography>
+                    </Box>
 
-                <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(148, 163, 184, 0.1)' }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Posted on {formatDate(job.createdAt || job.created_at || new Date().toISOString())}
-                  </Typography>
-                </Box>
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                        Screening Questions
+                      </Typography>
+                      {job.screeningQuestions?.length ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {job.screeningQuestions.map((question) => (
+                            <Typography key={question} variant="body2" sx={{ color: 'text.secondary' }}>
+                              • {question}
+                            </Typography>
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          No screening questions for this role.
+                        </Typography>
+                      )}
+                    </Box>
+
+                    <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Posted on {formatDate(job.createdAt || job.created_at || new Date().toISOString())}
+                      </Typography>
+                    </Box>
+                  </>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -177,7 +273,7 @@ export const JobDetails: React.FC = () => {
                 {!hasAccess && (
                   <Alert severity="info" sx={{ mb: 2 }}>
                     <Typography variant="body2">
-                      This {workModeLabel.toLowerCase()} job requires a premium subscription to access.
+                      Remote Jobs are available only for Premium Members.
                     </Typography>
                   </Alert>
                 )}
@@ -240,6 +336,71 @@ export const JobDetails: React.FC = () => {
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Apply for {job.title}
             </Typography>
+
+            <Box sx={{ mb: 3, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                Resume Upload / Update
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                Upload your latest resume or use the resume already saved to your profile.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Button variant="outlined" component="label">
+                  {resumeFile ? 'Update Resume' : 'Upload Resume'}
+                  <input
+                    type="file"
+                    hidden
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => e.target.files?.[0] && setResumeFile(e.target.files[0])}
+                  />
+                </Button>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {resumeFile ? resumeFile.name : resumeUrl ? 'Using saved resume' : 'No resume uploaded yet'}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ mb: 3, display: 'grid', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Current CTC"
+                value={currentCtc}
+                onChange={(e) => setCurrentCtc(e.target.value)}
+              />
+              <TextField
+                fullWidth
+                label="Expected CTC"
+                value={expectedCtc}
+                onChange={(e) => setExpectedCtc(e.target.value)}
+              />
+              <TextField
+                fullWidth
+                label="Notice Period"
+                value={noticePeriod}
+                onChange={(e) => setNoticePeriod(e.target.value)}
+              />
+            </Box>
+
+            {job.screeningQuestions?.length ? (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                  Screening Questions
+                </Typography>
+                <Box sx={{ display: 'grid', gap: 2 }}>
+                  {job.screeningQuestions.map((question) => (
+                    <TextField
+                      key={question}
+                      fullWidth
+                      label={question}
+                      multiline
+                      rows={2}
+                      value={screeningAnswers[question] || ''}
+                      onChange={(e) => setScreeningAnswers((prev) => ({ ...prev, [question]: e.target.value }))}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            ) : null}
 
             <TextField
               fullWidth

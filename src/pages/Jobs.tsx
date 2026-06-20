@@ -19,6 +19,8 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuthStore } from '@store/index';
+import { useSubscription } from '@hooks/index';
 import { Search as SearchIcon, Tune as TuneIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { JobCard } from '@components/jobs/JobCard';
@@ -32,6 +34,8 @@ const MotionPaper = motion(Paper);
 
 export const Jobs: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuthStore();
+  const { subscription } = useSubscription(user?.id || null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -336,7 +340,7 @@ export const Jobs: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                       >
-                        <JobCard job={job} />
+                        <JobCard job={job} isPremiumUser={!!subscription} />
                       </motion.div>
                     </Grid>
                   ))}
