@@ -44,6 +44,7 @@ export const JobDetails: React.FC = () => {
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
   const [profileLoading, setProfileLoading] = useState(false);
   const isSaved = false;
+  const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -61,6 +62,19 @@ export const JobDetails: React.FC = () => {
 
     fetchJob();
   }, [id]);
+
+  useEffect(() => {
+    const checkApplied = async () => {
+      if (!id || !user?.id) return;
+      try {
+        const applied = await applicationService.hasUserApplied(id, user.id);
+        setHasApplied(!!applied);
+      } catch (err) {
+        console.error('Failed to check application status:', err);
+      }
+    };
+    checkApplied();
+  }, [id, user?.id]);
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -112,6 +126,11 @@ export const JobDetails: React.FC = () => {
       return;
     }
 
+    if (hasApplied) {
+      toast('You have already applied for this job.');
+      return;
+    }
+
     setApplyLoading(true);
     try {
       let finalResumeUrl = resumeUrl;
@@ -143,6 +162,7 @@ export const JobDetails: React.FC = () => {
       );
 
       toast.success('Application submitted successfully!');
+      setHasApplied(true);
       setApplyDialogOpen(false);
       navigate(ROUTES.JOBS);
     } catch (error) {
@@ -283,10 +303,10 @@ export const JobDetails: React.FC = () => {
                   fullWidth
                   size="large"
                   onClick={() => setApplyDialogOpen(true)}
-                  disabled={!hasAccess}
+                  disabled={!hasAccess || hasApplied}
                   sx={{ mb: 2 }}
                 >
-                  Apply Now
+                  {hasApplied ? 'Already Applied' : 'Apply Now'}
                 </Button>
 
                 <Button
@@ -294,12 +314,17 @@ export const JobDetails: React.FC = () => {
                   fullWidth
                   startIcon={<ShareIcon />}
                   onClick={() => {
+                    if (!hasAccess) {
+                      toast.error('Upgrade to premium to share remote jobs');
+                      return;
+                    }
                     navigator.share({
                       title: job.title,
                       text: `Check out this job: ${job.title} at ${job.company_name}`,
                       url: window.location.href,
                     });
                   }}
+                  disabled={!hasAccess}
                 >
                   Share Job
                 </Button>
@@ -416,8 +441,8 @@ export const JobDetails: React.FC = () => {
               <Button variant="outlined" fullWidth onClick={() => setApplyDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button variant="contained" fullWidth onClick={handleApply} disabled={applyLoading}>
-                {applyLoading ? 'Applying...' : 'Submit Application'}
+              <Button variant="contained" fullWidth onClick={handleApply} disabled={applyLoading || hasApplied}>
+                {hasApplied ? 'Already Applied' : applyLoading ? 'Applying...' : 'Submit Application'}
               </Button>
             </Box>
           </Box>

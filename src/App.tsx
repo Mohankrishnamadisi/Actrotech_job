@@ -26,12 +26,21 @@ import { Dashboard } from '@pages/dashboard/Dashboard';
 import { ProfilePage } from '@pages/dashboard/Profile';
 import { RecruiterRegister } from '@pages/recruiter/RecruiterRegister';
 import { RecruiterDashboard } from '@pages/recruiter/RecruiterDashboard';
+import PremiumDashboard from '@pages/dashboard/PremiumDashboard';
+import { useSubscription } from '@hooks/index';
 
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
+  const { subscription } = useSubscription(user?.id || null);
+
   if (user?.role === USER_ROLES.RECRUITER) {
     return <Navigate to={ROUTES.RECRUITER_DASHBOARD} replace />;
   }
+
+  if (subscription) {
+    return <PremiumDashboard />;
+  }
+
   return <Dashboard />;
 };
 

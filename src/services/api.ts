@@ -256,6 +256,8 @@ export const jobService = {
   },
 
   async createJob(userId: string, jobData: Partial<Job>) {
+    if (!userId) throw new Error('Missing userId for createJob');
+
     const payload: Record<string, unknown> = {
       ...jobData,
       posted_by: userId,
@@ -271,6 +273,19 @@ export const jobService = {
     // ensure company_name is used; do not send a legacy `company` field
     if (jobData.company_name && !payload.company_name) {
       payload.company_name = jobData.company_name;
+    }
+
+    // normalize arrays and numeric fields
+    if (!Array.isArray(payload.skills)) payload.skills = jobData.skills || [];
+    if (!Array.isArray(payload.screening_questions)) payload.screening_questions = jobData.screening_questions || jobData.screeningQuestions || [];
+    if (payload.positions_available && typeof payload.positions_available === 'string') {
+      payload.positions_available = parseInt(payload.positions_available as string, 10) || 1;
+    }
+    if (payload.salary_min && typeof payload.salary_min === 'string') {
+      payload.salary_min = parseInt(payload.salary_min as string, 10);
+    }
+    if (payload.salary_max && typeof payload.salary_max === 'string') {
+      payload.salary_max = parseInt(payload.salary_max as string, 10);
     }
 
     const { data, error } = await supabase
@@ -370,6 +385,19 @@ export const applicationService = {
       .order('applied_at', { ascending: false });
     if (error) throw error;
     return data;
+  },
+
+  async hasUserApplied(jobId: string, userId: string) {
+    if (!jobId || !userId) return false;
+    const { data, error } = await supabase
+      .from('job_applications')
+      .select('id')
+      .eq('job_id', jobId)
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    if (error && error.code !== 'PGRST116') throw error;
+    return !!data;
   },
 
   async updateApplicationStatus(applicationId: string, status: string) {

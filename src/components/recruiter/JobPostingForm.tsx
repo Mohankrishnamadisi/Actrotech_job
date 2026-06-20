@@ -121,6 +121,11 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
   };
 
   const handleSubmit = async () => {
+    if (!recruiterId) {
+      setError('You must be signed in as a recruiter to post a job.');
+      return;
+    }
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -155,8 +160,12 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
       onJobCreated?.();
     } catch (err) {
       console.error('Error posting job:', err);
-      setError('Failed to post job. Please try again.');
-      toast.error('Failed to post job');
+      const message =
+        (err && (err as any).message) ||
+        (err && (err as any).error && (err as any).error.message) ||
+        JSON.stringify(err);
+      setError(String(message));
+      toast.error(String(message));
     } finally {
       setLoading(false);
     }

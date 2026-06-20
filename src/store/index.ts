@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { subscriptionService, paymentService } from '@services/api';
 import type { User } from '../types';
+import { STORAGE_KEYS } from '@constants/index';
 
 interface AuthStore {
   user: User | null;
@@ -12,14 +13,39 @@ interface AuthStore {
   logout: () => void;
 }
 
+const loadInitialUser = (): User | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.USER_DATA);
+    if (!raw) return null;
+    return JSON.parse(raw) as User;
+  } catch (err) {
+    return null;
+  }
+};
+
 export const useAuthStore = create<AuthStore>((set) => ({
-  user: null,
+  user: loadInitialUser(),
   loading: false,
   error: null,
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    try {
+      if (user) localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+      else localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    } catch (err) {
+      console.error('Failed to persist user to localStorage', err);
+    }
+    set({ user });
+  },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
-  logout: () => set({ user: null, error: null }),
+  logout: () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    } catch (err) {
+      console.error('Failed to remove user from localStorage', err);
+    }
+    set({ user: null, error: null });
+  },
 }));
 
 interface JobStore {

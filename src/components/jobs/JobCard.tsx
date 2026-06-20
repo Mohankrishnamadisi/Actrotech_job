@@ -17,7 +17,8 @@ interface JobCardProps {
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, isPremiumUser = false }) => {
-  const showRemotePremium = job.workMode === 'Remote' && !isPremiumUser;
+  const workMode = job.workMode || job.work_mode;
+  const showRemotePremium = workMode === 'Remote' && !isPremiumUser;
   return (
     <MotionCard
       whileHover={{ y: -6 }}
@@ -59,8 +60,11 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
             {job.title}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-            {job.company_name}
+          <Typography
+            variant="body2"
+            sx={{ color: 'text.secondary', mb: 1, ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}
+          >
+            {showRemotePremium ? 'Upgrade to view company' : job.company_name}
           </Typography>
           {job.featured && (
             <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
@@ -89,7 +93,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
           </Box>
           {(job.positionsAvailable || job.positions_available) && (
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Hiring {job.positionsAvailable || job.positions_available} position{(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}
+              {showRemotePremium ? 'Positions hidden • Upgrade' : `Hiring ${job.positionsAvailable || job.positions_available} position${(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}`}
             </Typography>
           )}
           <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 500 }}>
