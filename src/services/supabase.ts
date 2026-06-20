@@ -36,7 +36,7 @@ export const authService = {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${import.meta.env.VITE_APP_URL}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     if (error) throw error;
@@ -50,7 +50,7 @@ export const authService = {
 
   async resetPassword(email: string) {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${import.meta.env.VITE_APP_URL}/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) throw error;
     return data;

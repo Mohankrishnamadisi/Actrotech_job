@@ -19,6 +19,9 @@ import { PrivacyPolicy } from '@pages/PrivacyPolicy';
 import { TermsConditions } from '@pages/TermsConditions';
 import { Login } from '@pages/auth/Login';
 import { Signup } from '@pages/auth/Signup';
+import { ForgotPassword } from '@pages/auth/ForgotPassword';
+import { ResetPassword } from '@pages/auth/ResetPassword';
+import { AuthCallback } from '@pages/auth/AuthCallback';
 import { Dashboard } from '@pages/dashboard/Dashboard';
 import { ProfilePage } from '@pages/dashboard/Profile';
 import { RecruiterRegister } from '@pages/recruiter/RecruiterRegister';
@@ -99,6 +102,9 @@ export const App: React.FC = () => {
 
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.SIGNUP} element={<Signup />} />
+            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+            <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
             <Route path={ROUTES.RECRUITER_REGISTER} element={<RecruiterRegister />} />
 
             <Route

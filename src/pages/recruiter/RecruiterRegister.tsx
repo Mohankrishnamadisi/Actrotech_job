@@ -12,6 +12,12 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -43,6 +49,10 @@ export const RecruiterRegister: React.FC = () => {
   const [loading, setLoadingState] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [existingDialogOpen, setExistingDialogOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -112,19 +122,16 @@ export const RecruiterRegister: React.FC = () => {
         }
 
         await recruiterService.createRecruiterProfile(response.user.id, {
-          name: formData.hrContactPerson,
-          email: formData.hrEmail,
-          phone: formData.hrPhone,
           company_name: formData.companyName,
-          gst_number: formData.gstNumber,
-          cin_number: formData.cinNumber || undefined,
+          company_website: formData.companyWebsite,
+          company_logo_url: logoUrl,
+          industry: formData.industryType,
+          description: formData.companyDescription,
+          location: formData.companyAddress,
           company_email: formData.companyEmail,
           company_phone: formData.companyPhone,
-          company_website: formData.companyWebsite,
-          company_address: formData.companyAddress,
-          company_description: formData.companyDescription,
-          industry: formData.industryType,
-          company_logo: logoUrl,
+          gst_number: formData.gstNumber,
+          cin_number: formData.cinNumber || undefined,
           hr_contact_person: formData.hrContactPerson,
           hr_email: formData.hrEmail,
           hr_phone: formData.hrPhone,
@@ -139,12 +146,20 @@ export const RecruiterRegister: React.FC = () => {
           updatedAt: new Date().toISOString(),
         });
 
-        toast.success('Recruiter account created successfully!');
+        setSnackbarMessage('Registration successful.');
+        setSnackbarOpen(true);
+        setVerifyDialogOpen(true);
         navigate(ROUTES.RECRUITER_DASHBOARD);
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Registration failed';
-      toast.error(msg);
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('Recruiter registration error:', error);
+      if (/already/i.test(msg)) {
+        setExistingDialogOpen(true);
+      } else {
+        setSnackbarMessage(msg || 'Registration failed');
+        setSnackbarOpen(true);
+      }
     } finally {
       setLoadingState(false);
       setLoading(false);
@@ -290,6 +305,33 @@ export const RecruiterRegister: React.FC = () => {
           </MotionCard>
         </Container>
       </Box>
+          <Dialog open={verifyDialogOpen} onClose={() => setVerifyDialogOpen(false)} fullWidth maxWidth="sm">
+            <DialogTitle>Verify Your Email</DialogTitle>
+            <DialogContent>
+              A confirmation email has been sent to your registered email address. Please verify your email before logging in.
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => window.open('https://mail.google.com', '_blank')}>Open Gmail</Button>
+              <Button onClick={() => setVerifyDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog open={existingDialogOpen} onClose={() => setExistingDialogOpen(false)} fullWidth maxWidth="sm">
+            <DialogTitle>Account Already Exists</DialogTitle>
+            <DialogContent>
+              You have already registered with this email address. If you have already verified your email, please login to continue.
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => navigate(ROUTES.LOGIN)}>Login</Button>
+              <Button onClick={() => setExistingDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
+          <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+            <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
     </Layout>
   );
 };

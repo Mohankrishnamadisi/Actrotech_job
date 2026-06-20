@@ -17,6 +17,12 @@ import {
   StepLabel,
   Chip,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -58,6 +64,10 @@ export const Signup: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoadingState] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [existingDialogOpen, setExistingDialogOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [skillInput, setSkillInput] = useState('');
   const [resume, setResume] = useState<File | null>(null);
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -207,12 +217,19 @@ export const Signup: React.FC = () => {
           updatedAt: new Date().toISOString(),
         });
 
-        toast.success('Registration successful! Welcome to Actotech Jobs.');
-        navigate(ROUTES.DASHBOARD);
+        setSnackbarMessage('Registration successful.');
+        setSnackbarOpen(true);
+        setVerifyDialogOpen(true);
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Registration failed';
-      toast.error(msg);
+      const msg = error instanceof Error ? error.message : String(error);
+      // detect existing account
+      if (typeof msg === 'string' && /already/i.test(msg)) {
+        setExistingDialogOpen(true);
+      } else {
+        setSnackbarMessage(msg || 'Registration failed');
+        setSnackbarOpen(true);
+      }
     } finally {
       setLoadingState(false);
       setLoading(false);
@@ -498,6 +515,35 @@ export const Signup: React.FC = () => {
           </MotionCard>
         </Container>
       </Box>
+      {/* Verify Email Dialog */}
+      <Dialog open={verifyDialogOpen} onClose={() => setVerifyDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Verify Your Email</DialogTitle>
+        <DialogContent>
+          A confirmation email has been sent to your registered email address. Please verify your email before logging in.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => window.open('https://mail.google.com', '_blank')}>Open Gmail</Button>
+          <Button onClick={() => setVerifyDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Existing account dialog */}
+      <Dialog open={existingDialogOpen} onClose={() => setExistingDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Account Already Exists</DialogTitle>
+        <DialogContent>
+          You have already registered with this email address. If you have already verified your email, please login to continue.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => navigate(ROUTES.LOGIN)}>Login</Button>
+          <Button onClick={() => setExistingDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Layout>
   );
 };

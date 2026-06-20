@@ -70,9 +70,25 @@ export const userService = {
 // Recruiter operations
 export const recruiterService = {
   async createRecruiterProfile(userId: string, profileData: Partial<Recruiter>) {
+    // Map incoming keys to recruiters table schema
+    const payload: Record<string, unknown> = {
+      id: userId,
+      company_name: profileData.company_name || profileData.companyName || null,
+      company_website: profileData.company_website || profileData.company_website || profileData.company_website || null,
+      company_logo_url: profileData.company_logo_url || profileData.company_logo || profileData.companyLogoUrl || null,
+      industry: profileData.industry || profileData.industryType || null,
+      employee_count: profileData.employee_count || profileData.employeeCount || null,
+      description: profileData.description || profileData.company_description || profileData.companyDescription || null,
+      location: profileData.location || null,
+      company_email: profileData.company_email || profileData.companyEmail || null,
+      company_phone: profileData.company_phone || profileData.companyPhone || null,
+      company_address: profileData.company_address || profileData.companyAddress || null,
+      company_name_original: profileData.company_name || profileData.companyName || null,
+    };
+
     const { data, error } = await supabase
-      .from('profiles')
-      .insert([{ id: userId, role: 'recruiter', ...profileData }])
+      .from('recruiters')
+      .insert([{ ...payload }])
       .select();
     if (error) throw error;
     return data[0];
@@ -80,10 +96,9 @@ export const recruiterService = {
 
   async getRecruiterProfile(userId: string) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('recruiters')
       .select('*')
       .eq('id', userId)
-      .eq('role', 'recruiter')
       .single();
     if (error && error.code !== 'PGRST116') throw error;
     return data || null;

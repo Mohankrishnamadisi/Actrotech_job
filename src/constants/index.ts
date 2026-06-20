@@ -138,6 +138,8 @@ export const ROUTES = {
   SIGNUP: '/signup',
   RECRUITER_REGISTER: '/recruiter/register',
   FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
+  AUTH_CALLBACK: '/auth/callback',
   VERIFY_EMAIL: '/verify-email/:token',
   DASHBOARD: '/dashboard',
   DASHBOARD_PROFILE: '/dashboard/profile',
