@@ -112,6 +112,7 @@ export const JobDetails: React.FC = () => {
   const workModeLabel = job.workMode || job.work_mode || 'Onsite';
   const requiresSubscription = workModeLabel === 'Remote';
   const hasAccess = !requiresSubscription || !!subscription;
+  const showRemotePremium = workModeLabel === 'Remote' && !subscription;
 
   const handleApply = async () => {
     if (!user) {
@@ -185,8 +186,8 @@ export const JobDetails: React.FC = () => {
                     <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
                       {job.title}
                     </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
-                      {job.company_name}
+                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2, ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}>
+                      {showRemotePremium ? 'Upgrade to view company' : job.company_name}
                     </Typography>
                   </Box>
                   <Button variant="text" startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}>
@@ -217,8 +218,8 @@ export const JobDetails: React.FC = () => {
                   {job.positionsAvailable || job.positions_available ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <WorkIcon sx={{ color: 'primary.main' }} />
-                      <Typography variant="body2">
-                        Hiring {job.positionsAvailable || job.positions_available} position{(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}
+                      <Typography variant="body2" sx={showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}}>
+                        {showRemotePremium ? 'Positions hidden • Upgrade' : `Hiring ${job.positionsAvailable || job.positions_available} position${(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}`}
                       </Typography>
                     </Box>
                   ) : null}
