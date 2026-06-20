@@ -18,6 +18,7 @@ import {
   Logout as LogoutIcon,
   Dashboard as DashboardIcon,
   WorkOutline as WorkIcon,
+  Subscriptions as SubscriptionsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -145,6 +146,17 @@ export const Navbar: React.FC = () => {
                 >
                   {user.name}
                 </Typography>
+                {user?.role === USER_ROLES.JOB_SEEKER && (
+                  <IconButton
+                    component={RouterLink}
+                    to={ROUTES.PRICING}
+                    size="small"
+                    sx={{ color: 'text.primary' }}
+                    title="Subscription Plans"
+                  >
+                    <SubscriptionsIcon />
+                  </IconButton>
+                )}
                 <IconButton onClick={handleMenuOpen} size="small">
                   <Avatar
                     src={user.avatar}

@@ -1,10 +1,92 @@
-import React from 'react';
-import { Box, Container, Grid, Card, CardContent, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import {
+  Box,
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Paper,
+  Divider,
+} from '@mui/material';
 import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { SUBSCRIPTION_PLANS } from '@constants/index';
+import { SUBSCRIPTION_PLANS, SUBSCRIPTION_GATEWAY_FEE_PERCENT, SUBSCRIPTION_GST_PERCENT } from '@constants/index';
+import { formatCurrency } from '@utils/index';
+import { useAuthStore } from '@store/index';
+import { subscriptionService, paymentService } from '@services/api';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@constants/index';
+import toast from 'react-hot-toast';
 
 export const Pricing: React.FC = () => {
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const [selectedPlanId, setSelectedPlanId] = useState(SUBSCRIPTION_PLANS[0]?.id || 'basic');
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'phonepe' | 'credit_card' | 'upi'>('razorpay');
+  const [loading, setLoading] = useState(false);
+
+  const selectedPlan = useMemo(
+    () => SUBSCRIPTION_PLANS.find((plan) => plan.id === selectedPlanId) ?? SUBSCRIPTION_PLANS[0],
+    [selectedPlanId]
+  );
+
+  const gatewayFee = useMemo(
+    () => Math.round((selectedPlan.price * SUBSCRIPTION_GATEWAY_FEE_PERCENT) / 100),
+    [selectedPlan.price]
+  );
+
+  const gstAmount = useMemo(
+    () => Math.round(((selectedPlan.price + gatewayFee) * SUBSCRIPTION_GST_PERCENT) / 100),
+    [selectedPlan.price, gatewayFee]
+  );
+
+  const totalAmount = useMemo(
+    () => selectedPlan.price + gatewayFee + gstAmount,
+    [selectedPlan.price, gatewayFee, gstAmount]
+  );
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      toast.error('Please login to subscribe.');
+      navigate(ROUTES.LOGIN);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + selectedPlan.durationMonths);
+
+      const subscription = await subscriptionService.createSubscription(
+        user.id,
+        selectedPlan.id,
+        expiryDate.toISOString()
+      );
+
+      await paymentService.createPayment(user.id, subscription.id, totalAmount, paymentMethod);
+
+      toast.success('Subscription successful! Your premium access is now active.');
+      navigate(ROUTES.DASHBOARD);
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast.error('Failed to complete subscription. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const features = [
     { name: 'Access to Onsite jobs', free: true, basic: true, premium: true, pro: true },
     { name: 'View job details', free: true, basic: true, premium: true, pro: true },
@@ -35,70 +117,141 @@ export const Pricing: React.FC = () => {
           </Typography>
         </Box>
 
-        {/* Plans */}
         <Grid container spacing={3} sx={{ mb: 8 }}>
-          {SUBSCRIPTION_PLANS.map((plan) => (
-            <Grid item xs={12} sm={6} md={4} key={plan.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  border: plan.recommended ? '2px solid' : '1px solid',
-                  borderColor: plan.recommended ? 'primary.main' : 'divider',
-                  transform: plan.recommended ? 'scale(1.05)' : 'scale(1)',
-                }}
-              >
-                {plan.recommended && (
-                  <Box
+          <Grid item xs={12} md={8}>
+            <Grid container spacing={3}>
+              {SUBSCRIPTION_PLANS.map((plan) => (
+                <Grid item xs={12} sm={6} key={plan.id}>
+                  <Card
                     sx={{
-                      position: 'absolute',
-                      top: -12,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: '#1D4ED8',
-                      color: '#FFFFFF',
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: '16px',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      position: 'relative',
+                      border: plan.recommended ? '2px solid' : '1px solid',
+                      borderColor: plan.recommended ? 'primary.main' : 'divider',
+                      transform: plan.recommended ? 'scale(1.03)' : 'scale(1)',
                     }}
                   >
-                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                      Most Popular
-                    </Typography>
-                  </Box>
-                )}
-
-                <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', pt: plan.recommended ? 3 : 2 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-                    {plan.name}
-                  </Typography>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', display: 'inline' }}>
-                      ₹{plan.price}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      /{plan.period}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ mb: 3, flex: 1 }}>
-                    {plan.features.map((feature) => (
-                      <Box key={feature} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <CheckCircleIcon sx={{ fontSize: 18, color: 'success.main' }} />
-                        <Typography variant="body2">{feature}</Typography>
+                    {plan.recommended && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -12,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: '#1D4ED8',
+                          color: '#FFFFFF',
+                          px: 2,
+                          py: 0.5,
+                          borderRadius: '16px',
+                        }}
+                      >
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                          Most Popular
+                        </Typography>
                       </Box>
-                    ))}
-                  </Box>
+                    )}
 
-                  <Button variant={plan.recommended ? 'contained' : 'outlined'} fullWidth>
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', pt: plan.recommended ? 3 : 2 }}>
+                      <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                        {plan.name}
+                      </Typography>
+                      <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
+                        {plan.durationLabel}
+                      </Typography>
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', display: 'inline' }}>
+                          ₹{plan.price}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', ml: 1 }}>
+                          /{plan.period}
+                        </Typography>
+                      </Box>
+
+                      <Box sx={{ mb: 3, flex: 1 }}>
+                        {plan.features.map((feature) => (
+                          <Box key={feature} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <CheckCircleIcon sx={{ fontSize: 18, color: 'success.main' }} />
+                            <Typography variant="body2">{feature}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+
+                      <Button
+                        variant={plan.recommended ? 'contained' : 'outlined'}
+                        fullWidth
+                        onClick={() => setSelectedPlanId(plan.id)}
+                        color={selectedPlanId === plan.id ? 'primary' : 'inherit'}
+                      >
+                        Select {plan.name}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, position: 'sticky', top: 24 }} elevation={3}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                Checkout Summary
+              </Typography>
+
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Plan selected
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+                {selectedPlan.name} • {selectedPlan.durationLabel}
+              </Typography>
+
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Payment method
+              </Typography>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <RadioGroup
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value as any)}
+                >
+                  <FormControlLabel value="razorpay" control={<Radio />} label="Razorpay" />
+                  <FormControlLabel value="phonepe" control={<Radio />} label="PhonePe" />
+                  <FormControlLabel value="upi" control={<Radio />} label="UPI" />
+                  <FormControlLabel value="credit_card" control={<Radio />} label="Credit / Debit Card" />
+                </RadioGroup>
+              </FormControl>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2">Base price</Typography>
+                <Typography variant="body2">{formatCurrency(selectedPlan.price)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2">Gateway fee ({SUBSCRIPTION_GATEWAY_FEE_PERCENT}%)</Typography>
+                <Typography variant="body2">{formatCurrency(gatewayFee)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2">GST ({SUBSCRIPTION_GST_PERCENT}%)</Typography>
+                <Typography variant="body2">{formatCurrency(gstAmount)}</Typography>
+              </Box>
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Total</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{formatCurrency(totalAmount)}</Typography>
+              </Box>
+
+              <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                onClick={handleSubscribe}
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : `Subscribe for ₹${totalAmount}`}
+              </Button>
+            </Paper>
+          </Grid>
         </Grid>
 
         {/* Comparison Table */}

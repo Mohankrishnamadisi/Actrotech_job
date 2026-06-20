@@ -219,7 +219,7 @@ export interface Payment {
   amount: number;
   currency: string;
   status: 'pending' | 'completed' | 'failed';
-  method: 'razorpay' | 'credit_card' | 'upi';
+  method: 'razorpay' | 'phonepe' | 'credit_card' | 'upi';
   transactionId?: string;
   createdAt: string;
 }

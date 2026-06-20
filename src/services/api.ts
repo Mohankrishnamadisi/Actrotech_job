@@ -414,6 +414,7 @@ export const applicationService = {
 // Subscription operations
 export const subscriptionService = {
   async createSubscription(userId: string, plan: string, expiryDate: string) {
+    const startDate = new Date().toISOString();
     const { data, error } = await supabase
       .from('subscriptions')
       .insert([
@@ -421,6 +422,7 @@ export const subscriptionService = {
           user_id: userId,
           plan,
           status: 'active',
+          start_date: startDate,
           end_date: expiryDate,
         },
       ])
@@ -453,7 +455,7 @@ export const subscriptionService = {
 
 // Payment operations
 export const paymentService = {
-  async createPayment(userId: string, subscriptionId: string, amount: number) {
+  async createPayment(userId: string, subscriptionId: string, amount: number, method: 'razorpay' | 'phonepe' | 'credit_card' | 'upi') {
     const { data, error } = await supabase
       .from('payments')
       .insert([
@@ -462,7 +464,8 @@ export const paymentService = {
           subscription_id: subscriptionId,
           amount,
           currency: 'INR',
-          status: 'pending',
+          status: 'completed',
+          method,
         },
       ])
       .select();

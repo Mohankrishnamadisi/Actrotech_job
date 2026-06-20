@@ -31,20 +31,24 @@ export const SUBSCRIPTION_PLANS = [
   {
     id: 'basic',
     name: 'Basic',
+    durationLabel: '1 Month',
     price: 149,
+    durationMonths: 1,
     period: 'month',
     features: [
       'Access to Onsite jobs',
       'View job details',
-      'Save up to 5 jobs',
+      'Save jobs',
       'Email notifications',
     ],
   },
   {
     id: 'premium',
     name: 'Premium',
-    price: 299,
-    period: 'month',
+    durationLabel: '2 Months',
+    price: 249,
+    durationMonths: 2,
+    period: 'months',
     features: [
       'All Basic features',
       'Access to Remote & Hybrid jobs',
@@ -58,8 +62,10 @@ export const SUBSCRIPTION_PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 499,
-    period: 'month',
+    durationLabel: '3 Months',
+    price: 399,
+    durationMonths: 3,
+    period: 'months',
     features: [
       'All Premium features',
       'Early access to new jobs',
@@ -71,6 +77,9 @@ export const SUBSCRIPTION_PLANS = [
     ],
   },
 ];
+
+export const SUBSCRIPTION_GATEWAY_FEE_PERCENT = 2;
+export const SUBSCRIPTION_GST_PERCENT = 18;
 
 export const USER_ROLES = {
   JOB_SEEKER: 'job_seeker',
