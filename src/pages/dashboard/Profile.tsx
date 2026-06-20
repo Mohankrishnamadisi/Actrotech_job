@@ -41,7 +41,7 @@ import { userService } from '@services/api';
 import { EXPERIENCE_LEVELS, GENDER_OPTIONS, INDIAN_STATES } from '@constants/index';
 import { calculateProfileCompletion } from '@utils/index';
 import toast from 'react-hot-toast';
-import type { Certification, Project, Education, WorkExperience } from '@types/index';
+import type { Certification, Project, Education, WorkExperience } from '../../types';
 
 const MotionPaper = motion(Paper);
 

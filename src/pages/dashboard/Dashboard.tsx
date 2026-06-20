@@ -219,14 +219,14 @@ export const Dashboard: React.FC = () => {
 
             <List>
               {[
-                { job: 'React Developer', company: 'Tech Corp', status: 'shortlisted' },
-                { job: 'Full Stack Developer', company: 'Startup Inc', status: 'under_review' },
-                { job: 'Frontend Developer', company: 'Design Studio', status: 'applied' },
+                { job: 'React Developer', company_name: 'Tech Corp', status: 'shortlisted' },
+                { job: 'Full Stack Developer', company_name: 'Startup Inc', status: 'under_review' },
+                { job: 'Frontend Developer', company_name: 'Design Studio', status: 'applied' },
               ].map((app, index) => (
                 <ListItem key={index} sx={{ px: 0 }}>
                   <ListItemText
                     primary={app.job}
-                    secondary={app.company}
+                    secondary={app.company_name}
                   />
                   <Chip
                     label={app.status.replace('_', ' ').toUpperCase()}

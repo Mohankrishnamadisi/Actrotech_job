@@ -20,35 +20,24 @@ import {
   Typography,
   CircularProgress,
   Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  MoreVert as MoreVertIcon,
-  Visibility as ViewIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import type { Job } from '../../types';
 
 interface ManageJobsProps {
   recruiterId: string;
   onJobsChange?: () => void;
-}
-
-interface Job {
-  id: string;
-  title: string;
-  location: string;
-  job_type: string;
-  status: string;
-  created_at: string;
-  description: string;
-  skills: string[];
-  experience: string;
-  education: string;
-  [key: string]: unknown;
 }
 
 export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChange }) => {
@@ -116,17 +105,6 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
     }
   };
 
-  const handleStatusChange = async (jobId: string, newStatus: string) => {
-    try {
-      await jobService.updateJob(jobId, { status: newStatus });
-      toast.success(`Job status changed to ${newStatus}`);
-      fetchJobs();
-    } catch (err) {
-      console.error('Error updating status:', err);
-      toast.error('Failed to update job status');
-    }
-  };
-
   if (loading) {
     return (
       <Card>
@@ -179,7 +157,12 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
                     </TableCell>
                     <TableCell>{job.location}</TableCell>
                     <TableCell>
-                      <Chip label={job.job_type} size="small" variant="outlined" />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Chip label={job.job_type} size="small" variant="outlined" />
+                        {job.work_mode && (
+                          <Chip label={job.work_mode} size="small" variant="outlined" color="secondary" />
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -189,7 +172,7 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
                         variant={job.status === 'published' ? 'filled' : 'outlined'}
                       />
                     </TableCell>
-                    <TableCell>{format(new Date(job.created_at), 'dd MMM yyyy')}</TableCell>
+                    <TableCell>{format(new Date(job.created_at ?? job.createdAt ?? new Date().toISOString()), 'dd MMM yyyy')}</TableCell>
                     <TableCell align="right">
                       <IconButton
                         size="small"
@@ -231,6 +214,32 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
               value={editFormData.location || ''}
               onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
             />
+            <FormControl fullWidth>
+              <InputLabel>Job Type</InputLabel>
+              <Select
+                value={(editFormData.job_type as string) || ''}
+                label="Job Type"
+                onChange={(e) => setEditFormData({ ...editFormData, job_type: e.target.value as Job['job_type'] })}
+              >
+                <MenuItem value="Full-Time">Full-Time</MenuItem>
+                <MenuItem value="Part-Time">Part-Time</MenuItem>
+                <MenuItem value="Contract">Contract</MenuItem>
+                <MenuItem value="Internship">Internship</MenuItem>
+                <MenuItem value="Freelance">Freelance</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Work Mode</InputLabel>
+              <Select
+                value={(editFormData.work_mode as string) || ''}
+                label="Work Mode"
+                onChange={(e) => setEditFormData({ ...editFormData, work_mode: e.target.value as Job['work_mode'] })}
+              >
+                <MenuItem value="Onsite">Onsite</MenuItem>
+                <MenuItem value="Remote">Remote</MenuItem>
+                <MenuItem value="Hybrid">Hybrid</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
               label="Description"

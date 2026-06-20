@@ -1,6 +1,17 @@
 import { supabase } from './supabase';
-import type { JobSeeker, Recruiter, Job, JobApplication, Subscription } from '@types/index';
+import type { JobSeeker, Recruiter, Job } from '../types';
 import { getFreshnessDate } from '@utils/index';
+
+const normalizeJob = (job: Record<string, any>): Job => ({
+  ...job,
+  company_name: job.company_name || job.companyName || '',
+  jobType: job.jobType || job.job_type || job.work_type || undefined,
+  workMode: job.workMode || job.work_mode || undefined,
+  salaryMin: job.salaryMin ?? job.salary_min,
+  salaryMax: job.salaryMax ?? job.salary_max,
+  createdAt: job.createdAt ?? job.created_at,
+  updatedAt: job.updatedAt ?? job.updated_at,
+} as Job);
 
 // User operations
 export const userService = {
@@ -69,13 +80,13 @@ export const userService = {
 
 // Recruiter operations
 export const recruiterService = {
-  async createRecruiterProfile(userId: string, profileData: Partial<Recruiter>) {
+  async createRecruiterProfile(userId: string, profileData: Partial<Recruiter> & Record<string, any>) {
     // Map incoming keys to recruiters table schema
     const payload: Record<string, unknown> = {
       id: userId,
       company_name: profileData.company_name || profileData.companyName || null,
-      company_website: profileData.company_website || profileData.company_website || profileData.company_website || null,
-      company_logo_url: profileData.company_logo_url || profileData.company_logo || profileData.companyLogoUrl || null,
+      company_website: profileData.company_website || profileData.companyWebsite || null,
+      company_logo_url: profileData.company_logo_url || profileData.company_logo || profileData.companyLogo || null,
       industry: profileData.industry || profileData.industryType || null,
       employee_count: profileData.employee_count || profileData.employeeCount || null,
       description: profileData.description || profileData.company_description || profileData.companyDescription || null,
@@ -181,6 +192,9 @@ export const jobService = {
     if (filters?.jobType) {
       query = query.eq('job_type', filters.jobType);
     }
+    if (filters?.workMode) {
+      query = query.eq('work_mode', filters.workMode);
+    }
     if (filters?.category) {
       query = query.contains('skills', [filters.category]);
     }
@@ -202,7 +216,7 @@ export const jobService = {
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw error;
-    return { data: data || [], total: count || 0 };
+    return { data: (data || []).map(normalizeJob), total: count || 0 };
   },
 
   async getJobById(id: string) {
@@ -212,7 +226,7 @@ export const jobService = {
       .eq('id', id)
       .single();
     if (error) throw error;
-    return data;
+    return normalizeJob(data);
   },
 
   async getFeaturedJobs(limit = 6) {
@@ -223,7 +237,7 @@ export const jobService = {
       .eq('status', 'published')
       .limit(limit);
     if (error) throw error;
-    return data;
+    return (data || []).map(normalizeJob);
   },
 
   async getLatestJobs(limit = 10) {
@@ -234,26 +248,56 @@ export const jobService = {
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) throw error;
-    return data;
+    return (data || []).map(normalizeJob);
   },
 
   async createJob(userId: string, jobData: Partial<Job>) {
+    const payload: Record<string, unknown> = {
+      ...jobData,
+      posted_by: userId,
+      status: 'published',
+    };
+
+    if (jobData.jobType && !payload.job_type) {
+      payload.job_type = jobData.jobType;
+    }
+    if (jobData.workMode && !payload.work_mode) {
+      payload.work_mode = jobData.workMode;
+    }
+    // ensure company_name is used; do not send a legacy `company` field
+    if (jobData.company_name && !payload.company_name) {
+      payload.company_name = jobData.company_name;
+    }
+
     const { data, error } = await supabase
       .from('jobs')
-      .insert([{ ...jobData, posted_by: userId, status: 'published' }])
+      .insert([payload])
       .select();
     if (error) throw error;
-    return data[0];
+    return normalizeJob(data?.[0]);
   },
 
   async updateJob(jobId: string, updates: Record<string, unknown>) {
+    const payload: Record<string, unknown> = { ...updates };
+
+    if ((updates as any).jobType && !payload.job_type) {
+      payload.job_type = (updates as any).jobType;
+    }
+    if ((updates as any).workMode && !payload.work_mode) {
+      payload.work_mode = (updates as any).workMode;
+    }
+    // ensure company_name is used; do not set a legacy `company` field
+    if ((updates as any).company_name && !payload.company_name) {
+      payload.company_name = (updates as any).company_name;
+    }
+
     const { data, error } = await supabase
       .from('jobs')
-      .update(updates)
+      .update(payload)
       .eq('id', jobId)
       .select();
     if (error) throw error;
-    return data[0];
+    return normalizeJob(data?.[0]);
   },
 
   async deleteJob(jobId: string) {
@@ -268,7 +312,7 @@ export const jobService = {
       .eq('posted_by', recruiterId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data;
+    return (data || []).map(normalizeJob);
   },
 };
 

@@ -13,7 +13,10 @@ export const JOB_CATEGORIES = [
   'UI/UX Designer',
 ];
 
-export const JOB_TYPES = ['Onsite', 'Remote', 'Hybrid'];
+export const EMPLOYMENT_TYPES = ['Full-Time', 'Part-Time', 'Contract', 'Internship', 'Freelance'];
+export const WORK_MODES = ['Onsite', 'Remote', 'Hybrid'];
+
+export const JOB_TYPES = EMPLOYMENT_TYPES;
 
 export const EXPERIENCE_LEVELS = [
   '0-1 years',
@@ -73,7 +76,7 @@ export const USER_ROLES = {
   JOB_SEEKER: 'job_seeker',
   RECRUITER: 'recruiter',
   ADMIN: 'admin',
-};
+} as const;
 
 export const JOB_APPLICATION_STATUS = {
   APPLIED: 'applied',

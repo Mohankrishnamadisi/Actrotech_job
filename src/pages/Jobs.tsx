@@ -25,8 +25,8 @@ import { JobCard } from '@components/jobs/JobCard';
 import { JobListSkeleton } from '@components/common/LoadingSkeleton';
 import { Error } from '@components/common/Error';
 import { jobService } from '@services/api';
-import { JOB_CATEGORIES, JOB_TYPES, EXPERIENCE_LEVELS, EDUCATION_OPTIONS, FRESHNESS_OPTIONS } from '@constants/index';
-import type { Job } from '@types/index';
+import { JOB_CATEGORIES, EMPLOYMENT_TYPES, WORK_MODES, EXPERIENCE_LEVELS, EDUCATION_OPTIONS, FRESHNESS_OPTIONS } from '@constants/index';
+import type { Job } from '../types';
 
 const MotionPaper = motion(Paper);
 
@@ -46,6 +46,7 @@ export const Jobs: React.FC = () => {
     education: searchParams.get('education') || '',
     freshness: searchParams.get('freshness') || '',
     jobType: [] as string[],
+    workMode: [] as string[],
     category: [] as string[],
   });
 
@@ -57,6 +58,7 @@ export const Jobs: React.FC = () => {
       education: searchParams.get('education') || '',
       freshness: searchParams.get('freshness') || '',
       jobType: [],
+      workMode: [],
       category: [],
     });
     setPage(1);
@@ -74,13 +76,18 @@ export const Jobs: React.FC = () => {
         if (filters.education) params.education = filters.education;
         if (filters.freshness) params.freshness = filters.freshness;
         if (filters.jobType.length > 0) params.jobType = filters.jobType[0];
+        if (filters.workMode.length > 0) params.workMode = filters.workMode[0];
         if (filters.category.length > 0) params.category = filters.category[0];
 
         const { data, total: count } = await jobService.getJobs(params, page, 12);
         setJobs(data);
         setTotal(count);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load jobs');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(String(err) || 'Failed to load jobs');
+        }
       } finally {
         setLoading(false);
       }
@@ -110,6 +117,7 @@ export const Jobs: React.FC = () => {
       education: '',
       freshness: '',
       jobType: [],
+      workMode: [],
       category: [],
     });
     setSearchParams({});
@@ -239,7 +247,7 @@ export const Jobs: React.FC = () => {
                   Job Type
                 </Typography>
                 <FormGroup>
-                  {JOB_TYPES.map((type) => (
+                  {EMPLOYMENT_TYPES.map((type) => (
                     <FormControlLabel
                       key={type}
                       control={
@@ -251,6 +259,28 @@ export const Jobs: React.FC = () => {
                         />
                       }
                       label={type}
+                    />
+                  ))}
+                </FormGroup>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mb: 2.5 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Work Mode
+                </Typography>
+                <FormGroup>
+                  {WORK_MODES.map((mode) => (
+                    <FormControlLabel
+                      key={mode}
+                      control={
+                        <Checkbox
+                          checked={filters.workMode.includes(mode)}
+                          onChange={(e) => {
+                            handleFilterChange('workMode', e.target.checked ? [mode] : []);
+                          }}
+                        />
+                      }
+                      label={mode}
                     />
                   ))}
                 </FormGroup>

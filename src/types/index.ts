@@ -138,10 +138,14 @@ export interface Recruiter extends User {
 export interface Job {
   id: string;
   title: string;
-  company: string;
+  company_name: string;
   companyLogo?: string;
   location: string;
-  job_type?: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance' | 'Onsite' | 'Remote' | 'Hybrid';
+  job_type?: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance';
+  work_type?: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance';
+  jobType?: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance';
+  work_mode?: 'Onsite' | 'Remote' | 'Hybrid';
+  workMode?: 'Onsite' | 'Remote' | 'Hybrid';
   salaryMin?: number;
   salary_min?: number;
   salaryMax?: number;

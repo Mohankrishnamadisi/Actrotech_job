@@ -16,13 +16,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { LocationOn as LocationOnIcon, Work as WorkIcon, MonetizationOn as MonetizationOnIcon, BookmarkBorder as BookmarkBorderIcon, Bookmark as BookmarkIcon, Share as ShareIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
-import { jobService, applicationService } from '@services/api';
+import { jobService } from '@services/api';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
 import { ROUTES } from '@constants/index';
 import toast from 'react-hot-toast';
-import type { Job } from '@types/index';
+import type { Job } from '../types';
 
 export const JobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,10 +33,10 @@ export const JobDetails: React.FC = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
+  const isSaved = false;
 
   useEffect(() => {
     if (!id) return;
@@ -65,7 +65,9 @@ export const JobDetails: React.FC = () => {
       </Layout>
     );
 
-  const requiresSubscription = ['Remote', 'Hybrid'].includes(job.jobType);
+  const jobTypeLabel = job.jobType || job.job_type || 'Job';
+  const workModeLabel = job.workMode || job.work_mode || 'Onsite';
+  const requiresSubscription = ['Remote', 'Hybrid'].includes(workModeLabel);
   const hasAccess = !requiresSubscription || subscription;
 
   const handleApply = async () => {
@@ -107,7 +109,7 @@ export const JobDetails: React.FC = () => {
                       {job.title}
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
-                      {job.company}
+                      {job.company_name}
                     </Typography>
                   </Box>
                   <Button variant="text" startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}>
@@ -123,7 +125,11 @@ export const JobDetails: React.FC = () => {
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <WorkIcon sx={{ color: 'primary.main' }} />
-                    <Typography variant="body2">{job.jobType}</Typography>
+                    <Typography variant="body2">{jobTypeLabel}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <WorkIcon sx={{ color: 'primary.main' }} />
+                    <Typography variant="body2">{workModeLabel}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <MonetizationOnIcon sx={{ color: 'success.main' }} />
@@ -157,7 +163,7 @@ export const JobDetails: React.FC = () => {
 
                 <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(148, 163, 184, 0.1)' }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Posted on {formatDate(job.createdAt)}
+                    Posted on {formatDate(job.createdAt || job.created_at || new Date().toISOString())}
                   </Typography>
                 </Box>
               </CardContent>
@@ -171,7 +177,7 @@ export const JobDetails: React.FC = () => {
                 {!hasAccess && (
                   <Alert severity="info" sx={{ mb: 2 }}>
                     <Typography variant="body2">
-                      This {job.jobType.toLowerCase()} job requires a premium subscription to access.
+                      This {workModeLabel.toLowerCase()} job requires a premium subscription to access.
                     </Typography>
                   </Alert>
                 )}
@@ -194,7 +200,7 @@ export const JobDetails: React.FC = () => {
                   onClick={() => {
                     navigator.share({
                       title: job.title,
-                      text: `Check out this job: ${job.title} at ${job.company}`,
+                      text: `Check out this job: ${job.title} at ${job.company_name}`,
                       url: window.location.href,
                     });
                   }}

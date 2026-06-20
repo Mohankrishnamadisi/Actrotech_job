@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subscriptionService, paymentService } from '@services/api';
-import type { User } from '@types/index';
+import type { User } from '../types';
 
 interface AuthStore {
   user: User | null;

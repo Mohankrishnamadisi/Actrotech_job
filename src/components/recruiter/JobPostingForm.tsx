@@ -10,6 +10,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  SelectChangeEvent,
   MenuItem,
   Chip,
   Box,
@@ -18,7 +19,6 @@ import {
   Alert,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Close as CloseIcon } from '@mui/icons-material';
 import { jobService } from '@services/api';
 import toast from 'react-hot-toast';
 
@@ -29,18 +29,35 @@ interface JobPostingFormProps {
   onJobCreated?: () => void;
 }
 
+interface JobFormData {
+  title: string;
+  description: string;
+  company_name: string;
+  location: string;
+  job_type: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance';
+  work_mode: 'Onsite' | 'Remote' | 'Hybrid';
+  category: string;
+  salary_min: string;
+  salary_max: string;
+  currency: string;
+  experience: string;
+  education: string;
+  application_deadline: string;
+}
+
 export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, recruiterId, onJobCreated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<JobFormData>({
     title: '',
     description: '',
-    company: '',
+    company_name: '',
     location: '',
     job_type: 'Full-Time',
+    work_mode: 'Onsite',
     category: '',
     salary_min: '',
     salary_max: '',
@@ -50,8 +67,11 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     application_deadline: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value } = e.target as { name: string; value: unknown };
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
+  ) => {
+    const name = (e.target as HTMLInputElement).name;
+    const value = e.target.value;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError('');
   };
@@ -68,9 +88,12 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
   };
 
   const validateForm = () => {
+    if (!formData.company_name.trim()) return 'Company name is required';
     if (!formData.title.trim()) return 'Job title is required';
     if (!formData.description.trim()) return 'Job description is required';
     if (!formData.location.trim()) return 'Location is required';
+    if (!formData.job_type) return 'Job type is required';
+    if (!formData.work_mode) return 'Work mode is required';
     if (skills.length === 0) return 'At least one skill is required';
     if (!formData.category) return 'Job category is required';
     if (!formData.experience) return 'Experience level is required';
@@ -91,7 +114,19 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     setLoading(true);
     try {
       await jobService.createJob(recruiterId, {
-        ...formData,
+        company_name: formData.company_name,
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        job_type: formData.job_type,
+        work_mode: formData.work_mode,
+        category: formData.category,
+        education: formData.education,
+        application_deadline: formData.application_deadline,
+        currency: formData.currency,
+        salary_min: formData.salary_min ? Number(formData.salary_min) : undefined,
+        salary_max: formData.salary_max ? Number(formData.salary_max) : undefined,
+        experience: formData.experience,
         skills,
         posted_by: recruiterId,
         status: 'published',
@@ -113,9 +148,10 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     setFormData({
       title: '',
       description: '',
-      company: '',
+      company_name: '',
       location: '',
       job_type: 'Full-Time',
+      work_mode: 'Onsite',
       category: '',
       salary_min: '',
       salary_max: '',
@@ -135,9 +171,20 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <DialogTitle sx={{ fontWeight: 600, fontSize: 20 }}>Post a New Job</DialogTitle>
         <DialogContent dividers sx={{ py: 3 }}>
-          {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')} closable />}
+          {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')} />}
 
           <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Company Name"
+                name="company_name"
+                value={formData.company_name}
+                onChange={handleChange}
+                placeholder="e.g., Acme Solutions"
+              />
+            </Grid>
+
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -182,6 +229,17 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
                   <MenuItem value="Contract">Contract</MenuItem>
                   <MenuItem value="Internship">Internship</MenuItem>
                   <MenuItem value="Freelance">Freelance</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Work Mode</InputLabel>
+                <Select name="work_mode" value={formData.work_mode} onChange={handleChange} label="Work Mode">
+                  <MenuItem value="Onsite">Onsite</MenuItem>
+                  <MenuItem value="Remote">Remote</MenuItem>
+                  <MenuItem value="Hybrid">Hybrid</MenuItem>
                 </Select>
               </FormControl>
             </Grid>

@@ -5,7 +5,7 @@ import { CssBaseline } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 
-import { theme } from '@styles/theme';
+import { theme } from './styles/theme';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';

@@ -5,7 +5,7 @@ import { LocationOn as LocationOnIcon, Work as WorkIcon, TrendingUp as TrendingU
 import { Link as RouterLink } from 'react-router-dom';
 import { getTimeAgo, formatJobSalary } from '@utils/index';
 import { ROUTES } from '@constants/index';
-import type { Job } from '@types/index';
+import type { Job } from '../../types';
 
 const MotionCard = motion(Card);
 
@@ -58,11 +58,11 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
             {job.title}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-            {job.company}
+            {job.company_name}
           </Typography>
           {job.featured && (
             <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
-              Posted {getTimeAgo(job.createdAt)}
+              Posted {getTimeAgo(job.createdAt || job.created_at || new Date().toISOString())}
             </Typography>
           )}
         </Box>
@@ -73,9 +73,17 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false }
             <LocationOnIcon sx={{ fontSize: 18, color: 'primary.main' }} />
             <Typography variant="body2">{job.location}</Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <WorkIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-            <Typography variant="body2">{job.jobType}</Typography>
+            <Typography variant="body2">{job.jobType || job.job_type || 'Type unavailable'}</Typography>
+            {job.workMode || job.work_mode ? (
+              <Chip
+                label={job.workMode || job.work_mode}
+                size="small"
+                variant="outlined"
+                sx={{ ml: 1 }}
+              />
+            ) : null}
           </Box>
           <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 500 }}>
             {formatJobSalary(job.salaryMin, job.salaryMax)}

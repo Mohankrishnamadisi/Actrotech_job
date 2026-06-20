@@ -23,6 +23,7 @@
     "noFallthroughCasesInSwitch": true,
     
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
@@ -30,9 +31,11 @@
       "@services/*": ["src/services/*"],
       "@utils/*": ["src/utils/*"],
       "@hooks/*": ["src/hooks/*"],
+      "@types": ["src/types/index.ts"],
       "@types/*": ["src/types/*"],
       "@constants/*": ["src/constants/*"],
-      "@store/*": ["src/store/*"]
+      "@store/*": ["src/store/*"],
+      "@styles/*": ["src/styles/*"]
     }
   },
   "include": ["src"],
