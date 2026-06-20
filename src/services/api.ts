@@ -110,9 +110,9 @@ export const recruiterService = {
       .from('recruiters')
       .select('*')
       .eq('id', userId)
-      .single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return data || null;
+      .maybeSingle();
+    if (error) throw error;
+    return data ?? null;
   },
 
   async updateRecruiterProfile(userId: string, updates: Record<string, unknown>) {
