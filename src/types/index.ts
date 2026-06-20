@@ -141,30 +141,48 @@ export interface Job {
   company: string;
   companyLogo?: string;
   location: string;
-  jobType: 'Onsite' | 'Remote' | 'Hybrid';
+  job_type?: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance' | 'Onsite' | 'Remote' | 'Hybrid';
   salaryMin?: number;
+  salary_min?: number;
   salaryMax?: number;
+  salary_max?: number;
   experience: string;
   description: string;
   skills: string[];
   applicationLink?: string;
-  postedBy: string;
-  createdAt: string;
-  updatedAt: string;
+  posted_by?: string;
+  postedBy?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
   applicationsCount?: number;
   featured?: boolean;
   status?: 'published' | 'draft' | 'closed';
+  category?: string;
+  education?: string;
+  currency?: string;
+  application_deadline?: string;
+  [key: string]: unknown;
 }
 
 export interface JobApplication {
   id: string;
-  jobId: string;
-  userId: string;
-  resumeUrl: string;
+  jobId?: string;
+  job_id?: string;
+  userId?: string;
+  user_id?: string;
+  resumeUrl?: string;
+  resume_url?: string;
   coverLetter?: string;
+  cover_letter?: string;
   status: 'applied' | 'under_review' | 'shortlisted' | 'rejected' | 'accepted';
-  appliedAt: string;
-  updatedAt: string;
+  appliedAt?: string;
+  applied_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  profiles?: any;
+  [key: string]: unknown;
 }
 
 export interface Subscription {
@@ -199,6 +217,40 @@ export interface Notification {
   read: boolean;
   data?: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  recipientId: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface SavedJob {
+  id: string;
+  userId: string;
+  jobId: string;
+  createdAt: string;
+}
+
+export interface JobStats {
+  total_applications: number;
+  applied: number;
+  under_review: number;
+  shortlisted: number;
+  rejected: number;
+  accepted: number;
+  saved: number;
+}
+
+export interface RecruiterStats {
+  active_jobs: number;
+  total_jobs: number;
+  total_applicants: number;
+  shortlisted: number;
+  rejected: number;
 }
 
 export interface AuthResponse {
