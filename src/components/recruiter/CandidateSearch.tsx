@@ -69,10 +69,19 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
 
     try {
       const searchFilters: Record<string, unknown> = {};
-      if (filters.title) searchFilters.title = filters.title;
-      if (filters.location) searchFilters.location = filters.location;
-      if (filters.skills) searchFilters.skills = filters.skills.split(',').map((s) => s.trim());
-      if (filters.experience) searchFilters.experience = parseInt(filters.experience);
+      if (filters.title.trim()) searchFilters.title = filters.title.trim();
+      if (filters.location.trim()) searchFilters.location = filters.location.trim();
+
+      const skillValues = filters.skills
+        .split(',')
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+      if (skillValues.length) searchFilters.skills = skillValues;
+
+      const experienceValue = Number(filters.experience);
+      if (!Number.isNaN(experienceValue) && filters.experience !== '') {
+        searchFilters.experience = experienceValue;
+      }
 
       const result = await candidateService.searchCandidates(searchFilters);
       setSearchResults(result.data || []);
@@ -174,6 +183,11 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                 startIcon={<SearchIcon />}
                 disabled={loading}
                 fullWidth
+                sx={{
+                  background: 'linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%)',
+                  boxShadow: '0 16px 32px rgba(59, 130, 246, 0.18)',
+                  py: 1.25,
+                }}
               >
                 {loading ? 'Searching...' : 'Search Candidates'}
               </Button>

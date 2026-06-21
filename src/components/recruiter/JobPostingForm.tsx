@@ -197,10 +197,44 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: 'calc(100vh - 80px)',
+          overflow: 'hidden',
+        },
+      }}
+    >
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <DialogTitle sx={{ fontWeight: 600, fontSize: 20 }}>Post a New Job</DialogTitle>
-        <DialogContent dividers sx={{ py: 3 }}>
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            fontSize: 20,
+            background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+            color: '#FFFFFF',
+            py: 2,
+            textAlign: 'center',
+          }}
+        >
+          Post a Job
+        </DialogTitle>
+        <DialogContent
+          dividers
+          sx={{
+            py: 3,
+            background: '#F8FAFC',
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
           {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')} />}
 
           <Grid container spacing={2}>

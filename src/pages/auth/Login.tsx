@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Google as GoogleIcon } from '@mui/icons-material';
+import { motion } from 'framer-motion';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
@@ -103,85 +104,122 @@ export const Login: React.FC = () => {
 
   return (
     <Layout footer={false}>
-      <Container maxWidth="sm" sx={{ py: 6 }}>
-        <Card sx={{ p: 4 }}>
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              Login
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Welcome back! Sign in to your account
-            </Typography>
-          </Box>
-
-          <form onSubmit={handleLogin}>
-            <TextField
-              fullWidth
-              label="Email Address"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={!!errors.email}
-              helperText={errors.email}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={!!errors.password}
-              helperText={errors.password}
-              sx={{ mb: 1 }}
-            />
-
-            <Link
-              component={RouterLink}
-              to={ROUTES.FORGOT_PASSWORD}
-              sx={{ fontSize: '0.875rem', display: 'block', mb: 3 }}
+      <Box
+        sx={{
+          minHeight: '100vh',
+          py: 10,
+          background: 'radial-gradient(circle at top left, rgba(59,130,246,0.18), transparent 28%), radial-gradient(circle at bottom right, rgba(245,158,11,0.14), transparent 30%), linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%)',
+        }}
+      >
+        <Container maxWidth="sm">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card
+              sx={{
+                p: 4,
+                borderRadius: 5,
+                border: '1px solid rgba(37, 99, 235, 0.12)',
+                boxShadow: '0 28px 80px rgba(15, 23, 42, 0.08)',
+                backdropFilter: 'blur(8px)',
+                position: 'relative',
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255,255,255,0.95)',
+              }}
             >
-              Forgot Password?
-            </Link>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'radial-gradient(circle at top right, rgba(59,130,246,0.14), transparent 30%), radial-gradient(circle at bottom left, rgba(245,158,11,0.12), transparent 28%)',
+                  pointerEvents: 'none',
+                }}
+              />
+              <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', mb: 4 }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
+                  Welcome Back
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 1 }}>
+                  Securely access your dashboard and discover premium opportunities.
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Premium jobs, smart matching, and lightning-fast applications.
+                </Typography>
+              </Box>
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              disabled={loading}
-              sx={{ py: 1.5, mb: 2 }}
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
+              <form onSubmit={handleLogin}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  sx={{ mb: 2 }}
+                />
 
-          <Divider sx={{ my: 3 }}>OR</Divider>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  sx={{ mb: 1 }}
+                />
 
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<GoogleIcon />}
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            sx={{ mb: 3 }}
-          >
-            Login with Google
-          </Button>
+                <Link
+                  component={RouterLink}
+                  to={ROUTES.FORGOT_PASSWORD}
+                  sx={{ fontSize: '0.875rem', display: 'block', mb: 3 }}
+                >
+                  Forgot Password?
+                </Link>
 
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Don't have an account?{' '}
-              <Link component={RouterLink} to={ROUTES.SIGNUP}>
-                Sign Up
-              </Link>
-            </Typography>
-          </Box>
-        </Card>
-      </Container>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  disabled={loading}
+                  sx={{
+                    py: 1.5,
+                    mb: 2,
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                    boxShadow: '0 14px 30px rgba(37, 99, 235, 0.18)',
+                  }}
+                >
+                  {loading ? 'Logging in...' : 'Login'}
+                </Button>
+              </form>
+
+              <Divider sx={{ my: 3 }}>OR</Divider>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<GoogleIcon />}
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                sx={{ mb: 3, textTransform: 'none' }}
+              >
+                Login with Google
+              </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Don't have an account?{' '}
+                  <Link component={RouterLink} to={ROUTES.SIGNUP}>
+                    Sign Up
+                  </Link>
+                </Typography>
+              </Box>
+            </Card>
+          </motion.div>
+        </Container>
+      </Box>
     </Layout>
   );
 };

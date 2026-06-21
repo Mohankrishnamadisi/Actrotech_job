@@ -146,17 +146,39 @@ export const RecruiterDashboard: React.FC = () => {
     { label: 'Total Jobs', value: stats.total_jobs, icon: BusinessIcon, color: '#8B5CF6' },
   ];
 
+  const averageApplicants = stats.total_jobs ? Math.round(stats.total_applicants / stats.total_jobs) : 0;
+  const shortlistRate = stats.total_applicants ? Math.round((stats.shortlisted / stats.total_applicants) * 100) : 0;
+  const rejectionRate = stats.total_applicants ? Math.round((stats.rejected / stats.total_applicants) * 100) : 0;
+  const activitySummary =
+    stats.total_jobs === 0
+      ? 'No jobs posted yet. Post a job to start winning top talent.'
+      : `You currently have ${stats.active_jobs} active job posting(s) and ${stats.total_applicants} applicants across ${stats.total_jobs} jobs. Shortlist rate is ${shortlistRate}% and average applicants per job is ${averageApplicants}.`;
+
   return (
     <Layout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
+        <Box
+          sx={{
+            mb: 4,
+            p: 4,
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, rgba(55, 48, 163, 0.12), rgba(245, 158, 11, 0.12))',
+            border: '1px solid rgba(245, 158, 11, 0.18)',
+            boxShadow: '0 20px 60px rgba(15, 23, 42, 0.08)',
+          }}
+        >
+          <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
             Recruiter Dashboard
           </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            Welcome back, {recruiterProfile?.company_name || user?.name}! Manage your hiring effortlessly.
+          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2, maxWidth: 720 }}>
+            Welcome back, {recruiterProfile?.company_name || user?.name}! Manage your hiring with elevated clarity and curated insights.
           </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+              {activitySummary}
+            </Typography>
+          </Box>
         </Box>
 
         {/* Quick Stats */}
@@ -269,15 +291,25 @@ export const RecruiterDashboard: React.FC = () => {
         </Grid>
 
         {/* Tabs Section */}
-        <Card sx={{ boxShadow: 2 }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Card
+          sx={{
+            boxShadow: '0 28px 70px rgba(15, 23, 42, 0.08)',
+            borderRadius: 3,
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.1), rgba(245,158,11,0.1))' }}>
             <Tabs
               value={currentTab}
               onChange={(_, newValue) => setCurrentTab(newValue)}
               sx={{
-                '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 },
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  minHeight: 56,
+                },
                 '& .Mui-selected': { color: '#1D4ED8' },
-                '& .MuiTabs-indicator': { backgroundColor: '#1D4ED8' },
+                '& .MuiTabs-indicator': { backgroundColor: '#1D4ED8', height: 4, borderRadius: 2 },
               }}
             >
               <Tab label="Dashboard Overview" id="recruiter-tab-0" aria-controls="recruiter-tabpanel-0" />
@@ -296,30 +328,41 @@ export const RecruiterDashboard: React.FC = () => {
                 <Grid item xs={12}>
                   <MotionCard initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                        Welcome to Your Recruiter Dashboard
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                        Dashboard Overview
                       </Typography>
-                      <Alert severity="info" sx={{ mb: 2 }}>
-                        You can now post jobs for free, manage applicants, search candidates, and communicate with
-                        them directly through our chat system!
-                      </Alert>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.8 }}>
-                        • <strong>Post Jobs:</strong> Create job postings with detailed requirements and qualifications.
-                        <br />
-                        • <strong>Manage Jobs:</strong> Edit, delete, or change the status of your job postings.
-                        <br />
-                        • <strong>View Applicants:</strong> See all candidates who have applied for your jobs and manage
-                        their application status.
-                        <br />
-                        • <strong>Search Candidates:</strong> Browse and search through our candidate pool by skills,
-                        experience, and location.
-                        <br />
-                        • <strong>Chat System:</strong> Communicate directly with candidates without leaving the
-                        platform.
-                        <br />
-                        • <strong>Company Profile:</strong> Update your company information, logo, and HR contact
-                        details.
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, lineHeight: 1.8 }}>
+                        {activitySummary}
                       </Typography>
+
+                      <Grid container spacing={2}>
+                        {[
+                          { label: 'Average Applicants / Job', value: averageApplicants, accent: '#A78BFA' },
+                          { label: 'Shortlist Rate', value: `${shortlistRate}%`, accent: '#FBBF24' },
+                          { label: 'Rejection Rate', value: `${rejectionRate}%`, accent: '#EF4444' },
+                          { label: 'Active Job Pulse', value: stats.active_jobs, accent: '#22C55E' },
+                        ].map((item) => (
+                          <Grid item xs={12} sm={6} md={3} key={item.label}>
+                            <Card
+                              sx={{
+                                background: `${item.accent}12`,
+                                border: `1px solid ${item.accent}33`,
+                                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+                                borderRadius: 3,
+                              }}
+                            >
+                              <CardContent>
+                                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, fontWeight: 600 }}>
+                                  {item.label}
+                                </Typography>
+                                <Typography variant="h4" sx={{ fontWeight: 800, color: item.accent }}>
+                                  {item.value}
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
                     </CardContent>
                   </MotionCard>
                 </Grid>
@@ -327,13 +370,20 @@ export const RecruiterDashboard: React.FC = () => {
                 <Grid item xs={12} md={6}>
                   <MotionCard initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                     <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                         Recent Activity
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                         {stats.total_jobs === 0
-                          ? 'No jobs posted yet. Click "Post New Job" to get started!'
-                          : `You have ${stats.active_jobs} active job(s) and ${stats.total_applicants} total applicant(s)`}
+                          ? 'No jobs posted yet. Click "Post New Job" to get started and begin attracting top candidates.'
+                          : `You currently manage ${stats.total_jobs} job postings with ${stats.total_applicants} total applicants. Stay focused on the roles that are driving the most interest.`}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.8 }}>
+                        • Keep high-priority openings active to capture qualified talent quickly.
+                        <br />
+                        • Shortlist strong applicants early to move faster than competing employers.
+                        <br />
+                        • Update role descriptions once per week to keep candidate flow fresh.
                       </Typography>
                     </CardContent>
                   </MotionCard>
@@ -342,15 +392,18 @@ export const RecruiterDashboard: React.FC = () => {
                 <Grid item xs={12} md={6}>
                   <MotionCard initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                     <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                        Quick Tips
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                        Recruitment Insights
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        • Make your job postings detailed and clear for better candidates matches.
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                        Use this dashboard to evaluate the health of your hiring funnel. Focus on roles with growing applicant volume and shorter shortlist ratios for faster outcomes.
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.8 }}>
+                        • Update your company profile regularly to build trust.
                         <br />
-                        • Respond to applicants quickly to get the best talent.
+                        • Review applicant status daily for maximum efficiency.
                         <br />
-                        • Update your company profile to attract more candidates.
+                        • Leverage chat to convert top candidates before they accept other offers.
                       </Typography>
                     </CardContent>
                   </MotionCard>

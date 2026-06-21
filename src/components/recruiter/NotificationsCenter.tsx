@@ -56,9 +56,10 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
   }, [userId]);
 
   const fetchNotifications = async () => {
+    setLoading(true);
     try {
       const data = await notificationService.getUserNotifications(userId, 20);
-      setNotifications(data || []);
+      setNotifications((data || []).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     } catch (err) {
       console.error('Error fetching notifications:', err);
     } finally {
@@ -79,11 +80,12 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
   const handleMarkAllAsRead = async () => {
     try {
       await notificationService.markAllAsRead(userId);
-      fetchNotifications();
+      await fetchNotifications();
       onNotificationRead?.();
       toast.success('All notifications marked as read');
     } catch (err) {
       console.error('Error marking all as read:', err);
+      toast.error('Failed to mark all as read');
     }
   };
 

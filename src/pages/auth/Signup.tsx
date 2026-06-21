@@ -264,8 +264,8 @@ export const Signup: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          py: 4,
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFC 55%)',
+          py: 6,
+          background: 'radial-gradient(circle at top left, rgba(59,130,246,0.18), transparent 28%), radial-gradient(circle at bottom right, rgba(234, 179, 8, 0.16), transparent 28%), linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%)',
         }}
       >
         <Container maxWidth="md">
@@ -281,238 +281,461 @@ export const Signup: React.FC = () => {
               Create Your Account
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Join India's leading job portal — complete your profile in 3 easy steps
+              Join India's leading job portal — complete your profile in 3 easy steps.
             </Typography>
           </Box>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label, index) => (
-              <Step key={label}>
-                <StepLabel
-                  StepIconComponent={() => (
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background:
-                          activeStep >= index
-                            ? '#1D4ED8'
-                            : '#D9E2EF',
-                        color: '#fff',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {index === 0 ? <PersonIcon sx={{ fontSize: 18 }} /> :
-                       index === 1 ? <SchoolIcon sx={{ fontSize: 18 }} /> :
-                       <WorkIcon sx={{ fontSize: 18 }} />}
-                    </Box>
-                  )}
-                >
-                  {label}
-                </StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          <MotionCard
-            sx={{ p: { xs: 3, md: 4 } }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+          <Card
+            sx={{
+              borderRadius: 5,
+              boxShadow: '0 28px 80px rgba(15, 23, 42, 0.08)',
+              border: '1px solid rgba(37, 99, 235, 0.12)',
+              mb: 4,
+              overflow: 'hidden',
+            }}
           >
-            {activeStep === 0 && (
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Full Name *" name="fullName" value={formData.fullName}
-                    onChange={handleChange} error={!!errors.fullName} helperText={errors.fullName} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Email *" name="email" type="email" value={formData.email}
-                    onChange={handleChange} error={!!errors.email} helperText={errors.email} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Mobile Number *" name="phone" value={formData.phone}
-                    onChange={handleChange} error={!!errors.phone} helperText={errors.phone}
-                    placeholder="10-digit mobile number"
-                    InputProps={{ startAdornment: <InputAdornment position="start">+91</InputAdornment> }} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={!!errors.gender}>
-                    <InputLabel>Gender *</InputLabel>
-                    <Select name="gender" value={formData.gender} onChange={handleChange} label="Gender *">
-                      {GENDER_OPTIONS.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-                    </Select>
-                    {errors.gender && <Typography variant="caption" color="error">{errors.gender}</Typography>}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Password *" name="password" type="password" value={formData.password}
-                    onChange={handleChange} error={!!errors.password} helperText={errors.password} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Confirm Password *" name="confirmPassword" type="password"
-                    value={formData.confirmPassword} onChange={handleChange}
-                    error={!!errors.confirmPassword} helperText={errors.confirmPassword} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Date of Birth *" name="dateOfBirth" type="date"
-                    value={formData.dateOfBirth} onChange={handleChange}
-                    error={!!errors.dateOfBirth} helperText={errors.dateOfBirth}
-                    InputLabelProps={{ shrink: true }} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <input type="file" id="profile-img" accept="image/*" hidden
-                      onChange={(e) => handleFileChange(e, 'profile')} />
-                    <Button component="label" htmlFor="profile-img" variant="outlined" fullWidth
-                      startIcon={<CloudUploadIcon />} sx={{ height: 56 }}>
-                      Profile Photo (Optional)
-                    </Button>
-                    {profileImage && (
-                      <Typography variant="caption" color="success.main">✓ {profileImage.name}</Typography>
-                    )}
-                  </Box>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField fullWidth label="Address *" name="address" value={formData.address}
-                    onChange={handleChange} error={!!errors.address} helperText={errors.address} multiline rows={2} />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField fullWidth label="City *" name="city" value={formData.city}
-                    onChange={handleChange} error={!!errors.city} helperText={errors.city} />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth error={!!errors.state}>
-                    <InputLabel>State *</InputLabel>
-                    <Select name="state" value={formData.state} onChange={handleChange} label="State *">
-                      {INDIAN_STATES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField fullWidth label="Country *" name="country" value={formData.country}
-                    onChange={handleChange} error={!!errors.country} helperText={errors.country} />
-                </Grid>
-              </Grid>
-            )}
-
-            {activeStep === 1 && (
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <FormControl fullWidth error={!!errors.education}>
-                    <InputLabel>Highest Education *</InputLabel>
-                    <Select name="education" value={formData.education} onChange={handleChange} label="Highest Education *">
-                      {['10th', '12th', 'Diploma', "Bachelor's", "Master's", 'PhD'].map((e) => (
-                        <MenuItem key={e} value={e}>{e}</MenuItem>
-                      ))}
-                    </Select>
-                    {errors.education && <Typography variant="caption" color="error">{errors.education}</Typography>}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Skills *</Typography>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <TextField fullWidth size="small" placeholder="e.g. React, Python, SQL"
-                      value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())} />
-                    <Button variant="contained" onClick={handleAddSkill} startIcon={<AddIcon />}>Add</Button>
-                  </Box>
-                  {errors.skills && <Typography variant="caption" color="error" sx={{ display: 'block', mb: 1 }}>{errors.skills}</Typography>}
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {formData.skills.map((skill) => (
-                      <Chip key={skill} label={skill} color="primary" variant="outlined"
-                        onDelete={() => setFormData((prev) => ({
-                          ...prev, skills: prev.skills.filter((s) => s !== skill),
-                        }))} />
-                    ))}
-                  </Box>
-                </Grid>
-              </Grid>
-            )}
-
-            {activeStep === 2 && (
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={!!errors.experience}>
-                    <InputLabel>Total Experience *</InputLabel>
-                    <Select name="experience" value={formData.experience} onChange={handleChange} label="Total Experience *">
-                      {EXPERIENCE_LEVELS.map((l) => <MenuItem key={l} value={l}>{l}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={!!errors.noticePeriod}>
-                    <InputLabel>Notice Period *</InputLabel>
-                    <Select name="noticePeriod" value={formData.noticePeriod} onChange={handleChange} label="Notice Period *">
-                      {NOTICE_PERIOD_OPTIONS.map((n) => <MenuItem key={n} value={n}>{n}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Current Company" name="currentCompany"
-                    value={formData.currentCompany} onChange={handleChange} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Current CTC (LPA)" name="currentCtc"
-                    value={formData.currentCtc} onChange={handleChange} placeholder="e.g. 8" />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Expected CTC (LPA)" name="expectedCtc"
-                    value={formData.expectedCtc} onChange={handleChange} placeholder="e.g. 12" />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="LinkedIn URL" name="linkedinUrl"
-                    value={formData.linkedinUrl} onChange={handleChange}
-                    error={!!errors.linkedinUrl} helperText={errors.linkedinUrl} />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField fullWidth label="Portfolio URL" name="portfolioUrl"
-                    value={formData.portfolioUrl} onChange={handleChange}
-                    error={!!errors.portfolioUrl} helperText={errors.portfolioUrl} />
-                </Grid>
-                <Grid item xs={12}>
-                  <Box sx={{
-                    p: 3, border: '2px dashed', borderColor: errors.resume ? 'error.main' : 'primary.main',
-                    borderRadius: 2, textAlign: 'center',
-                    background: '#F8FAFC',
-                  }}>
-                    <input type="file" id="resume-upload" accept=".pdf,.doc,.docx" hidden
-                      onChange={(e) => handleFileChange(e, 'resume')} />
-                    <Button component="label" htmlFor="resume-upload" variant="contained"
-                      startIcon={<CloudUploadIcon />}>Upload Resume *</Button>
-                    <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
-                      PDF or Word document (Max 10MB)
-                    </Typography>
-                    {resume && <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1 }}>✓ {resume.name}</Typography>}
-                    {errors.resume && <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>{errors.resume}</Typography>}
-                  </Box>
-                </Grid>
-              </Grid>
-            )}
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-              <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">Back</Button>
-              {activeStep < steps.length - 1 ? (
-                <Button variant="contained" onClick={handleNext}>Continue</Button>
-              ) : (
-                <Button variant="contained" onClick={handleSignup} disabled={loading}>
-                  {loading ? 'Creating Account...' : 'Complete Registration'}
-                </Button>
-              )}
-            </Box>
-
-            <Box sx={{ textAlign: 'center', mt: 3 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Already have an account?{' '}
-                <Link component={RouterLink} to={ROUTES.LOGIN}>Login</Link>
+            <Box sx={{ p: 4, background: 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(245,158,11,0.12))' }}>
+              <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+                Create Your Account
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                Join India's leading job portal — complete your profile in 3 easy steps.
               </Typography>
             </Box>
-          </MotionCard>
+            <Box sx={{ p: 4 }}>
+              <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+                {steps.map((label, index) => (
+                  <Step key={label}>
+                    <StepLabel
+                      StepIconComponent={() => (
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: activeStep >= index ? '#1D4ED8' : '#D9E2EF',
+                            color: activeStep >= index ? '#FFFFFF' : '#64748B',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {index === 0 ? <PersonIcon sx={{ fontSize: 18 }} /> :
+                           index === 1 ? <SchoolIcon sx={{ fontSize: 18 }} /> :
+                           <WorkIcon sx={{ fontSize: 18 }} />}
+                        </Box>
+                      )}
+                    >
+                      {label}
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+
+              <MotionCard
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 4,
+                  border: '1px solid rgba(37, 99, 235, 0.12)',
+                  background: '#FFFFFF',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {activeStep === 0 && (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Full Name *"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        error={!!errors.fullName}
+                        helperText={errors.fullName}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Email *"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        error={!!errors.email}
+                        helperText={errors.email}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Mobile Number *"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        error={!!errors.phone}
+                        helperText={errors.phone}
+                        placeholder="10-digit mobile number"
+                        InputProps={{ startAdornment: <InputAdornment position="start">+91</InputAdornment> }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={!!errors.gender}>
+                        <InputLabel>Gender *</InputLabel>
+                        <Select name="gender" value={formData.gender} onChange={handleChange} label="Gender *">
+                          {GENDER_OPTIONS.map((g) => (
+                            <MenuItem key={g} value={g}>
+                              {g}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.gender && (
+                          <Typography variant="caption" color="error">
+                            {errors.gender}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Password *"
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        error={!!errors.password}
+                        helperText={errors.password}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Confirm Password *"
+                        name="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        error={!!errors.confirmPassword}
+                        helperText={errors.confirmPassword}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Date of Birth *"
+                        name="dateOfBirth"
+                        type="date"
+                        value={formData.dateOfBirth}
+                        onChange={handleChange}
+                        error={!!errors.dateOfBirth}
+                        helperText={errors.dateOfBirth}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Box>
+                        <input
+                          type="file"
+                          id="profile-img"
+                          accept="image/*"
+                          hidden
+                          onChange={(e) => handleFileChange(e, 'profile')}
+                        />
+                        <Button
+                          component="label"
+                          htmlFor="profile-img"
+                          variant="outlined"
+                          fullWidth
+                          startIcon={<CloudUploadIcon />}
+                          sx={{ height: 56 }}
+                        >
+                          Profile Photo (Optional)
+                        </Button>
+                        {profileImage && (
+                          <Typography variant="caption" color="success.main">
+                            ✓ {profileImage.name}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Address *"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        error={!!errors.address}
+                        helperText={errors.address}
+                        multiline
+                        rows={2}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        label="City *"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        error={!!errors.city}
+                        helperText={errors.city}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <FormControl fullWidth error={!!errors.state}>
+                        <InputLabel>State *</InputLabel>
+                        <Select
+                          name="state"
+                          value={formData.state}
+                          onChange={handleChange}
+                          label="State *"
+                        >
+                          {INDIAN_STATES.map((s) => (
+                            <MenuItem key={s} value={s}>
+                              {s}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        label="Country *"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        error={!!errors.country}
+                        helperText={errors.country}
+                      />
+                    </Grid>
+                  </Grid>
+                )}
+
+                {activeStep === 1 && (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth error={!!errors.education}>
+                        <InputLabel>Highest Education *</InputLabel>
+                        <Select
+                          name="education"
+                          value={formData.education}
+                          onChange={handleChange}
+                          label="Highest Education *"
+                        >
+                          {['10th', '12th', 'Diploma', "Bachelor's", "Master's", 'PhD'].map((e) => (
+                            <MenuItem key={e} value={e}>
+                              {e}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.education && (
+                          <Typography variant="caption" color="error">
+                            {errors.education}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                        Skills *
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder="e.g. React, Python, SQL"
+                          value={skillInput}
+                          onChange={(e) => setSkillInput(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                        />
+                        <Button variant="contained" onClick={handleAddSkill} startIcon={<AddIcon />}>
+                          Add
+                        </Button>
+                      </Box>
+                      {errors.skills && (
+                        <Typography variant="caption" color="error" sx={{ display: 'block', mb: 1 }}>
+                          {errors.skills}
+                        </Typography>
+                      )}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {formData.skills.map((skill) => (
+                          <Chip
+                            key={skill}
+                            label={skill}
+                            color="primary"
+                            variant="outlined"
+                            onDelete={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                skills: prev.skills.filter((s) => s !== skill),
+                              }))
+                            }
+                          />
+                        ))}
+                      </Box>
+                    </Grid>
+                  </Grid>
+                )}
+
+                {activeStep === 2 && (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={!!errors.experience}>
+                        <InputLabel>Total Experience *</InputLabel>
+                        <Select
+                          name="experience"
+                          value={formData.experience}
+                          onChange={handleChange}
+                          label="Total Experience *"
+                        >
+                          {EXPERIENCE_LEVELS.map((l) => (
+                            <MenuItem key={l} value={l}>
+                              {l}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={!!errors.noticePeriod}>
+                        <InputLabel>Notice Period *</InputLabel>
+                        <Select
+                          name="noticePeriod"
+                          value={formData.noticePeriod}
+                          onChange={handleChange}
+                          label="Notice Period *"
+                        >
+                          {NOTICE_PERIOD_OPTIONS.map((n) => (
+                            <MenuItem key={n} value={n}>
+                              {n}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Current Company"
+                        name="currentCompany"
+                        value={formData.currentCompany}
+                        onChange={handleChange}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Current CTC (LPA)"
+                        name="currentCtc"
+                        value={formData.currentCtc}
+                        onChange={handleChange}
+                        placeholder="e.g. 8"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Expected CTC (LPA)"
+                        name="expectedCtc"
+                        value={formData.expectedCtc}
+                        onChange={handleChange}
+                        placeholder="e.g. 12"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="LinkedIn URL"
+                        name="linkedinUrl"
+                        value={formData.linkedinUrl}
+                        onChange={handleChange}
+                        error={!!errors.linkedinUrl}
+                        helperText={errors.linkedinUrl}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Portfolio URL"
+                        name="portfolioUrl"
+                        value={formData.portfolioUrl}
+                        onChange={handleChange}
+                        error={!!errors.portfolioUrl}
+                        helperText={errors.portfolioUrl}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box
+                        sx={{
+                          p: 3,
+                          border: '2px dashed',
+                          borderColor: errors.resume ? 'error.main' : 'primary.main',
+                          borderRadius: 2,
+                          textAlign: 'center',
+                          background: '#F8FAFC',
+                        }}
+                      >
+                        <input
+                          type="file"
+                          id="resume-upload"
+                          accept=".pdf,.doc,.docx"
+                          hidden
+                          onChange={(e) => handleFileChange(e, 'resume')}
+                        />
+                        <Button component="label" htmlFor="resume-upload" variant="contained" startIcon={<CloudUploadIcon />}>
+                          Upload Resume *
+                        </Button>
+                        <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+                          PDF or Word document (Max 10MB)
+                        </Typography>
+                        {resume && (
+                          <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1 }}>
+                            ✓ {resume.name}
+                          </Typography>
+                        )}
+                        {errors.resume && (
+                          <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+                            {errors.resume}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                  </Grid>
+                )}
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                  <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">
+                    Back
+                  </Button>
+                  {activeStep < steps.length - 1 ? (
+                    <Button variant="contained" onClick={handleNext}>
+                      Continue
+                    </Button>
+                  ) : (
+                    <Button variant="contained" onClick={handleSignup} disabled={loading}>
+                      {loading ? 'Creating Account...' : 'Complete Registration'}
+                    </Button>
+                  )}
+                </Box>
+
+                <Box sx={{ textAlign: 'center', mt: 3 }}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    Already have an account?{' '}
+                    <Link component={RouterLink} to={ROUTES.LOGIN}>
+                      Login
+                    </Link>
+                  </Typography>
+                </Box>
+              </MotionCard>
+            </Box>
+          </Card>
         </Container>
       </Box>
       {/* Verify Email Dialog */}

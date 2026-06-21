@@ -161,65 +161,117 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     );
   }
 
+  const selectedJob = jobs.find((job) => job.id === selectedJobId) || jobs[0];
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <Card>
         <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
             View Applicants
           </Typography>
 
-          {/* Job Selection */}
-          <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
-              Select Job
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {jobs.map((job) => (
-                <Chip
-                  key={job.id}
-                  label={job.title}
-                  onClick={() => setSelectedJobId(job.id)}
-                  variant={selectedJobId === job.id ? 'filled' : 'outlined'}
-                  color={selectedJobId === job.id ? 'primary' : 'default'}
-                  sx={{ cursor: 'pointer' }}
-                />
-              ))}
-            </Box>
-          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12} lg={4}>
+              <Card
+                sx={{
+                  border: '1px solid rgba(148, 163, 184, 0.24)',
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+                  borderRadius: 3,
+                }}
+              >
+                <CardContent>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: 'text.secondary' }}>
+                    Jobs ordered by post date
+                  </Typography>
+                  <Box sx={{ display: 'grid', gap: 1.25 }}>
+                    {jobs.map((job) => (
+                      <Box
+                        key={job.id}
+                        onClick={() => setSelectedJobId(job.id)}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          cursor: 'pointer',
+                          border: selectedJobId === job.id ? '1px solid #1D4ED8' : '1px solid rgba(148, 163, 184, 0.24)',
+                          backgroundColor: selectedJobId === job.id ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: 'rgba(59, 130, 246, 0.06)',
+                          },
+                        }}
+                      >
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>
+                          {job.title}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          Posted {format(new Date(job.created_at), 'dd MMM yyyy')}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          {/* Status Filter Tabs */}
-          <Tabs
-            value={statusFilter}
-            onChange={(_, value) => setStatusFilter(value)}
-            sx={{ mb: 2, borderBottom: '1px solid #e0e0e0' }}
-          >
-            <Tab
-              label={`All (${applicants.length})`}
-              value="all"
-              sx={{ textTransform: 'none' }}
-            />
-            <Tab
-              label={`Applied (${statusCounts.applied})`}
-              value="applied"
-              sx={{ textTransform: 'none' }}
-            />
-            <Tab
-              label={`Under Review (${statusCounts.under_review})`}
-              value="under_review"
-              sx={{ textTransform: 'none' }}
-            />
-            <Tab
-              label={`Shortlisted (${statusCounts.shortlisted})`}
-              value="shortlisted"
-              sx={{ textTransform: 'none' }}
-            />
-            <Tab
-              label={`Rejected (${statusCounts.rejected})`}
-              value="rejected"
-              sx={{ textTransform: 'none' }}
-            />
-          </Tabs>
+            <Grid item xs={12} lg={8}>
+              <Card
+                sx={{
+                  border: '1px solid rgba(148, 163, 184, 0.24)',
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+                  borderRadius: 3,
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                      Selected job
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {selectedJob.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {selectedJob.status ? `${selectedJob.status} • ` : ''}
+                      Posted {format(new Date(selectedJob.created_at), 'dd MMM yyyy')} • {applicants.length}{' '}
+                      applicant(s)
+                    </Typography>
+                  </Box>
+
+                  <Tabs
+                    value={statusFilter}
+                    onChange={(_, value) => setStatusFilter(value)}
+                    sx={{ mb: 2, borderBottom: '1px solid #e0e0e0' }}
+                  >
+                    <Tab
+                      label={`All (${applicants.length})`}
+                      value="all"
+                      sx={{ textTransform: 'none' }}
+                    />
+                    <Tab
+                      label={`Applied (${statusCounts.applied})`}
+                      value="applied"
+                      sx={{ textTransform: 'none' }}
+                    />
+                    <Tab
+                      label={`Under Review (${statusCounts.under_review})`}
+                      value="under_review"
+                      sx={{ textTransform: 'none' }}
+                    />
+                    <Tab
+                      label={`Shortlisted (${statusCounts.shortlisted})`}
+                      value="shortlisted"
+                      sx={{ textTransform: 'none' }}
+                    />
+                    <Tab
+                      label={`Rejected (${statusCounts.rejected})`}
+                      value="rejected"
+                      sx={{ textTransform: 'none' }}
+                    />
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

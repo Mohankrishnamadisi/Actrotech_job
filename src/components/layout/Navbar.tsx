@@ -19,7 +19,7 @@ import {
   WorkOutline as WorkIcon,
   Settings as SettingsIcon,
   ExitToApp as ExitToAppIcon,
-  OpenInNew as OpenInNewIcon,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -38,6 +38,7 @@ export const Navbar: React.FC = () => {
   const { subscription } = useSubscription(user?.id || null);
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -46,6 +47,20 @@ export const Navbar: React.FC = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileAnchor(event.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => {
+    setMobileAnchor(null);
+  };
+
+  const mobileNavItems = [
+    { label: 'Home', to: ROUTES.HOME },
+    { label: 'Jobs', to: ROUTES.JOBS },
+    { label: 'Pricing', to: ROUTES.PRICING },
+  ];
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -93,7 +108,15 @@ export const Navbar: React.FC = () => {
       : ROUTES.DASHBOARD;
 
   return (
-    <AppBar position="sticky" elevation={0}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(18px)',
+        borderBottom: '1px solid rgba(226,232,240,0.9)',
+      }}
+    >
       <Container maxWidth="lg">
         <Toolbar
           disableGutters
@@ -104,6 +127,7 @@ export const Navbar: React.FC = () => {
             alignItems: { xs: 'center', sm: 'center' },
             gap: { xs: 1.25, sm: 1 },
             py: { xs: 1.25, sm: 0.75 },
+            px: { xs: 0, sm: 1 },
           }}
         >
           <Logo size="medium" />
@@ -118,14 +142,76 @@ export const Navbar: React.FC = () => {
               width: { xs: '100%', sm: 'auto' },
             }}
           >
-            <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+            <IconButton
+              onClick={handleMobileMenuOpen}
+              sx={{ display: { xs: 'inline-flex', sm: 'none' }, color: 'text.primary' }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Menu
+              anchorEl={mobileAnchor}
+              open={Boolean(mobileAnchor)}
+              onClose={handleMobileMenuClose}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            >
+              {mobileNavItems.map((item) => (
+                <MenuItem
+                  key={item.label}
+                  component={RouterLink}
+                  to={item.to}
+                  onClick={handleMobileMenuClose}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+              {user ? (
+                <>
+                  <MenuItem
+                    component={RouterLink}
+                    to={dashboardRoute}
+                    onClick={handleMobileMenuClose}
+                  >
+                    Dashboard
+                  </MenuItem>
+                  <MenuItem onClick={() => { handleMenuClose(); handleLogout(); }}>
+                    Logout
+                  </MenuItem>
+                </>
+              ) : (
+                <>
+                  <MenuItem
+                    component={RouterLink}
+                    to={ROUTES.LOGIN}
+                    onClick={handleMobileMenuClose}
+                  >
+                    Login
+                  </MenuItem>
+                  <MenuItem
+                    component={RouterLink}
+                    to={ROUTES.SIGNUP}
+                    onClick={handleMobileMenuClose}
+                  >
+                    Sign Up
+                  </MenuItem>
+                </>
+              )}
+            </Menu>
+
+            <Box
+              sx={{
+                display: { xs: 'none', sm: 'flex' },
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: { xs: 'center', sm: 'flex-end' },
+              }}
+            >
               <InstallApp />
             </Box>
-            {(!user || user.role === USER_ROLES.RECRUITER) && (
+            {!user && (
               <MotionBox whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                 <Button
                   component={RouterLink}
-                  to={user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_DASHBOARD : ROUTES.RECRUITER_REGISTER}
+                  to={ROUTES.RECRUITER_REGISTER}
                   variant="outlined"
                   size="small"
                   startIcon={<WorkIcon sx={{ fontSize: 18 }} />}
@@ -151,7 +237,7 @@ export const Navbar: React.FC = () => {
             )}
 
             {!user ? (
-              <>
+              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
                 <Button
                   component={RouterLink}
                   to={ROUTES.LOGIN}
@@ -191,7 +277,7 @@ export const Navbar: React.FC = () => {
                     Register
                   </Button>
                 </MotionBox>
-              </>
+              </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                 {user?.role === USER_ROLES.JOB_SEEKER && (

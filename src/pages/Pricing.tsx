@@ -108,12 +108,21 @@ export const Pricing: React.FC = () => {
     <Layout>
       <Container maxWidth="lg" sx={{ py: 6 }}>
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Box
+          sx={{
+            textAlign: 'center',
+            mb: 8,
+            p: 4,
+            borderRadius: 4,
+            background: 'radial-gradient(circle at top, rgba(59,130,246,0.12), transparent 34%), radial-gradient(circle at bottom right, rgba(245,158,11,0.12), transparent 32%)',
+            border: '1px solid rgba(37, 99, 235, 0.12)',
+          }}
+        >
           <Typography variant="h2" sx={{ fontWeight: 700, mb: 2 }}>
             Simple, Transparent Pricing
           </Typography>
-          <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-            Choose the plan that's right for you
+          <Typography variant="h6" sx={{ color: 'text.secondary', maxWidth: 720, mx: 'auto' }}>
+            Choose the plan that's right for your next career move. Upgrade to unlock premium job matches, priority application support, and career coaching.
           </Typography>
         </Box>
 
@@ -131,6 +140,9 @@ export const Pricing: React.FC = () => {
                       border: plan.recommended ? '2px solid' : '1px solid',
                       borderColor: plan.recommended ? 'primary.main' : 'divider',
                       transform: plan.recommended ? 'scale(1.03)' : 'scale(1)',
+                      borderRadius: 4,
+                      background: plan.recommended ? 'linear-gradient(180deg, rgba(37,99,235,0.08), #FFFFFF)' : '#FFFFFF',
+                      boxShadow: plan.recommended ? '0 24px 60px rgba(37,99,235,0.14)' : '0 12px 32px rgba(15,23,42,0.08)',
                     }}
                   >
                     {plan.recommended && (
@@ -179,12 +191,21 @@ export const Pricing: React.FC = () => {
                       </Box>
 
                       <Button
-                        variant={plan.recommended ? 'contained' : 'outlined'}
+                        variant={selectedPlanId === plan.id ? 'contained' : 'outlined'}
                         fullWidth
                         onClick={() => setSelectedPlanId(plan.id)}
-                        color={selectedPlanId === plan.id ? 'primary' : 'inherit'}
+                        color="primary"
+                        sx={{
+                          textTransform: 'none',
+                          py: 1.3,
+                          fontWeight: 700,
+                          ...(selectedPlanId === plan.id && {
+                            background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                            color: '#FFFFFF',
+                          }),
+                        }}
                       >
-                        Select {plan.name}
+                        {selectedPlanId === plan.id ? `Selected ${plan.name}` : `Choose ${plan.name}`}
                       </Button>
                     </CardContent>
                   </Card>
@@ -194,7 +215,18 @@ export const Pricing: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 3, position: 'sticky', top: 24 }} elevation={3}>
+            <Paper
+            sx={{
+              p: 3,
+              position: 'sticky',
+              top: 24,
+              borderRadius: 4,
+              border: '1px solid rgba(37, 99, 235, 0.12)',
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.08)',
+              background: '#FFFFFF',
+            }}
+            elevation={3}
+          >
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                 Checkout Summary
               </Typography>
@@ -247,6 +279,13 @@ export const Pricing: React.FC = () => {
                 size="large"
                 onClick={handleSubscribe}
                 disabled={loading}
+                sx={{
+                  mt: 2,
+                  py: 1.5,
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                  boxShadow: '0 14px 30px rgba(37, 99, 235, 0.18)',
+                  textTransform: 'none',
+                }}
               >
                 {loading ? 'Processing...' : `Subscribe for ₹${totalAmount}`}
               </Button>

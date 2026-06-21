@@ -726,9 +726,13 @@ export const candidateService = {
       query = query.ilike('location', `%${filters.location}%`);
     }
     if (filters?.skills) {
-      query = query.contains('skills', Array.isArray(filters.skills) ? filters.skills : [filters.skills]);
+      const skills = Array.isArray(filters.skills) ? filters.skills : [filters.skills];
+      const cleanSkills = skills.map((skill) => String(skill).trim()).filter(Boolean);
+      if (cleanSkills.length > 0) {
+        query = query.contains('skills', cleanSkills);
+      }
     }
-    if (filters?.experience) {
+    if (filters?.experience !== undefined && filters?.experience !== null) {
       query = query.gte('experience_years', filters.experience);
     }
 
