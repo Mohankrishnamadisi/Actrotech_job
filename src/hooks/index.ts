@@ -117,3 +117,5 @@ export const useLocalStorage = (key: string, initialValue: unknown) => {
 
   return [storedValue, setValue] as const;
 };
+
+export { useThemeMode } from '../context/ThemeContext';

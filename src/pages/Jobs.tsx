@@ -16,6 +16,8 @@ import {
   Pagination,
   InputAdornment,
   Paper,
+  Autocomplete,
+  Chip,
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -27,7 +29,7 @@ import { JobCard } from '@components/jobs/JobCard';
 import { JobListSkeleton } from '@components/common/LoadingSkeleton';
 import { Error } from '@components/common/Error';
 import { jobService } from '@services/api';
-import { JOB_CATEGORIES, EMPLOYMENT_TYPES, WORK_MODES, EXPERIENCE_LEVELS, EDUCATION_OPTIONS, FRESHNESS_OPTIONS } from '@constants/index';
+import { JOB_CATEGORIES, EMPLOYMENT_TYPES, WORK_MODES, EXPERIENCE_LEVELS, EDUCATION_OPTIONS, FRESHNESS_OPTIONS, INDIAN_CITIES } from '@constants/index';
 import type { Job } from '../types';
 
 const MotionPaper = motion(Paper);
@@ -55,15 +57,23 @@ export const Jobs: React.FC = () => {
   });
 
   useEffect(() => {
+    const getMultiValues = (key: string) => {
+      const values = searchParams.getAll(key);
+      if (values.length > 0) return values.filter(Boolean);
+      const rawValue = searchParams.get(key);
+      if (!rawValue) return [];
+      return rawValue.split(',').map((value) => value.trim()).filter(Boolean);
+    };
+
     setFilters({
       keyword: searchParams.get('keyword') || '',
       location: searchParams.get('location') || '',
       experience: searchParams.get('experience') || '',
       education: searchParams.get('education') || '',
       freshness: searchParams.get('freshness') || '',
-      jobType: [],
-      workMode: [],
-      category: [],
+      jobType: getMultiValues('jobType'),
+      workMode: getMultiValues('workMode'),
+      category: getMultiValues('category'),
     });
     setPage(1);
   }, [searchParams]);
@@ -74,24 +84,26 @@ export const Jobs: React.FC = () => {
       setError(null);
       try {
         const params: Record<string, unknown> = {};
-        if (filters.keyword) params.title = filters.keyword;
+        if (filters.keyword) params.keyword = filters.keyword;
         if (filters.location) params.location = filters.location;
         if (filters.experience) params.experience = filters.experience;
         if (filters.education) params.education = filters.education;
         if (filters.freshness) params.freshness = filters.freshness;
-        if (filters.jobType.length > 0) params.jobType = filters.jobType[0];
-        if (filters.workMode.length > 0) params.workMode = filters.workMode[0];
-        if (filters.category.length > 0) params.category = filters.category[0];
+        if (filters.jobType.length > 0) params.jobType = filters.jobType;
+        if (filters.workMode.length > 0) params.workMode = filters.workMode;
+        if (filters.category.length > 0) params.category = filters.category;
 
         const { data, total: count } = await jobService.getJobs(params, page, 12);
         setJobs(data);
         setTotal(count);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError(String(err) || 'Failed to load jobs');
+      } catch (err) {
+        let loadError = 'Failed to load jobs';
+        if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
+          loadError = (err as any).message;
+        } else if (typeof err === 'string') {
+          loadError = err;
         }
+        setError(loadError);
       } finally {
         setLoading(false);
       }
@@ -105,10 +117,16 @@ export const Jobs: React.FC = () => {
     setPage(1);
 
     const params = new URLSearchParams(searchParams);
-    if (value && String(value).trim()) {
+    params.delete(filterName);
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item && String(item).trim()) {
+          params.append(filterName, String(item));
+        }
+      });
+    } else if (value && String(value).trim()) {
       params.set(filterName, String(value));
     } else {
-      params.delete(filterName);
     }
     setSearchParams(params);
   };
@@ -168,22 +186,25 @@ export const Jobs: React.FC = () => {
                 p: 3,
                 position: { md: 'sticky' },
                 top: 80,
-                background: '#FFFFFF',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(243,246,255,0.96))',
                 border: '1px solid',
                 borderColor: 'divider',
-                borderRadius: 2,
-                boxShadow: '0 12px 28px rgba(15, 23, 42, 0.06)',
+                borderRadius: 3,
+                boxShadow: '0 26px 68px rgba(15, 23, 42, 0.10)',
               }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                Filters
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                Smart Filters
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                Use keywords, city, experience and job type to narrow the best matches.
               </Typography>
 
               <TextField
                 fullWidth
-                placeholder="Job Title"
+                placeholder="Job title, skill, or company"
                 value={filters.keyword}
                 onChange={(e) => handleFilterChange('keyword', e.target.value)}
                 InputProps={{
@@ -193,15 +214,27 @@ export const Jobs: React.FC = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ mb: 2.5 }}
+                sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { height: 54, fontSize: '0.97rem' } }}
               />
 
-              <TextField
-                fullWidth
-                placeholder="Location"
-                value={filters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-                sx={{ mb: 2.5 }}
+              <Autocomplete
+                freeSolo
+                options={INDIAN_CITIES}
+                inputValue={filters.location}
+                onInputChange={(_, value) => handleFilterChange('location', value)}
+                filterOptions={(options, state) =>
+                  options.filter((option) =>
+                    option.toLowerCase().includes(state.inputValue.toLowerCase())
+                  )
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    placeholder="Location"
+                    sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { height: 54, fontSize: '0.97rem' } }}
+                  />
+                )}
               />
 
               <FormControl fullWidth sx={{ mb: 2.5 }}>
@@ -250,7 +283,7 @@ export const Jobs: React.FC = () => {
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Job Type
                 </Typography>
-                <FormGroup>
+                <FormGroup sx={{ flexDirection: 'column' }}>
                   {EMPLOYMENT_TYPES.map((type) => (
                     <FormControlLabel
                       key={type}
@@ -258,7 +291,10 @@ export const Jobs: React.FC = () => {
                         <Checkbox
                           checked={filters.jobType.includes(type)}
                           onChange={(e) => {
-                            handleFilterChange('jobType', e.target.checked ? [type] : []);
+                            const nextValues = e.target.checked
+                              ? [...filters.jobType, type]
+                              : filters.jobType.filter((item) => item !== type);
+                            handleFilterChange('jobType', nextValues);
                           }}
                         />
                       }
@@ -272,7 +308,7 @@ export const Jobs: React.FC = () => {
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Work Mode
                 </Typography>
-                <FormGroup>
+                <FormGroup sx={{ flexDirection: 'column' }}>
                   {WORK_MODES.map((mode) => (
                     <FormControlLabel
                       key={mode}
@@ -280,7 +316,10 @@ export const Jobs: React.FC = () => {
                         <Checkbox
                           checked={filters.workMode.includes(mode)}
                           onChange={(e) => {
-                            handleFilterChange('workMode', e.target.checked ? [mode] : []);
+                            const nextValues = e.target.checked
+                              ? [...filters.workMode, mode]
+                              : filters.workMode.filter((item) => item !== mode);
+                            handleFilterChange('workMode', nextValues);
                           }}
                         />
                       }
@@ -294,7 +333,7 @@ export const Jobs: React.FC = () => {
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Category
                 </Typography>
-                <FormGroup sx={{ maxHeight: 200, overflow: 'auto' }}>
+                <FormGroup sx={{ maxHeight: 200, overflow: 'auto', flexDirection: 'column' }}>
                   {JOB_CATEGORIES.map((category) => (
                     <FormControlLabel
                       key={category}
@@ -302,7 +341,10 @@ export const Jobs: React.FC = () => {
                         <Checkbox
                           checked={filters.category.includes(category)}
                           onChange={(e) => {
-                            handleFilterChange('category', e.target.checked ? [category] : []);
+                            const nextValues = e.target.checked
+                              ? [...filters.category, category]
+                              : filters.category.filter((item) => item !== category);
+                            handleFilterChange('category', nextValues);
                           }}
                         />
                       }
@@ -312,6 +354,13 @@ export const Jobs: React.FC = () => {
                 </FormGroup>
               </FormControl>
 
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                {filters.keyword && <Chip label={filters.keyword} size="small" />}
+                {filters.location && <Chip label={filters.location} size="small" />}
+                {filters.experience && <Chip label={filters.experience} size="small" />}
+                {filters.education && <Chip label={filters.education} size="small" />}
+              </Box>
+
               <Button variant="outlined" fullWidth onClick={clearFilters}>
                 Clear Filters
               </Button>
@@ -319,6 +368,11 @@ export const Jobs: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} md={9}>
+            <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {filters.keyword && <Chip label={`Keyword: ${filters.keyword}`} size="small" />}
+              {filters.location && <Chip label={`Location: ${filters.location}`} size="small" />}
+              {filters.experience && <Chip label={`Experience: ${filters.experience}`} size="small" />}
+            </Box>
             {loading ? (
               <JobListSkeleton count={6} />
             ) : jobs.length === 0 ? (

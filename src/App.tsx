@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 
-import { theme } from './styles/theme';
+import { getTheme } from './styles/theme';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { ProtectedRoute } from '@components/common/ProtectedRoute';
+import { ThemeModeProvider, useThemeMode } from './context/ThemeContext';
 
 import { Home } from '@pages/Home';
 import { Jobs } from '@pages/Jobs';
@@ -24,6 +25,9 @@ import { ResetPassword } from '@pages/auth/ResetPassword';
 import { AuthCallback } from '@pages/auth/AuthCallback';
 import { Dashboard } from '@pages/dashboard/Dashboard';
 import { ProfilePage } from '@pages/dashboard/Profile';
+import { ApplicationsPage } from '@pages/dashboard/Applications';
+import { SavedJobsPage } from '@pages/dashboard/SavedJobs';
+import { NotificationsPage } from '@pages/dashboard/Notifications';
 import { RecruiterRegister } from '@pages/recruiter/RecruiterRegister';
 import { RecruiterDashboard } from '@pages/recruiter/RecruiterDashboard';
 import PremiumDashboard from '@pages/dashboard/PremiumDashboard';
@@ -33,6 +37,11 @@ import { CommunicationPrivacySettings } from '@pages/dashboard/settings/Communic
 import { JobPreferencesSettings } from '@pages/dashboard/settings/JobPreferencesSettings';
 import { BlockedCompaniesSettings } from '@pages/dashboard/settings/BlockedCompaniesSettings';
 import { useSubscription } from '@hooks/index';
+import RecommendedJobs from '@pages/dashboard/RecommendedJobs';
+import RemoteJobs from '@pages/dashboard/RemoteJobs';
+import MockInterviews from '@pages/dashboard/tools/MockInterviews';
+import ResumeReview from '@pages/dashboard/tools/ResumeReview';
+import PriorityApply from '@pages/dashboard/tools/PriorityApply';
 
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -49,7 +58,8 @@ const RoleDashboard: React.FC = () => {
   return <Dashboard />;
 };
 
-export const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { themeMode } = useThemeMode();
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
@@ -101,82 +111,152 @@ export const App: React.FC = () => {
   }, [setUser, setLoading]);
 
   return (
-    <HelmetProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Toaster position="top-center" />
-        <Router>
-          <Routes>
-            <Route path={ROUTES.HOME} element={<Home />} />
-            <Route path={ROUTES.JOBS} element={<Jobs />} />
-            <Route path={ROUTES.JOB_DETAILS} element={<JobDetails />} />
-            <Route path={ROUTES.PRICING} element={<Pricing />} />
-            <Route path={ROUTES.PRIVACY_POLICY} element={<PrivacyPolicy />} />
-            <Route path={ROUTES.TERMS_CONDITIONS} element={<TermsConditions />} />
+    <ThemeProvider theme={getTheme(themeMode)}>
+      <CssBaseline />
+      <Toaster position="top-center" />
+      <Router>
+        <Routes>
+          <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.JOBS} element={<Jobs />} />
+          <Route path={ROUTES.JOB_DETAILS} element={<JobDetails />} />
+          <Route path={ROUTES.PRICING} element={<Pricing />} />
+          <Route path={ROUTES.PRIVACY_POLICY} element={<PrivacyPolicy />} />
+          <Route path={ROUTES.TERMS_CONDITIONS} element={<TermsConditions />} />
 
-            <Route path={ROUTES.LOGIN} element={<Login />} />
-            <Route path={ROUTES.SIGNUP} element={<Signup />} />
-            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
-            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
-            <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-            <Route path={ROUTES.RECRUITER_REGISTER} element={<RecruiterRegister />} />
+          <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route path={ROUTES.SIGNUP} element={<Signup />} />
+          <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+          <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+          <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
+          <Route path={ROUTES.RECRUITER_REGISTER} element={<RecruiterRegister />} />
 
+          <Route
+            path={ROUTES.DASHBOARD}
+            element={
+              <ProtectedRoute>
+                <RoleDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.DASHBOARD_PROFILE}
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.DASHBOARD_APPLICATIONS}
+            element={
+              <ProtectedRoute>
+                <ApplicationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.DASHBOARD_SAVED_JOBS}
+            element={
+              <ProtectedRoute>
+                <SavedJobsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.DASHBOARD_NOTIFICATIONS}
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.DASHBOARD_SETTINGS}
+            element={
+              <ProtectedRoute>
+                <SettingsLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route
-              path={ROUTES.DASHBOARD}
-              element={
-                <ProtectedRoute>
-                  <RoleDashboard />
-                </ProtectedRoute>
-              }
+              path="account"
+              element={<AccountSettings />}
             />
             <Route
-              path={ROUTES.DASHBOARD_PROFILE}
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
+              path="privacy"
+              element={<CommunicationPrivacySettings />}
             />
             <Route
-              path={ROUTES.DASHBOARD_SETTINGS}
-              element={
-                <ProtectedRoute>
-                  <SettingsLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                path="account"
-                element={<AccountSettings />}
-              />
-              <Route
-                path="privacy"
-                element={<CommunicationPrivacySettings />}
-              />
-              <Route
-                path="preferences"
-                element={<JobPreferencesSettings />}
-              />
-              <Route
-                path="blocked-companies"
-                element={<BlockedCompaniesSettings />}
-              />
-            </Route>
-            <Route
-              path={ROUTES.RECRUITER_DASHBOARD}
-              element={
-                <ProtectedRoute requiredRole={USER_ROLES.RECRUITER}>
-                  <RecruiterDashboard />
-                </ProtectedRoute>
-              }
+              path="preferences"
+              element={<JobPreferencesSettings />}
             />
+            <Route
+              path="blocked-companies"
+              element={<BlockedCompaniesSettings />}
+            />
+          </Route>
+          <Route
+            path="/dashboard/recommended-jobs"
+            element={
+              <ProtectedRoute>
+                <RecommendedJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/remote-jobs"
+            element={
+              <ProtectedRoute>
+                <RemoteJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/mock-interviews"
+            element={
+              <ProtectedRoute>
+                <MockInterviews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/resume-review"
+            element={
+              <ProtectedRoute>
+                <ResumeReview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/priority-apply"
+            element={
+              <ProtectedRoute>
+                <PriorityApply />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.RECRUITER_DASHBOARD}
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.RECRUITER}>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
-          </Routes>
-        </Router>
-      </ThemeProvider>
-    </HelmetProvider>
+          <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 };
+
+export const App: React.FC = () => (
+  <HelmetProvider>
+    <ThemeModeProvider>
+      <AppContent />
+    </ThemeModeProvider>
+  </HelmetProvider>
+);
 
 export default App;

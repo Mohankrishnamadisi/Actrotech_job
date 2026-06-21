@@ -16,7 +16,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { LocationOn as LocationOnIcon, Work as WorkIcon, MonetizationOn as MonetizationOnIcon, BookmarkBorder as BookmarkBorderIcon, Bookmark as BookmarkIcon, Share as ShareIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
-import { jobService, userService, applicationService } from '@services/api';
+import { jobService, userService, applicationService, savedService } from '@services/api';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
@@ -43,7 +43,8 @@ export const JobDetails: React.FC = () => {
   const [noticePeriod, setNoticePeriod] = useState('');
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
   const [profileLoading, setProfileLoading] = useState(false);
-  const isSaved = false;
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedLoading, setSavedLoading] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
@@ -67,10 +68,14 @@ export const JobDetails: React.FC = () => {
     const checkApplied = async () => {
       if (!id || !user?.id) return;
       try {
-        const applied = await applicationService.hasUserApplied(id, user.id);
+        const [applied, saved] = await Promise.all([
+          applicationService.hasUserApplied(id, user.id),
+          savedService.isJobSaved(user.id, id),
+        ]);
         setHasApplied(!!applied);
+        setIsSaved(!!saved);
       } catch (err) {
-        console.error('Failed to check application status:', err);
+        console.error('Failed to check application or saved status:', err);
       }
     };
     checkApplied();
@@ -113,6 +118,31 @@ export const JobDetails: React.FC = () => {
   const requiresSubscription = workModeLabel === 'Remote';
   const hasAccess = !requiresSubscription || !!subscription;
   const showRemotePremium = workModeLabel === 'Remote' && !subscription;
+
+  const handleSaveToggle = async () => {
+    if (!user?.id || !job?.id) {
+      toast.error('Please login to save this job.');
+      return;
+    }
+
+    setSavedLoading(true);
+    try {
+      if (isSaved) {
+        await savedService.unsaveJob(user.id, job.id);
+        setIsSaved(false);
+        toast.success('Job removed from saved jobs.');
+      } else {
+        await savedService.saveJob(user.id, job.id);
+        setIsSaved(true);
+        toast.success('Job saved successfully.');
+      }
+    } catch (err) {
+      console.error('Failed to update saved job:', err);
+      toast.error('Unable to update saved job.');
+    } finally {
+      setSavedLoading(false);
+    }
+  };
 
   const handleApply = async () => {
     if (!user) {
@@ -190,7 +220,7 @@ export const JobDetails: React.FC = () => {
                       {showRemotePremium ? 'Upgrade to view company' : job.company_name}
                     </Typography>
                   </Box>
-                  <Button variant="text" startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}>
+                  <Button variant="text" startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />} onClick={handleSaveToggle} disabled={savedLoading}>
                     {isSaved ? 'Saved' : 'Save'}
                   </Button>
                 </Box>

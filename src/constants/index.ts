@@ -123,6 +123,13 @@ export const NOTICE_PERIOD_OPTIONS = [
   'Serving Notice',
 ];
 
+export const INDIAN_CITIES = [
+  'Hyderabad', 'Bengaluru', 'Chennai', 'Mumbai', 'Delhi', 'Pune', 'Kolkata', 'Ahmedabad',
+  'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Surat', 'Vadodara', 'Bhopal', 'Coimbatore',
+  'Visakhapatnam', 'Ludhiana', 'Agra', 'Madurai', 'Thiruvananthapuram', 'Noida', 'Gurgaon',
+  'Faridabad', 'Amritsar', 'Nashik', 'Meerut', 'Rajkot', 'Vijayawada',
+];
+
 export const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -158,6 +165,7 @@ export const ROUTES = {
   DASHBOARD_RESUME: '/dashboard/resume',
   DASHBOARD_APPLICATIONS: '/dashboard/applications',
   DASHBOARD_SAVED_JOBS: '/dashboard/saved-jobs',
+  DASHBOARD_NOTIFICATIONS: '/dashboard/notifications',
   DASHBOARD_SETTINGS: '/dashboard/settings',
   DASHBOARD_SETTINGS_ACCOUNT: '/dashboard/settings/account',
   DASHBOARD_SETTINGS_PRIVACY: '/dashboard/settings/privacy',
@@ -173,11 +181,11 @@ export const ROUTES = {
   TERMS_CONDITIONS: '/terms-conditions',
 };
 
-export const API_BASE_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
-
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'actro_auth_token',
   USER_DATA: 'actro_user_data',
   PREFERENCES: 'actro_preferences',
   THEME: 'actro_theme',
 };
+
+export const API_BASE_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';

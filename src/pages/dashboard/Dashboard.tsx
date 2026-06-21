@@ -26,8 +26,18 @@ import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
-import { calculateProfileCompletion } from '@utils/index';
-import { userService } from '@services/api';
+import { calculateProfileCompletion, formatDate } from '@utils/index';
+import { applicationService, savedService, notificationService, userService } from '@services/api';
+
+type RecentApplication = {
+  id: string;
+  status: string;
+  applied_at?: string;
+  jobs?: {
+    title?: string;
+    company_name?: string;
+  };
+};
 
 const MotionCard = motion(Card);
 
@@ -35,6 +45,9 @@ export const Dashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
+  const [savedCount, setSavedCount] = useState(0);
+  const [notificationsCount, setNotificationsCount] = useState(0);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -65,19 +78,40 @@ export const Dashboard: React.FC = () => {
         console.error('Failed to load profile for dashboard completion:', err);
       }
     };
+
     loadProfile();
   }, [user?.id, user?.name, user?.email]);
 
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (!user?.id) return;
+      try {
+        const [applications, savedJobs, notifications] = await Promise.all([
+          applicationService.getUserApplications(user.id),
+          savedService.getUserSavedJobs(user.id),
+          notificationService.getUserNotifications(user.id, 50),
+        ]);
+
+        setRecentApplications(applications || []);
+        setSavedCount((savedJobs || []).length);
+        setNotificationsCount((notifications || []).length);
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      }
+    };
+
+    loadDashboardData();
+  }, [user?.id]);
+
   const stats = [
-    { label: 'Applications', value: 0, icon: WorkIcon, color: '#1D4ED8' },
-    { label: 'Saved Jobs', value: 0, icon: BookmarkIcon, color: '#10B981' },
-    { label: 'Notifications', value: 0, icon: NotificationsIcon, color: '#F59E0B' },
+    { label: 'Applications', value: recentApplications.length, icon: WorkIcon, color: '#1D4ED8' },
+    { label: 'Saved Jobs', value: savedCount, icon: BookmarkIcon, color: '#10B981' },
+    { label: 'Notifications', value: notificationsCount, icon: NotificationsIcon, color: '#F59E0B' },
   ];
 
   return (
     <Layout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
             Welcome, {user?.name}!
@@ -87,7 +121,6 @@ export const Dashboard: React.FC = () => {
           </Typography>
         </Box>
 
-        {/* Stats */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {stats.map((stat, index) => (
             <Grid item xs={12} sm={6} md={4} key={stat.label}>
@@ -128,8 +161,12 @@ export const Dashboard: React.FC = () => {
           <Card sx={{ mb: 4, background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>Complete Your Profile</Typography>
-                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700 }}>{profileCompletion}%</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Complete Your Profile
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700 }}>
+                  {profileCompletion}%
+                </Typography>
               </Box>
               <LinearProgress variant="determinate" value={profileCompletion} sx={{ mb: 2, height: 6, borderRadius: 3 }} />
               <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" startIcon={<PersonIcon />}>
@@ -140,7 +177,6 @@ export const Dashboard: React.FC = () => {
         )}
 
         <Grid container spacing={3}>
-          {/* Quick Actions */}
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
@@ -152,7 +188,7 @@ export const Dashboard: React.FC = () => {
                   <Button
                     component={RouterLink}
                     to={ROUTES.JOBS}
-                    variant="outlined"
+                    variant="contained"
                     fullWidth
                     sx={{ justifyContent: 'flex-start' }}
                   >
@@ -160,29 +196,49 @@ export const Dashboard: React.FC = () => {
                   </Button>
                   <Button
                     component={RouterLink}
-                    to={ROUTES.DASHBOARD_PROFILE}
+                    to={ROUTES.DASHBOARD_SAVED_JOBS}
                     variant="outlined"
                     fullWidth
+                    startIcon={<BookmarkIcon />}
                     sx={{ justifyContent: 'flex-start' }}
                   >
-                    Update Profile
+                    Saved Jobs
                   </Button>
                   <Button
                     component={RouterLink}
-                    to={ROUTES.JOBS}
+                    to={ROUTES.DASHBOARD_APPLICATIONS}
                     variant="outlined"
                     fullWidth
-                    startIcon={<SearchIcon />}
+                    startIcon={<WorkIcon />}
                     sx={{ justifyContent: 'flex-start' }}
                   >
-                    Search Jobs
+                    My Applications
+                  </Button>
+                  <Button
+                    component={RouterLink}
+                    to={ROUTES.DASHBOARD_NOTIFICATIONS}
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<NotificationsIcon />}
+                    sx={{ justifyContent: 'flex-start' }}
+                  >
+                    Notifications
+                  </Button>
+                  <Button
+                    component={RouterLink}
+                    to={ROUTES.DASHBOARD_PROFILE}
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<PersonIcon />}
+                    sx={{ justifyContent: 'flex-start' }}
+                  >
+                    View Profile
                   </Button>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
-          {/* Subscription Status */}
           <Grid item xs={12} md={6}>
             <Card sx={{ background: subscription ? '#ECFDF5' : '#EFF6FF' }}>
               <CardContent>
@@ -229,41 +285,55 @@ export const Dashboard: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Recent Applications */}
         <Card sx={{ mt: 4 }}>
           <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Recent Applications
               </Typography>
-              <Button
-                component={RouterLink}
-                to={ROUTES.DASHBOARD_APPLICATIONS}
-                variant="text"
-                size="small"
-              >
-                View All
+              <Button component={RouterLink} to={ROUTES.DASHBOARD_APPLICATIONS} variant="text" size="small">
+                View All ({recentApplications.length})
               </Button>
             </Box>
 
             <List>
-              {[
-                { job: 'React Developer', company_name: 'Tech Corp', status: 'shortlisted' },
-                { job: 'Full Stack Developer', company_name: 'Startup Inc', status: 'under_review' },
-                { job: 'Frontend Developer', company_name: 'Design Studio', status: 'applied' },
-              ].map((app, index) => (
-                <ListItem key={index} sx={{ px: 0 }}>
+              {recentApplications.length === 0 ? (
+                <ListItem sx={{ px: 0 }}>
                   <ListItemText
-                    primary={app.job}
-                    secondary={app.company_name}
-                  />
-                  <Chip
-                    label={app.status.replace('_', ' ').toUpperCase()}
-                    size="small"
-                    color={app.status === 'shortlisted' ? 'success' : app.status === 'under_review' ? 'warning' : 'default'}
+                    primary="No applications yet"
+                    secondary="Apply to jobs to see your recent application activity here."
                   />
                 </ListItem>
-              ))}
+              ) : (
+                recentApplications.slice(0, 3).map((application, index) => (
+                  <ListItem key={index} sx={{ px: 0 }}>
+                    <ListItemText
+                      primary={application.jobs?.title || 'Unknown role'}
+                      secondary={application.jobs?.company_name || 'Unknown company'}
+                    />
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Chip
+                        label={(application.status || 'applied').replace('_', ' ').toUpperCase()}
+                        size="small"
+                        color={
+                          application.status === 'shortlisted'
+                            ? 'success'
+                            : application.status === 'under_review'
+                            ? 'warning'
+                            : application.status === 'rejected'
+                            ? 'error'
+                            : application.status === 'accepted'
+                            ? 'primary'
+                            : 'default'
+                        }
+                      />
+                      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
+                        {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
+                      </Typography>
+                    </Box>
+                  </ListItem>
+                ))
+              )}
             </List>
           </CardContent>
         </Card>

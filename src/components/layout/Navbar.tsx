@@ -29,11 +29,13 @@ import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
 import InstallApp from '@components/InstallApp/InstallApp';
+import { useSubscription } from '@hooks/index';
 
 const MotionBox = motion(Box);
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const { subscription } = useSubscription(user?.id || null);
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -192,16 +194,29 @@ export const Navbar: React.FC = () => {
               </>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600,
-                    display: { xs: 'none', sm: 'block' },
-                    color: 'text.primary',
-                  }}
-                >
-                  {user.name}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      border: subscription ? '2px solid #FFD700' : '2px solid transparent',
+                      bgcolor: subscription ? '#FFFBEB' : '#E2E8F0',
+                      color: subscription ? '#B45309' : '#475569',
+                    }}
+                  >
+                    {generateInitials(user.name)}
+                  </Avatar>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 700,
+                      display: { xs: 'none', sm: 'block' },
+                      color: subscription ? '#B45309' : 'text.primary',
+                    }}
+                  >
+                    {user.name}
+                  </Typography>
+                </Box>
                 {user?.role === USER_ROLES.JOB_SEEKER && (
                   <>
                     <IconButton

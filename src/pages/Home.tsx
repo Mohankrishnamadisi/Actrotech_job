@@ -15,6 +15,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Autocomplete,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -30,7 +31,7 @@ import {
   DataObject as DataIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { ROUTES, JOB_CATEGORIES } from '@constants/index';
+import { ROUTES, JOB_CATEGORIES, INDIAN_CITIES } from '@constants/index';
 
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
@@ -183,10 +184,10 @@ export const Home: React.FC = () => {
               }}
             >
               <Grid container spacing={2} alignItems="stretch">
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    placeholder="Job Title"
+                    placeholder="Search by job title, skill, or company"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -197,36 +198,49 @@ export const Home: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { height: 56 } }}
+                    sx={{ '& .MuiOutlinedInput-root': { height: 64, fontSize: '1rem' } }}
                   />
                 </Grid>
                 <Grid item xs={12} md={3}>
-                  <TextField
-                    fullWidth
-                    placeholder="Location"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocationOnIcon sx={{ color: 'primary.main' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{ '& .MuiOutlinedInput-root': { height: 56 } }}
+                  <Autocomplete
+                    freeSolo
+                    options={INDIAN_CITIES}
+                    inputValue={searchLocation}
+                    onInputChange={(_, value) => setSearchLocation(value)}
+                    filterOptions={(options: string[], state) =>
+                      options.filter((option) =>
+                        option.toLowerCase().includes(state.inputValue.toLowerCase())
+                      )
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        placeholder="Location"
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LocationOnIcon sx={{ color: 'primary.main' }} />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{ '& .MuiOutlinedInput-root': { height: 64, fontSize: '1rem' } }}
+                      />
+                    )}
                   />
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={2}>
                   <FormControl fullWidth>
                     <InputLabel>Experience</InputLabel>
                     <Select
                       value={experience}
                       onChange={(e) => setExperience(e.target.value)}
                       label="Experience"
-                      sx={{ height: 56 }}
+                      sx={{ height: 64, fontSize: '0.95rem' }}
                     >
-                      <MenuItem value="">All Experience</MenuItem>
+                      <MenuItem value="">Any</MenuItem>
                       {experienceOptions.map((option) => (
                         <MenuItem key={option} value={option}>{option}</MenuItem>
                       ))}
@@ -236,7 +250,7 @@ export const Home: React.FC = () => {
                 <Grid item xs={12} md={3}>
                   <MotionButton
                     variant="contained"
-                    size="large"
+                    size="medium"
                     onClick={handleSearch}
                     fullWidth
                     whileHover={{ scale: 1.01 }}

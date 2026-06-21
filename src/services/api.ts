@@ -187,20 +187,31 @@ export const jobService = {
   async getJobs(filters?: Record<string, unknown>, page = 1, limit = 20) {
     let query = supabase.from('jobs').select('*', { count: 'exact' }).eq('status', 'published');
 
-    if (filters?.title) {
-      query = query.ilike('title', `%${filters.title}%`);
+    const keyword = filters?.keyword ? String(filters.keyword) : null;
+    if (keyword) {
+      const escapedKeyword = keyword.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      const keywordPattern = `%${escapedKeyword}%`;
+      query = query.or(
+        `title.ilike.${keywordPattern},company_name.ilike.${keywordPattern},skills.cs.{${keyword}}`
+      );
     }
     if (filters?.location) {
       query = query.ilike('location', `%${filters.location}%`);
     }
-    if (filters?.jobType) {
-      query = query.eq('job_type', filters.jobType);
+    if (Array.isArray(filters?.jobType) && filters.jobType.length > 0) {
+      query = query.in('job_type', filters.jobType as string[]);
+    } else if (filters?.jobType) {
+      query = query.eq('job_type', filters.jobType as string);
     }
-    if (filters?.workMode) {
-      query = query.eq('work_mode', filters.workMode);
+    if (Array.isArray(filters?.workMode) && filters.workMode.length > 0) {
+      query = query.in('work_mode', filters.workMode as string[]);
+    } else if (filters?.workMode) {
+      query = query.eq('work_mode', filters.workMode as string);
     }
-    if (filters?.category) {
-      query = query.contains('skills', [filters.category]);
+    if (Array.isArray(filters?.category) && filters.category.length > 0) {
+      query = query.in('category', filters.category as string[]);
+    } else if (filters?.category) {
+      query = query.eq('category', filters.category as string);
     }
     if (filters?.experience) {
       query = query.ilike('experience', `%${filters.experience}%`);
@@ -333,6 +344,31 @@ export const jobService = {
     if (error) throw error;
     return (data || []).map(normalizeJob);
   },
+
+  async getJobsBySkills(skills: string[], page = 1, limit = 10) {
+    const filteredSkills = skills.filter(Boolean).map((skill) => String(skill).trim());
+    if (filteredSkills.length === 0) {
+      return { data: [], total: 0 };
+    }
+
+    const skillQueries = filteredSkills
+      .map((skill) => {
+        const escaped = skill.replace(/%/g, '\\%').replace(/_/g, '\\_');
+        return `skills.cs.{${escaped}}`;
+      })
+      .join(',');
+
+    const { data, error, count } = await supabase
+      .from('jobs')
+      .select('*', { count: 'exact' })
+      .eq('status', 'published')
+      .or(skillQueries)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (error) throw error;
+    return { data: (data || []).map(normalizeJob), total: count || 0 };
+  },
 };
 
 // Job Application operations
@@ -364,6 +400,22 @@ export const applicationService = {
       ])
       .select();
     if (error) throw error;
+
+    try {
+      const application = data?.[0];
+      if (application) {
+        await notificationService.createNotification(
+          userId,
+          'application_status',
+          'Application Submitted',
+          `Your application for the selected role has been received. We'll let you know when HR updates the status.`,
+          { jobId }
+        );
+      }
+    } catch (notificationError) {
+      console.error('Failed to send application notification:', notificationError);
+    }
+
     return data[0];
   },
 
@@ -405,8 +457,24 @@ export const applicationService = {
       .from('job_applications')
       .update({ status })
       .eq('id', applicationId)
-      .select();
+      .select('*, jobs(*)');
     if (error) throw error;
+
+    const application = data?.[0];
+    if (application) {
+      try {
+        await notificationService.createNotification(
+          application.user_id || application.userId,
+          'application_status',
+          'Application Update',
+          `HR has marked your application for ${application.jobs?.title || 'the role'} as ${status.replace('_', ' ')}. Check the dashboard for details.`,
+          { applicationId, status }
+        );
+      } catch (notificationError) {
+        console.error('Failed to send HR action notification:', notificationError);
+      }
+    }
+
     return data[0];
   },
 };
