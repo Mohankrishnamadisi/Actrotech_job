@@ -18,7 +18,6 @@ import {
   Logout as LogoutIcon,
   Dashboard as DashboardIcon,
   WorkOutline as WorkIcon,
-  Subscriptions as SubscriptionsIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -154,10 +153,58 @@ export const Navbar: React.FC = () => {
                       component={RouterLink}
                       to={ROUTES.PRICING}
                       size="small"
-                      sx={{ color: 'text.primary' }}
+                      sx={{
+                        p: 0.75,
+                        borderRadius: '10px',
+                        minWidth: 0,
+                        background: 'rgba(255, 215, 0, 0.16)',
+                        color: '#FFD700',
+                        boxShadow: '0 0 0 0 rgba(255, 215, 0, 0.2)',
+                        transition: 'transform 180ms ease, box-shadow 180ms ease',
+                        position: 'relative',
+                        '&:hover': {
+                          transform: 'scale(1.08)',
+                          boxShadow: '0 0 24px 8px rgba(255, 215, 0, 0.35)',
+                        },
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '10px',
+                          background: 'radial-gradient(circle at top left, rgba(255,255,255,0.7), transparent 38%)',
+                          opacity: 0,
+                          transition: 'opacity 300ms ease',
+                        },
+                        '&:hover::before': {
+                          opacity: 1,
+                        },
+                      }}
                       title="Subscription Plans"
                     >
-                      <SubscriptionsIcon />
+                      <Box
+                        component="img"
+                        src="/crown.png"
+                        alt="Crown"
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          filter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
+                          WebkitFilter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
+                          animation: 'crownShine 2.4s ease-in-out infinite',
+                          transformOrigin: 'center center',
+                          display: 'block',
+                        }}
+                      />
+                      <Box
+                        component="span"
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '10px',
+                          pointerEvents: 'none',
+                          boxShadow: '0 0 10px 4px rgba(255, 215, 0, 0.22)',
+                        }}
+                      />
                     </IconButton>
                   </>
                 )}

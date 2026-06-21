@@ -27,6 +27,17 @@ body {
   margin: 0;
 }
 
+@keyframes crownShine {
+  0%, 100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.04);
+    filter: brightness(1.25) drop-shadow(0 0 8px rgba(255, 215, 0, 0.38));
+  }
+}
+
 #root {
   min-height: 100vh;
 }
