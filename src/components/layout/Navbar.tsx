@@ -27,6 +27,7 @@ import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
+import InstallApp from '@components/InstallApp/InstallApp';
 
 const MotionBox = motion(Box);
 
@@ -147,15 +148,18 @@ export const Navbar: React.FC = () => {
                   {user.name}
                 </Typography>
                 {user?.role === USER_ROLES.JOB_SEEKER && (
-                  <IconButton
-                    component={RouterLink}
-                    to={ROUTES.PRICING}
-                    size="small"
-                    sx={{ color: 'text.primary' }}
-                    title="Subscription Plans"
-                  >
-                    <SubscriptionsIcon />
-                  </IconButton>
+                  <>
+                    <InstallApp />
+                    <IconButton
+                      component={RouterLink}
+                      to={ROUTES.PRICING}
+                      size="small"
+                      sx={{ color: 'text.primary' }}
+                      title="Subscription Plans"
+                    >
+                      <SubscriptionsIcon />
+                    </IconButton>
+                  </>
                 )}
                 <IconButton onClick={handleMenuOpen} size="small">
                   <Avatar
