@@ -28,20 +28,21 @@ export const InstallApp: React.FC = () => {
       <Button
         onClick={handleOpen}
         variant="outlined"
+        size="small"
         sx={{
           borderRadius: 2,
-          px: { xs: 2.5, sm: 2 },
-          py: 0.9,
-          minWidth: 130,
+          px: { xs: 2, sm: 1.75 },
+          py: 0.75,
+          minWidth: 120,
           textTransform: 'none',
-          borderColor: '#1976d2',
-          color: '#1976d2',
+          borderColor: '#1D4ED8',
+          color: '#1D4ED8',
           bgcolor: '#ffffff',
-          boxShadow: '0 12px 24px rgba(25, 118, 210, 0.12)',
+          boxShadow: '0 6px 14px rgba(25, 118, 210, 0.08)',
           width: { xs: '100%', sm: 'auto' },
-          fontSize: { xs: '0.9rem', sm: '0.95rem' },
+          fontSize: '0.9rem',
           '&:hover': {
-            bgcolor: '#f3f7ff',
+            bgcolor: '#eff6ff',
           },
         }}
       >

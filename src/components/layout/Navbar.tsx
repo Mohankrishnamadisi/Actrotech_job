@@ -18,6 +18,9 @@ import {
   Logout as LogoutIcon,
   Dashboard as DashboardIcon,
   WorkOutline as WorkIcon,
+  Settings as SettingsIcon,
+  ExitToApp as ExitToAppIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -34,6 +37,7 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -41,6 +45,14 @@ export const Navbar: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleSettingsOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setSettingsAnchorEl(event.currentTarget);
+  };
+
+  const handleSettingsClose = () => {
+    setSettingsAnchorEl(null);
   };
 
   const handleLogout = async () => {
@@ -118,20 +130,26 @@ export const Navbar: React.FC = () => {
               <InstallApp />
             </Box>
             {(!user || user.role === USER_ROLES.RECRUITER) && (
-              <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <MotionBox whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                 <Button
                   component={RouterLink}
                   to={user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_DASHBOARD : ROUTES.RECRUITER_REGISTER}
                   variant="outlined"
                   size="small"
-                  startIcon={<WorkIcon />}
+                  startIcon={<WorkIcon sx={{ fontSize: 18 }} />}
                   sx={{
                     display: { xs: 'none', sm: 'flex' },
                     borderColor: 'divider',
                     color: 'primary.dark',
+                    px: 1.25,
+                    py: 0.65,
+                    minWidth: 120,
+                    fontSize: '0.85rem',
+                    textTransform: 'none',
+                    borderRadius: 2,
                     '&:hover': {
                       borderColor: 'primary.main',
-                      background: 'primary.light',
+                      background: 'rgba(59, 130, 246, 0.12)',
                     },
                   }}
                 >
@@ -146,18 +164,44 @@ export const Navbar: React.FC = () => {
                   component={RouterLink}
                   to={ROUTES.LOGIN}
                   variant="text"
-                  sx={{ color: 'text.primary' }}
+                  sx={{
+                    color: 'text.primary',
+                    textTransform: 'none',
+                    px: 1.4,
+                    py: 0.65,
+                    fontSize: '0.9rem',
+                    borderRadius: 999,
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
                 >
                   Login
                 </Button>
-                <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button component={RouterLink} to={ROUTES.SIGNUP} variant="contained">
+                <MotionBox whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    component={RouterLink}
+                    to={ROUTES.SIGNUP}
+                    variant="contained"
+                    sx={{
+                      textTransform: 'none',
+                      px: 1.8,
+                      py: 0.75,
+                      fontSize: '0.9rem',
+                      borderRadius: '999px',
+                      background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                      boxShadow: '0 10px 18px rgba(37, 99, 235, 0.18)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+                      },
+                    }}
+                  >
                     Register
                   </Button>
                 </MotionBox>
               </>
             ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                 <Typography
                   variant="body2"
                   sx={{
@@ -229,6 +273,9 @@ export const Navbar: React.FC = () => {
                     </IconButton>
                   </>
                 )}
+                <IconButton onClick={handleSettingsOpen} size="small" sx={{ color: 'text.primary' }}>
+                  <SettingsIcon sx={{ fontSize: 20 }} />
+                </IconButton>
                 <IconButton onClick={handleMenuOpen} size="small">
                   <Avatar
                     src={user.avatar}
@@ -242,6 +289,51 @@ export const Navbar: React.FC = () => {
                     {generateInitials(user.name)}
                   </Avatar>
                 </IconButton>
+                <Menu
+                  anchorEl={settingsAnchorEl}
+                  open={Boolean(settingsAnchorEl)}
+                  onClose={handleSettingsClose}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  PaperProps={{
+                    sx: {
+                      background: '#FFFFFF',
+                      border: '1px solid #E4E9F2',
+                      borderRadius: 2,
+                      boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
+                      minWidth: 220,
+                      mt: 1,
+                    },
+                  }}
+                >
+                  <MenuItem
+                    component="a"
+                    href="https://www.naukri.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleSettingsClose}
+                  >
+                    Naukri <OpenInNewIcon sx={{ fontSize: 18, ml: 1 }} />
+                  </MenuItem>
+                  <MenuItem
+                    component="a"
+                    href="https://www.linkedin.com/jobs/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleSettingsClose}
+                  >
+                    LinkedIn <OpenInNewIcon sx={{ fontSize: 18, ml: 1 }} />
+                  </MenuItem>
+                  <MenuItem
+                    component="a"
+                    href="https://www.indeed.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleSettingsClose}
+                  >
+                    Indeed <OpenInNewIcon sx={{ fontSize: 18, ml: 1 }} />
+                  </MenuItem>
+                </Menu>
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
@@ -284,26 +376,9 @@ export const Navbar: React.FC = () => {
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                    <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} /> Logout
+                    <ExitToAppIcon sx={{ mr: 1.5, fontSize: 20 }} /> Logout
                   </MenuItem>
                 </Menu>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleLogout}
-                  startIcon={<LogoutIcon />}
-                  sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    borderColor: 'rgba(239, 68, 68, 0.4)',
-                    color: 'error.main',
-                    '&:hover': {
-                      borderColor: 'error.main',
-                      background: 'rgba(239, 68, 68, 0.1)',
-                    },
-                  }}
-                >
-                  Logout
-                </Button>
               </Box>
             )}
           </Box>
