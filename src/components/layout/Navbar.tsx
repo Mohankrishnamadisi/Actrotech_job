@@ -194,18 +194,66 @@ export const Navbar: React.FC = () => {
               </>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar
+                {user?.role === USER_ROLES.JOB_SEEKER && (
+                  <IconButton
+                    component={RouterLink}
+                    to={ROUTES.PRICING}
+                    size="small"
                     sx={{
-                      width: 34,
-                      height: 34,
-                      border: subscription ? '2px solid #FFD700' : '2px solid transparent',
-                      bgcolor: subscription ? '#FFFBEB' : '#E2E8F0',
-                      color: subscription ? '#B45309' : '#475569',
+                      p: 0.75,
+                      borderRadius: '10px',
+                      minWidth: 0,
+                      background: 'rgba(255, 215, 0, 0.16)',
+                      color: '#FFD700',
+                      boxShadow: '0 8px 16px rgba(255, 215, 0, 0.16)',
+                      transition: 'transform 180ms ease, box-shadow 180ms ease',
+                      position: 'relative',
+                      '&:hover': {
+                        transform: 'scale(1.08)',
+                        boxShadow: '0 0 24px 8px rgba(255, 215, 0, 0.35)',
+                      },
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        inset: 0,
+                        borderRadius: '10px',
+                        background: 'radial-gradient(circle at top left, rgba(255,255,255,0.7), transparent 38%)',
+                        opacity: 0,
+                        transition: 'opacity 300ms ease',
+                      },
+                      '&:hover::before': {
+                        opacity: 1,
+                      },
                     }}
+                    title="Subscription Plans"
                   >
-                    {generateInitials(user.name)}
-                  </Avatar>
+                    <Box
+                      component="img"
+                      src="/crown.png"
+                      alt="Crown"
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        filter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
+                        WebkitFilter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
+                        animation: 'crownShine 2.4s ease-in-out infinite',
+                        transformOrigin: 'center center',
+                        display: 'block',
+                      }}
+                    />
+                    <Box
+                      component="span"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        borderRadius: '10px',
+                        pointerEvents: 'none',
+                        boxShadow: '0 0 10px 4px rgba(255, 215, 0, 0.22)',
+                      }}
+                    />
+                  </IconButton>
+                )}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -216,81 +264,21 @@ export const Navbar: React.FC = () => {
                   >
                     {user.name}
                   </Typography>
-                </Box>
-                {user?.role === USER_ROLES.JOB_SEEKER && (
-                  <>
-                    <IconButton
-                      component={RouterLink}
-                      to={ROUTES.PRICING}
-                      size="small"
+                  <IconButton onClick={handleMenuOpen} size="small">
+                    <Avatar
+                      src={user.avatar}
                       sx={{
-                        p: 0.75,
-                        borderRadius: '10px',
-                        minWidth: 0,
-                        background: 'rgba(255, 215, 0, 0.16)',
-                        color: '#FFD700',
-                        boxShadow: '0 0 0 0 rgba(255, 215, 0, 0.2)',
-                        transition: 'transform 180ms ease, box-shadow 180ms ease',
-                        position: 'relative',
-                        '&:hover': {
-                          transform: 'scale(1.08)',
-                          boxShadow: '0 0 24px 8px rgba(255, 215, 0, 0.35)',
-                        },
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '10px',
-                          background: 'radial-gradient(circle at top left, rgba(255,255,255,0.7), transparent 38%)',
-                          opacity: 0,
-                          transition: 'opacity 300ms ease',
-                        },
-                        '&:hover::before': {
-                          opacity: 1,
-                        },
+                        width: 36,
+                        height: 36,
+                        background: subscription ? '#FFFBEB' : '#1D4ED8',
+                        border: subscription ? '2px solid #FFD700' : '2px solid #DBEAFE',
+                        color: subscription ? '#B45309' : '#FFFFFF',
                       }}
-                      title="Subscription Plans"
                     >
-                      <Box
-                        component="img"
-                        src="/crown.png"
-                        alt="Crown"
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          filter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
-                          WebkitFilter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
-                          animation: 'crownShine 2.4s ease-in-out infinite',
-                          transformOrigin: 'center center',
-                          display: 'block',
-                        }}
-                      />
-                      <Box
-                        component="span"
-                        sx={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: '10px',
-                          pointerEvents: 'none',
-                          boxShadow: '0 0 10px 4px rgba(255, 215, 0, 0.22)',
-                        }}
-                      />
-                    </IconButton>
-                  </>
-                )}
-                <IconButton onClick={handleMenuOpen} size="small">
-                  <Avatar
-                    src={user.avatar}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      background: '#1D4ED8',
-                      border: '2px solid #DBEAFE',
-                    }}
-                  >
-                    {generateInitials(user.name)}
-                  </Avatar>
-                </IconButton>
+                      {generateInitials(user.name)}
+                    </Avatar>
+                  </IconButton>
+                </Box>
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
