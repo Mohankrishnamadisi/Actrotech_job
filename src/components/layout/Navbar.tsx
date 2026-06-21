@@ -91,10 +91,21 @@ export const Navbar: React.FC = () => {
   return (
     <AppBar position="sticky" elevation={0}>
       <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+        <Toolbar
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 1,
+            py: { xs: 1, sm: 0.5 },
+          }}
+        >
           <Logo size="medium" />
 
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25, alignItems: 'center', justifyContent: 'flex-end' }}>
+            <InstallApp />
             {(!user || user.role === USER_ROLES.RECRUITER) && (
               <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Button
@@ -148,7 +159,6 @@ export const Navbar: React.FC = () => {
                 </Typography>
                 {user?.role === USER_ROLES.JOB_SEEKER && (
                   <>
-                    <InstallApp />
                     <IconButton
                       component={RouterLink}
                       to={ROUTES.PRICING}

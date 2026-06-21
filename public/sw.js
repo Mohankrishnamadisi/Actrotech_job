@@ -1,4 +1,4 @@
-const CACHE_NAME = 'actotech-cache-v1';
+const CACHE_NAME = 'actro-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -13,7 +13,7 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-384x384.png',
   '/icons/icon-512x512.png',
   '/icons/icon-512x512-maskable.png',
-  '/job_logo.png'
+  '/actrotitle.png'
 ];
 
 self.addEventListener('install', (event) => {

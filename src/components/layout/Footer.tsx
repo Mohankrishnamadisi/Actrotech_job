@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
         <Grid container spacing={4} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-              Actotech Jobs
+              Actro Jobs
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
               Find your dream job or hire top talent. A modern platform for job seekers and
@@ -160,7 +160,7 @@ export const Footer: React.FC = () => {
           }}
         >
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Copyright {currentYear} Actotech Jobs. All rights reserved.
+            Copyright {currentYear} Actro Jobs. All rights reserved.
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Built for job seekers and recruiters

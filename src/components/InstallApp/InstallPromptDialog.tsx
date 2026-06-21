@@ -10,12 +10,12 @@ interface Props {
 export const InstallPromptDialog: React.FC<Props> = ({ open, onClose, onInstall }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Install Actotech Jobs App</DialogTitle>
-      <DialogContent>
+      <DialogTitle>Install Actro Jobs App</DialogTitle>
+      <DialogContent sx={{ pt: 1.5 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Box component="img" src="/job_logo.png" alt="logo" sx={{ width: 64, height: 64, borderRadius: 2 }} />
+          <Box component="img" src="/actrotitle.png" alt="Actro Jobs" sx={{ width: 64, height: 64, borderRadius: 2 }} />
           <Box>
-            <Typography variant="body1" sx={{ fontWeight: 700 }}>Install Actotech Jobs App</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700 }}>Install Actro Jobs App</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               Install this app on your mobile for faster access, job alerts, and an app-like experience.
             </Typography>

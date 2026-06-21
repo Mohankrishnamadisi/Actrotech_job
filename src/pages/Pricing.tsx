@@ -331,7 +331,7 @@ export const Pricing: React.FC = () => {
             Have questions?
           </Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            Check our FAQ or contact our support team at support@actotechjobs.com
+            Check our FAQ or contact our support team at support@actrojobs.com
           </Typography>
         </Box>
       </Container>

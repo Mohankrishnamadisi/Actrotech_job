@@ -172,8 +172,8 @@ export const ROUTES = {
 export const API_BASE_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'actotech_auth_token',
-  USER_DATA: 'actotech_user_data',
-  PREFERENCES: 'actotech_preferences',
-  THEME: 'actotech_theme',
+  AUTH_TOKEN: 'actro_auth_token',
+  USER_DATA: 'actro_user_data',
+  PREFERENCES: 'actro_preferences',
+  THEME: 'actro_theme',
 };

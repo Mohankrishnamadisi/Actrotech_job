@@ -351,7 +351,7 @@ export const Home: React.FC = () => {
             Ready to start your job search?
           </Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4 }}>
-            Join thousands of job seekers who have found their dream jobs on Actotech Jobs
+            Join thousands of job seekers who have found their dream jobs on Actro Jobs
           </Typography>
           <MotionButton
             variant="contained"

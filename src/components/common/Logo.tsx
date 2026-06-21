@@ -27,13 +27,15 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
         textDecoration: 'none',
         transition: 'transform 0.2s ease',
         '&:hover': { transform: 'scale(1.02)' },
+        width: { xs: '100%', sm: 'auto' },
+        justifyContent: { xs: 'center', sm: 'flex-start' },
       }}
     >
       {showText && (
         <Box
           component="img"
           src="/job_logo.png"
-          alt="Actotech Jobs"
+          alt="Actro Jobs"
           sx={{
             width: { xs: Math.min(width, 142), sm: width },
             height,

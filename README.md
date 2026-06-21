@@ -1,4 +1,4 @@
-# Actotech Jobs - Production Ready Job Portal
+# Actro Jobs - Production Ready Job Portal
 
 A modern, premium, production-ready job portal web application built with React, TypeScript, Material UI, and Supabase.
 
@@ -83,8 +83,8 @@ A modern, premium, production-ready job portal web application built with React,
 
 \`\`\`bash
 # Clone repository
-git clone https://github.com/yourusername/actotech-jobs.git
-cd actotech-jobs
+git clone https://github.com/yourusername/actro-jobs.git
+cd actro-jobs
 
 # Install dependencies
 npm install
@@ -269,12 +269,12 @@ Contributions are welcome! Please follow these guidelines:
 
 ## 📄 License
 
-Proprietary © 2024 Actotech Jobs. All rights reserved.
+Proprietary © 2024 Actro Jobs. All rights reserved.
 
 ## 📞 Support
 
-- Email: support@actotechjobs.com
-- Website: https://actotechjobs.com
+- Email: support@actrojobs.com
+- Website: https://actrojobs.com
 - Issues: GitHub Issues
 
 ## 🙏 Acknowledgments

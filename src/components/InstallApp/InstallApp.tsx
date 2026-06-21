@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import usePWA from '../../hooks/usePWA';
 import { useLocation } from 'react-router-dom';
+import InstallPromptDialog from './InstallPromptDialog';
 
-const VISIT_KEY = 'actotech_page_visits';
-const DISMISS_KEY = 'actotech_install_dismissed';
+const VISIT_KEY = 'actro_page_visits';
+const DISMISS_KEY = 'actro_install_dismissed';
 
 export const InstallApp: React.FC = () => {
   const { deferredPrompt, isInstalled, promptInstall } = usePWA();
@@ -46,20 +47,33 @@ export const InstallApp: React.FC = () => {
   if (isInstalled) return null;
 
   return (
-    <button
-      type="button"
-      onClick={handleOpen}
-      style={{
-        border: '1px solid #1976d2',
-        background: '#ffffff',
-        color: '#1976d2',
-        borderRadius: 8,
-        padding: '8px 12px',
-        cursor: 'pointer',
-      }}
-    >
-      Install App
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        style={{
+          border: '1px solid #1976d2',
+          background: '#ffffff',
+          color: '#1976d2',
+          borderRadius: 12,
+          padding: '9px 16px',
+          cursor: 'pointer',
+          fontWeight: 700,
+          minWidth: 130,
+          boxShadow: '0 12px 24px rgba(25, 118, 210, 0.12)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        }}
+        onMouseEnter={(event) => { event.currentTarget.style.transform = 'translateY(-1px)'; }}
+        onMouseLeave={(event) => { event.currentTarget.style.transform = 'translateY(0)'; }}
+      >
+        Install App
+      </button>
+      <InstallPromptDialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onInstall={handleInstall}
+      />
+    </>
   );
 };
 

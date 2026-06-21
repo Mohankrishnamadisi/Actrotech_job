@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 export const InstallTooltip: React.FC = () => {
   return (
     <Box sx={{ p: 1, maxWidth: 260 }}>
-      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Install Actotech Jobs App</Typography>
+      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Install Actro Jobs App</Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         Install this app on your mobile for faster access, job alerts, and an app-like experience.
       </Typography>
