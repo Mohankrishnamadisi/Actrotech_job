@@ -37,6 +37,7 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
   const navigate = useNavigate();
+  const isRecruiter = user?.role === USER_ROLES.RECRUITER;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
 
@@ -350,20 +351,51 @@ export const Navbar: React.FC = () => {
                   >
                     {user.name}
                   </Typography>
-                  <IconButton onClick={handleMenuOpen} size="small">
-                    <Avatar
-                      src={user.avatar}
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        background: subscription ? '#FFFBEB' : '#1D4ED8',
-                        border: subscription ? '2px solid #FFD700' : '2px solid #DBEAFE',
-                        color: subscription ? '#B45309' : '#FFFFFF',
-                      }}
-                    >
-                      {generateInitials(user.name)}
-                    </Avatar>
-                  </IconButton>
+                  <IconButton
+                  onClick={handleMenuOpen}
+                  size="small"
+                  sx={{
+                    position: 'relative',
+                    '&::after': isRecruiter
+                      ? {
+                          content: '""',
+                          position: 'absolute',
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #FACC15, #F59E0B)',
+                          border: '2px solid #ffffff',
+                          right: 0,
+                          top: 0,
+                          boxShadow: '0 0 0 4px rgba(251, 191, 36, 0.15)',
+                        }
+                      : {},
+                  }}
+                >
+                  <Avatar
+                    src={user.avatar}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      background: isRecruiter
+                        ? 'radial-gradient(circle at top left, #FDE68A, #F59E0B 55%, #C2410C)'
+                        : subscription
+                        ? '#FFFBEB'
+                        : '#1D4ED8',
+                      border: isRecruiter
+                        ? '2px solid #FBBF24'
+                        : subscription
+                        ? '2px solid #FFD700'
+                        : '2px solid #DBEAFE',
+                      color: isRecruiter ? '#92400E' : subscription ? '#B45309' : '#FFFFFF',
+                      boxShadow: isRecruiter
+                        ? '0 0 0 6px rgba(245, 158, 11, 0.16)'
+                        : 'none',
+                    }}
+                  >
+                    {generateInitials(user.name)}
+                  </Avatar>
+                </IconButton>
                 </Box>
                 <Menu
                   anchorEl={anchorEl}

@@ -22,6 +22,8 @@ import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
 import toast from 'react-hot-toast';
 
+const MotionBox = motion(Box);
+
 interface JobPostingFormProps {
   open: boolean;
   onClose: () => void;
@@ -207,20 +209,29 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
           borderRadius: 4,
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: 'calc(100vh - 80px)',
+          height: 'calc(100vh - 80px)',
           overflow: 'hidden',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))',
+          boxShadow: '0 30px 90px rgba(15, 23, 42, 0.12)',
         },
       }}
     >
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <MotionBox
+        component="div"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+      >
         <DialogTitle
           sx={{
-            fontWeight: 700,
-            fontSize: 20,
-            background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+            fontWeight: 800,
+            fontSize: 22,
+            background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 45%, #2563EB 100%)',
             color: '#FFFFFF',
             py: 2,
             textAlign: 'center',
+            letterSpacing: 0.6,
+            boxShadow: 'inset 0 -4px 0 rgba(255,255,255,0.18)',
           }}
         >
           Post a Job
@@ -233,6 +244,19 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             flex: '1 1 auto',
             minHeight: 0,
             overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(100,116,139,0.6) transparent',
+            '&::-webkit-scrollbar': {
+              width: 10,
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'rgba(15, 23, 42, 0.04)',
+              borderRadius: 5,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(100, 116, 139, 0.6)',
+              borderRadius: 5,
+            },
           }}
         >
           {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')} />}
@@ -484,7 +508,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             {loading ? 'Posting...' : 'Post Job'}
           </Button>
         </DialogActions>
-      </motion.div>
+      </MotionBox>
     </Dialog>
   );
 };
