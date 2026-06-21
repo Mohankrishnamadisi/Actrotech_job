@@ -10,9 +10,9 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) => {
   const sizes = {
-    small: { width: 132, height: 40 },
-    medium: { width: 168, height: 50 },
-    large: { width: 220, height: 66 },
+    small: { width: 120, height: 36 },
+    medium: { width: 150, height: 46 },
+    large: { width: 210, height: 60 },
   };
 
   const { width, height } = sizes[size];
@@ -37,7 +37,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
           src="/job_logo.png"
           alt="Actro Jobs"
           sx={{
-            width: { xs: Math.min(width, 142), sm: width },
+            width: { xs: Math.min(width, 140), sm: width },
             height,
             display: 'block',
             objectFit: 'contain',

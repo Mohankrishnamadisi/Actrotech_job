@@ -95,17 +95,28 @@ export const Navbar: React.FC = () => {
           disableGutters
           sx={{
             display: 'flex',
-            flexWrap: 'wrap',
+            flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 1,
-            py: { xs: 1, sm: 0.5 },
+            alignItems: { xs: 'center', sm: 'center' },
+            gap: { xs: 1.25, sm: 1 },
+            py: { xs: 1.25, sm: 0.75 },
           }}
         >
           <Logo size="medium" />
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25, alignItems: 'center', justifyContent: 'flex-end' }}>
-            <InstallApp />
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              alignItems: 'center',
+              justifyContent: { xs: 'center', sm: 'flex-end' },
+              width: { xs: '100%', sm: 'auto' },
+            }}
+          >
+            <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+              <InstallApp />
+            </Box>
             {(!user || user.role === USER_ROLES.RECRUITER) && (
               <MotionBox whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Button
