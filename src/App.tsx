@@ -27,6 +27,11 @@ import { ProfilePage } from '@pages/dashboard/Profile';
 import { RecruiterRegister } from '@pages/recruiter/RecruiterRegister';
 import { RecruiterDashboard } from '@pages/recruiter/RecruiterDashboard';
 import PremiumDashboard from '@pages/dashboard/PremiumDashboard';
+import { SettingsLayout } from '@pages/dashboard/settings/SettingsLayout';
+import { AccountSettings } from '@pages/dashboard/settings/AccountSettings';
+import { CommunicationPrivacySettings } from '@pages/dashboard/settings/CommunicationPrivacySettings';
+import { JobPreferencesSettings } from '@pages/dashboard/settings/JobPreferencesSettings';
+import { BlockedCompaniesSettings } from '@pages/dashboard/settings/BlockedCompaniesSettings';
 import { useSubscription } from '@hooks/index';
 
 const RoleDashboard: React.FC = () => {
@@ -132,6 +137,31 @@ export const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path={ROUTES.DASHBOARD_SETTINGS}
+              element={
+                <ProtectedRoute>
+                  <SettingsLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                path="account"
+                element={<AccountSettings />}
+              />
+              <Route
+                path="privacy"
+                element={<CommunicationPrivacySettings />}
+              />
+              <Route
+                path="preferences"
+                element={<JobPreferencesSettings />}
+              />
+              <Route
+                path="blocked-companies"
+                element={<BlockedCompaniesSettings />}
+              />
+            </Route>
             <Route
               path={ROUTES.RECRUITER_DASHBOARD}
               element={

@@ -15,7 +15,6 @@ import {
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Person as PersonIcon,
-  Logout as LogoutIcon,
   Dashboard as DashboardIcon,
   WorkOutline as WorkIcon,
   Settings as SettingsIcon,
@@ -37,7 +36,6 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -45,14 +43,6 @@ export const Navbar: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-  };
-
-  const handleSettingsOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setSettingsAnchorEl(event.currentTarget);
-  };
-
-  const handleSettingsClose = () => {
-    setSettingsAnchorEl(null);
   };
 
   const handleLogout = async () => {
@@ -273,9 +263,6 @@ export const Navbar: React.FC = () => {
                     </IconButton>
                   </>
                 )}
-                <IconButton onClick={handleSettingsOpen} size="small" sx={{ color: 'text.primary' }}>
-                  <SettingsIcon sx={{ fontSize: 20 }} />
-                </IconButton>
                 <IconButton onClick={handleMenuOpen} size="small">
                   <Avatar
                     src={user.avatar}
@@ -289,51 +276,6 @@ export const Navbar: React.FC = () => {
                     {generateInitials(user.name)}
                   </Avatar>
                 </IconButton>
-                <Menu
-                  anchorEl={settingsAnchorEl}
-                  open={Boolean(settingsAnchorEl)}
-                  onClose={handleSettingsClose}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                  PaperProps={{
-                    sx: {
-                      background: '#FFFFFF',
-                      border: '1px solid #E4E9F2',
-                      borderRadius: 2,
-                      boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
-                      minWidth: 220,
-                      mt: 1,
-                    },
-                  }}
-                >
-                  <MenuItem
-                    component="a"
-                    href="https://www.naukri.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleSettingsClose}
-                  >
-                    Naukri <OpenInNewIcon sx={{ fontSize: 18, ml: 1 }} />
-                  </MenuItem>
-                  <MenuItem
-                    component="a"
-                    href="https://www.linkedin.com/jobs/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleSettingsClose}
-                  >
-                    LinkedIn <OpenInNewIcon sx={{ fontSize: 18, ml: 1 }} />
-                  </MenuItem>
-                  <MenuItem
-                    component="a"
-                    href="https://www.indeed.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleSettingsClose}
-                  >
-                    Indeed <OpenInNewIcon sx={{ fontSize: 18, ml: 1 }} />
-                  </MenuItem>
-                </Menu>
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
@@ -373,6 +315,13 @@ export const Navbar: React.FC = () => {
                     onClick={handleMenuClose}
                   >
                     <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} /> My Profile
+                  </MenuItem>
+                  <MenuItem
+                    component={RouterLink}
+                    to={ROUTES.DASHBOARD_SETTINGS}
+                    onClick={handleMenuClose}
+                  >
+                    <SettingsIcon sx={{ mr: 1.5, fontSize: 20 }} /> Settings
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
