@@ -46,7 +46,7 @@ export const SUBSCRIPTION_PLANS = [
     id: 'premium',
     name: 'Premium',
     durationLabel: '2 Months',
-    price: 249,
+    price: 269,
     durationMonths: 2,
     period: 'months',
     features: [
