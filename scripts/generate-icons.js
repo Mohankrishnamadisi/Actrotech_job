@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 
-const input = path.join(__dirname, '..', 'public', 'job_logo.png');
+const input = path.join(__dirname, '..', 'public', 'actrotitle.png');
 const outDir = path.join(__dirname, '..', 'public', 'icons');
 
 const sizes = [
