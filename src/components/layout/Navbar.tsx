@@ -12,13 +12,14 @@ import {
   Typography,
   Divider,
 } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Person as PersonIcon,
   Dashboard as DashboardIcon,
   WorkOutline as WorkIcon,
   Settings as SettingsIcon,
   ExitToApp as ExitToAppIcon,
+  ArrowBackIosNew as ArrowBackIosNewIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -37,7 +38,9 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
   const navigate = useNavigate();
+  const location = useLocation();
   const isRecruiter = user?.role === USER_ROLES.RECRUITER;
+  const canGoBack = location.pathname !== ROUTES.HOME && location.pathname !== '/';
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
 
@@ -131,7 +134,33 @@ export const Navbar: React.FC = () => {
             px: { xs: 0, sm: 1 },
           }}
         >
-          <Logo size="medium" />
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              width: { xs: '100%', sm: 'auto' },
+              justifyContent: { xs: 'space-between', sm: 'flex-start' },
+              ml: { xs: -1.5, sm: 0 },
+            }}
+          >
+            {canGoBack && (
+              <IconButton
+                onClick={() => navigate(-1)}
+                size="small"
+                sx={{
+                  bgcolor: 'background.paper',
+                  border: '1px solid rgba(15,23,42,0.08)',
+                  boxShadow: 1,
+                  color: 'text.primary',
+                  ml: { xs: 1, sm: 0 },
+                }}
+              >
+                <ArrowBackIosNewIcon fontSize="small" />
+              </IconButton>
+            )}
+            <Logo size="medium" />
+          </Box>
 
           <Box
             sx={{
@@ -290,21 +319,18 @@ export const Navbar: React.FC = () => {
                       p: 0.75,
                       borderRadius: '10px',
                       minWidth: 0,
-                      background: 'rgba(255, 215, 0, 0.16)',
-                      color: '#FFD700',
-                      boxShadow: '0 8px 16px rgba(255, 215, 0, 0.16)',
+                      color: '#ffffff',
                       transition: 'transform 180ms ease, box-shadow 180ms ease',
                       position: 'relative',
                       '&:hover': {
-                        transform: 'scale(1.08)',
-                        boxShadow: '0 0 24px 8px rgba(255, 215, 0, 0.35)',
+                        transform: 'scale(1.05)',
                       },
                       '&::before': {
                         content: '""',
                         position: 'absolute',
                         inset: 0,
                         borderRadius: '10px',
-                        background: 'radial-gradient(circle at top left, rgba(255,255,255,0.7), transparent 38%)',
+                        background: 'radial-gradient(circle at top left, rgba(255,255,255,0.5), transparent 38%)',
                         opacity: 0,
                         transition: 'opacity 300ms ease',
                       },
