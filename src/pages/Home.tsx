@@ -16,6 +16,7 @@ import {
   CardContent,
   Chip,
   Autocomplete,
+  IconButton,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -29,9 +30,10 @@ import {
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
   DataObject as DataIcon,
+  ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { ROUTES, JOB_CATEGORIES, INDIAN_CITIES } from '@constants/index';
+import { ROUTES, JOB_CATEGORIES, INDIAN_CITIES, INTERVIEW_ROLES, INTERVIEW_ROLE_CATEGORIES } from '@constants/index';
 
 const MotionBox = motion(Box);
 const MotionTypography = motion(Typography);
@@ -85,13 +87,7 @@ const featuredCompanies = [
   { name: 'Swiggy', description: 'Growth and product hiring', keyword: 'Swiggy' },
 ];
 
-const interviewRoles = [
-  'Software Engineer',
-  'Product Manager',
-  'Data Scientist',
-  'UI/UX Designer',
-  'DevOps Engineer',
-];
+const interviewRoleCategories = INTERVIEW_ROLE_CATEGORIES;
 
 const categoryIconColors = [
   '#2563EB',
@@ -107,6 +103,8 @@ export const Home: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [experience, setExperience] = useState('');
+  const [roleSearch, setRoleSearch] = useState('');
+  const [selectedRoleCategory, setSelectedRoleCategory] = useState('All');
 
   const handleSearch = () => {
     const filters = new URLSearchParams();
@@ -125,6 +123,18 @@ export const Home: React.FC = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
+
+  const roleCardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
+  const filteredInterviewRoles = INTERVIEW_ROLES.filter((role) => {
+    const matchesSearch = role.title.toLowerCase().includes(roleSearch.toLowerCase()) ||
+      role.description.toLowerCase().includes(roleSearch.toLowerCase());
+    const matchesCategory = selectedRoleCategory === 'All' || role.categories.includes(selectedRoleCategory);
+    return matchesSearch && matchesCategory;
+  });
 
   const experienceOptions = Array.from({ length: 26 }, (_, i) => `${i} years`);
 
@@ -511,37 +521,165 @@ export const Home: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Paper sx={{ p: 4, borderRadius: 3, background: 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', border: '1px solid', borderColor: 'divider' }}>
+          <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, background: 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', border: '1px solid', borderColor: 'divider' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
               Interview Questions by Role
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, textAlign: 'center' }}>
-              Click on any role to explore interview questions and answers from AmbitionBox.
+              Discover role-specific interview questions and prepare with real AmbitionBox resources.
             </Typography>
-            <Grid container spacing={2}>
-              {interviewRoles.map((role) => (
-                <Grid item xs={12} sm={6} md={4} key={role}>
-                  <Card sx={{ p: 2, borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 3, alignItems: 'center', justifyContent: 'space-between' }}>
+              <TextField
+                fullWidth
+                placeholder="Search roles like React, Java, DevOps, Data Scientist"
+                value={roleSearch}
+                onChange={(e) => setRoleSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'primary.main' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ background: '#fff', borderRadius: 2 }}
+              />
+              <FormControl sx={{ minWidth: 180 }}>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={selectedRoleCategory}
+                  label="Category"
+                  onChange={(e) => setSelectedRoleCategory(e.target.value)}
+                  sx={{ background: '#fff', borderRadius: 2 }}
+                >
+                  {INTERVIEW_ROLE_CATEGORIES.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Grid container spacing={3}>
+              {filteredInterviewRoles.slice(0, 4).map((role) => (
+                <Grid item xs={12} sm={6} md={3} key={role.title}>
+                  <MotionCard
+                    component="button"
+                    type="button"
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    transition={{ duration: 0.25 }}
+                    onClick={() => window.open(role.url, '_blank')}
+                    sx={{
+                      p: 3,
+                      borderRadius: 4,
+                      background: '#fff',
+                      boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
+                      border: '1px solid transparent',
+                      textAlign: 'left',
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: 'rgba(37, 99, 235, 0.18)',
+                        boxShadow: '0 22px 58px rgba(15, 23, 42, 0.14)',
+                      },
+                      '&:focus': {
+                        outline: 'none',
+                        borderColor: 'rgba(37, 99, 235, 0.28)',
+                      },
+                    }}
+                    initial="hidden"
+                    animate="visible"
+                    variants={roleCardVariants}
+                  >
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                        {role}
+                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.25 }}>
+                        {role.title}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Prepare with real questions and answers from top industry interviews.
+                      <Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 700, mb: 1 }}>
+                        {role.count}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                        {role.description}
                       </Typography>
                     </Box>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => window.open(`https://www.ambitionbox.com/profiles`, '_blank')}
-                      sx={{ mt: 2, textTransform: 'none' }}
-                    >
-                      Open AmbitionBox
-                    </Button>
-                  </Card>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mt: 3 }}>
+                      <Box sx={{ color: 'primary.main', fontSize: '1.2rem' }}>
+                        <ArrowForwardIcon />
+                      </Box>
+                    </Box>
+                  </MotionCard>
                 </Grid>
               ))}
+              {filteredInterviewRoles.length === 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}>
+                    No matching roles found. Adjust your search or choose another category.
+                  </Typography>
+                </Grid>
+              )}
             </Grid>
+            {filteredInterviewRoles.length > 4 && (
+              <Box sx={{ mt: 4, overflowX: 'auto', py: 1, mx: -2, px: 2 }}>
+                <Box sx={{ display: 'flex', gap: 2, minWidth: 'max-content' }}>
+                  {filteredInterviewRoles.slice(4).map((role) => (
+                    <MotionCard
+                      key={role.title}
+                      component="button"
+                      type="button"
+                      whileHover={{ y: -6, scale: 1.02 }}
+                      transition={{ duration: 0.25 }}
+                      onClick={() => window.open(role.url, '_blank')}
+                      sx={{
+                        p: 3,
+                        borderRadius: 4,
+                        background: '#fff',
+                        boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
+                        border: '1px solid transparent',
+                        textAlign: 'left',
+                        minWidth: 300,
+                        flex: '0 0 auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          borderColor: 'rgba(37, 99, 235, 0.18)',
+                          boxShadow: '0 22px 58px rgba(15, 23, 42, 0.14)',
+                        },
+                        '&:focus': {
+                          outline: 'none',
+                          borderColor: 'rgba(37, 99, 235, 0.28)',
+                        },
+                      }}
+                      initial="hidden"
+                      animate="visible"
+                      variants={roleCardVariants}
+                    >
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.25 }}>
+                          {role.title}
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 700, mb: 1 }}>
+                          {role.count}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                          {role.description}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mt: 3 }}>
+                        <Box sx={{ color: 'primary.main', fontSize: '1.2rem' }}>
+                          <ArrowForwardIcon />
+                        </Box>
+                      </Box>
+                    </MotionCard>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Paper>
         </MotionBox>
 
