@@ -10,6 +10,7 @@ import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { ProtectedRoute } from '@components/common/ProtectedRoute';
+import { ErrorBoundary } from '@components/common/ErrorBoundary';
 import { ThemeModeProvider, useThemeMode } from './context/ThemeContext';
 
 import { Home } from '@pages/Home';
@@ -66,20 +67,23 @@ const AppContent: React.FC = () => {
     const initAuth = async () => {
       setLoading(true);
       try {
-        const session = await authService.getSession();
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || 'User',
-            role: session.user.user_metadata?.role || USER_ROLES.JOB_SEEKER,
-            avatar: session.user.user_metadata?.avatar_url,
-            createdAt: session.user.created_at || new Date().toISOString(),
-            updatedAt: session.user.updated_at || new Date().toISOString(),
-          });
+        try {
+          const session = await authService.getSession();
+          if (session?.user) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.name || 'User',
+              role: session.user.user_metadata?.role || USER_ROLES.JOB_SEEKER,
+              avatar: session.user.user_metadata?.avatar_url,
+              createdAt: session.user.created_at || new Date().toISOString(),
+              updatedAt: session.user.updated_at || new Date().toISOString(),
+            });
+          }
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+          // Continue without authentication - user will see login page
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
       } finally {
         setLoading(false);
       }
@@ -87,26 +91,35 @@ const AppContent: React.FC = () => {
 
     initAuth();
 
-    const unsubscribe = authService.onAuthStateChange((session) => {
-      const s = session as { user?: { id: string; email?: string; user_metadata?: Record<string, string>; created_at?: string; updated_at?: string } } | null;
-      if (s?.user) {
-        setUser({
-          id: s.user.id,
-          email: s.user.email || '',
-          name: s.user.user_metadata?.name || 'User',
-          role: (s.user.user_metadata?.role as 'job_seeker' | 'recruiter' | 'admin') || USER_ROLES.JOB_SEEKER,
-          avatar: s.user.user_metadata?.avatar_url,
-          createdAt: s.user.created_at || new Date().toISOString(),
-          updatedAt: s.user.updated_at || new Date().toISOString(),
-        });
-      } else {
-        setUser(null);
-      }
-    });
+    let subscription: { data?: { subscription?: { unsubscribe: () => void } } } | null = null;
+    try {
+      subscription = authService.onAuthStateChange((session) => {
+        const s = session as { user?: { id: string; email?: string; user_metadata?: Record<string, string>; created_at?: string; updated_at?: string } } | null;
+        if (s?.user) {
+          setUser({
+            id: s.user.id,
+            email: s.user.email || '',
+            name: s.user.user_metadata?.name || 'User',
+            role: (s.user.user_metadata?.role as 'job_seeker' | 'recruiter' | 'admin') || USER_ROLES.JOB_SEEKER,
+            avatar: s.user.user_metadata?.avatar_url,
+            createdAt: s.user.created_at || new Date().toISOString(),
+            updatedAt: s.user.updated_at || new Date().toISOString(),
+          });
+        } else {
+          setUser(null);
+        }
+      });
+    } catch (error) {
+      console.error('Auth state listener error:', error);
+    }
 
     return () => {
-      const sub = unsubscribe as { data?: { subscription?: { unsubscribe: () => void } } };
-      sub?.data?.subscription?.unsubscribe();
+      try {
+        const sub = subscription as { data?: { subscription?: { unsubscribe: () => void } } };
+        sub?.data?.subscription?.unsubscribe();
+      } catch (error) {
+        console.error('Error unsubscribing from auth:', error);
+      }
     };
   }, [setUser, setLoading]);
 
@@ -252,11 +265,13 @@ const AppContent: React.FC = () => {
 };
 
 export const App: React.FC = () => (
-  <HelmetProvider>
-    <ThemeModeProvider>
-      <AppContent />
-    </ThemeModeProvider>
-  </HelmetProvider>
+  <ErrorBoundary>
+    <HelmetProvider>
+      <ThemeModeProvider>
+        <AppContent />
+      </ThemeModeProvider>
+    </HelmetProvider>
+  </ErrorBoundary>
 );
 
 export default App;

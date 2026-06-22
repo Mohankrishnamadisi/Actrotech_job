@@ -25,6 +25,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    hmr: process.env.NODE_ENV === 'production' ? false : undefined,
   },
 })
 
