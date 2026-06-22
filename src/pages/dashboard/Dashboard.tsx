@@ -20,14 +20,14 @@ import {
   Bookmark as BookmarkIcon,
   Notifications as NotificationsIcon,
   Person as PersonIcon,
-  Search as SearchIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
 import { calculateProfileCompletion, formatDate } from '@utils/index';
-import { applicationService, savedService, notificationService, userService } from '@services/api';
+import { applicationService, savedService, notificationService, userService, jobService } from '@services/api';
+import { INTERVIEW_ROLES } from '@constants/index';
 
 type RecentApplication = {
   id: string;
@@ -45,15 +45,20 @@ export const Dashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [profile, setProfile] = useState<any | null>(null);
   const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
       if (!user?.id) return;
       try {
         const profile = await userService.getProfile(user.id);
+        setProfile(profile || null);
         setProfileCompletion(
           calculateProfileCompletion({
             fullName: profile?.name || user.name,
@@ -74,6 +79,9 @@ export const Dashboard: React.FC = () => {
             socialLinks: profile?.linkedin_url || profile?.portfolio_url || profile?.github_url,
           })
         );
+        // extract skills for personalized content
+        const userSkills = profile?.skills || profile?.skills || [];
+        setSkills(Array.isArray(userSkills) ? userSkills : String(userSkills || '').split(',').map((s: string) => s.trim()).filter(Boolean));
       } catch (err) {
         console.error('Failed to load profile for dashboard completion:', err);
       }
@@ -95,6 +103,19 @@ export const Dashboard: React.FC = () => {
         setRecentApplications(applications || []);
         setSavedCount((savedJobs || []).length);
         setNotificationsCount((notifications || []).length);
+        // load recommended jobs based on skills
+        try {
+          const skillList = (profile?.skills && Array.isArray(profile.skills) && profile.skills.length) ? profile.skills : (skills || []);
+          if (skillList && skillList.length > 0) {
+            setRecommendedLoading(true);
+            const res = await jobService.getJobsBySkills(skillList, 1, 6);
+            setRecommendedJobs(res.data || []);
+          }
+        } catch (err) {
+          console.error('Failed to load recommended jobs by skills:', err);
+        } finally {
+          setRecommendedLoading(false);
+        }
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       }
@@ -280,6 +301,88 @@ export const Dashboard: React.FC = () => {
                     </Button>
                   </>
                 )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        {/* Personalized sections: Skills, Recommended Jobs, Interview Prep */}
+        <Grid container spacing={3} sx={{ mt: 4 }}>
+          <Grid item xs={12} md={4}>
+            <Card sx={{ borderRadius: 3, p: 2, height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                  Your Skills
+                </Typography>
+                {skills && skills.length ? (
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                    {skills.map((s) => (
+                      <Chip key={s} label={s} color="primary" variant="outlined" />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                    Add skills in your profile to get personalized recommendations.
+                  </Typography>
+                )}
+                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                  <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" sx={{ textTransform: 'none' }}>
+                    Edit Profile
+                  </Button>
+                  <Button variant="outlined" component={RouterLink} to={ROUTES.JOBS} sx={{ textTransform: 'none' }}>
+                    Browse Jobs
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={5}>
+            <Card sx={{ borderRadius: 3, p: 2, height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                  Recommended Jobs For You
+                </Typography>
+                {recommendedLoading ? (
+                  <LinearProgress />
+                ) : recommendedJobs && recommendedJobs.length ? (
+                  <List>
+                    {recommendedJobs.map((job: any) => (
+                      <ListItem key={job.id} button component={RouterLink} to={`/jobs/${job.id}`} sx={{ px: 0 }}>
+                        <ListItemText
+                          primary={job.title}
+                          secondary={`${job.company_name} • ${job.location || 'Location'}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    No recommendations yet. Improve your profile skills to receive tailored job suggestions.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <Card sx={{ borderRadius: 3, p: 2, height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                  Interview Prep
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                  Role-specific interview questions from AmbitionBox matched to your skills.
+                </Typography>
+                <List>
+                  {INTERVIEW_ROLES.filter((r) => skills.some((sk) => r.title.toLowerCase().includes(sk.toLowerCase()) || sk.toLowerCase().includes(r.title.toLowerCase().split(' ')[0]))).slice(0, 6).map((role) => (
+                    <ListItem key={role.title} button onClick={() => window.open(role.url, '_blank')} sx={{ px: 0 }}>
+                      <ListItemText primary={role.title} secondary={role.count} />
+                    </ListItem>
+                  ))}
+                </List>
+                <Button variant="text" component={RouterLink} to={ROUTES.JOBS} sx={{ mt: 1 }}>
+                  Explore more interview roles
+                </Button>
               </CardContent>
             </Card>
           </Grid>
