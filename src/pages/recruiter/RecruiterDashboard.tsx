@@ -14,22 +14,23 @@ import {
   DialogContent,
   TextField,
   CircularProgress,
-  Alert,
+  IconButton,
+  Badge,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
-  Work as WorkIcon,
-  People as PeopleIcon,
   Add as AddIcon,
   Business as BusinessIcon,
-  TrendingUp as TrendingUpIcon,
   Search as SearchIcon,
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
-import { recruiterService, statsService, chatService } from '@services/api';
+import { ROUTES } from '@constants/index';
+import { recruiterService, statsService, chatService, notificationService } from '@services/api';
+import { messagingService } from '@services/messaging';
 import { JobPostingForm } from '@components/recruiter/JobPostingForm';
 import { ManageJobs } from '@components/recruiter/ManageJobs';
 import { ViewApplicants } from '@components/recruiter/ViewApplicants';
@@ -78,6 +79,9 @@ export const RecruiterDashboard: React.FC = () => {
   const [selectedChatUser, setSelectedChatUser] = useState<{ id: string; name: string } | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
@@ -88,13 +92,19 @@ export const RecruiterDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsData, profileData] = await Promise.all([
+      const [statsData, profileData, unreadNotif, conversations] = await Promise.all([
         statsService.getRecruiterStats(user?.id || ''),
         recruiterService.getRecruiterProfile(user?.id || ''),
+        notificationService.getUnreadNotifications(user?.id || ''),
+        messagingService.getConversations(user?.id || ''),
       ]);
 
       setStats(statsData);
       setRecruiterProfile(profileData);
+      setNotificationsCount((unreadNotif || []).length);
+      setUnreadMessagesCount(
+        (((conversations as any[]) || [])).reduce((count, conv) => count + (conv.unreadCount || 0), 0)
+      );
     } catch (err) {
       console.error('Error fetching data:', err);
       toast.error('Failed to load dashboard data');
@@ -118,7 +128,7 @@ export const RecruiterDashboard: React.FC = () => {
 
     setSendingMessage(true);
     try {
-      await chatService.sendMessage(user.id, selectedChatUser.id, chatMessage);
+      await chatService.sendMessage(user.id, selectedChatUser.id, chatMessage, 'recruiter');
       setChatMessage('');
       toast.success('Message sent successfully!');
     } catch (err) {
@@ -138,13 +148,6 @@ export const RecruiterDashboard: React.FC = () => {
       </Layout>
     );
   }
-
-  const dashboardStats = [
-    { label: 'Active Jobs', value: stats.active_jobs, icon: WorkIcon, color: '#1D4ED8' },
-    { label: 'Total Applicants', value: stats.total_applicants, icon: PeopleIcon, color: '#10B981' },
-    { label: 'Shortlisted', value: stats.shortlisted, icon: TrendingUpIcon, color: '#F59E0B' },
-    { label: 'Total Jobs', value: stats.total_jobs, icon: BusinessIcon, color: '#8B5CF6' },
-  ];
 
   const averageApplicants = stats.total_jobs ? Math.round(stats.total_applicants / stats.total_jobs) : 0;
   const shortlistRate = stats.total_applicants ? Math.round((stats.shortlisted / stats.total_applicants) * 100) : 0;
@@ -168,67 +171,35 @@ export const RecruiterDashboard: React.FC = () => {
             boxShadow: '0 20px 60px rgba(15, 23, 42, 0.08)',
           }}
         >
-          <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-            Recruiter Dashboard
-          </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2, maxWidth: 720 }}>
-            Welcome back, {recruiterProfile?.company_name || user?.name}! Manage your hiring with elevated clarity and curated insights.
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-              {activitySummary}
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
+                  Recruiter Dashboard
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2, maxWidth: 720 }}>
+                  Welcome back, {recruiterProfile?.company_name || user?.name}! Manage your hiring with elevated clarity and curated insights.
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                <IconButton
+                  onClick={() => navigate(ROUTES.MESSAGING)}
+                  sx={{ background: 'rgba(79,70,229,0.08)' }}
+                >
+                  <Badge badgeContent={unreadMessagesCount} color="primary">
+                    <ChatIcon />
+                  </Badge>
+                </IconButton>
+                <IconButton
+                  onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
+                  sx={{ background: 'rgba(245,158,11,0.08)' }}
+                >
+                  <Badge badgeContent={notificationsCount} color="error">
+                    <NotificationsIcon />
+                  </Badge>
+                </IconButton>
+              </Box>
+            </Box>
           </Box>
-        </Box>
-
-        {/* Quick Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {dashboardStats.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={stat.label}>
-              <MotionCard
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                sx={{
-                  background: `linear-gradient(135deg, ${stat.color}20 0%, ${stat.color}10 100%)`,
-                  border: `2px solid ${stat.color}30`,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: `0 8px 24px ${stat.color}30`,
-                  },
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                        {stat.label}
-                      </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color }}>
-                        {stat.value}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 2,
-                        background: stat.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <stat.icon sx={{ color: 'white', fontSize: 32 }} />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </MotionCard>
-            </Grid>
-          ))}
-        </Grid>
 
         {/* Quick Actions */}
         <Grid container spacing={2} sx={{ mb: 4 }}>

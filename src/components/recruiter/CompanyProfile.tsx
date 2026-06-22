@@ -89,7 +89,7 @@ export const CompanyProfile: React.FC<CompanyProfileProps> = ({ recruiterId, onP
           companyDescription: profile.description || '',
           industryType: profile.industry || '',
           employeeCount: profile.employee_count || '',
-          hrContactPerson: profile.hr_contact_person || '',
+          hrContactPerson: profile.hr_name || '',
           hrEmail: profile.hr_email || '',
           hrPhone: profile.hr_phone || '',
           gstNumber: profile.gst_number || '',

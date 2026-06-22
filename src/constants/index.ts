@@ -502,6 +502,9 @@ export const ROUTES = {
   ADMIN_DASHBOARD: '/admin/dashboard',
   PRIVACY_POLICY: '/privacy-policy',
   TERMS_CONDITIONS: '/terms-conditions',
+  MESSAGING: '/messaging',
+  MESSAGING_INBOX: '/messaging/inbox',
+  MESSAGING_SENT: '/messaging/sent',
 };
 
 export const STORAGE_KEYS = {

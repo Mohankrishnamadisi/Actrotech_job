@@ -132,7 +132,7 @@ export const RecruiterRegister: React.FC = () => {
           company_phone: formData.companyPhone,
           gst_number: formData.gstNumber,
           cin_number: formData.cinNumber || undefined,
-          hr_contact_person: formData.hrContactPerson,
+          hr_name: formData.hrContactPerson,
           hr_email: formData.hrEmail,
           hr_phone: formData.hrPhone,
         } as Record<string, unknown>);

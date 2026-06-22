@@ -135,7 +135,7 @@ export const recruiterService = {
       companyDescription: 'description',
       industryType: 'industry',
       employeeCount: 'employee_count',
-      hrContactPerson: 'hr_contact_person',
+      hrContactPerson: 'hr_name',
       hrEmail: 'hr_email',
       hrPhone: 'hr_phone',
       gstNumber: 'gst_number',
@@ -344,7 +344,43 @@ export const jobService = {
       .insert([payload])
       .select();
     if (error) throw error;
-    return normalizeJob(data?.[0]);
+
+    const createdJob = data?.[0] ? normalizeJob(data[0]) : null;
+
+    try {
+      if (createdJob?.id) {
+        const { data: activeSubs, error: subsError } = await supabase
+          .from('subscriptions')
+          .select('user_id')
+          .eq('status', 'active');
+
+        if (subsError) {
+          throw subsError;
+        }
+
+        const notifications = (activeSubs || [])
+          .filter((sub) => sub?.user_id)
+          .map((sub) => ({
+            user_id: sub.user_id,
+            type: 'new_job',
+            title: 'New premium job posted',
+            message: `${createdJob.title} at ${createdJob.company_name} is now live. Apply now to secure your next role.`,
+            data: { jobId: createdJob.id },
+            read: false,
+          }));
+
+        if (notifications.length > 0) {
+          const { error: notifError } = await supabase.from('notifications').insert(notifications);
+          if (notifError) {
+            throw notifError;
+          }
+        }
+      }
+    } catch (notificationError) {
+      console.error('Failed to notify subscribers of new job:', notificationError);
+    }
+
+    return createdJob;
   },
 
   async updateJob(jobId: string, updates: Record<string, unknown>) {
@@ -809,37 +845,107 @@ export const candidateService = {
 
 // Chat operations
 export const chatService = {
-  async sendMessage(senderId: string, recipientId: string, message: string) {
-    const { data, error } = await supabase
-      .from('messages')
-      .insert([{ sender_id: senderId, recipient_id: recipientId, message, read: false }])
-      .select();
-    if (error) throw error;
-    return data[0];
+  async sendMessage(
+    senderId: string,
+    receiverId: string,
+    content: string,
+    userRole: 'recruiter' | 'candidate' = 'candidate'
+  ) {
+    try {
+      let conversation = await this.getConversation(senderId, receiverId);
+
+      if (!conversation) {
+        if (userRole !== 'recruiter') {
+          throw new Error('Only recruiters can initiate conversations');
+        }
+
+        const recruiterId = senderId;
+        const candidateId = receiverId;
+        console.log('No conversation found. Creating new conversation', {
+          recruiterId,
+          candidateId,
+        });
+
+        const { data, error } = await supabase
+          .from('conversations')
+          .insert([
+            {
+              recruiter_id: recruiterId,
+              candidate_id: candidateId,
+              initiated_by_recruiter: true,
+            },
+          ])
+          .select('id')
+          .single();
+
+        if (error) {
+          const sqlError = error as any;
+          if (sqlError?.code === '23505' || sqlError?.details?.includes('duplicate key value')) {
+            console.warn('Conversation already exists after insert race, refetching existing conversation');
+            conversation = await this.getConversation(senderId, receiverId);
+          } else {
+            throw error;
+          }
+        } else {
+          conversation = data;
+          console.log('Conversation created', conversation.id);
+        }
+      } else {
+        console.log('Conversation found', conversation.id);
+      }
+
+      if (!conversation?.id) {
+        throw new Error('Unable to resolve conversation id');
+      }
+
+      console.log('Inserting message with conversation_id', conversation.id);
+      const { data, error } = await supabase
+        .from('messages')
+        .insert([
+          {
+            conversation_id: conversation.id,
+            sender_id: senderId,
+            receiver_id: receiverId,
+            content,
+            is_read: false,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Chat sendMessage error:', error);
+      throw error;
+    }
   },
 
   async getConversation(userId: string, otherUserId: string) {
     const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`)
-      .order('created_at', { ascending: true });
-    if (error) throw error;
+      .from('conversations')
+      .select('id, recruiter_id, candidate_id')
+      .or(
+        `and(recruiter_id.eq.${userId},candidate_id.eq.${otherUserId}),and(recruiter_id.eq.${otherUserId},candidate_id.eq.${userId})`
+      )
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
     return data;
   },
 
   async getUserConversations(userId: string) {
     const { data, error } = await supabase
       .from('messages')
-      .select('sender_id, recipient_id, message, created_at')
-      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+      .select('sender_id, receiver_id, content, created_at')
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
     if (error) throw error;
 
     // Group by conversation
     const conversations: Record<string, unknown> = {};
     data?.forEach((msg) => {
-      const otherId = msg.sender_id === userId ? msg.recipient_id : msg.sender_id;
+      const otherId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
       if (!conversations[otherId]) {
         conversations[otherId] = msg;
       }
@@ -850,8 +956,8 @@ export const chatService = {
   async markMessagesAsRead(userId: string, senderId: string) {
     const { error } = await supabase
       .from('messages')
-      .update({ read: true })
-      .eq('recipient_id', userId)
+      .update({ is_read: true })
+      .eq('receiver_id', userId)
       .eq('sender_id', senderId);
     if (error) throw error;
   },

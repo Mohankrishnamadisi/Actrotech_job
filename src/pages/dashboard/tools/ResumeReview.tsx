@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import {
   Box,
   Container,
@@ -9,7 +10,6 @@ import {
   Button,
   TextField,
   LinearProgress,
-  Alert,
   List,
   ListItem,
   ListItemIcon,
@@ -63,7 +63,12 @@ export const ResumeReview: React.FC = () => {
 
   const analyzeResume = async () => {
     if (!resumeContent.trim()) {
-      alert('Please paste your resume content');
+      await Swal.fire({
+        title: 'Paste your resume',
+        text: 'Please paste your resume content before analyzing.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+      });
       return;
     }
 
@@ -109,10 +114,20 @@ export const ResumeReview: React.FC = () => {
       
       setHasResume(true);
       setOpenUpload(false);
-      alert('Resume uploaded successfully!');
+      await Swal.fire({
+        title: 'Upload successful',
+        text: 'Resume uploaded successfully!',
+        icon: 'success',
+        confirmButtonText: 'OK',
+      });
     } catch (error) {
       console.error('Error uploading resume:', error);
-      alert('Failed to upload resume');
+      await Swal.fire({
+        title: 'Upload failed',
+        text: 'Failed to upload resume.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
     } finally {
       setLoading(false);
     }

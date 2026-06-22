@@ -12,8 +12,9 @@ import {
   ListItemText,
   Chip,
   LinearProgress,
+  Badge,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Work as WorkIcon,
@@ -27,6 +28,7 @@ import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
 import { calculateProfileCompletion, formatDate } from '@utils/index';
 import { applicationService, savedService, notificationService, userService, jobService } from '@services/api';
+import { messagingService } from '@services/messaging';
 import { INTERVIEW_ROLES } from '@constants/index';
 
 type RecentApplication = {
@@ -49,9 +51,11 @@ export const Dashboard: React.FC = () => {
   const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [skills, setSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -94,15 +98,21 @@ export const Dashboard: React.FC = () => {
     const loadDashboardData = async () => {
       if (!user?.id) return;
       try {
-        const [applications, savedJobs, notifications] = await Promise.all([
+        const [applications, savedJobs, notifications, conversations] = await Promise.all([
           applicationService.getUserApplications(user.id),
           savedService.getUserSavedJobs(user.id),
-          notificationService.getUserNotifications(user.id, 50),
+          notificationService.getUnreadNotifications(user.id),
+          messagingService.getConversations(user.id),
         ]);
 
         setRecentApplications(applications || []);
         setSavedCount((savedJobs || []).length);
         setNotificationsCount((notifications || []).length);
+        setUnreadMessagesCount(
+          (((conversations as any[]) || [])
+            .reduce((count, conv) => count + (conv.unreadCount || 0), 0))
+        );
+
         // load recommended jobs based on skills
         try {
           const skillList = (profile?.skills && Array.isArray(profile.skills) && profile.skills.length) ? profile.skills : (skills || []);
@@ -122,7 +132,7 @@ export const Dashboard: React.FC = () => {
     };
 
     loadDashboardData();
-  }, [user?.id]);
+  }, [user?.id, profile?.skills, skills]);
 
   const stats = [
     { label: 'Applications', value: recentApplications.length, icon: WorkIcon, color: '#1D4ED8' },
@@ -137,9 +147,33 @@ export const Dashboard: React.FC = () => {
           <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
             Welcome, {user?.name}!
           </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
             Here's your job search dashboard
           </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate(ROUTES.MESSAGING)}
+              startIcon={
+                <Badge badgeContent={unreadMessagesCount} color="primary">
+                  💬
+                </Badge>
+              }
+            >
+              Inbox
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
+              startIcon={
+                <Badge badgeContent={notificationsCount} color="error">
+                  🔔
+                </Badge>
+              }
+            >
+              Notifications
+            </Button>
+          </Box>
         </Box>
 
         <Grid container spacing={3} sx={{ mb: 4 }}>

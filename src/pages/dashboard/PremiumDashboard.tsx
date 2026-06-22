@@ -13,6 +13,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  IconButton,
+  Badge,
 } from '@mui/material';
 import {
   Work as WorkIcon,
@@ -22,22 +24,25 @@ import {
   Videocam as VideocamIcon,
   Description as DescriptionIcon,
   Rocket as RocketIcon,
+  Chat as ChatIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
-import { useSubscription, useThemeMode } from '@hooks/index';
+import { useThemeMode } from '@hooks/index';
 import { useAuthStore } from '@store/index';
-import { userService, applicationService, savedService } from '@services/api';
+import { userService, applicationService, savedService, notificationService } from '@services/api';
+import { messagingService } from '@services/messaging';
 import { ROUTES } from '@constants/index';
 
 export const PremiumDashboard: React.FC = () => {
   const { user } = useAuthStore();
-  const { subscription } = useSubscription(user?.id || null);
   const { themeMode, setThemeMode } = useThemeMode();
   const navigate = useNavigate();
   const [applicationCount, setApplicationCount] = useState(0);
   const [savedJobsCount, setSavedJobsCount] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [profileStrength, setProfileStrength] = useState(0);
   const [userSkills, setUserSkills] = useState<string[]>([]);
@@ -65,13 +70,20 @@ export const PremiumDashboard: React.FC = () => {
           setProfileStrength(Math.round(strength));
         }
 
-        const applications = await applicationService.getUserApplications(user.id, 1, 1000);
+        const applications = await applicationService.getUserApplications(user.id);
         setApplicationCount(applications?.length || 0);
 
         const saved = await savedService.getUserSavedJobs(user.id);
         setSavedJobsCount(saved?.length || 0);
 
-        setNotificationsCount(2);
+        const unreadNotifications = await notificationService.getUnreadNotifications(user.id);
+        setNotificationsCount((unreadNotifications || []).length);
+
+        const conversations = await messagingService.getConversations(user.id);
+        setUnreadMessagesCount(
+          (((conversations as any[]) || [])
+            .reduce((count, conv) => count + (conv.unreadCount || 0), 0))
+        );
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -107,18 +119,36 @@ export const PremiumDashboard: React.FC = () => {
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Chip icon={<StarIcon />} label="Premium Member" sx={{ fontWeight: 700, background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)', color: '#000' }} />
-              <FormControl size="small">
-                <InputLabel>Theme</InputLabel>
-                <Select value={themeMode} label="Theme" onChange={(e) => setThemeMode(e.target.value as any)} sx={{ minWidth: 140 }}>
-                  <MenuItem value="light">Light</MenuItem>
-                  <MenuItem value="dark">Dark</MenuItem>
-                  <MenuItem value="professional">Professional</MenuItem>
-                  <MenuItem value="modern">Modern</MenuItem>
-                </Select>
-              </FormControl>
+            <Chip icon={<StarIcon />} label="Premium Member" sx={{ fontWeight: 700, background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)', color: '#000' }} />
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <IconButton
+                onClick={() => navigate(ROUTES.MESSAGING)}
+                sx={{ background: 'rgba(79,70,229,0.08)' }}
+              >
+                <Badge badgeContent={unreadMessagesCount} color="primary">
+                  <ChatIcon />
+                </Badge>
+              </IconButton>
+              <IconButton
+                onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
+                sx={{ background: 'rgba(245,158,11,0.08)' }}
+              >
+                <Badge badgeContent={notificationsCount} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
             </Box>
+            <FormControl size="small">
+              <InputLabel>Theme</InputLabel>
+              <Select value={themeMode} label="Theme" onChange={(e) => setThemeMode(e.target.value as any)} sx={{ minWidth: 140 }}>
+                <MenuItem value="light">Light</MenuItem>
+                <MenuItem value="dark">Dark</MenuItem>
+                <MenuItem value="professional">Professional</MenuItem>
+                <MenuItem value="modern">Modern</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
+        </Box>
         </Box>
 
         {/* Stats Dashboard */}

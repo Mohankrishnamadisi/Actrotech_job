@@ -44,6 +44,7 @@ import RemoteJobs from '@pages/dashboard/RemoteJobs';
 import MockInterviews from '@pages/dashboard/tools/MockInterviews';
 import ResumeReview from '@pages/dashboard/tools/ResumeReview';
 import PriorityApply from '@pages/dashboard/tools/PriorityApply';
+import MessagingPage from '@pages/Messaging';
 
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -256,6 +257,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute requiredRole={USER_ROLES.RECRUITER}>
                 <RecruiterDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.MESSAGING}
+            element={
+              <ProtectedRoute>
+                <MessagingPage />
               </ProtectedRoute>
             }
           />

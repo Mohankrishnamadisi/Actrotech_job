@@ -241,9 +241,10 @@ export interface Notification {
 export interface Message {
   id: string;
   senderId: string;
-  recipientId: string;
-  message: string;
-  read: boolean;
+  receiverId: string;
+  content: string;
+  attachments?: string[];
+  isRead: boolean;
   createdAt: string;
 }
 

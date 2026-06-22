@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import {
   Box,
   Container,
@@ -7,18 +8,11 @@ import {
   CardContent,
   Typography,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   RadioGroup,
   FormControlLabel,
   Radio,
   Alert,
-  Stepper,
-  Step,
-  StepLabel,
   LinearProgress,
   Chip,
 } from '@mui/material';
@@ -76,9 +70,14 @@ export const MockInterviews: React.FC = () => {
     setUserResponse('');
   };
 
-  const handleSubmitResponse = () => {
+  const handleSubmitResponse = async () => {
     if (!userResponse.trim()) {
-      alert('Please provide a response before moving forward.');
+      await Swal.fire({
+        title: 'Response required',
+        text: 'Please provide a response before moving forward.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+      });
       return;
     }
 
