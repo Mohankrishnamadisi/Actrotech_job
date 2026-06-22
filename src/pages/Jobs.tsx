@@ -124,19 +124,23 @@ export const Jobs: React.FC = () => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
     setPage(1);
 
-    const params = new URLSearchParams(searchParams);
-    params.delete(filterName);
-    if (Array.isArray(value)) {
-      value.forEach((item) => {
-        if (item && String(item).trim()) {
-          params.append(filterName, String(item));
-        }
-      });
-    } else if (value && String(value).trim()) {
-      params.set(filterName, String(value));
-    } else {
-    }
-    setSearchParams(params);
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.delete(filterName);
+
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          const text = String(item).trim();
+          if (text) {
+            params.append(filterName, text);
+          }
+        });
+      } else if (value !== null && value !== undefined && String(value).trim() !== '') {
+        params.set(filterName, String(value).trim());
+      }
+
+      return params;
+    });
   };
 
   const clearFilters = () => {
@@ -150,7 +154,7 @@ export const Jobs: React.FC = () => {
       workMode: [],
       category: [],
     });
-    setSearchParams({});
+    setSearchParams(new URLSearchParams());
     setPage(1);
   };
 
@@ -193,7 +197,11 @@ export const Jobs: React.FC = () => {
               sx={{
                 p: 3,
                 position: { md: 'sticky' },
-                top: 80,
+                top: { md: 80 },
+                maxHeight: { md: 'calc(100vh - 110px)' },
+                overflowY: { md: 'auto' },
+                overflowX: 'hidden',
+                alignSelf: 'flex-start',
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(243,246,255,0.96))',
                 border: '1px solid',
                 borderColor: 'divider',
@@ -341,25 +349,54 @@ export const Jobs: React.FC = () => {
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Category
                 </Typography>
-                <FormGroup sx={{ maxHeight: 200, overflow: 'auto', flexDirection: 'column' }}>
-                  {JOB_CATEGORIES.map((category) => (
-                    <FormControlLabel
-                      key={category}
-                      control={
-                        <Checkbox
-                          checked={filters.category.includes(category)}
-                          onChange={(e) => {
-                            const nextValues = e.target.checked
-                              ? [...filters.category, category]
-                              : filters.category.filter((item) => item !== category);
-                            handleFilterChange('category', nextValues);
-                          }}
-                        />
-                      }
-                      label={category}
-                    />
-                  ))}
-                </FormGroup>
+                <Box
+                  sx={{
+                    maxHeight: 220,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    width: '100%',
+                  }}
+                >
+                  <FormGroup
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      width: '100%',
+                      gap: 1,
+                    }}
+                  >
+                    {JOB_CATEGORIES.map((category) => (
+                      <FormControlLabel
+                        key={category}
+                        control={
+                          <Checkbox
+                            sx={{ p: 0.5, mr: 0.75 }}
+                            checked={filters.category.includes(category)}
+                            onChange={(e) => {
+                              const nextValues = e.target.checked
+                                ? [...filters.category, category]
+                                : filters.category.filter((item) => item !== category);
+                              handleFilterChange('category', nextValues);
+                            }}
+                          />
+                        }
+                        label={category}
+                        sx={{
+                          m: 0,
+                          width: '100%',
+                          alignItems: 'center',
+                          '& .MuiFormControlLabel-label': {
+                            flex: 1,
+                            minWidth: 0,
+                            whiteSpace: 'normal',
+                            overflowWrap: 'anywhere',
+                            lineHeight: 1.4,
+                          },
+                        }}
+                      />
+                    ))}
+                  </FormGroup>
+                </Box>
               </FormControl>
 
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>

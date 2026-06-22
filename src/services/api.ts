@@ -209,9 +209,33 @@ export const jobService = {
       query = query.eq('work_mode', filters.workMode as string);
     }
     if (Array.isArray(filters?.category) && filters.category.length > 0) {
-      query = query.in('category', filters.category as string[]);
+      const categoryTerms = (filters.category as string[])
+        .map((value) => String(value).trim())
+        .filter(Boolean);
+
+      if (categoryTerms.length > 0) {
+        const exactCategoryClauses = categoryTerms.map((term) => `category.eq.${JSON.stringify(term)}`);
+        const titleClauses = categoryTerms.map((term) => `title.ilike.%${term.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`);
+        const descriptionClauses = categoryTerms.map((term) => `description.ilike.%${term.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`);
+        const companyClauses = categoryTerms.map((term) => `company_name.ilike.%${term.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`);
+        const skillClauses = categoryTerms.map((term) => `skills.cs.{${term}}`);
+
+        const allClauses = [
+          ...exactCategoryClauses,
+          ...titleClauses,
+          ...descriptionClauses,
+          ...companyClauses,
+          ...skillClauses,
+        ];
+
+        query = query.or(allClauses.join(','));
+      }
     } else if (filters?.category) {
-      query = query.eq('category', filters.category as string);
+      const term = String(filters.category).trim();
+      const escaped = term.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      query = query.or(
+        `category.eq.${JSON.stringify(term)},title.ilike.%${escaped}%,description.ilike.%${escaped}%,company_name.ilike.%${escaped}%,skills.cs.{${term}}`
+      );
     }
     if (filters?.experience) {
       query = query.ilike('experience', `%${filters.experience}%`);
