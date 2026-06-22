@@ -158,6 +158,9 @@ export interface Job {
   screeningQuestions?: string[];
   skills: string[];
   applicationLink?: string;
+  application_link?: string;
+  applicationUrl?: string;
+  application_url?: string;
   posted_by?: string;
   postedBy?: string;
   createdAt?: string;

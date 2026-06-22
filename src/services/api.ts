@@ -13,6 +13,10 @@ const normalizeJob = (job: Record<string, any>): Job => ({
   positions_available: job.positions_available ?? job.positionsAvailable ?? job.number_of_positions,
   screeningQuestions: job.screeningQuestions || job.screening_questions || [],
   screening_questions: job.screening_questions || job.screeningQuestions || [],
+  applicationLink: job.applicationLink || job.application_link || job.applicationUrl || job.application_url || undefined,
+  application_link: job.application_link || job.applicationLink || job.applicationUrl || job.application_url || undefined,
+  applicationUrl: job.applicationUrl || job.application_link || job.applicationLink || job.application_url || undefined,
+  application_url: job.application_url || job.application_link || job.applicationLink || job.applicationUrl || undefined,
   createdAt: job.createdAt ?? job.created_at,
   updatedAt: job.updatedAt ?? job.updated_at,
 } as Job);
@@ -313,6 +317,18 @@ export const jobService = {
     // normalize arrays and numeric fields
     if (!Array.isArray(payload.skills)) payload.skills = jobData.skills || [];
     if (!Array.isArray(payload.screening_questions)) payload.screening_questions = jobData.screening_questions || jobData.screeningQuestions || [];
+    if (jobData.applicationLink && !payload.application_link) {
+      payload.application_link = jobData.applicationLink;
+    }
+    if (jobData.application_link && !payload.application_link) {
+      payload.application_link = jobData.application_link;
+    }
+    if (jobData.applicationUrl && !payload.application_link) {
+      payload.application_link = jobData.applicationUrl;
+    }
+    if (jobData.application_url && !payload.application_link) {
+      payload.application_link = jobData.application_url;
+    }
     if (payload.positions_available && typeof payload.positions_available === 'string') {
       payload.positions_available = parseInt(payload.positions_available as string, 10) || 1;
     }
@@ -339,6 +355,18 @@ export const jobService = {
     }
     if ((updates as any).workMode && !payload.work_mode) {
       payload.work_mode = (updates as any).workMode;
+    }
+    if ((updates as any).applicationLink && !payload.application_link) {
+      payload.application_link = (updates as any).applicationLink;
+    }
+    if ((updates as any).application_link && !payload.application_link) {
+      payload.application_link = (updates as any).application_link;
+    }
+    if ((updates as any).applicationUrl && !payload.application_link) {
+      payload.application_link = (updates as any).applicationUrl;
+    }
+    if ((updates as any).application_url && !payload.application_link) {
+      payload.application_link = (updates as any).application_url;
     }
     // ensure company_name is used; do not set a legacy `company` field
     if ((updates as any).company_name && !payload.company_name) {

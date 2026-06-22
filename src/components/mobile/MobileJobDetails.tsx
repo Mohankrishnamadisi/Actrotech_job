@@ -20,6 +20,10 @@ interface JobDetailsProps {
   description?: string;
   requirements?: string[];
   benefits?: string[];
+  applicationLink?: string;
+  application_link?: string;
+  applicationUrl?: string;
+  application_url?: string;
   isSaved?: boolean;
   onApply?: () => void;
   onSave?: () => void;
@@ -34,6 +38,10 @@ export const MobileJobDetails: React.FC<JobDetailsProps> = ({
   description = '',
   requirements = [],
   benefits = [],
+  applicationLink,
+  application_link,
+  applicationUrl,
+  application_url,
   isSaved = false,
   onApply,
   onSave,
@@ -53,6 +61,14 @@ export const MobileJobDetails: React.FC<JobDetailsProps> = ({
         background: '#FFFFFF',
         color: '#172033',
       }).then(() => navigate(ROUTES.LOGIN));
+      return;
+    }
+
+    const externalApplyUrl =
+      applicationLink || application_link || applicationUrl || application_url;
+
+    if (externalApplyUrl) {
+      window.open(externalApplyUrl as string, '_blank', 'noopener,noreferrer');
       return;
     }
 

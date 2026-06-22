@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
+import { validateURL } from '@utils/index';
 import toast from 'react-hot-toast';
 
 const MotionBox = motion(Box);
@@ -39,6 +40,7 @@ interface JobFormData {
   job_type: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance';
   work_mode: 'Onsite' | 'Remote' | 'Hybrid';
   category: string;
+  application_link: string;
   salary_min: string;
   salary_max: string;
   currency: string;
@@ -64,6 +66,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     job_type: 'Full-Time',
     work_mode: 'Onsite',
     category: '',
+    application_link: '',
     salary_min: '',
     salary_max: '',
     currency: 'INR',
@@ -116,6 +119,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     if (!formData.category) return 'Job category is required';
     if (!formData.experience) return 'Experience level is required';
     if (!formData.education) return 'Education level is required';
+    if (formData.application_link && !validateURL(formData.application_link)) return 'Application URL is not valid';
     if (formData.salary_min && formData.salary_max && parseInt(formData.salary_min) > parseInt(formData.salary_max)) {
       return 'Minimum salary cannot be greater than maximum salary';
     }
@@ -144,6 +148,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
         job_type: formData.job_type,
         work_mode: formData.work_mode,
         category: formData.category,
+        application_link: formData.application_link?.trim() || undefined,
         education: formData.education,
         application_deadline: formData.application_deadline,
         currency: formData.currency,
@@ -182,6 +187,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
       job_type: 'Full-Time',
       work_mode: 'Onsite',
       category: '',
+      application_link: '',
       salary_min: '',
       salary_max: '',
       currency: 'INR',
@@ -480,7 +486,17 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
               </Box>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={8}>
+              <TextField
+                fullWidth
+                label="Application URL"
+                name="application_link"
+                value={formData.application_link}
+                onChange={handleChange}
+                placeholder="https://company.com/careers/job-id"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 label="Application Deadline"

@@ -183,6 +183,14 @@ export const JobDetails: React.FC = () => {
       return;
     }
 
+    const externalApplyUrl =
+      job.applicationLink || job.application_link || job.applicationUrl || job.application_url;
+
+    if (externalApplyUrl) {
+      window.open(externalApplyUrl as string, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     if (requiresSubscription && !subscription) {
       Swal.fire({
         icon: 'warning',
