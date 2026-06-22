@@ -119,3 +119,4 @@ export const useLocalStorage = (key: string, initialValue: unknown) => {
 };
 
 export { useThemeMode } from '../context/ThemeContext';
+export { useMobileDetect } from './useMobileDetect';
