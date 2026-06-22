@@ -1,18 +1,31 @@
 import React from 'react';
-import { Box, Container, Grid, Typography, Link, Divider } from '@mui/material';
+import { Box, Container, Grid, Typography, Link, Divider, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Facebook as FacebookIcon,
   Twitter as TwitterIcon,
   LinkedIn as LinkedInIcon,
   GitHub as GitHubIcon,
+  GetApp as InstallIcon,
 } from '@mui/icons-material';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { useAuthStore } from '@store/index';
+import usePWA from '@hooks/usePWA';
+import InstallPromptDialog from '@components/InstallApp/InstallPromptDialog';
 
 export const Footer: React.FC = () => {
   const { user } = useAuthStore();
+  const { deferredPrompt, isInstalled, promptInstall } = usePWA();
+  const [openDialog, setOpenDialog] = React.useState(false);
   const currentYear = new Date().getFullYear();
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      setOpenDialog(true);
+      return;
+    }
+    await promptInstall();
+  };
 
   const recruiterLinks = [
     { label: 'Post a Job', to: ROUTES.RECRUITER_REGISTER },
@@ -119,6 +132,7 @@ export const Footer: React.FC = () => {
               </Box>
             </Grid>
           ))}
+
           {user?.role === 'recruiter' && (
             <Grid item xs={12} sm={6} md={3}>
               <Typography variant="h6" sx={{ fontWeight: 650, mb: 2 }}>
@@ -146,6 +160,37 @@ export const Footer: React.FC = () => {
               </Box>
             </Grid>
           )}
+
+          {/* Install App Section */}
+          {!isInstalled && (
+            <Grid item xs={12} sm={6} md={3}>
+              <Typography variant="h6" sx={{ fontWeight: 650, mb: 2 }}>
+                Mobile App
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, fontSize: '0.875rem' }}>
+                Install our app on your mobile device for the best experience. Access jobs and manage your profile on the go.
+              </Typography>
+              <Button
+                onClick={handleInstallClick}
+                variant="contained"
+                size="small"
+                startIcon={<InstallIcon />}
+                sx={{
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  backgroundColor: '#1D4ED8',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  py: 0.75,
+                  '&:hover': {
+                    backgroundColor: '#1e40af',
+                  },
+                }}
+              >
+                Install App
+              </Button>
+            </Grid>
+          )}
         </Grid>
 
         <Divider sx={{ borderColor: 'divider', my: 3 }} />
@@ -167,6 +212,16 @@ export const Footer: React.FC = () => {
           </Typography>
         </Box>
       </Container>
+
+      {/* Install Dialog */}
+      {!isInstalled && (
+        <InstallPromptDialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          onInstall={handleInstallClick}
+          fallbackMessage={!deferredPrompt ? 'If installation does not appear, use your browser menu → Add to Home screen.' : undefined}
+        />
+      )}
     </Box>
   );
 };
