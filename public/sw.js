@@ -1,4 +1,4 @@
-const CACHE_NAME = 'actro-cache-v1';
+const CACHE_NAME = 'actro-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -39,22 +39,38 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
 
-  // Always try network first for API calls
-  if (request.url.includes('/api/') || request.method !== 'GET') {
+  // Treat known API/third-party endpoints (Supabase, REST paths) as network-first
+  const isSupabase = url.hostname.includes('supabase.co');
+  const isRestApiPath = url.pathname.includes('/rest/v1') || url.pathname.includes('/storage/v1') || url.pathname.includes('/auth/v1');
+
+  if (request.method !== 'GET' || request.url.includes('/api/') || isSupabase || isRestApiPath) {
     event.respondWith(
-      fetch(request).catch(() => caches.match(request))
+      fetch(request)
+        .then((networkResponse) => networkResponse)
+        .catch(() => caches.match(request))
     );
     return;
   }
 
-  // For navigation and static assets, serve cache first
+  // For navigation and static assets, serve cache first. Cache only same-origin GET responses.
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request).then((resp) => {
-      if (!resp || resp.status !== 200) return resp;
-      const respClone = resp.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(request, respClone));
-      return resp;
-    })).catch(() => caches.match('/index.html'))
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((resp) => {
+        if (!resp || resp.status !== 200) return resp;
+        try {
+          const respClone = resp.clone();
+          // Only cache same-origin resources to avoid caching third-party API responses
+          if (new URL(request.url).origin === self.location.origin) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, respClone));
+          }
+        } catch (e) {
+          // ignore cache failures
+        }
+        return resp;
+      });
+    }).catch(() => caches.match('/index.html'))
   );
 });
