@@ -38,6 +38,7 @@ import { CommunicationPrivacySettings } from '@pages/dashboard/settings/Communic
 import { JobPreferencesSettings } from '@pages/dashboard/settings/JobPreferencesSettings';
 import { BlockedCompaniesSettings } from '@pages/dashboard/settings/BlockedCompaniesSettings';
 import { useSubscription } from '@hooks/index';
+import { useNotificationAlerts } from '@hooks/useNotificationAlerts';
 import RecommendedJobs from '@pages/dashboard/RecommendedJobs';
 import RemoteJobs from '@pages/dashboard/RemoteJobs';
 import MockInterviews from '@pages/dashboard/tools/MockInterviews';
@@ -61,7 +62,9 @@ const RoleDashboard: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { themeMode } = useThemeMode();
-  const { setUser, setLoading } = useAuthStore();
+  const { setUser, setLoading, user } = useAuthStore();
+
+  useNotificationAlerts(user?.id || null);
 
   useEffect(() => {
     const initAuth = async () => {

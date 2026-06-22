@@ -87,7 +87,11 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
       setSearchResults(result.data || []);
 
       if (result.data && result.data.length === 0) {
-        toast.info('No candidates found matching your criteria');
+        toast('No candidates found matching your criteria', {
+          duration: 4000,
+          position: 'top-center',
+          icon: '🔍',
+        });
       }
     } catch (err) {
       console.error('Error searching candidates:', err);

@@ -62,6 +62,37 @@ const categoryColors = [
   'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)',
 ];
 
+const suggestedJobs = [
+  { title: 'Frontend Developer', company: 'Skyline Labs', location: 'Bangalore', keyword: 'Frontend Developer' },
+  { title: 'React Developer', company: 'Nimbus Analytics', location: 'Hyderabad', keyword: 'React Developer' },
+  { title: 'Product Designer', company: 'ZetaWorks', location: 'Pune', keyword: 'Product Designer' },
+  { title: 'Data Analyst', company: 'Astra Insights', location: 'Gurgaon', keyword: 'Data Analyst' },
+];
+
+const topCompanies = [
+  { name: 'TCS', hiring: '1.2k roles' },
+  { name: 'Infosys', hiring: '950 roles' },
+  { name: 'Accenture', hiring: '860 roles' },
+  { name: 'Amazon', hiring: '720 roles' },
+  { name: 'Microsoft', hiring: '540 roles' },
+  { name: 'Wipro', hiring: '430 roles' },
+];
+
+const featuredCompanies = [
+  { name: 'Unacademy', description: 'Tech and product hiring fast', keyword: 'Unacademy' },
+  { name: 'Freshworks', description: 'Engineering & support roles open', keyword: 'Freshworks' },
+  { name: 'Delhivery', description: 'Operations and logistics hiring', keyword: 'Delhivery' },
+  { name: 'Swiggy', description: 'Growth and product hiring', keyword: 'Swiggy' },
+];
+
+const interviewRoles = [
+  'Software Engineer',
+  'Product Manager',
+  'Data Scientist',
+  'UI/UX Designer',
+  'DevOps Engineer',
+];
+
 const categoryIconColors = [
   '#2563EB',
   '#0F766E',
@@ -343,6 +374,175 @@ export const Home: React.FC = () => {
               );
             })}
           </Grid>
+        </MotionBox>
+
+        <MotionBox
+          sx={{ mt: 8, mb: 6 }}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
+            Jobs You May Be Interested In
+          </Typography>
+          <Grid container spacing={2}>
+            {suggestedJobs.map((job) => (
+              <Grid item xs={12} sm={6} md={3} key={job.title + job.company}>
+                <MotionCard
+                  whileHover={{ y: -6 }}
+                  sx={{ borderRadius: 3, p: 2, minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 700, mb: 1 }}>
+                      Recommended
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                      {job.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                      {job.company}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {job.location}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => {
+                      const filters = new URLSearchParams();
+                      filters.append('keyword', job.keyword);
+                      navigate(`${ROUTES.JOBS}?${filters.toString()}`);
+                    }}
+                    sx={{ mt: 2, textTransform: 'none' }}
+                  >
+                    View Jobs
+                  </Button>
+                </MotionCard>
+              </Grid>
+            ))}
+          </Grid>
+        </MotionBox>
+
+        <MotionBox
+          sx={{ mb: 6 }}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)' }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+                  Top Companies Hiring Now
+                </Typography>
+                <Grid container spacing={2}>
+                  {topCompanies.map((company) => (
+                    <Grid item xs={6} key={company.name}>
+                      <Paper sx={{ p: 2, borderRadius: 2, background: '#fff', border: '1px solid', borderColor: 'divider' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>
+                          {company.name}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {company.hiring}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Button
+                  variant="text"
+                  sx={{ mt: 3, textTransform: 'none', fontWeight: 700 }}
+                  onClick={() => {
+                    const filters = new URLSearchParams();
+                    filters.append('keyword', 'Jobs at top companies');
+                    navigate(`${ROUTES.JOBS}?${filters.toString()}`);
+                  }}
+                >
+                  Explore all top company jobs
+                </Button>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%)' }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+                  Featured Companies Actively Hiring
+                </Typography>
+                <Grid container spacing={2}>
+                  {featuredCompanies.map((company) => (
+                    <Grid item xs={12} key={company.name}>
+                      <Paper sx={{ p: 2, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: 'divider' }}>
+                        <Box>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                            {company.name}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {company.description}
+                          </Typography>
+                        </Box>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => {
+                            const filters = new URLSearchParams();
+                            filters.append('keyword', company.keyword);
+                            navigate(`${ROUTES.JOBS}?${filters.toString()}`);
+                          }}
+                          sx={{ textTransform: 'none' }}
+                        >
+                          See jobs
+                        </Button>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Card>
+            </Grid>
+          </Grid>
+        </MotionBox>
+
+        <MotionBox
+          sx={{ mb: 8 }}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Paper sx={{ p: 4, borderRadius: 3, background: 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
+              Interview Questions by Role
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, textAlign: 'center' }}>
+              Click on any role to explore interview questions and answers from AmbitionBox.
+            </Typography>
+            <Grid container spacing={2}>
+              {interviewRoles.map((role) => (
+                <Grid item xs={12} sm={6} md={4} key={role}>
+                  <Card sx={{ p: 2, borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                        {role}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Prepare with real questions and answers from top industry interviews.
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => window.open(`https://www.ambitionbox.com/profiles`, '_blank')}
+                      sx={{ mt: 2, textTransform: 'none' }}
+                    >
+                      Open AmbitionBox
+                    </Button>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
         </MotionBox>
 
         <MotionBox

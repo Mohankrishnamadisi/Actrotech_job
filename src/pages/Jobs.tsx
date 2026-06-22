@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -78,39 +78,47 @@ export const Jobs: React.FC = () => {
     setPage(1);
   }, [searchParams]);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params: Record<string, unknown> = {};
-        if (filters.keyword) params.keyword = filters.keyword;
-        if (filters.location) params.location = filters.location;
-        if (filters.experience) params.experience = filters.experience;
-        if (filters.education) params.education = filters.education;
-        if (filters.freshness) params.freshness = filters.freshness;
-        if (filters.jobType.length > 0) params.jobType = filters.jobType;
-        if (filters.workMode.length > 0) params.workMode = filters.workMode;
-        if (filters.category.length > 0) params.category = filters.category;
+  const fetchJobs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.keyword) params.keyword = filters.keyword;
+      if (filters.location) params.location = filters.location;
+      if (filters.experience) params.experience = filters.experience;
+      if (filters.education) params.education = filters.education;
+      if (filters.freshness) params.freshness = filters.freshness;
+      if (filters.jobType.length > 0) params.jobType = filters.jobType;
+      if (filters.workMode.length > 0) params.workMode = filters.workMode;
+      if (filters.category.length > 0) params.category = filters.category;
 
-        const { data, total: count } = await jobService.getJobs(params, page, 12);
-        setJobs(data);
-        setTotal(count);
-      } catch (err) {
-        let loadError = 'Failed to load jobs';
-        if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
-          loadError = (err as any).message;
-        } else if (typeof err === 'string') {
-          loadError = err;
-        }
-        setError(loadError);
-      } finally {
-        setLoading(false);
+      const { data, total: count } = await jobService.getJobs(params, page, 12);
+      setJobs(data);
+      setTotal(count);
+    } catch (err) {
+      let loadError = 'Failed to load jobs';
+      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
+        loadError = (err as any).message;
+      } else if (typeof err === 'string') {
+        loadError = err;
       }
-    };
+      setError(loadError);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, page]);
 
+  useEffect(() => {
     fetchJobs();
-  }, [page, filters]);
+  }, [fetchJobs]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      fetchJobs();
+    }, 60000);
+
+    return () => window.clearInterval(interval);
+  }, [fetchJobs]);
 
   const handleFilterChange = (filterName: string, value: unknown) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));

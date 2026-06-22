@@ -1,11 +1,10 @@
 import React from 'react';
-import { Box, Container, Card, CardContent, Typography, Button, Chip, Grid, Divider } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Box, Container, Card, CardContent, Typography, Button, Chip } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowBack as ArrowBackIcon,
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
-  Share as ShareIcon,
 } from '@mui/icons-material';
 import { MobileLayout } from '@components/layout/MobileLayout';
 import { useAuthStore } from '@store/index';
@@ -13,7 +12,6 @@ import { ROUTES } from '@constants/index';
 import Swal from 'sweetalert2';
 
 interface JobDetailsProps {
-  jobId?: string;
   title?: string;
   company?: string;
   location?: string;
@@ -28,7 +26,6 @@ interface JobDetailsProps {
 }
 
 export const MobileJobDetails: React.FC<JobDetailsProps> = ({
-  jobId,
   title = 'Job Title',
   company = 'Company Name',
   location = 'Location',
@@ -48,19 +45,14 @@ export const MobileJobDetails: React.FC<JobDetailsProps> = ({
   const handleApply = () => {
     if (!user) {
       Swal.fire({
-        title: 'Login Required',
-        text: 'Please login to apply for this job',
         icon: 'info',
-        confirmButtonText: 'Login',
-        cancelButtonText: 'Cancel',
-        showCancelButton: true,
+        title: 'Login required',
+        text: 'Login to apply and unlock job opportunities.',
+        timer: 1800,
+        showConfirmButton: false,
         background: '#FFFFFF',
         color: '#172033',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate(ROUTES.LOGIN);
-        }
-      });
+      }).then(() => navigate(ROUTES.LOGIN));
       return;
     }
 
@@ -72,19 +64,14 @@ export const MobileJobDetails: React.FC<JobDetailsProps> = ({
   const handleSave = () => {
     if (!user) {
       Swal.fire({
-        title: 'Login Required',
-        text: 'Please login to save jobs',
         icon: 'info',
-        confirmButtonText: 'Login',
-        cancelButtonText: 'Cancel',
-        showCancelButton: true,
+        title: 'Login required',
+        text: 'Login to save jobs and keep track of opportunities.',
+        timer: 1800,
+        showConfirmButton: false,
         background: '#FFFFFF',
         color: '#172033',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate(ROUTES.LOGIN);
-        }
-      });
+      }).then(() => navigate(ROUTES.LOGIN));
       return;
     }
 

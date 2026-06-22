@@ -21,6 +21,7 @@ import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
 import { ROUTES } from '@constants/index';
+import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import type { Job } from '../types';
 
@@ -42,7 +43,6 @@ export const JobDetails: React.FC = () => {
   const [expectedCtc, setExpectedCtc] = useState('');
   const [noticePeriod, setNoticePeriod] = useState('');
   const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({});
-  const [profileLoading, setProfileLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [savedLoading, setSavedLoading] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
@@ -84,7 +84,6 @@ export const JobDetails: React.FC = () => {
   useEffect(() => {
     const loadProfileData = async () => {
       if (!user?.id) return;
-      setProfileLoading(true);
       try {
         const profile = await userService.getProfile(user.id);
         if (profile) {
@@ -95,8 +94,6 @@ export const JobDetails: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to load candidate profile for application:', err);
-      } finally {
-        setProfileLoading(false);
       }
     };
 
@@ -121,7 +118,15 @@ export const JobDetails: React.FC = () => {
 
   const handleSaveToggle = async () => {
     if (!user?.id || !job?.id) {
-      toast.error('Please login to save this job.');
+      Swal.fire({
+        icon: 'info',
+        title: 'Login required',
+        text: 'Please login to save this job.',
+        timer: 1800,
+        showConfirmButton: false,
+        background: '#FFFFFF',
+        color: '#172033',
+      });
       return;
     }
 
@@ -130,35 +135,128 @@ export const JobDetails: React.FC = () => {
       if (isSaved) {
         await savedService.unsaveJob(user.id, job.id);
         setIsSaved(false);
-        toast.success('Job removed from saved jobs.');
+        Swal.fire({
+          icon: 'success',
+          title: 'Removed from saved jobs',
+          timer: 1400,
+          showConfirmButton: false,
+          background: '#FFFFFF',
+          color: '#172033',
+        });
       } else {
         await savedService.saveJob(user.id, job.id);
         setIsSaved(true);
-        toast.success('Job saved successfully.');
+        Swal.fire({
+          icon: 'success',
+          title: 'Job saved successfully',
+          timer: 1400,
+          showConfirmButton: false,
+          background: '#FFFFFF',
+          color: '#172033',
+        });
       }
     } catch (err) {
       console.error('Failed to update saved job:', err);
-      toast.error('Unable to update saved job.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Unable to update saved job',
+        text: 'Please try again later.',
+        background: '#FFFFFF',
+        color: '#172033',
+      });
     } finally {
       setSavedLoading(false);
     }
   };
 
-  const handleApply = async () => {
+  const handleApplyClick = () => {
     if (!user) {
-      toast.error('Please login to apply');
-      navigate(ROUTES.LOGIN);
+      Swal.fire({
+        icon: 'info',
+        title: 'Login required',
+        text: 'Login to apply and unlock job opportunities.',
+        timer: 1800,
+        showConfirmButton: false,
+        background: '#FFFFFF',
+        color: '#172033',
+      }).then(() => navigate(ROUTES.LOGIN));
       return;
     }
 
     if (requiresSubscription && !subscription) {
-      toast.error('Remote Jobs are available only for Premium Members.');
-      navigate(ROUTES.PRICING);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Premium access required',
+        text: 'Remote Jobs are available only for Premium Members.',
+        confirmButtonText: 'View pricing',
+        confirmButtonColor: '#1D4ED8',
+        background: '#FFFFFF',
+        color: '#172033',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(ROUTES.PRICING);
+        }
+      });
       return;
     }
 
     if (hasApplied) {
-      toast('You have already applied for this job.');
+      Swal.fire({
+        icon: 'info',
+        title: 'Already applied',
+        text: 'You have already applied for this job.',
+        timer: 1600,
+        showConfirmButton: false,
+        background: '#FFFFFF',
+        color: '#172033',
+      });
+      return;
+    }
+
+    setApplyDialogOpen(true);
+  };
+
+  const handleApply = async () => {
+    if (!user) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Login required',
+        text: 'Login to apply and unlock job opportunities.',
+        timer: 1800,
+        showConfirmButton: false,
+        background: '#FFFFFF',
+        color: '#172033',
+      }).then(() => navigate(ROUTES.LOGIN));
+      return;
+    }
+
+    if (requiresSubscription && !subscription) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Premium access required',
+        text: 'Remote Jobs are available only for Premium Members.',
+        confirmButtonText: 'View pricing',
+        confirmButtonColor: '#1D4ED8',
+        background: '#FFFFFF',
+        color: '#172033',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(ROUTES.PRICING);
+        }
+      });
+      return;
+    }
+
+    if (hasApplied) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Already applied',
+        text: 'You have already applied for this job.',
+        timer: 1600,
+        showConfirmButton: false,
+        background: '#FFFFFF',
+        color: '#172033',
+      });
       return;
     }
 
@@ -172,7 +270,13 @@ export const JobDetails: React.FC = () => {
       }
 
       if (!finalResumeUrl) {
-        toast.error('Please upload a resume before applying.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Resume required',
+          text: 'Please upload a resume before applying.',
+          background: '#FFFFFF',
+          color: '#172033',
+        });
         return;
       }
 
@@ -192,12 +296,26 @@ export const JobDetails: React.FC = () => {
         noticePeriod
       );
 
-      toast.success('Application submitted successfully!');
+      await Swal.fire({
+        icon: 'success',
+        title: 'Application submitted!',
+        text: 'Your application has been sent successfully.',
+        timer: 1800,
+        showConfirmButton: false,
+        background: '#FFFFFF',
+        color: '#172033',
+      });
       setHasApplied(true);
       setApplyDialogOpen(false);
       navigate(ROUTES.JOBS);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to apply');
+      Swal.fire({
+        icon: 'error',
+        title: 'Application failed',
+        text: error instanceof Error ? error.message : 'Failed to apply',
+        background: '#FFFFFF',
+        color: '#172033',
+      });
     } finally {
       setApplyLoading(false);
     }
@@ -333,7 +451,7 @@ export const JobDetails: React.FC = () => {
                   variant="contained"
                   fullWidth
                   size="large"
-                  onClick={() => setApplyDialogOpen(true)}
+                  onClick={handleApplyClick}
                   disabled={!hasAccess || hasApplied}
                   sx={{ mb: 2 }}
                 >
