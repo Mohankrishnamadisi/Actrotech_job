@@ -25,9 +25,15 @@ import { motion } from 'framer-motion';
 import {
   Add as AddIcon,
   Business as BusinessIcon,
+  BusinessCenter as BusinessCenterIcon,
   Search as SearchIcon,
   Chat as ChatIcon,
+  Dashboard as DashboardIcon,
+  People as PeopleIcon,
   Notifications as NotificationsIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  Work as WorkIcon,
+  AccountTree as AccountTreeIcon,
   LocalOffer as TagIcon,
   FolderSpecial as PoolIcon,
 } from '@mui/icons-material';
@@ -298,15 +304,15 @@ export const RecruiterDashboard: React.FC = () => {
                 '& .MuiTabs-indicator': { backgroundColor: '#1D4ED8', height: 4, borderRadius: 2 },
               }}
             >
-              <Tab label="Dashboard Overview" id="recruiter-tab-0" aria-controls="recruiter-tabpanel-0" />
-              <Tab label="Manage Jobs" id="recruiter-tab-1" aria-controls="recruiter-tabpanel-1" />
-              <Tab label="Company Profile" id="recruiter-tab-2" aria-controls="recruiter-tabpanel-2" />
-              <Tab label="View Applicants" id="recruiter-tab-3" aria-controls="recruiter-tabpanel-3" />
-              <Tab label="AI Recommended" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" />
+              <Tab label="Dashboard Overview" id="recruiter-tab-0" aria-controls="recruiter-tabpanel-0" icon={<DashboardIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="Manage Jobs" id="recruiter-tab-1" aria-controls="recruiter-tabpanel-1" icon={<WorkIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="Company Profile" id="recruiter-tab-2" aria-controls="recruiter-tabpanel-2" icon={<BusinessCenterIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="View Applicants" id="recruiter-tab-3" aria-controls="recruiter-tabpanel-3" icon={<PeopleIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="AI Recommended" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" icon={<AutoAwesomeIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
               <Tab label="Candidate Tags" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" icon={<TagIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="Find Candidates" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
+              <Tab label="Find Candidates" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" icon={<SearchIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
               <Tab label="Talent Pool" id="recruiter-tab-7" aria-controls="recruiter-tabpanel-7" icon={<PoolIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="ATS Pipeline" id="recruiter-tab-8" aria-controls="recruiter-tabpanel-8" />
+              <Tab label="ATS Pipeline" id="recruiter-tab-8" aria-controls="recruiter-tabpanel-8" icon={<AccountTreeIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
             </Tabs>
           </Box>
 
