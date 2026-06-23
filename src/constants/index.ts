@@ -520,6 +520,21 @@ export const ROUTES = {
   MESSAGING_SENT: '/messaging/sent',
 };
 
+export const CANDIDATE_TAG_COLORS = [
+  '#6366F1', // indigo
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#EF4444', // red
+  '#F97316', // orange
+  '#F59E0B', // amber
+  '#22C55E', // green
+  '#14B8A6', // teal
+  '#06B6D4', // cyan
+  '#3B82F6', // blue
+  '#64748B', // slate
+  '#A855F7', // purple
+] as const;
+
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'actro_auth_token',
   USER_DATA: 'actro_user_data',

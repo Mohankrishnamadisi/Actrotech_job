@@ -4,3 +4,7 @@ export { ViewApplicants } from './ViewApplicants';
 export { CompanyProfile } from './CompanyProfile';
 export { CandidateSearch } from './CandidateSearch';
 export { NotificationsCenter } from './NotificationsCenter';
+export { TagManager } from './TagManager';
+export { TagFilterBar } from './TagFilterBar';
+export { CandidateTagChips, CandidateTagChip } from './CandidateTagChips';
+export { CandidateTagAssigner } from './CandidateTagAssigner';

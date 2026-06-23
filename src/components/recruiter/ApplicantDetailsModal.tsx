@@ -31,13 +31,19 @@ import {
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { applicationService } from '@services/api';
+import type { CandidateTag } from '@types';
+import { CandidateTagAssigner } from './CandidateTagAssigner';
 
 interface ApplicantDetailsModalProps {
   open: boolean;
   onClose: () => void;
   applicantId?: string;
+  candidateId?: string;
   jobId?: string;
+  recruiterId?: string;
+  availableTags?: CandidateTag[];
   onStatusChange?: () => void;
+  onTagsChange?: () => void;
 }
 
 const MotionCard = motion(Card);
@@ -46,8 +52,12 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   open,
   onClose,
   applicantId,
+  candidateId,
   jobId,
+  recruiterId,
+  availableTags = [],
   onStatusChange,
+  onTagsChange,
 }) => {
   const [loading, setLoading] = useState(false);
   const [applicant, setApplicant] = useState<any>(null);
@@ -332,6 +342,22 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
             )}
 
             <Divider sx={{ my: 1 }} />
+
+            {/* Candidate Tags */}
+            {recruiterId && candidateId && (
+              <Grid item xs={12}>
+                <MotionCard initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <CardContent>
+                    <CandidateTagAssigner
+                      candidateId={candidateId}
+                      recruiterId={recruiterId}
+                      availableTags={availableTags}
+                      onTagsChange={onTagsChange}
+                    />
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
 
             {/* Status Update */}
             <Grid item xs={12}>

@@ -24,6 +24,7 @@ import {
   Search as SearchIcon,
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
+  LocalOffer as TagIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
@@ -37,6 +38,7 @@ import { ViewApplicants } from '@components/recruiter/ViewApplicants';
 import { CompanyProfile } from '@components/recruiter/CompanyProfile';
 import { CandidateSearch } from '@components/recruiter/CandidateSearch';
 import { NotificationsCenter } from '@components/recruiter/NotificationsCenter';
+import { TagManager } from '@components/recruiter/TagManager';
 import toast from 'react-hot-toast';
 
 // ATS Pipeline
@@ -277,9 +279,10 @@ export const RecruiterDashboard: React.FC = () => {
               <Tab label="Manage Jobs" id="recruiter-tab-1" aria-controls="recruiter-tabpanel-1" />
               <Tab label="Company Profile" id="recruiter-tab-2" aria-controls="recruiter-tabpanel-2" />
               <Tab label="View Applicants" id="recruiter-tab-3" aria-controls="recruiter-tabpanel-3" />
-              <Tab label="Find Candidates" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" />
-              <Tab label="Notifications" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" />
-+              <Tab label="ATS Pipeline" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
+              <Tab label="Candidate Tags" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" icon={<TagIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="Find Candidates" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" />
+              <Tab label="Notifications" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
+              <Tab label="ATS Pipeline" id="recruiter-tab-7" aria-controls="recruiter-tabpanel-7" />
             </Tabs>
           </Box>
 
@@ -403,8 +406,13 @@ export const RecruiterDashboard: React.FC = () => {
               )}
             </TabPanel>
 
-            {/* Find Candidates Tab */}
+            {/* Candidate Tags Tab */}
             <TabPanel value={currentTab} index={4}>
+              {user?.id && <TagManager recruiterId={user.id} inline />}
+            </TabPanel>
+
+            {/* Find Candidates Tab */}
+            <TabPanel value={currentTab} index={5}>
               {user?.id && (
                 <CandidateSearch
                   recruiterId={user.id}
@@ -414,7 +422,7 @@ export const RecruiterDashboard: React.FC = () => {
             </TabPanel>
 
             {/* Notifications Tab */}
-            <TabPanel value={currentTab} index={5}>
+            <TabPanel value={currentTab} index={6}>
               {user?.id && (
                 <NotificationsCenter
                   userId={user.id}
@@ -424,7 +432,7 @@ export const RecruiterDashboard: React.FC = () => {
             </TabPanel>
 
             {/* ATS Pipeline Tab */}
-            <TabPanel value={currentTab} index={6}>
+            <TabPanel value={currentTab} index={7}>
               {user?.id && (
                 <PipelineBoard />
               )}

@@ -8,12 +8,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Button,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Box,
   Typography,
   CircularProgress,
@@ -32,10 +27,18 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService, applicationService } from '@services/api';
-import type { Job } from '@types';
+import {
+  candidateTagService,
+  groupAssignmentsByCandidate,
+  filterByTagIds,
+} from '@services/candidateTags';
+import type { Job, CandidateTag, CandidateTagAssignment } from '@types';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ApplicantDetailsModal } from './ApplicantDetailsModal';
+import { TagManager } from './TagManager';
+import { TagFilterBar } from './TagFilterBar';
+import { CandidateTagChips } from './CandidateTagChips';
 
 interface ViewApplicantsProps {
   recruiterId: string;
@@ -63,9 +66,15 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tags, setTags] = useState<CandidateTag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [tagAssignmentsByCandidate, setTagAssignmentsByCandidate] = useState<
+    Record<string, CandidateTagAssignment[]>
+  >({});
 
   useEffect(() => {
     fetchJobs();
+    fetchTags();
   }, [recruiterId]);
 
   useEffect(() => {
@@ -73,6 +82,33 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
       fetchApplicants();
     }
   }, [selectedJobId]);
+
+  useEffect(() => {
+    if (applicants.length > 0) {
+      fetchTagAssignments();
+    } else {
+      setTagAssignmentsByCandidate({});
+    }
+  }, [applicants]);
+
+  const fetchTags = async () => {
+    try {
+      const data = await candidateTagService.getRecruiterTags(recruiterId);
+      setTags(data);
+    } catch (err) {
+      console.error('Error fetching tags:', err);
+    }
+  };
+
+  const fetchTagAssignments = async () => {
+    try {
+      const candidateIds = [...new Set(applicants.map((a) => a.user_id))];
+      const assignments = await candidateTagService.getAssignmentsForCandidates(candidateIds);
+      setTagAssignmentsByCandidate(groupAssignmentsByCandidate(assignments));
+    } catch (err) {
+      console.error('Error fetching tag assignments:', err);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -120,8 +156,19 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     fetchApplicants();
   };
 
-  const filteredApplicants = applicants.filter((app) =>
+  const handleTagsChanged = () => {
+    fetchTags();
+    fetchTagAssignments();
+  };
+
+  const statusFiltered = applicants.filter((app) =>
     statusFilter === 'all' ? true : app.status === statusFilter
+  );
+
+  const filteredApplicants = filterByTagIds(
+    statusFiltered,
+    tagAssignmentsByCandidate,
+    selectedTagIds
   );
 
   const statusCounts = {
@@ -244,18 +291,21 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
         <Box sx={{ flex: 1 }}>
           <Card sx={{ mb: 2 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
-                <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                  Selected job
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  {selectedJob.title}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {selectedJob.status ? `${selectedJob.status} • ` : ''}
-                  Posted {format(new Date(selectedJob.created_at as any), 'dd MMM yyyy')} • {applicants.length}{' '}
-                  applicant(s)
-                </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                    Selected job
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {selectedJob.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {selectedJob.status ? `${selectedJob.status} • ` : ''}
+                    Posted {format(new Date(selectedJob.created_at as any), 'dd MMM yyyy')} • {applicants.length}{' '}
+                    applicant(s)
+                  </Typography>
+                </Box>
+                <TagManager recruiterId={recruiterId} onTagsChange={handleTagsChanged} />
               </Box>
 
               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
@@ -316,6 +366,12 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   sx={{ textTransform: 'none' }}
                 />
               </Tabs>
+
+              <TagFilterBar
+                tags={tags}
+                selectedTagIds={selectedTagIds}
+                onChange={setSelectedTagIds}
+              />
             </CardContent>
           </Card>
 
@@ -326,7 +382,9 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
             </Box>
           ) : filteredApplicants.length === 0 ? (
             <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', py: 4 }}>
-              No applicants with status "{statusFilter}"
+              {selectedTagIds.length > 0
+                ? 'No applicants match the selected tag filters'
+                : `No applicants with status "${statusFilter}"`}
             </Typography>
           ) : (
             <TableContainer component={Paper}>
@@ -335,6 +393,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                     <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Tags</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Applied</TableCell>
                     <TableCell sx={{ fontWeight: 600 }} align="right">
@@ -351,6 +410,11 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                         </Typography>
                       </TableCell>
                       <TableCell>{applicant.profiles?.email || 'N/A'}</TableCell>
+                      <TableCell>
+                        <CandidateTagChips
+                          assignments={tagAssignmentsByCandidate[applicant.user_id] || []}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Chip
                           label={applicant.status}
@@ -404,8 +468,12 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
           open={viewDialogOpen}
           onClose={() => setViewDialogOpen(false)}
           applicantId={selectedApplicant.id}
+          candidateId={selectedApplicant.user_id}
           jobId={selectedJobId}
+          recruiterId={recruiterId}
+          availableTags={tags}
           onStatusChange={handleStatusChanged}
+          onTagsChange={handleTagsChanged}
         />
       )}
     </motion.div>

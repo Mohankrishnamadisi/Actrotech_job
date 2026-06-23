@@ -6,11 +6,11 @@ const createAppTheme = (themeMode: ThemeMode) => {
   const paletteByMode = {
     light: {
       mode: 'light',
-      primary: { main: '#2563EB', dark: '#1D4ED8', light: '#93C5FD', contrastText: '#FFFFFF' },
-      secondary: { main: '#7C3AED', dark: '#5B21B6', light: '#DDD6FE', contrastText: '#FFFFFF' },
-      success: { main: '#22C55E', light: '#DCFCE7', contrastText: '#0F172A' },
+      primary: { main: '#2563EB', dark: '#1D4ED8', light: '#BFDBFE', contrastText: '#FFFFFF' },
+      secondary: { main: '#0F766E', dark: '#115E59', light: '#99F6E4', contrastText: '#FFFFFF' },
+      success: { main: '#16A34A', light: '#DCFCE7', contrastText: '#0F172A' },
       warning: { main: '#F59E0B', light: '#FEF3C7', contrastText: '#0F172A' },
-      error: { main: '#EF4444', light: '#FECACA', contrastText: '#FFFFFF' },
+      error: { main: '#DC2626', light: '#FECACA', contrastText: '#FFFFFF' },
       background: { default: '#F8FAFC', paper: '#FFFFFF' },
       text: { primary: '#0F172A', secondary: '#475569' },
       divider: '#E2E8F0',
@@ -18,35 +18,35 @@ const createAppTheme = (themeMode: ThemeMode) => {
     dark: {
       mode: 'dark',
       primary: { main: '#60A5FA', dark: '#2563EB', light: '#93C5FD', contrastText: '#0F172A' },
-      secondary: { main: '#7C3AED', dark: '#6026C5', light: '#C4B5FD', contrastText: '#FFFFFF' },
-      success: { main: '#22C55E', light: '#DCFCE7', contrastText: '#0F172A' },
-      warning: { main: '#F59E0B', light: '#FDE68A', contrastText: '#0F172A' },
-      error: { main: '#FB7185', light: '#FECACA', contrastText: '#0F172A' },
-      background: { default: '#0F172A', paper: '#111827' },
+      secondary: { main: '#C084FC', dark: '#9333EA', light: '#E9D5FF', contrastText: '#0F172A' },
+      success: { main: '#22C55E', light: '#A7F3D0', contrastText: '#0F172A' },
+      warning: { main: '#FBBF24', light: '#FDE68A', contrastText: '#0F172A' },
+      error: { main: '#F87171', light: '#FECACA', contrastText: '#0F172A' },
+      background: { default: '#020617', paper: '#111827' },
       text: { primary: '#F8FAFC', secondary: '#CBD5E1' },
-      divider: '#1E293B',
+      divider: '#334155',
     },
     professional: {
       mode: 'light',
-      primary: { main: '#2563EB', dark: '#1D4ED8', light: '#93C5FD', contrastText: '#FFFFFF' },
-      secondary: { main: '#7C3AED', dark: '#5B21B6', light: '#DDD6FE', contrastText: '#FFFFFF' },
-      success: { main: '#22C55E', light: '#DCFCE7', contrastText: '#0F172A' },
-      warning: { main: '#F59E0B', light: '#FEF3C7', contrastText: '#0F172A' },
-      error: { main: '#EF4444', light: '#FECACA', contrastText: '#FFFFFF' },
-      background: { default: '#F8FAFC', paper: '#FFFFFF' },
+      primary: { main: '#1E40AF', dark: '#1D4ED8', light: '#93C5FD', contrastText: '#FFFFFF' },
+      secondary: { main: '#475569', dark: '#0F172A', light: '#E2E8F0', contrastText: '#FFFFFF' },
+      success: { main: '#15803D', light: '#D1FAE5', contrastText: '#0F172A' },
+      warning: { main: '#B45309', light: '#FDE68A', contrastText: '#0F172A' },
+      error: { main: '#B91C1C', light: '#FECACA', contrastText: '#FFFFFF' },
+      background: { default: '#F3F4F6', paper: '#FFFFFF' },
       text: { primary: '#0F172A', secondary: '#475569' },
-      divider: '#E2E8F0',
+      divider: '#CBD5E1',
     },
     modern: {
       mode: 'light',
-      primary: { main: '#2563EB', dark: '#1D4ED8', light: '#93C5FD', contrastText: '#FFFFFF' },
-      secondary: { main: '#7C3AED', dark: '#5B21B6', light: '#DDD6FE', contrastText: '#FFFFFF' },
-      success: { main: '#22C55E', light: '#DCFCE7', contrastText: '#0F172A' },
+      primary: { main: '#7C3AED', dark: '#6D28D9', light: '#DDD6FE', contrastText: '#FFFFFF' },
+      secondary: { main: '#0EA5E9', dark: '#0284C7', light: '#CFFAFE', contrastText: '#0F172A' },
+      success: { main: '#14B8A6', light: '#CCFBF1', contrastText: '#0F172A' },
       warning: { main: '#F59E0B', light: '#FEF3C7', contrastText: '#0F172A' },
       error: { main: '#EF4444', light: '#FECACA', contrastText: '#FFFFFF' },
-      background: { default: '#F8FAFC', paper: '#FFFFFF' },
-      text: { primary: '#0F172A', secondary: '#475569' },
-      divider: '#E2E8F0',
+      background: { default: '#F7F3FF', paper: '#FFFFFF' },
+      text: { primary: '#111827', secondary: '#4B5563' },
+      divider: '#E5E7EB',
     },
   } as const;
 
@@ -105,6 +105,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
             boxShadow: palette.mode === 'dark'
               ? '0 24px 80px rgba(15, 23, 42, 0.42)'
               : '0 18px 70px rgba(15, 23, 42, 0.08)',
+            backgroundColor: palette.mode === 'dark' ? '#111827' : '#FFFFFF',
           },
         },
       },
@@ -134,19 +135,19 @@ const createAppTheme = (themeMode: ThemeMode) => {
             transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease',
           },
           containedPrimary: {
-            background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
-            color: '#FFFFFF',
+            background: palette.primary.main,
+            color: palette.primary.contrastText,
             '&:hover': {
-              background: 'linear-gradient(135deg, #1D4ED8 0%, #6D28D9 100%)',
-              boxShadow: '0 16px 30px rgba(37, 99, 235, 0.24)',
+              background: palette.primary.dark,
+              boxShadow: `0 16px 30px ${palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.24)' : 'rgba(37, 99, 235, 0.24)'}`,
               transform: 'translateY(-1px)',
             },
           },
           containedSecondary: {
-            background: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
-            color: '#FFFFFF',
+            background: palette.secondary.main,
+            color: palette.secondary.contrastText,
             '&:hover': {
-              background: 'linear-gradient(135deg, #5B21B6 0%, #1D4ED8 100%)',
+              background: palette.secondary.dark,
               transform: 'translateY(-1px)',
             },
           },
@@ -169,6 +170,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
             '& .MuiOutlinedInput-root': {
               borderRadius: 8,
               backgroundColor: palette.mode === 'dark' ? '#111827' : '#FFFFFF',
+              color: palette.text.primary,
               '& fieldset': {
                 borderColor: palette.divider,
               },
@@ -183,6 +185,9 @@ const createAppTheme = (themeMode: ThemeMode) => {
             '& .MuiInputLabel-root': {
               color: palette.text.secondary,
             },
+            '& .MuiInputBase-input': {
+              color: palette.text.primary,
+            },
             '& .MuiInputBase-input::placeholder': {
               color: palette.text.secondary,
               opacity: 1,
@@ -194,6 +199,10 @@ const createAppTheme = (themeMode: ThemeMode) => {
         styleOverrides: {
           outlined: {
             backgroundColor: palette.mode === 'dark' ? '#111827' : '#FFFFFF',
+            color: palette.text.primary,
+            '& .MuiSelect-icon': {
+              color: palette.text.secondary,
+            },
           },
         },
       },
@@ -202,7 +211,8 @@ const createAppTheme = (themeMode: ThemeMode) => {
           root: {
             borderRadius: 8,
             fontWeight: 700,
-            backgroundColor: palette.mode === 'dark' ? 'rgba(148, 163, 184, 0.08)' : 'rgba(37, 99, 235, 0.08)',
+            color: palette.text.primary,
+            backgroundColor: palette.mode === 'dark' ? 'rgba(148, 163, 184, 0.12)' : 'rgba(37, 99, 235, 0.08)',
           },
           outlined: {
             borderColor: palette.divider,
@@ -214,6 +224,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
         styleOverrides: {
           root: {
             backgroundImage: 'none',
+            color: palette.text.primary,
           },
         },
       },

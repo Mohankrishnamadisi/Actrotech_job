@@ -34,10 +34,12 @@ import { useAuthStore } from '@store/index';
 import { userService, applicationService, savedService, notificationService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { ROUTES } from '@constants/index';
+import { useTheme } from '@mui/material/styles';
 
 export const PremiumDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { themeMode, setThemeMode } = useThemeMode();
+  const theme = useTheme();
   const navigate = useNavigate();
   const [applicationCount, setApplicationCount] = useState(0);
   const [savedJobsCount, setSavedJobsCount] = useState(0);
@@ -108,22 +110,22 @@ export const PremiumDashboard: React.FC = () => {
     <Layout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Header Section */}
-        <Box sx={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(220,184,105,0.15) 100%)', border: '2px solid rgba(255,215,0,0.3)', borderRadius: 3, p: 4, mb: 4 }}>
+        <Box sx={{ background: theme.palette.mode === 'dark' ? 'rgba(56, 189, 248, 0.08)' : theme.palette.secondary.light, border: `2px solid ${theme.palette.mode === 'dark' ? 'rgba(58, 123, 213, 0.2)' : theme.palette.secondary.main}`, borderRadius: 3, p: 4, mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Box>
               <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
                 Premium Hub ✨
               </Typography>
               <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                Welcome back, <span style={{ fontWeight: 700, color: '#B45309' }}>{user?.name}</span>
+                Welcome back, <span style={{ fontWeight: 700, color: theme.palette.warning.main }}>{user?.name}</span>
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Chip icon={<StarIcon />} label="Premium Member" sx={{ fontWeight: 700, background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)', color: '#000' }} />
+            <Chip icon={<StarIcon />} label="Premium Member" sx={{ fontWeight: 700, background: theme.palette.mode === 'dark' ? 'rgba(245, 158, 11, 0.2)' : theme.palette.warning.light, color: theme.palette.warning.contrastText }} />
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <IconButton
                 onClick={() => navigate(ROUTES.MESSAGING)}
-                sx={{ background: 'rgba(79,70,229,0.08)' }}
+                sx={{ background: theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.16)' : 'rgba(79,70,229,0.08)' }}
               >
                 <Badge badgeContent={unreadMessagesCount} color="primary">
                   <ChatIcon />
@@ -131,7 +133,7 @@ export const PremiumDashboard: React.FC = () => {
               </IconButton>
               <IconButton
                 onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
-                sx={{ background: 'rgba(245,158,11,0.08)' }}
+                sx={{ background: theme.palette.mode === 'dark' ? 'rgba(245, 158, 11, 0.16)' : 'rgba(245,158,11,0.08)' }}
               >
                 <Badge badgeContent={notificationsCount} color="error">
                   <NotificationsIcon />
@@ -154,9 +156,9 @@ export const PremiumDashboard: React.FC = () => {
         {/* Stats Dashboard */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3} onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)}>
-            <Card sx={{ cursor: 'pointer', transition: 'all 0.3s', '&:hover': { transform: 'translateY(-8px)', boxShadow: '0 12px 32px rgba(0,0,0,0.1)' } }}>
+            <Card sx={{ cursor: 'pointer', transition: 'all 0.3s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }}>
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <WorkIcon sx={{ fontSize: 36, mb: 1, color: '#2563EB' }} />
+                <WorkIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.primary.main }} />
                 <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{applicationCount}</Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Applications</Typography>
               </CardContent>
@@ -164,9 +166,9 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3} onClick={() => navigate(ROUTES.DASHBOARD_SAVED_JOBS)}>
-            <Card sx={{ cursor: 'pointer', transition: 'all 0.3s', '&:hover': { transform: 'translateY(-8px)', boxShadow: '0 12px 32px rgba(0,0,0,0.1)' } }}>
+            <Card sx={{ cursor: 'pointer', transition: 'all 0.3s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }}>
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <FavoriteIcon sx={{ fontSize: 36, mb: 1, color: '#E91E63' }} />
+                <FavoriteIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.error.main }} />
                 <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{savedJobsCount}</Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Saved Jobs</Typography>
               </CardContent>
@@ -174,9 +176,9 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, rgba(76,175,80,0.1) 0%, rgba(139,195,74,0.1) 100%)', border: '2px solid rgba(76,175,80,0.3)' }}>
+            <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <TrendingUpIcon sx={{ fontSize: 36, mb: 1, color: '#4CAF50' }} />
+                <TrendingUpIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.success.main }} />
                 <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{profileStrength}%</Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Profile Strength</Typography>
               </CardContent>
@@ -184,9 +186,9 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, rgba(156,39,176,0.1) 0%, rgba(123,31,162,0.1) 100%)', border: '2px solid rgba(156,39,176,0.3)' }}>
+            <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <VideocamIcon sx={{ fontSize: 36, mb: 1, color: '#9C27B0' }} />
+                <VideocamIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.secondary.main }} />
                 <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{userSkills.length}</Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Skills</Typography>
               </CardContent>
@@ -199,22 +201,22 @@ export const PremiumDashboard: React.FC = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>Quick Actions</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" fullWidth onClick={() => navigate(ROUTES.JOBS)} sx={{ p: 2, background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', fontWeight: 700 }}>
+              <Button variant="contained" color="primary" fullWidth onClick={() => navigate(ROUTES.JOBS)} sx={{ p: 2, fontWeight: 700 }}>
                 Browse Jobs
               </Button>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/remote-jobs')} sx={{ p: 2, background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)', fontWeight: 700 }}>
+              <Button variant="contained" color="success" fullWidth onClick={() => navigate('/dashboard/remote-jobs')} sx={{ p: 2, fontWeight: 700 }}>
                 Remote Jobs
               </Button>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" fullWidth onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ p: 2, background: 'linear-gradient(135deg, #FF6B6B 0%, #E63946 100%)', fontWeight: 700 }}>
+              <Button variant="contained" color="secondary" fullWidth onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ p: 2, fontWeight: 700 }}>
                 Complete Profile
               </Button>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ p: 2, background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)', color: '#000', fontWeight: 700 }}>
+              <Button variant="contained" color="warning" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ p: 2, fontWeight: 700 }}>
                 Recommended
               </Button>
             </Grid>
@@ -226,11 +228,11 @@ export const PremiumDashboard: React.FC = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>🎯 Exclusive Premium Tools</Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ background: 'linear-gradient(135deg, rgba(156,39,176,0.1) 0%, rgba(123,31,162,0.1) 100%)', border: '2px solid rgba(156,39,176,0.3)', borderRadius: 3 }}>
+              <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
                 <CardContent sx={{ textAlign: 'center' }}>
-                  <VideocamIcon sx={{ fontSize: 48, mb: 2, color: '#9C27B0' }} />
+                  <VideocamIcon sx={{ fontSize: 48, mb: 2, color: theme.palette.primary.main }} />
                   <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Mock Interviews</Typography>
-                  <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/mock-interviews')} sx={{ background: 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)', fontWeight: 700 }}>
+                  <Button variant="contained" color="primary" fullWidth onClick={() => navigate('/dashboard/mock-interviews')} sx={{ fontWeight: 700 }}>
                     Start Practice
                   </Button>
                 </CardContent>
@@ -238,11 +240,11 @@ export const PremiumDashboard: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ background: 'linear-gradient(135deg, rgba(63,81,181,0.1) 0%, rgba(51,103,214,0.1) 100%)', border: '2px solid rgba(63,81,181,0.3)', borderRadius: 3 }}>
+              <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
                 <CardContent sx={{ textAlign: 'center' }}>
-                  <DescriptionIcon sx={{ fontSize: 48, mb: 2, color: '#3F51B5' }} />
+                  <DescriptionIcon sx={{ fontSize: 48, mb: 2, color: theme.palette.secondary.main }} />
                   <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Resume Review</Typography>
-                  <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/resume-review')} sx={{ background: 'linear-gradient(135deg, #3F51B5 0%, #3367D6 100%)', fontWeight: 700 }}>
+                  <Button variant="contained" color="secondary" fullWidth onClick={() => navigate('/dashboard/resume-review')} sx={{ fontWeight: 700 }}>
                     Get Review
                   </Button>
                 </CardContent>
@@ -250,11 +252,11 @@ export const PremiumDashboard: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ background: 'linear-gradient(135deg, rgba(244,67,54,0.1) 0%, rgba(255,87,87,0.1) 100%)', border: '2px solid rgba(244,67,54,0.3)', borderRadius: 3 }}>
+              <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
                 <CardContent sx={{ textAlign: 'center' }}>
-                  <RocketIcon sx={{ fontSize: 48, mb: 2, color: '#F44336' }} />
+                  <RocketIcon sx={{ fontSize: 48, mb: 2, color: theme.palette.error.main }} />
                   <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Priority Apply</Typography>
-                  <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/priority-apply')} sx={{ background: 'linear-gradient(135deg, #F44336 0%, #E53935 100%)', fontWeight: 700 }}>
+                  <Button variant="contained" color="error" fullWidth onClick={() => navigate('/dashboard/priority-apply')} sx={{ fontWeight: 700 }}>
                     Apply Now
                   </Button>
                 </CardContent>
@@ -272,7 +274,7 @@ export const PremiumDashboard: React.FC = () => {
                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
                   {userSkills.length > 0 ? `Matched with ${userSkills.slice(0, 3).join(', ')}...` : 'Add skills to profile'}
                 </Typography>
-                <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)', color: '#000', fontWeight: 700 }}>
+                <Button variant="contained" color="warning" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ fontWeight: 700 }}>
                   View All
                 </Button>
               </CardContent>
@@ -280,11 +282,11 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3 }}>
+            <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Priority Matches (Remote)</Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>Remote jobs matching your skills with high relevance.</Typography>
-                <Button variant="contained" fullWidth onClick={() => navigate('/dashboard/remote-jobs')} sx={{ background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)', fontWeight: 700 }}>
+                <Button variant="contained" color="success" fullWidth onClick={() => navigate('/dashboard/remote-jobs')} sx={{ fontWeight: 700 }}>
                   Explore Remote
                 </Button>
               </CardContent>

@@ -281,3 +281,21 @@ export interface AuthResponse {
     expiresIn: number;
   };
 }
+
+export interface CandidateTag {
+  id: string;
+  recruiter_id: string;
+  name: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CandidateTagAssignment {
+  id: string;
+  tag_id: string;
+  candidate_id: string;
+  assigned_by?: string | null;
+  assigned_at: string;
+  candidate_tags?: CandidateTag;
+}
