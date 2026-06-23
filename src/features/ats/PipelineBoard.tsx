@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DroppableStateSnapshot, DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 import { PipelineEntry, fetchPipelineByJob, moveCandidate, PipelineStage } from '../../services/pipeline';
 import CandidateCard from './CandidateCard';
@@ -21,11 +21,31 @@ interface Props {
 
 export default function PipelineBoard({ jobId }: Props) {
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState<Record<PipelineStage, 'asc' | 'desc'>>(() => {
+    const orders = {} as Record<PipelineStage, 'asc' | 'desc'>;
+    STAGES.forEach((stage) => {
+      orders[stage] = 'desc';
+    });
+    return orders;
+  });
   const [columns, setColumns] = useState<Record<PipelineStage, PipelineEntry[]>>(() => {
     const map = {} as Record<PipelineStage, PipelineEntry[]>;
     STAGES.forEach(s => (map[s] = []));
     return map;
   });
+
+  const sortedColumns = useMemo(() => {
+    const results: Record<PipelineStage, PipelineEntry[]> = {} as any;
+    STAGES.forEach((stage) => {
+      const list = columns[stage] || [];
+      results[stage] = [...list].sort((a, b) => {
+        const aDate = new Date(a.updated_at).getTime();
+        const bDate = new Date(b.updated_at).getTime();
+        return sortOrder[stage] === 'asc' ? aDate - bDate : bDate - aDate;
+      });
+    });
+    return results;
+  }, [columns, sortOrder]);
 
   useEffect(() => {
     let mounted = true;
@@ -48,6 +68,13 @@ export default function PipelineBoard({ jobId }: Props) {
     };
   }, [jobId]);
 
+  const toggleSortOrder = (stage: PipelineStage) => {
+    setSortOrder((prev) => ({
+      ...prev,
+      [stage]: prev[stage] === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
   const onDragEnd = async (result: DropResult): Promise<void> => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
@@ -55,11 +82,11 @@ export default function PipelineBoard({ jobId }: Props) {
     const toStage = destination.droppableId as PipelineStage;
     if (fromStage === toStage) return;
 
-    // Optimistic update
-    const sourceList = Array.from(columns[fromStage]);
-    const destList = Array.from(columns[toStage]);
-    const index = source.index;
-    const [moved] = sourceList.splice(index, 1);
+    const originalSource = columns[fromStage];
+    const originalDest = columns[toStage];
+    const sourceList = Array.from(originalSource);
+    const destList = Array.from(originalDest);
+    const [moved] = sourceList.splice(source.index, 1);
     destList.splice(destination.index, 0, moved);
 
     setColumns(prev => ({ ...prev, [fromStage]: sourceList, [toStage]: destList }));
@@ -67,9 +94,8 @@ export default function PipelineBoard({ jobId }: Props) {
     try {
       await moveCandidate(draggableId, toStage);
     } catch (err) {
-      // Revert on error
-      setColumns(prev => ({ ...prev, [fromStage]: prev[fromStage], [toStage]: prev[toStage] }));
       console.error(err);
+      setColumns(prev => ({ ...prev, [fromStage]: originalSource, [toStage]: originalDest }));
     }
   };
 
@@ -89,14 +115,23 @@ export default function PipelineBoard({ jobId }: Props) {
                 className={`pipeline-column ${snapshot.isDraggingOver ? 'drag-over' : ''}`}
               >
                 <div className="pipeline-column-header">
-                  <h4>{stage}</h4>
-                  <span className="count">{columns[stage]?.length ?? 0}</span>
+                  <div>
+                    <h4>{stage}</h4>
+                    <button
+                      type="button"
+                      className="pipeline-sort-button"
+                      onClick={() => toggleSortOrder(stage)}
+                    >
+                      Sort: {sortOrder[stage] === 'asc' ? 'Oldest' : 'Newest'}
+                    </button>
+                  </div>
+                  <span className="count">{sortedColumns[stage]?.length ?? 0}</span>
                 </div>
                 <div className="pipeline-column-body">
-                  {columns[stage] && columns[stage].length === 0 && (
+                  {sortedColumns[stage] && sortedColumns[stage].length === 0 && (
                     <div className="empty">No candidates</div>
                   )}
-                  {columns[stage]?.map((candidate, idx) => (
+                  {sortedColumns[stage]?.map((candidate, idx) => (
                     <Draggable draggableId={candidate.id} index={idx} key={candidate.id}>
                       {(provided: DraggableProvided, _snapshot: DraggableStateSnapshot) => (
                         <div

@@ -249,19 +249,6 @@ export const RecruiterDashboard: React.FC = () => {
               </Button>
             </motion.div>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<NotificationsIcon />}
-                onClick={() => setCurrentTab(5)}
-                sx={{ py: 1.5, fontWeight: 600 }}
-              >
-                Notifications
-              </Button>
-            </motion.div>
-          </Grid>
         </Grid>
 
         {/* Tabs Section */}

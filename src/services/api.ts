@@ -512,6 +512,26 @@ export const applicationService = {
           `Your application for the selected role has been received. We'll let you know when HR updates the status.`,
           { jobId }
         );
+
+        const { data: jobDetails, error: jobDetailsError } = await supabase
+          .from('jobs')
+          .select('posted_by, title, company_name')
+          .eq('id', jobId)
+          .maybeSingle();
+
+        if (jobDetailsError) {
+          console.error('Failed to load job details for recruiter notification', jobDetailsError);
+        }
+
+        if (jobDetails?.posted_by) {
+          await notificationService.createNotification(
+            jobDetails.posted_by,
+            'new_application',
+            'New applicant submitted',
+            `A candidate has applied for ${jobDetails.title || 'your job posting'} at ${jobDetails.company_name || 'your company'}.`,
+            { jobId, applicationId: application.id }
+          );
+        }
       }
     } catch (notificationError) {
       console.error('Failed to send application notification:', notificationError);
