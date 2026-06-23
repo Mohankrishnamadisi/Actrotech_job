@@ -8,3 +8,4 @@ export { TagManager } from './TagManager';
 export { TagFilterBar } from './TagFilterBar';
 export { CandidateTagChips, CandidateTagChip } from './CandidateTagChips';
 export { CandidateTagAssigner } from './CandidateTagAssigner';
+export { CandidateNotesPanel } from './CandidateNotesPanel';

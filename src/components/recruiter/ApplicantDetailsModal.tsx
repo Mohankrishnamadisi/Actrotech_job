@@ -33,6 +33,7 @@ import toast from 'react-hot-toast';
 import { applicationService } from '@services/api';
 import type { CandidateTag } from '@types';
 import { CandidateTagAssigner } from './CandidateTagAssigner';
+import { CandidateNotesPanel } from './CandidateNotesPanel';
 
 interface ApplicantDetailsModalProps {
   open: boolean;
@@ -353,6 +354,21 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                       recruiterId={recruiterId}
                       availableTags={availableTags}
                       onTagsChange={onTagsChange}
+                    />
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
+
+            {/* Recruiter Notes */}
+            {recruiterId && candidateId && applicantId && (
+              <Grid item xs={12}>
+                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <CardContent>
+                    <CandidateNotesPanel
+                      applicationId={applicantId}
+                      candidateId={candidateId}
+                      recruiterId={recruiterId}
                     />
                   </CardContent>
                 </MotionCard>

@@ -299,3 +299,19 @@ export interface CandidateTagAssignment {
   assigned_at: string;
   candidate_tags?: CandidateTag;
 }
+
+export interface CandidateNote {
+  id: string;
+  application_id: string;
+  candidate_id: string;
+  recruiter_id: string;
+  note: string;
+  created_at: string;
+  updated_at: string;
+  recruiter?: {
+    id: string;
+    hr_name?: string | null;
+    hr_email?: string | null;
+    company_name?: string | null;
+  };
+}
