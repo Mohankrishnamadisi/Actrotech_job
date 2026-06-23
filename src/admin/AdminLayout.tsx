@@ -10,7 +10,7 @@ const AdminLayout: React.FC = () => {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <AdminTopbar drawerWidth={drawerWidth} />
       <AdminSidebar drawerWidth={drawerWidth} />
-      <main style={{ flexGrow: 1, padding: 24, background: 'var(--bg, white)' }}>
+      <main style={{ marginLeft: drawerWidth, flexGrow: 1, padding: 24, background: 'var(--bg, white)' }}>
         <div style={{ height: 64 }} />
         <Outlet />
       </main>

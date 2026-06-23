@@ -24,16 +24,31 @@ const AdminSidebar: React.FC<{ drawerWidth?: number }> = ({ drawerWidth = 260 })
       left: 0,
       top: 0,
       bottom: 0,
-      paddingTop: 64,
-      borderRight: '1px solid rgba(0,0,0,0.06)',
-      background: 'var(--bg, #fff)'
+      paddingTop: 72,
+      background: '#f8fafc',
+      borderRight: '1px solid rgba(148, 163, 184, 0.2)',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      <div style={{ padding: 12, fontWeight: 600 }}>Admin</div>
-      <nav aria-label="Admin navigation">
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      <div style={{ padding: 20, fontWeight: 700, color: '#0f172a', letterSpacing: 1, borderBottom: '1px solid rgba(148, 163, 184, 0.12)' }}>
+        Admin Menu
+      </div>
+      <nav aria-label="Admin navigation" style={{ flex: 1, overflowY: 'auto' }}>
+        <ul style={{ listStyle: 'none', padding: '16px 0', margin: 0 }}>
           {items.map((it) => (
             <li key={it.to} style={{ margin: 0 }}>
-              <NavLink to={it.to} style={({ isActive }) => ({ display: 'block', padding: '10px 12px', textDecoration: 'none', color: isActive ? '#000' : '#444', background: isActive ? 'rgba(0,0,0,0.04)' : 'transparent' })}>
+              <NavLink
+                to={it.to}
+                style={({ isActive }) => ({
+                  display: 'block',
+                  padding: '12px 20px',
+                  textDecoration: 'none',
+                  color: isActive ? '#1d4ed8' : '#334155',
+                  background: isActive ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
+                  borderLeft: isActive ? '4px solid #2563eb' : '4px solid transparent',
+                  transition: 'background 0.2s ease, color 0.2s ease',
+                })}
+              >
                 {it.label}
               </NavLink>
             </li>
