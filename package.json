@@ -30,7 +30,11 @@
     "react-markdown": "^9.0.0",
     "react-router-dom": "^6.20.0",
     "sweetalert2": "^11.26.25",
-    "zustand": "^4.4.0"
+    "zustand": "^4.4.0",
+    "@mui/x-data-grid": "^5.17.26",
+    "papaparse": "^5.5.4",
+    "recharts": "^2.15.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

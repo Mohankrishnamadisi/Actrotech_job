@@ -71,22 +71,21 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        background: '#FFFFFF',
-        borderTop: '1px solid',
-        borderColor: 'divider',
-        py: 6,
+        background: 'linear-gradient(180deg, #0F172A 0%, #111827 100%)',
+        color: '#E2E8F0',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        py: 8,
         mt: 10,
       }}
     >
       <Container maxWidth="lg">
         <Grid container spacing={4} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#FFFFFF' }}>
               Actro Jobs
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Find your dream job or hire top talent. A modern platform for job seekers and
-              recruiters.
+            <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.88)', mb: 2 }}>
+              Discover premium hiring and job search experiences with modern analytics, growth tools, and design-forward workflows.
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               {[FacebookIcon, TwitterIcon, LinkedInIcon, GitHubIcon].map((Icon, index) => (
@@ -94,9 +93,10 @@ export const Footer: React.FC = () => {
                   key={index}
                   href="#"
                   sx={{
-                    color: 'text.secondary',
+                    color: 'rgba(226, 232, 240, 0.72)',
                     display: 'inline-flex',
-                    '&:hover': { color: 'primary.main' },
+                    transition: 'color 0.2s ease',
+                    '&:hover': { color: '#FFFFFF' },
                   }}
                 >
                   <Icon fontSize="small" />
@@ -202,13 +202,14 @@ export const Footer: React.FC = () => {
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: 2,
+            pt: 3,
           }}
         >
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Copyright {currentYear} Actro Jobs. All rights reserved.
+          <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.84)' }}>
+            © {currentYear} Actro Jobs. Designed for premium hiring experiences.
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Built for job seekers and recruiters
+          <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.72)' }}>
+            Modern talent marketplace for candidates and recruiters.
           </Typography>
         </Box>
       </Container>

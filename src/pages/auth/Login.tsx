@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
+import { userService } from '@services/api';
 import { ROUTES } from '@constants/index';
 import { validateEmail } from '@utils/index';
 import toast from 'react-hot-toast';
@@ -67,17 +68,44 @@ export const Login: React.FC = () => {
       const response = await authService.signIn(formData.email, formData.password);
 
       if (response.user) {
+        // Log auth user
+        // eslint-disable-next-line no-console
+        console.log('Auth user (login):', response.user);
+
+        // Try to load profile from our profiles table to get authoritative role
+        let profile: any = null;
+        try {
+          profile = await userService.getProfile(response.user.id);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to load profile after login', err);
+        }
+        // eslint-disable-next-line no-console
+        console.log('Loaded profile after login:', profile);
+
+        const roleFromProfile = profile?.role;
+        const roleFromAuth = response.user.user_metadata?.role;
+        const finalRole = roleFromProfile || roleFromAuth || 'job_seeker';
+
         setUser({
           id: response.user.id,
           email: response.user.email || formData.email,
-          name: response.user.user_metadata?.name || 'User',
-          role: response.user.user_metadata?.role || 'job_seeker',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          name: profile?.name || response.user.user_metadata?.name || 'User',
+          role: finalRole,
+          createdAt: profile?.created_at || new Date().toISOString(),
+          updatedAt: profile?.updated_at || new Date().toISOString(),
         });
 
         toast.success('Login successful!');
-        navigate(ROUTES.DASHBOARD);
+
+        // Route based on role
+        if (finalRole === 'admin') {
+          navigate(ROUTES.ADMIN_DASHBOARD);
+        } else if (finalRole === 'recruiter') {
+          navigate(ROUTES.RECRUITER_DASHBOARD);
+        } else {
+          navigate(ROUTES.DASHBOARD);
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
