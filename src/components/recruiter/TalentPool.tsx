@@ -22,8 +22,8 @@ import { Search as SearchIcon, People as PeopleIcon } from '@mui/icons-material'
 import { motion } from 'framer-motion';
 import { useDebounce } from '@hooks/index';
 import { useTalentPool } from '@hooks/useTalentPool';
-import { calculateMatchScore, normalizeSkills } from '@utils/matchScore';
-import type { TalentPool, TalentPoolCandidate } from '@types';
+import { calculateSkillMatchScore, normalizeSkills } from '@utils/matchScore';
+import type { TalentPool as TalentPoolRecord, TalentPoolCandidate } from '@types';
 import { PoolList } from './talentPool/PoolList';
 import { PoolCandidateCard } from './talentPool/PoolCandidateCard';
 import { PoolFormDialog } from './talentPool/PoolFormDialog';
@@ -66,8 +66,8 @@ export const TalentPool: React.FC<TalentPoolProps> = ({ recruiterId, onChatClick
   const [skillFilter, setSkillFilter] = useState('');
 
   const [poolFormOpen, setPoolFormOpen] = useState(false);
-  const [editingPool, setEditingPool] = useState<TalentPool | null>(null);
-  const [deletePoolTarget, setDeletePoolTarget] = useState<TalentPool | null>(null);
+  const [editingPool, setEditingPool] = useState<TalentPoolRecord | null>(null);
+  const [deletePoolTarget, setDeletePoolTarget] = useState<TalentPoolRecord | null>(null);
   const [moveTarget, setMoveTarget] = useState<TalentPoolCandidate | null>(null);
   const [viewTarget, setViewTarget] = useState<TalentPoolCandidate | null>(null);
   const [removeTarget, setRemoveTarget] = useState<TalentPoolCandidate | null>(null);
@@ -87,7 +87,7 @@ export const TalentPool: React.FC<TalentPoolProps> = ({ recruiterId, onChatClick
 
   const getMatchScore = (entry: TalentPoolCandidate) => {
     const candidateSkills = normalizeSkills(entry.profiles?.skills);
-    return calculateMatchScore(jobSkills, candidateSkills);
+    return calculateSkillMatchScore(jobSkills, candidateSkills);
   };
 
   const handleCreatePool = async (payload: { name: string; description?: string }) => {

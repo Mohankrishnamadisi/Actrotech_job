@@ -11,3 +11,4 @@ export { CandidateTagAssigner } from './CandidateTagAssigner';
 export { CandidateNotesPanel } from './CandidateNotesPanel';
 export { TalentPool } from './TalentPool';
 export { AddToPoolButton } from './talentPool/AddToPoolButton';
+export { RecommendedCandidates } from './RecommendedCandidates';

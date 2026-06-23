@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -9,14 +9,20 @@ import {
   Card,
   CardContent,
   Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
   Alert,
+  Tabs,
+  Tab,
+  CircularProgress,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LocationOn as LocationOnIcon, Work as WorkIcon, MonetizationOn as MonetizationOnIcon, BookmarkBorder as BookmarkBorderIcon, Bookmark as BookmarkIcon, Share as ShareIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
-import { jobService, userService, applicationService, savedService } from '@services/api';
+import { jobService, userService, applicationService, savedService, chatService } from '@services/api';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
@@ -24,6 +30,12 @@ import { ROUTES } from '@constants/index';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import type { Job } from '../types';
+
+const RecommendedCandidates = React.lazy(() =>
+  import('@components/recruiter/RecommendedCandidates').then((module) => ({
+    default: module.RecommendedCandidates,
+  }))
+);
 
 export const JobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +58,11 @@ export const JobDetails: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [savedLoading, setSavedLoading] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [jobDetailsTab, setJobDetailsTab] = useState(0);
+  const [chatDialogOpen, setChatDialogOpen] = useState(false);
+  const [selectedChatUser, setSelectedChatUser] = useState<{ id: string; name: string } | null>(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -115,6 +132,28 @@ export const JobDetails: React.FC = () => {
   const requiresSubscription = workModeLabel === 'Remote';
   const hasAccess = !requiresSubscription || !!subscription;
   const showRemotePremium = workModeLabel === 'Remote' && !subscription;
+  const isRecruiterOwner = Boolean(user?.id && job.posted_by === user.id);
+
+  const handleRecommendedMessage = (candidateId: string, candidateName: string) => {
+    setSelectedChatUser({ id: candidateId, name: candidateName });
+    setChatDialogOpen(true);
+  };
+
+  const handleSendRecommendedMessage = async () => {
+    if (!selectedChatUser || !chatMessage.trim() || !user?.id) return;
+
+    setSendingMessage(true);
+    try {
+      await chatService.sendMessage(user.id, selectedChatUser.id, chatMessage, 'recruiter');
+      setChatMessage('');
+      toast.success('Message sent successfully!');
+    } catch (err) {
+      console.error('Failed to send candidate message:', err);
+      toast.error('Failed to send message');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   const handleSaveToggle = async () => {
     if (!user?.id || !job?.id) {
@@ -393,7 +432,27 @@ export const JobDetails: React.FC = () => {
                   </Box>
                 </Box>
 
-                {!hasAccess && requiresSubscription ? (
+                {isRecruiterOwner && (
+                  <Tabs
+                    value={jobDetailsTab}
+                    onChange={(_, value) => setJobDetailsTab(value)}
+                    sx={{ mb: 3, borderBottom: '1px solid rgba(148, 163, 184, 0.18)' }}
+                  >
+                    <Tab label="Job Details" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                    <Tab label="Recommended Candidates" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                  </Tabs>
+                )}
+
+                {isRecruiterOwner && jobDetailsTab === 1 ? (
+                  <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}><CircularProgress /></Box>}>
+                    <RecommendedCandidates
+                      recruiterId={user?.id || ''}
+                      jobId={job.id}
+                      compact
+                      onMessageClick={handleRecommendedMessage}
+                    />
+                  </Suspense>
+                ) : !hasAccess && requiresSubscription ? (
                   <Box sx={{ p: 3, border: '1px solid rgba(186, 230, 253, 1)', borderRadius: 2, background: '#EFF6FF' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                       Premium Remote Job
@@ -511,6 +570,35 @@ export const JobDetails: React.FC = () => {
             </Card>
           </Grid>
         </Grid>
+
+        {/* Recommended Candidate Message Dialog */}
+        <Dialog open={chatDialogOpen} onClose={() => setChatDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Message {selectedChatUser?.name}</DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              placeholder="Write a message to this candidate..."
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              disabled={sendingMessage}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setChatDialogOpen(false)} disabled={sendingMessage}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSendRecommendedMessage}
+              disabled={!chatMessage.trim() || sendingMessage}
+              endIcon={sendingMessage ? <CircularProgress size={18} /> : undefined}
+            >
+              {sendingMessage ? 'Sending...' : 'Send Message'}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Apply Dialog */}
         <Dialog open={applyDialogOpen} onClose={() => setApplyDialogOpen(false)} maxWidth="sm" fullWidth>

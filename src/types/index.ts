@@ -355,6 +355,40 @@ export interface TalentPoolFilters {
   skill?: string;
 }
 
+export interface RecommendedCandidateProfile {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  headline?: string | null;
+  title?: string | null;
+  location?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  skills?: string[] | string | null;
+  experience_years?: number | null;
+  experience?: string | null;
+  education?: unknown;
+  expected_ctc?: string | number | null;
+  current_ctc?: string | number | null;
+  avatar_url?: string | null;
+  role?: string | null;
+  [key: string]: unknown;
+}
+
+export interface RecommendedCandidate {
+  candidate: RecommendedCandidateProfile;
+  job: Job;
+  matchScore: import('@utils/matchScore').MatchScoreResult;
+}
+
+export interface RecommendedCandidateFilters {
+  minMatchScore?: number;
+  skills?: string;
+  location?: string;
+  minExperience?: number;
+}
+
 export interface PaginatedResult<T> {
   data: T[];
   total: number;

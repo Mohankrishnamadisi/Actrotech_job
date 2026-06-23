@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { userService } from './api';
 import type {
   PaginatedResult,
   TalentPool,
@@ -52,17 +53,80 @@ export async function createPool(
   recruiterId: string,
   payload: { name: string; description?: string }
 ): Promise<TalentPool> {
+  const sessionResponse = await supabase.auth.getSession();
+  const authUser = sessionResponse?.data?.session?.user ?? null;
+  const authUserId = authUser?.id ?? null;
+  const authEmail = authUser?.email ?? null;
+  const authName = authUser?.user_metadata?.name ?? null;
+  const actualRecruiterId = authUserId || recruiterId;
+
+  // eslint-disable-next-line no-console
+  console.info(
+    'TalentPool.createPool auth user id:',
+    authUserId,
+    'recruiter_id param:',
+    recruiterId,
+    'effective recruiter_id:',
+    actualRecruiterId
+  );
+  if (!authUserId) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'TalentPool.createPool no active auth session; cannot verify recruiter identity for recruiterId param:',
+      recruiterId
+    );
+    throw new Error('No active authenticated user session available to create a talent pool.');
+  }
+
+  if (authUserId && recruiterId !== authUserId) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'TalentPool.createPool recruiter_id mismatch. recruiterId param:',
+      recruiterId,
+      'auth.uid():',
+      authUserId,
+      'using auth uid as recruiter_id'
+    );
+  }
+
+  try {
+    await userService.ensureRecruiterProfile(actualRecruiterId, {
+      name: authName || 'Recruiter',
+      email: authEmail || undefined,
+    } as Record<string, unknown>);
+  } catch (profileError) {
+    // eslint-disable-next-line no-console
+    console.error('TalentPool.createPool recruiter profile auto-create failed', {
+      actualRecruiterId,
+      authUserId,
+      authEmail,
+      authName,
+      profileError,
+    });
+    throw profileError;
+  }
+
   const { data, error } = await supabase
     .from('talent_pools')
     .insert({
-      recruiter_id: recruiterId,
+      recruiter_id: actualRecruiterId,
       name: payload.name.trim(),
       description: payload.description?.trim() || null,
     })
     .select(POOL_SELECT)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error('TalentPool.createPool insert failed', {
+      recruiterId,
+      authUserId,
+      payload,
+      error,
+    });
+    throw error;
+  }
+
   return mapPool(data as Record<string, unknown>);
 }
 

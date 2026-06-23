@@ -252,9 +252,16 @@ const AppContent: React.FC = () => {
             try {
               const { userService } = await import('./services/api');
               profile = await userService.getProfile(session.user.id);
+              if (!profile && session.user.user_metadata?.role === USER_ROLES.RECRUITER) {
+                await userService.ensureRecruiterProfile(session.user.id, {
+                  name: session.user.user_metadata?.name || 'Recruiter',
+                  email: session.user.email,
+                } as Record<string, unknown>);
+                profile = await userService.getProfile(session.user.id);
+              }
             } catch (err) {
               // eslint-disable-next-line no-console
-              console.warn('Failed to load profile on initAuth', err);
+              console.warn('Failed to load or create profile on initAuth', err);
             }
             // eslint-disable-next-line no-console
             console.log('Profile on init:', profile);

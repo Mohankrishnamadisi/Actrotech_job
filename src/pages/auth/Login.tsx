@@ -17,6 +17,7 @@ import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { userService } from '@services/api';
+import type { Recruiter } from '@types';
 import { ROUTES } from '@constants/index';
 import { validateEmail } from '@utils/index';
 import toast from 'react-hot-toast';
@@ -86,6 +87,18 @@ export const Login: React.FC = () => {
         const roleFromProfile = profile?.role;
         const roleFromAuth = response.user.user_metadata?.role;
         const finalRole = roleFromProfile || roleFromAuth || 'job_seeker';
+
+        if (!profile && finalRole === 'recruiter') {
+          try {
+            await userService.ensureRecruiterProfile(response.user.id, {
+              name: response.user.user_metadata?.name || 'Recruiter',
+              email: response.user.email,
+            } as Partial<Recruiter> & Record<string, unknown>);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to ensure recruiter profile on login', err);
+          }
+        }
 
         setUser({
           id: response.user.id,

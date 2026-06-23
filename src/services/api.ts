@@ -42,6 +42,59 @@ export const userService = {
     return data || null;
   },
 
+  async ensureRecruiterProfile(userId: string, profileData: Partial<Recruiter> & Record<string, unknown> = {}) {
+    const { data: existing, error: existingError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (existingError && existingError.code !== 'PGRST116') throw existingError;
+    if (existing) {
+      if (existing.role !== 'recruiter') {
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ role: 'recruiter', updated_at: new Date().toISOString() })
+          .eq('id', userId)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      return existing;
+    }
+
+    let authUser: any = null;
+    if (!profileData.name || !profileData.email) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (!userError && userData?.user?.id === userId) {
+        authUser = userData.user;
+      }
+    }
+
+    const payload: Record<string, unknown> = {
+      id: userId,
+      role: 'recruiter',
+      name:
+        profileData.hr_name ||
+        profileData.name ||
+        profileData.company_name ||
+        authUser?.user_metadata?.name ||
+        'Recruiter',
+      email:
+        profileData.company_email ||
+        profileData.email ||
+        authUser?.email ||
+        null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase.from('profiles').insert([payload]).select().single();
+    if (error) throw error;
+    return data;
+  },
+
   async updateProfile(userId: string, updates: Record<string, unknown>) {
     const { data, error } = await supabase
       .from('profiles')
@@ -123,6 +176,12 @@ export const recruiterService = {
       .insert([{ ...payload }])
       .select();
     if (error) throw error;
+
+    await userService.ensureRecruiterProfile(userId, {
+      name: payload.hr_name as string,
+      email: payload.company_email as string,
+    } as Partial<Recruiter> & Record<string, unknown>);
+
     return data[0];
   },
 

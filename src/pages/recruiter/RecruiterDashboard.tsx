@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -16,6 +16,10 @@ import {
   CircularProgress,
   IconButton,
   Badge,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
@@ -31,17 +35,17 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { ROUTES } from '@constants/index';
-import { recruiterService, statsService, chatService, notificationService } from '@services/api';
+import { recruiterService, statsService, chatService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { JobPostingForm } from '@components/recruiter/JobPostingForm';
 import { ManageJobs } from '@components/recruiter/ManageJobs';
 import { ViewApplicants } from '@components/recruiter/ViewApplicants';
 import { CompanyProfile } from '@components/recruiter/CompanyProfile';
 import { CandidateSearch } from '@components/recruiter/CandidateSearch';
-import { NotificationsCenter } from '@components/recruiter/NotificationsCenter';
 import { TagManager } from '@components/recruiter/TagManager';
 import { TalentPool } from '@components/recruiter/TalentPool';
 import toast from 'react-hot-toast';
+import type { Job } from '@types';
 
 // ATS Pipeline
 import PipelineBoard from '../../features/ats/PipelineBoard';
@@ -68,6 +72,11 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const MotionCard = motion(Card);
+const RecommendedCandidates = React.lazy(() =>
+  import('@components/recruiter/RecommendedCandidates').then((module) => ({
+    default: module.RecommendedCandidates,
+  }))
+);
 
 export const RecruiterDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -88,6 +97,8 @@ export const RecruiterDashboard: React.FC = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [recommendedJobId, setRecommendedJobId] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -99,15 +110,18 @@ export const RecruiterDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsData, profileData, unreadNotif, conversations] = await Promise.all([
+      const [statsData, profileData, unreadNotif, conversations, recruiterJobs] = await Promise.all([
         statsService.getRecruiterStats(user?.id || ''),
         recruiterService.getRecruiterProfile(user?.id || ''),
         notificationService.getUnreadNotifications(user?.id || ''),
         messagingService.getConversations(user?.id || ''),
+        jobService.getRecruiterJobs(user?.id || ''),
       ]);
 
       setStats(statsData);
       setRecruiterProfile(profileData);
+      setJobs(recruiterJobs || []);
+      setRecommendedJobId((current) => current || recruiterJobs?.[0]?.id || '');
       setNotificationsCount((unreadNotif || []).length);
       setUnreadMessagesCount(
         (((conversations as any[]) || [])).reduce((count, conv) => count + (conv.unreadCount || 0), 0)
@@ -267,7 +281,14 @@ export const RecruiterDashboard: React.FC = () => {
             <Tabs
               value={currentTab}
               onChange={(_, newValue) => setCurrentTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
               sx={{
+                overflowX: 'auto',
+                '& .MuiTabs-flexContainer': {
+                  flexWrap: 'nowrap',
+                },
                 '& .MuiTab-root': {
                   textTransform: 'none',
                   fontWeight: 700,
@@ -281,11 +302,11 @@ export const RecruiterDashboard: React.FC = () => {
               <Tab label="Manage Jobs" id="recruiter-tab-1" aria-controls="recruiter-tabpanel-1" />
               <Tab label="Company Profile" id="recruiter-tab-2" aria-controls="recruiter-tabpanel-2" />
               <Tab label="View Applicants" id="recruiter-tab-3" aria-controls="recruiter-tabpanel-3" />
-              <Tab label="Candidate Tags" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" icon={<TagIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="Find Candidates" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" />
-              <Tab label="Talent Pool" id="recruiter-tab-8" aria-controls="recruiter-tabpanel-8" icon={<PoolIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="Notifications" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
-              <Tab label="ATS Pipeline" id="recruiter-tab-7" aria-controls="recruiter-tabpanel-7" />
+              <Tab label="AI Recommended" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" />
+              <Tab label="Candidate Tags" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" icon={<TagIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="Find Candidates" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
+              <Tab label="Talent Pool" id="recruiter-tab-7" aria-controls="recruiter-tabpanel-7" icon={<PoolIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab label="ATS Pipeline" id="recruiter-tab-8" aria-controls="recruiter-tabpanel-8" />
             </Tabs>
           </Box>
 
@@ -409,13 +430,64 @@ export const RecruiterDashboard: React.FC = () => {
               )}
             </TabPanel>
 
-            {/* Candidate Tags Tab */}
+            {/* AI Recommended Candidates Tab */}
             <TabPanel value={currentTab} index={4}>
+              {user?.id && (
+                jobs.length === 0 ? (
+                  <Card>
+                    <CardContent sx={{ textAlign: 'center', py: 5 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                        No jobs available for recommendations
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Post a job first to see AI recommended candidates.
+                      </Typography>
+                      <Button variant="contained" startIcon={<AddIcon />} onClick={() => setJobPostingFormOpen(true)}>
+                        Post New Job
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Box>
+                    <Card sx={{ mb: 2, borderRadius: 2, border: '1px solid rgba(148,163,184,0.2)', boxShadow: 'none' }}>
+                      <CardContent>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Recommend candidates for job</InputLabel>
+                          <Select
+                            value={recommendedJobId}
+                            label="Recommend candidates for job"
+                            onChange={(e) => setRecommendedJobId(e.target.value)}
+                          >
+                            {jobs.map((job) => (
+                              <MenuItem key={job.id} value={job.id}>
+                                {job.title} - {job.location}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </CardContent>
+                    </Card>
+                    {recommendedJobId && (
+                      <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}><CircularProgress /></Box>}>
+                        <RecommendedCandidates
+                          recruiterId={user.id}
+                          jobId={recommendedJobId}
+                          onMessageClick={handleChatClick}
+                        />
+                      </Suspense>
+                    )}
+                  </Box>
+                )
+              )}
+            </TabPanel>
+
+            {/* Candidate Tags Tab */}
+            <TabPanel value={currentTab} index={5}>
               {user?.id && <TagManager recruiterId={user.id} inline />}
             </TabPanel>
 
             {/* Find Candidates Tab */}
-            <TabPanel value={currentTab} index={5}>
+            <TabPanel value={currentTab} index={6}>
               {user?.id && (
                 <CandidateSearch
                   recruiterId={user.id}
@@ -425,7 +497,7 @@ export const RecruiterDashboard: React.FC = () => {
             </TabPanel>
 
             {/* Talent Pool Tab */}
-            <TabPanel value={currentTab} index={8}>
+            <TabPanel value={currentTab} index={7}>
               {user?.id && (
                 <TalentPool
                   recruiterId={user.id}
@@ -434,18 +506,8 @@ export const RecruiterDashboard: React.FC = () => {
               )}
             </TabPanel>
 
-            {/* Notifications Tab */}
-            <TabPanel value={currentTab} index={6}>
-              {user?.id && (
-                <NotificationsCenter
-                  userId={user.id}
-                  onNotificationRead={fetchData}
-                />
-              )}
-            </TabPanel>
-
             {/* ATS Pipeline Tab */}
-            <TabPanel value={currentTab} index={7}>
+            <TabPanel value={currentTab} index={8}>
               {user?.id && (
                 <PipelineBoard />
               )}

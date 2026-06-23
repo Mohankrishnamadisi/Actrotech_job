@@ -3,6 +3,7 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@services/supabase';
 import { userService, recruiterService } from '@services/api';
+import type { Recruiter } from '@types';
 import { useAuthStore } from '@store/index';
 import { ROUTES, USER_ROLES } from '@constants/index';
 
@@ -30,6 +31,16 @@ export const AuthCallback: React.FC = () => {
             await recruiterService.createRecruiterProfile(userId, {
               company_email: user.email,
             } as Record<string, unknown>);
+          } else {
+            try {
+              await userService.ensureRecruiterProfile(userId, {
+                name: user.user_metadata?.name || 'Recruiter',
+                email: user.email,
+              } as Partial<Recruiter> & Record<string, unknown>);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.warn('Failed to ensure recruiter profile on OAuth callback', err);
+            }
           }
           setUser({ id: userId, email: user.email || '', name: user.user_metadata?.name || 'Recruiter', role: USER_ROLES.RECRUITER, createdAt: user.created_at || new Date().toISOString(), updatedAt: user.updated_at || new Date().toISOString(), });
           navigate(ROUTES.RECRUITER_DASHBOARD);
