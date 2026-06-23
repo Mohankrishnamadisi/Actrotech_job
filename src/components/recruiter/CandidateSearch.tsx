@@ -30,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { candidateService, savedService } from '@services/api';
+import { AddToPoolButton } from './talentPool/AddToPoolButton';
 import toast from 'react-hot-toast';
 
 interface CandidateSearchProps {
@@ -220,6 +221,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                     }}
                     secondaryAction={
                       <Box sx={{ display: 'flex', gap: 1 }}>
+                        <AddToPoolButton recruiterId={recruiterId} candidateId={candidate.id} />
                         <IconButton
                           edge="end"
                           onClick={() => handleSaveCandidate(candidate.id)}

@@ -315,3 +315,50 @@ export interface CandidateNote {
     company_name?: string | null;
   };
 }
+
+export interface TalentPool {
+  id: string;
+  recruiter_id: string;
+  name: string;
+  description?: string | null;
+  created_at: string;
+  updated_at: string;
+  candidate_count?: number;
+}
+
+export interface TalentPoolCandidateProfile {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  headline?: string | null;
+  location?: string | null;
+  skills?: string[] | string | null;
+  experience_years?: number | null;
+  experience?: string | null;
+  avatar_url?: string | null;
+  role?: string | null;
+}
+
+export interface TalentPoolCandidate {
+  id: string;
+  pool_id: string;
+  candidate_id: string;
+  notes?: string | null;
+  added_at: string;
+  profiles?: TalentPoolCandidateProfile;
+}
+
+export interface TalentPoolFilters {
+  search?: string;
+  location?: string;
+  minExperience?: number;
+  skill?: string;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

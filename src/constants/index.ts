@@ -499,6 +499,7 @@ export const ROUTES = {
   RECRUITER_JOBS: '/recruiter/jobs',
   RECRUITER_APPLICANTS: '/recruiter/applicants',
   RECRUITER_PROFILE: '/recruiter/profile',
+  RECRUITER_TALENT_POOL: '/recruiter/dashboard?tab=talent-pool',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/users',
   ADMIN_RECRUITERS: '/admin/recruiters',

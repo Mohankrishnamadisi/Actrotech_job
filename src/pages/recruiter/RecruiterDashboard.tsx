@@ -25,6 +25,7 @@ import {
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
   LocalOffer as TagIcon,
+  FolderSpecial as PoolIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
@@ -39,6 +40,7 @@ import { CompanyProfile } from '@components/recruiter/CompanyProfile';
 import { CandidateSearch } from '@components/recruiter/CandidateSearch';
 import { NotificationsCenter } from '@components/recruiter/NotificationsCenter';
 import { TagManager } from '@components/recruiter/TagManager';
+import { TalentPool } from '@components/recruiter/TalentPool';
 import toast from 'react-hot-toast';
 
 // ATS Pipeline
@@ -231,7 +233,7 @@ export const RecruiterDashboard: React.FC = () => {
                 fullWidth
                 variant="outlined"
                 startIcon={<SearchIcon />}
-                onClick={() => setCurrentTab(4)}
+                onClick={() => setCurrentTab(5)}
                 sx={{ py: 1.5, fontWeight: 600 }}
               >
                 Search Candidates
@@ -281,6 +283,7 @@ export const RecruiterDashboard: React.FC = () => {
               <Tab label="View Applicants" id="recruiter-tab-3" aria-controls="recruiter-tabpanel-3" />
               <Tab label="Candidate Tags" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" icon={<TagIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
               <Tab label="Find Candidates" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" />
+              <Tab label="Talent Pool" id="recruiter-tab-8" aria-controls="recruiter-tabpanel-8" icon={<PoolIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
               <Tab label="Notifications" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
               <Tab label="ATS Pipeline" id="recruiter-tab-7" aria-controls="recruiter-tabpanel-7" />
             </Tabs>
@@ -415,6 +418,16 @@ export const RecruiterDashboard: React.FC = () => {
             <TabPanel value={currentTab} index={5}>
               {user?.id && (
                 <CandidateSearch
+                  recruiterId={user.id}
+                  onChatClick={handleChatClick}
+                />
+              )}
+            </TabPanel>
+
+            {/* Talent Pool Tab */}
+            <TabPanel value={currentTab} index={8}>
+              {user?.id && (
+                <TalentPool
                   recruiterId={user.id}
                   onChatClick={handleChatClick}
                 />

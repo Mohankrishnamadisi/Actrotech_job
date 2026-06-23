@@ -18,6 +18,10 @@ import {
   Tab,
   TextField,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   GetApp as DownloadIcon,
@@ -39,6 +43,8 @@ import { ApplicantDetailsModal } from './ApplicantDetailsModal';
 import { TagManager } from './TagManager';
 import { TagFilterBar } from './TagFilterBar';
 import { CandidateTagChips } from './CandidateTagChips';
+import { AddToPoolButton } from './talentPool/AddToPoolButton';
+import { calculateMatchScore, getMatchScoreHex, type MatchScoreResult } from '@utils/matchScore';
 
 interface ViewApplicantsProps {
   recruiterId: string;
@@ -57,6 +63,9 @@ interface Applicant {
   [key: string]: unknown;
 }
 
+type SortMode = 'applied_desc' | 'match_desc' | 'match_asc';
+type MatchScoreFilter = 'all' | '90_plus' | '70_89' | 'below_70';
+
 export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onChatClick }) => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJobId, setSelectedJobId] = useState('');
@@ -65,6 +74,8 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortMode, setSortMode] = useState<SortMode>('applied_desc');
+  const [matchScoreFilter, setMatchScoreFilter] = useState<MatchScoreFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [tags, setTags] = useState<CandidateTag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
@@ -136,17 +147,6 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     }
   };
 
-  const handleStatusChange = async (applicationId: string, newStatus: string) => {
-    try {
-      await applicationService.updateApplicationStatus(applicationId, newStatus);
-      toast.success(`Application status changed to ${newStatus}`);
-      fetchApplicants();
-    } catch (err) {
-      console.error('Error updating status:', err);
-      toast.error('Failed to update application status');
-    }
-  };
-
   const handleViewApplicant = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setViewDialogOpen(true);
@@ -161,15 +161,45 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     fetchTagAssignments();
   };
 
+  const selectedJob = jobs.find((job) => job.id === selectedJobId) || jobs[0];
+
+  const getApplicantMatchScore = (applicant: Applicant): MatchScoreResult =>
+    calculateMatchScore(
+      {
+        ...(applicant.profiles || {}),
+        expected_ctc: applicant.expected_ctc || applicant.expectedCtc,
+        current_ctc: applicant.current_ctc || applicant.currentCtc,
+      },
+      selectedJob
+    );
+
   const statusFiltered = applicants.filter((app) =>
     statusFilter === 'all' ? true : app.status === statusFilter
   );
 
-  const filteredApplicants = filterByTagIds(
+  const tagFilteredApplicants = filterByTagIds(
     statusFiltered,
     tagAssignmentsByCandidate,
     selectedTagIds
   );
+
+  const filteredApplicants = [...tagFilteredApplicants]
+    .filter((applicant) => {
+      const score = getApplicantMatchScore(applicant).score;
+      if (matchScoreFilter === '90_plus') return score >= 90;
+      if (matchScoreFilter === '70_89') return score >= 70 && score <= 89;
+      if (matchScoreFilter === 'below_70') return score < 70;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortMode === 'match_desc') {
+        return getApplicantMatchScore(b).score - getApplicantMatchScore(a).score;
+      }
+      if (sortMode === 'match_asc') {
+        return getApplicantMatchScore(a).score - getApplicantMatchScore(b).score;
+      }
+      return new Date(b.applied_at || 0).getTime() - new Date(a.applied_at || 0).getTime();
+    });
 
   const statusCounts = {
     applied: applicants.filter((a) => a.status === 'applied').length,
@@ -211,8 +241,6 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
       </Card>
     );
   }
-
-  const selectedJob = jobs.find((job) => job.id === selectedJobId) || jobs[0];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -372,6 +400,34 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                 selectedTagIds={selectedTagIds}
                 onChange={setSelectedTagIds}
               />
+
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 190 }}>
+                  <InputLabel>Sort By Match Score</InputLabel>
+                  <Select
+                    value={sortMode}
+                    label="Sort By Match Score"
+                    onChange={(e) => setSortMode(e.target.value as SortMode)}
+                  >
+                    <MenuItem value="applied_desc">Newest Applied</MenuItem>
+                    <MenuItem value="match_desc">Match Score: High to Low</MenuItem>
+                    <MenuItem value="match_asc">Match Score: Low to High</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel>Filter By Match Score</InputLabel>
+                  <Select
+                    value={matchScoreFilter}
+                    label="Filter By Match Score"
+                    onChange={(e) => setMatchScoreFilter(e.target.value as MatchScoreFilter)}
+                  >
+                    <MenuItem value="all">All Scores</MenuItem>
+                    <MenuItem value="90_plus">90+ Green</MenuItem>
+                    <MenuItem value="70_89">70-89 Orange</MenuItem>
+                    <MenuItem value="below_70">Below 70 Red</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
             </CardContent>
           </Card>
 
@@ -394,6 +450,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                     <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Tags</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Match Score</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Applied</TableCell>
                     <TableCell sx={{ fontWeight: 600 }} align="right">
@@ -402,59 +459,77 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredApplicants.map((applicant) => (
-                    <TableRow key={applicant.id} hover>
-                      <TableCell>
-                        <Typography sx={{ fontWeight: 500 }}>
-                          {applicant.profiles?.name || 'Unknown'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{applicant.profiles?.email || 'N/A'}</TableCell>
-                      <TableCell>
-                        <CandidateTagChips
-                          assignments={tagAssignmentsByCandidate[applicant.user_id] || []}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={applicant.status}
-                          size="small"
-                          color={getStatusColor(applicant.status)}
-                          variant="filled"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewApplicant(applicant)}
-                          title="View details"
-                        >
-                          <ViewIcon fontSize="small" />
-                        </IconButton>
-                        {applicant.resume_url && (
+                  {filteredApplicants.map((applicant) => {
+                    const matchScore = getApplicantMatchScore(applicant);
+                    const matchHex = getMatchScoreHex(matchScore.score);
+
+                    return (
+                      <TableRow key={applicant.id} hover>
+                        <TableCell>
+                          <Typography sx={{ fontWeight: 500 }}>
+                            {applicant.profiles?.name || 'Unknown'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{applicant.profiles?.email || 'N/A'}</TableCell>
+                        <TableCell>
+                          <CandidateTagChips
+                            assignments={tagAssignmentsByCandidate[applicant.user_id] || []}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={matchScore.label}
+                            size="small"
+                            sx={{
+                              fontWeight: 800,
+                              bgcolor: `${matchHex}14`,
+                              color: matchHex,
+                              border: `1px solid ${matchHex}33`,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={applicant.status}
+                            size="small"
+                            color={getStatusColor(applicant.status)}
+                            variant="filled"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}
+                        </TableCell>
+                        <TableCell align="right">
                           <IconButton
                             size="small"
-                            href={applicant.resume_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Download resume"
+                            onClick={() => handleViewApplicant(applicant)}
+                            title="View details"
                           >
-                            <DownloadIcon fontSize="small" />
+                            <ViewIcon fontSize="small" />
                           </IconButton>
-                        )}
-                        <IconButton
-                          size="small"
-                          onClick={() => onChatClick?.(applicant.user_id, applicant.profiles?.name || 'Candidate')}
-                          title="Send message"
-                        >
-                          <MessageIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          {applicant.resume_url && (
+                            <IconButton
+                              size="small"
+                              href={applicant.resume_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Download resume"
+                            >
+                              <DownloadIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                          <AddToPoolButton recruiterId={recruiterId} candidateId={applicant.user_id} />
+                          <IconButton
+                            size="small"
+                            onClick={() => onChatClick?.(applicant.user_id, applicant.profiles?.name || 'Candidate')}
+                            title="Send message"
+                          >
+                            <MessageIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>

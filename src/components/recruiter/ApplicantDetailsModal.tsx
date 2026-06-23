@@ -19,6 +19,7 @@ import {
   Alert,
   Chip,
   Divider,
+  LinearProgress,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -34,6 +35,7 @@ import { applicationService } from '@services/api';
 import type { CandidateTag } from '@types';
 import { CandidateTagAssigner } from './CandidateTagAssigner';
 import { CandidateNotesPanel } from './CandidateNotesPanel';
+import { calculateMatchScore, getMatchScoreHex } from '@utils/matchScore';
 
 interface ApplicantDetailsModalProps {
   open: boolean;
@@ -101,6 +103,16 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   const formatAppliedDate = appliedDate ? appliedDate.toLocaleString() : 'Unknown';
 
   const resumeUrl = profile?.resume_url || applicant?.resume_url || '';
+  const matchScore = applicant
+    ? calculateMatchScore(
+        {
+          ...(profile || {}),
+          expected_ctc: applicant.expected_ctc || applicant.expectedCtc,
+          current_ctc: applicant.current_ctc || applicant.currentCtc,
+        },
+        applicant.jobs
+      )
+    : null;
 
   const handleStatusChange = async () => {
     if (!applicant?.id) return;
@@ -228,6 +240,127 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                 </CardContent>
               </MotionCard>
             </Grid>
+
+            {/* AI Match Score */}
+            {matchScore && (
+              <Grid item xs={12}>
+                <MotionCard initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          AI Match Score
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Rule-based match against {applicant.jobs?.title || 'this job'}
+                        </Typography>
+                      </Box>
+                      <Chip
+                        label={matchScore.label}
+                        sx={{
+                          height: 34,
+                          px: 1,
+                          fontWeight: 900,
+                          bgcolor: `${getMatchScoreHex(matchScore.score)}14`,
+                          color: getMatchScoreHex(matchScore.score),
+                          border: `1px solid ${getMatchScoreHex(matchScore.score)}33`,
+                        }}
+                      />
+                    </Box>
+
+                    <Grid container spacing={2}>
+                      {Object.values(matchScore.breakdown).map((item) => (
+                        <Grid item xs={12} sm={6} md={4} key={item.label}>
+                          <Box
+                            sx={{
+                              p: 1.5,
+                              borderRadius: 1,
+                              border: '1px solid rgba(148, 163, 184, 0.24)',
+                              bgcolor: 'rgba(248,250,252,0.7)',
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                                {item.label}
+                              </Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                                {item.points}/{item.weight}
+                              </Typography>
+                            </Box>
+                            <LinearProgress
+                              variant="determinate"
+                              value={item.percent}
+                              sx={{
+                                height: 6,
+                                borderRadius: 3,
+                                bgcolor: 'rgba(148,163,184,0.18)',
+                                '& .MuiLinearProgress-bar': {
+                                  bgcolor: getMatchScoreHex(item.percent),
+                                  borderRadius: 3,
+                                },
+                              }}
+                            />
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+
+                    <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                          Skills Matching Breakdown
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                          {matchScore.matchedSkills.length > 0 ? (
+                            matchScore.matchedSkills.map((skill) => (
+                              <Chip key={skill} label={skill} size="small" color="success" variant="outlined" />
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No required skills matched yet
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                          Missing Skills
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                          {matchScore.missingSkills.length > 0 ? (
+                            matchScore.missingSkills.map((skill) => (
+                              <Chip key={skill} label={skill} size="small" color="error" variant="outlined" />
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No missing required skills
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                          Strengths
+                        </Typography>
+                        <Box component="ul" sx={{ m: 0, pl: 2.2 }}>
+                          {matchScore.strengths.length > 0 ? (
+                            matchScore.strengths.map((strength) => (
+                              <Typography component="li" variant="body2" key={strength} sx={{ mb: 0.5 }}>
+                                {strength}
+                              </Typography>
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Add more profile details for stronger insights
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
 
             {/* Professional Info */}
             <Grid item xs={12} sm={6}>
