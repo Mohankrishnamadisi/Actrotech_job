@@ -39,6 +39,9 @@ import { CandidateSearch } from '@components/recruiter/CandidateSearch';
 import { NotificationsCenter } from '@components/recruiter/NotificationsCenter';
 import toast from 'react-hot-toast';
 
+// ATS Pipeline
+import PipelineBoard from '../../features/ats/PipelineBoard';
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -289,6 +292,7 @@ export const RecruiterDashboard: React.FC = () => {
               <Tab label="View Applicants" id="recruiter-tab-3" aria-controls="recruiter-tabpanel-3" />
               <Tab label="Find Candidates" id="recruiter-tab-4" aria-controls="recruiter-tabpanel-4" />
               <Tab label="Notifications" id="recruiter-tab-5" aria-controls="recruiter-tabpanel-5" />
++              <Tab label="ATS Pipeline" id="recruiter-tab-6" aria-controls="recruiter-tabpanel-6" />
             </Tabs>
           </Box>
 
@@ -429,6 +433,13 @@ export const RecruiterDashboard: React.FC = () => {
                   userId={user.id}
                   onNotificationRead={fetchData}
                 />
+              )}
+            </TabPanel>
+
+            {/* ATS Pipeline Tab */}
+            <TabPanel value={currentTab} index={6}>
+              {user?.id && (
+                <PipelineBoard />
               )}
             </TabPanel>
           </CardContent>

@@ -1,0 +1,63 @@
+.pipeline-board {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.pipeline-column {
+  min-width: 260px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  backdrop-filter: blur(6px);
+}
+
+.pipeline-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pipeline-column .count {
+  background: linear-gradient(90deg,#7c3aed,#06b6d4);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.pipeline-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.candidate-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: grab;
+}
+
+.candidate-card-main { display:flex; gap:8px; align-items:center; }
+.candidate-card .avatar{ width:40px; height:40px; border-radius:8px; background:rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; font-weight:700 }
+.candidate-card .info .name { font-weight:600 }
+.candidate-card .info .title { font-size:12px; color:rgba(255,255,255,0.6) }
+
+.empty { padding: 12px; color: rgba(255,255,255,0.6); font-size: 13px; }
+.pipeline-loading { padding: 20px; }
+.drag-over { box-shadow: inset 0 0 0 2px rgba(99,102,241,0.12); }
+
+@media (max-width: 768px) {
+  .pipeline-board { gap: 8px; padding: 8px; }
+  .pipeline-column { min-width: 220px; }
+}

@@ -35,6 +35,7 @@ import { jobService, applicationService } from '@services/api';
 import type { Job } from '@types';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { ApplicantDetailsModal } from './ApplicantDetailsModal';
 
 interface ViewApplicantsProps {
   recruiterId: string;
@@ -113,6 +114,10 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const handleViewApplicant = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setViewDialogOpen(true);
+  };
+
+  const handleStatusChanged = () => {
+    fetchApplicants();
   };
 
   const filteredApplicants = applicants.filter((app) =>
@@ -391,73 +396,16 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
         </Box>
       </Box>
 
-      {/* View Applicant Details Dialog */}
-      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Applicant Details</DialogTitle>
-        <DialogContent dividers sx={{ py: 2 }}>
-          {selectedApplicant && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Name
-                </Typography>
-                <Typography>{selectedApplicant.profiles?.name || 'Unknown'}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Email
-                </Typography>
-                <Typography>{selectedApplicant.profiles?.email || 'N/A'}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Status
-                </Typography>
-                <Chip label={selectedApplicant.status} color={getStatusColor(selectedApplicant.status)} />
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Cover Letter
-                </Typography>
-                <Typography>{selectedApplicant.cover_letter || 'No cover letter provided'}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Applied On
-                </Typography>
-                <Typography>{format(new Date(selectedApplicant.applied_at), 'dd MMM yyyy hh:mm a')}</Typography>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
-          {selectedApplicant && (
-            <>
-              <Button
-                color="success"
-                variant="outlined"
-                onClick={() => {
-                  handleStatusChange(selectedApplicant.id, 'shortlisted');
-                  setViewDialogOpen(false);
-                }}
-              >
-                Shortlist
-              </Button>
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={() => {
-                  handleStatusChange(selectedApplicant.id, 'rejected');
-                  setViewDialogOpen(false);
-                }}
-              >
-                Reject
-              </Button>
-            </>
-          )}
-        </DialogActions>
-      </Dialog>
+      {/* Enhanced Applicant Details Modal */}
+      {selectedApplicant && (
+        <ApplicantDetailsModal
+          open={viewDialogOpen}
+          onClose={() => setViewDialogOpen(false)}
+          applicantId={selectedApplicant.id}
+          jobId={selectedJobId}
+          onStatusChange={handleStatusChanged}
+        />
+      )}
     </motion.div>
   );
 };
