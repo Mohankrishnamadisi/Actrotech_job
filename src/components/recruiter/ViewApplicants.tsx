@@ -359,7 +359,9 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           variant="filled"
                         />
                       </TableCell>
-                      <TableCell>{format(new Date(applicant.applied_at), 'dd MMM yyyy')}</TableCell>
+                      <TableCell>
+                        {applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}
+                      </TableCell>
                       <TableCell align="right">
                         <IconButton
                           size="small"

@@ -30,7 +30,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import supabase from '@services/supabaseClient';
+import { applicationService } from '@services/api';
 
 interface ApplicantDetailsModalProps {
   open: boolean;
@@ -52,7 +52,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [applicant, setApplicant] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('applied');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -64,26 +64,10 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   const fetchApplicantDetails = async () => {
     setLoading(true);
     try {
-      // Fetch application details
-      const { data: appData, error: appError } = await supabase
-        .from('job_applications')
-        .select('*')
-        .eq('id', applicantId)
-        .single();
-
-      if (appError) throw appError;
-      setApplicant(appData);
-      setStatus(appData?.status || 'applied');
-
-      // Fetch candidate profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', appData?.user_id)
-        .single();
-
-      if (profileError) throw profileError;
-      setProfile(profileData);
+      const application = await applicationService.getApplicationDetails(applicantId!, jobId);
+      setApplicant(application);
+      setProfile(application.profiles || null);
+      setStatus(application.status || 'applied');
     } catch (err) {
       console.error('Error fetching applicant details:', err);
       toast.error('Failed to load applicant details');
@@ -92,16 +76,30 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
     }
   };
 
+  const profileAvatarUrl =
+    profile?.avatar_url || profile?.avatarUrl || profile?.image || profile?.photo || profile?.picture || '';
+
+  const appliedDate = applicant?.applied_at
+    ? new Date(applicant.applied_at)
+    : applicant?.created_at
+    ? new Date(applicant.created_at)
+    : applicant?.updated_at
+    ? new Date(applicant.updated_at)
+    : null;
+
+  const formatAppliedDate = appliedDate ? appliedDate.toLocaleString() : 'Unknown';
+
+  const resumeUrl = profile?.resume_url || applicant?.resume_url || '';
+
   const handleStatusChange = async () => {
     if (!applicant?.id) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('job_applications')
-        .update({ status })
-        .eq('id', applicant.id);
-
-      if (error) throw error;
+      const updatedApplication = await applicationService.updateApplicationStatus(applicant.id, status, jobId);
+      setApplicant(updatedApplication);
+      if (updatedApplication.profiles) {
+        setProfile(updatedApplication.profiles);
+      }
       toast.success(`Status updated to ${status}`);
       onStatusChange?.();
       onClose();
@@ -114,8 +112,8 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   };
 
   const downloadResume = () => {
-    if (profile?.resume_url) {
-      window.open(profile.resume_url, '_blank');
+    if (resumeUrl) {
+      window.open(resumeUrl, '_blank');
     } else {
       toast.error('Resume not available');
     }
@@ -146,7 +144,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
           borderBottom: '1px solid rgba(0,0,0,0.08)',
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        <Typography component="div" variant="h6" sx={{ fontWeight: 700 }}>
           Applicant Details
         </Typography>
         <CloseIcon sx={{ cursor: 'pointer' }} onClick={onClose} />
@@ -157,7 +155,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
           </Box>
-        ) : profile ? (
+        ) : applicant ? (
           <Grid container spacing={3}>
             {/* Candidate Header */}
             <Grid item xs={12}>
@@ -165,16 +163,16 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                 <CardContent>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                     <Avatar
-                      src={profile?.avatar_url}
+                      src={profileAvatarUrl || undefined}
                       sx={{
                         width: 80,
                         height: 80,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: profileAvatarUrl ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         fontSize: 32,
                         fontWeight: 700,
                       }}
                     >
-                      {profile?.name?.charAt(0).toUpperCase()}
+                      {!profileAvatarUrl && profile?.name?.charAt(0).toUpperCase()}
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
@@ -189,7 +187,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                           />
                         )}
                         <Chip
-                          label={`Applied: ${new Date(applicant?.created_at).toLocaleDateString()}`}
+                          label={`Applied: ${formatAppliedDate}`}
                           size="small"
                           variant="outlined"
                         />
@@ -293,7 +291,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                         Applied On
                       </Typography>
                       <Typography variant="body2">
-                        {new Date(applicant?.created_at).toLocaleString()}
+                        {formatAppliedDate}
                       </Typography>
                     </Box>
                   </Box>

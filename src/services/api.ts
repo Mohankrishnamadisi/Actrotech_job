@@ -540,6 +540,27 @@ export const applicationService = {
     return data;
   },
 
+  async getApplicationDetails(applicationId: string, jobId?: string) {
+    let query = supabase
+      .from('job_applications')
+      .select('*, profiles(*), jobs(*)')
+      .eq('id', applicationId);
+
+    if (jobId) {
+      query = query.eq('job_id', jobId);
+    }
+
+    const { data, error } = await query.maybeSingle();
+    if (error) {
+      console.error('Failed to load application details', { applicationId, jobId }, error);
+      throw error;
+    }
+    if (!data) {
+      throw new Error('Application not found or access denied');
+    }
+    return data;
+  },
+
   async hasUserApplied(jobId: string, userId: string) {
     if (!jobId || !userId) return false;
     const { data, error } = await supabase
@@ -553,15 +574,36 @@ export const applicationService = {
     return !!data;
   },
 
-  async updateApplicationStatus(applicationId: string, status: string) {
-    const { data, error } = await supabase
-      .from('job_applications')
-      .update({ status })
-      .eq('id', applicationId)
-      .select('*, jobs(*)');
-    if (error) throw error;
+  async updateApplicationStatus(applicationId: string, status: string, jobId?: string) {
+    const updatePayload = {
+      status,
+      updated_at: new Date().toISOString(),
+    };
 
-    const application = data?.[0];
+    let query = supabase
+      .from('job_applications')
+      .update(updatePayload)
+      .eq('id', applicationId);
+
+    if (jobId) {
+      query = query.eq('job_id', jobId);
+    }
+
+    const { data, error } = await query
+      .select('id, status, user_id, job_id, profiles(*), jobs(*)')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to update application status', { applicationId, status, jobId }, error);
+      throw error;
+    }
+
+    if (!data) {
+      console.error('Application status update returned no row', { applicationId, status, jobId });
+      throw new Error('Application update failed or access denied');
+    }
+
+    const application = data;
     if (application) {
       try {
         await notificationService.createNotification(
@@ -576,7 +618,7 @@ export const applicationService = {
       }
     }
 
-    return data[0];
+    return application;
   },
 };
 
