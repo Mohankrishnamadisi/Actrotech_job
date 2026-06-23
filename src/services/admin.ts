@@ -41,6 +41,113 @@ export const adminService = {
     return data?.[0];
   },
 
+  async getRecruiters(limit = 100) {
+    const { data, error } = await supabase.from('recruiters').select('*').limit(limit).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getCandidates(limit = 100) {
+    const { data, error } = await supabase.from('profiles').select('*').eq('role', 'job_seeker').limit(limit).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getApplications(limit = 200) {
+    const { data, error } = await supabase
+      .from('job_applications')
+      .select('*, jobs(*), profiles(*)')
+      .limit(limit)
+      .order('applied_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getAnalytics() {
+    const [{ count: usersCount }, { count: candidatesCount }, { count: recruitersCount }, { count: activeJobsCount }, { count: applicationsCount }] = await Promise.all([
+      supabase.from('profiles').select('id', { count: 'exact' }),
+      supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'job_seeker'),
+      supabase.from('recruiters').select('id', { count: 'exact' }),
+      supabase.from('jobs').select('id', { count: 'exact' }).eq('status', 'published'),
+      supabase.from('job_applications').select('id', { count: 'exact' }),
+    ]).then((res) => res.map((r) => r));
+
+    const payments = await supabase.from('payments').select('amount');
+    const totalRevenue = (payments.data || []).reduce((total, item) => total + Number(item.amount || 0), 0);
+
+    return {
+      totalUsers: usersCount?.count || 0,
+      totalCandidates: candidatesCount?.count || 0,
+      totalRecruiters: recruitersCount?.count || 0,
+      activeJobs: activeJobsCount?.count || 0,
+      totalApplications: applicationsCount?.count || 0,
+      totalRevenue,
+    };
+  },
+
+  async getDashboardChartData(days = 14) {
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - days + 1);
+    const fromIso = fromDate.toISOString();
+
+    const [profilesRes, paymentsRes] = await Promise.all([
+      supabase.from('profiles').select('created_at').gte('created_at', fromIso),
+      supabase.from('payments').select('amount, created_at').gte('created_at', fromIso),
+    ]);
+
+    const profiles = profilesRes.data || [];
+    const payments = paymentsRes.data || [];
+
+    const labels = Array.from({ length: days }).map((_, idx) => {
+      const date = new Date(fromDate);
+      date.setDate(fromDate.getDate() + idx);
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+
+    return labels.map((label) => {
+      const registrations = profiles.filter((item: any) => {
+        const createdAt = item.created_at ? new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : null;
+        return createdAt === label;
+      }).length;
+
+      const revenue = payments.reduce((sum, item: any) => {
+        const paymentDate = item.created_at ? new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : null;
+        return paymentDate === label ? sum + Number(item.amount || 0) : sum;
+      }, 0);
+
+      return { day: label, registrations, revenue };
+    });
+  },
+
+  async getSystemHealth() {
+    const [{ data: jobs }, { data: applications }, { data: users }] = await Promise.all([
+      supabase.from('jobs').select('id, status'),
+      supabase.from('job_applications').select('id, status'),
+      supabase.from('profiles').select('id, role'),
+    ]);
+
+    const integrity = await this.runIntegrityChecks();
+
+    return {
+      jobCount: jobs?.length || 0,
+      applicationCount: applications?.length || 0,
+      userCount: users?.length || 0,
+      integrity,
+    };
+  },
+
+  async getAdminSettings() {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('adminSettings') : null;
+    return stored ? JSON.parse(stored) : { siteTitle: 'Actro Jobs Admin', supportEmail: '', maintenanceMode: false };
+  },
+
+  async saveAdminSettings(settings: Record<string, any>) {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('adminSettings', JSON.stringify(settings));
+    }
+    return settings;
+  },
+
   async bulkImportJobs(rows: Record<string, any>[]) {
     if (!Array.isArray(rows) || rows.length === 0) return { imported: 0 };
     // naive mapping: try to insert rows directly into jobs table

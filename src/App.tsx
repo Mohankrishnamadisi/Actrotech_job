@@ -49,9 +49,15 @@ import MessagingPage from '@pages/Messaging';
 import AdminLayout from './admin/AdminLayout';
 import DashboardOverview from './admin/pages/DashboardOverview';
 import UsersPage from './admin/pages/UsersPage';
+import RecruitersPage from './admin/pages/RecruitersPage';
+import CandidatesPage from './admin/pages/CandidatesPage';
 import JobsPage from './admin/pages/JobsPage';
+import AdminApplicationsPage from './admin/pages/ApplicationsPage';
+import AnalyticsPage from './admin/pages/Analytics';
 import BulkImport from './admin/pages/BulkImport';
 import DataIntegrity from './admin/pages/DataIntegrity';
+import SystemHealthPage from './admin/pages/SystemHealth';
+import SettingsPage from './admin/pages/Settings';
 
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -203,9 +209,15 @@ const AnimatedRoutes: React.FC = () => {
         >
           <Route path={ROUTES.ADMIN_DASHBOARD} element={<DashboardOverview />} />
           <Route path={ROUTES.ADMIN_USERS} element={<UsersPage />} />
+          <Route path={ROUTES.ADMIN_RECRUITERS} element={<RecruitersPage />} />
+          <Route path={ROUTES.ADMIN_CANDIDATES} element={<CandidatesPage />} />
           <Route path={ROUTES.ADMIN_JOBS} element={<JobsPage />} />
+          <Route path={ROUTES.ADMIN_APPLICATIONS} element={<AdminApplicationsPage />} />
+          <Route path={ROUTES.ADMIN_ANALYTICS} element={<AnalyticsPage />} />
           <Route path={ROUTES.ADMIN_BULK_IMPORT} element={<BulkImport />} />
           <Route path={ROUTES.ADMIN_DATA_INTEGRITY} element={<DataIntegrity />} />
+          <Route path={ROUTES.ADMIN_SYSTEM_HEALTH} element={<SystemHealthPage />} />
+          <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
         </Route>
         <Route
           path={ROUTES.MESSAGING}

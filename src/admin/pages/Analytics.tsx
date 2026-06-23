@@ -12,17 +12,37 @@ const StatCard: React.FC<{ title: string; value: number | string }> = ({ title, 
   </Paper>
 );
 
-const DashboardOverview: React.FC = () => {
-  const [stats, setStats] = useState<Record<string, any>>({});
+const AnalyticsPage: React.FC = () => {
+  const [analytics, setAnalytics] = useState<Record<string, any>>({});
   const [trendData, setTrendData] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
-        const s = await adminService.getDashboardStats();
-        const chartData = await adminService.getDashboardChartData(14);
-        setStats(s);
-        setTrendData(chartData);
+        const stats = await adminService.getAnalytics();
+        const series = await adminService.getDashboardChartData(14);
+        const labels = Array.from({ length: 14 }).map((_, idx) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (13 - idx));
+          return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        });
+
+        const registrationCounts = labels.map((label) => {
+          const found = series.registrations.find((item: any) => item.day === label);
+          return found ? found.count : 0;
+        });
+
+        const paymentsByDay = labels.map((label) => {
+          const found = series.revenue.find((item: any) => item.day === label);
+          return found ? found.amount : 0;
+        });
+
+        setAnalytics(stats);
+        setTrendData(labels.map((label, index) => ({
+          day: label,
+          registrations: registrationCounts[index],
+          revenue: paymentsByDay[index],
+        })));
       } catch (err) {
         // noop
       }
@@ -32,28 +52,33 @@ const DashboardOverview: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Overview
+        Analytics
       </Typography>
-
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Users" value={stats.totalUsers ?? '—'} />
+          <StatCard title="Total Users" value={analytics.totalUsers ?? '—'} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Candidates" value={stats.totalCandidates ?? '—'} />
+          <StatCard title="Total Candidates" value={analytics.totalCandidates ?? '—'} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Total Recruiters" value={stats.totalRecruiters ?? '—'} />
+          <StatCard title="Total Recruiters" value={analytics.totalRecruiters ?? '—'} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Active Jobs" value={stats.activeJobs ?? '—'} />
+          <StatCard title="Published Jobs" value={analytics.activeJobs ?? '—'} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Total Applications" value={analytics.totalApplications ?? '—'} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Total Revenue" value={`₹${analytics.totalRevenue ?? 0}`} />
         </Grid>
       </Grid>
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2, height: 320 }}>
-            <Typography variant="subtitle1">Daily Registrations</Typography>
+            <Typography variant="subtitle1">Registrations (Last 14 days)</Typography>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={trendData}>
                 <XAxis dataKey="day" />
@@ -82,4 +107,4 @@ const DashboardOverview: React.FC = () => {
   );
 };
 
-export default DashboardOverview;
+export default AnalyticsPage;
