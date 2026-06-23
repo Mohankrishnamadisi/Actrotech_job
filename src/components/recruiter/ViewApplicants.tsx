@@ -21,31 +21,24 @@ import {
   IconButton,
   Tabs,
   Tab,
-  Grid,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
   GetApp as DownloadIcon,
   Visibility as ViewIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
   Message as MessageIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService, applicationService } from '@services/api';
+import type { Job } from '@types';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 interface ViewApplicantsProps {
   recruiterId: string;
   onChatClick?: (candidateId: string, candidateName: string) => void;
-}
-
-interface Job {
-  id: string;
-  title: string;
-  status: string;
-  created_at: string;
-  [key: string]: unknown;
 }
 
 interface Applicant {
@@ -68,6 +61,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchJobs();
@@ -133,7 +127,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     accepted: applicants.filter((a) => a.status === 'accepted').length,
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success' => {
     switch (status) {
       case 'applied':
         return 'info';
@@ -149,6 +143,10 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
         return 'default';
     }
   };
+
+  const filteredJobs = jobs.filter((j) =>
+    j.title?.toString().toLowerCase().includes(searchQuery.trim().toLowerCase())
+  );
 
   if (jobs.length === 0) {
     return (
@@ -166,114 +164,157 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-            View Applicants
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12} lg={4}>
-              <Card
-                sx={{
-                  border: '1px solid rgba(148, 163, 184, 0.24)',
-                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
-                  borderRadius: 3,
+      <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+        {/* LEFT SIDEBAR */}
+        <Box
+          sx={{
+            width: 320,
+            minWidth: 320,
+            height: 'calc(100vh - 160px)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Card sx={{ flex: '0 0 auto', mb: 2 }}>
+            <CardContent sx={{ position: 'sticky', top: 16, zIndex: 5, background: 'transparent' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                Jobs ordered by post date
+              </Typography>
+              <TextField
+                placeholder="Search jobs"
+                size="small"
+                fullWidth
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
                 }}
+              />
+            </CardContent>
+          </Card>
+
+          <Card sx={{ flex: '1 1 auto', overflow: 'hidden' }}>
+            <CardContent sx={{ height: '100%', p: 1 }}>
+              <Box sx={{ height: '100%', overflowY: 'auto', pr: 1 }}>
+                <Box sx={{ display: 'grid', gap: 1.25 }}>
+                  {filteredJobs.map((job) => (
+                    <Box
+                      key={job.id}
+                      onClick={() => setSelectedJobId(job.id)}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        border: selectedJobId === job.id ? '1px solid #1D4ED8' : '1px solid rgba(148, 163, 184, 0.24)',
+                        backgroundColor: selectedJobId === job.id ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
+                        transition: 'all 0.18s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 18px rgba(15,23,42,0.04)',
+                        },
+                      }}
+                    >
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>
+                        {job.title}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Posted {format(new Date(job.created_at as any), 'dd MMM yyyy')}
+                      </Typography>
+                      <Typography variant="caption" sx={{ float: 'right', color: 'text.secondary' }}>
+                        {/* applicant count placeholder */}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* RIGHT CONTENT */}
+        <Box sx={{ flex: 1 }}>
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                  Selected job
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  {selectedJob.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {selectedJob.status ? `${selectedJob.status} • ` : ''}
+                  Posted {format(new Date(selectedJob.created_at as any), 'dd MMM yyyy')} • {applicants.length}{' '}
+                  applicant(s)
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Card sx={{ flex: '1 1 0', p: 1 }}>
+                  <CardContent sx={{ p: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Applied</Typography>
+                    <Typography variant="h6">{statusCounts.applied}</Typography>
+                  </CardContent>
+                </Card>
+                <Card sx={{ flex: '1 1 0', p: 1 }}>
+                  <CardContent sx={{ p: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Under Review</Typography>
+                    <Typography variant="h6">{statusCounts.under_review}</Typography>
+                  </CardContent>
+                </Card>
+                <Card sx={{ flex: '1 1 0', p: 1 }}>
+                  <CardContent sx={{ p: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Shortlisted</Typography>
+                    <Typography variant="h6">{statusCounts.shortlisted}</Typography>
+                  </CardContent>
+                </Card>
+                <Card sx={{ flex: '1 1 0', p: 1 }}>
+                  <CardContent sx={{ p: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Rejected</Typography>
+                    <Typography variant="h6">{statusCounts.rejected}</Typography>
+                  </CardContent>
+                </Card>
+              </Box>
+
+              <Tabs
+                value={statusFilter}
+                onChange={(_, value) => setStatusFilter(value)}
+                sx={{ mb: 0, borderBottom: '1px solid #e0e0e0' }}
               >
-                <CardContent>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: 'text.secondary' }}>
-                    Jobs ordered by post date
-                  </Typography>
-                  <Box sx={{ display: 'grid', gap: 1.25 }}>
-                    {jobs.map((job) => (
-                      <Box
-                        key={job.id}
-                        onClick={() => setSelectedJobId(job.id)}
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          cursor: 'pointer',
-                          border: selectedJobId === job.id ? '1px solid #1D4ED8' : '1px solid rgba(148, 163, 184, 0.24)',
-                          backgroundColor: selectedJobId === job.id ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            backgroundColor: 'rgba(59, 130, 246, 0.06)',
-                          },
-                        }}
-                      >
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>
-                          {job.title}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          Posted {format(new Date(job.created_at), 'dd MMM yyyy')}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                <Tab
+                  label={`All (${applicants.length})`}
+                  value="all"
+                  sx={{ textTransform: 'none' }}
+                />
+                <Tab
+                  label={`Applied (${statusCounts.applied})`}
+                  value="applied"
+                  sx={{ textTransform: 'none' }}
+                />
+                <Tab
+                  label={`Under Review (${statusCounts.under_review})`}
+                  value="under_review"
+                  sx={{ textTransform: 'none' }}
+                />
+                <Tab
+                  label={`Shortlisted (${statusCounts.shortlisted})`}
+                  value="shortlisted"
+                  sx={{ textTransform: 'none' }}
+                />
+                <Tab
+                  label={`Rejected (${statusCounts.rejected})`}
+                  value="rejected"
+                  sx={{ textTransform: 'none' }}
+                />
+              </Tabs>
+            </CardContent>
+          </Card>
 
-            <Grid item xs={12} lg={8}>
-              <Card
-                sx={{
-                  border: '1px solid rgba(148, 163, 184, 0.24)',
-                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
-                  borderRadius: 3,
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
-                    <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                      Selected job
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {selectedJob.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {selectedJob.status ? `${selectedJob.status} • ` : ''}
-                      Posted {format(new Date(selectedJob.created_at), 'dd MMM yyyy')} • {applicants.length}{' '}
-                      applicant(s)
-                    </Typography>
-                  </Box>
-
-                  <Tabs
-                    value={statusFilter}
-                    onChange={(_, value) => setStatusFilter(value)}
-                    sx={{ mb: 2, borderBottom: '1px solid #e0e0e0' }}
-                  >
-                    <Tab
-                      label={`All (${applicants.length})`}
-                      value="all"
-                      sx={{ textTransform: 'none' }}
-                    />
-                    <Tab
-                      label={`Applied (${statusCounts.applied})`}
-                      value="applied"
-                      sx={{ textTransform: 'none' }}
-                    />
-                    <Tab
-                      label={`Under Review (${statusCounts.under_review})`}
-                      value="under_review"
-                      sx={{ textTransform: 'none' }}
-                    />
-                    <Tab
-                      label={`Shortlisted (${statusCounts.shortlisted})`}
-                      value="shortlisted"
-                      sx={{ textTransform: 'none' }}
-                    />
-                    <Tab
-                      label={`Rejected (${statusCounts.rejected})`}
-                      value="rejected"
-                      sx={{ textTransform: 'none' }}
-                    />
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
+          {/* Applicants table always inside right panel */}
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress />
@@ -309,7 +350,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                         <Chip
                           label={applicant.status}
                           size="small"
-                          color={getStatusColor(applicant.status) as any}
+                          color={getStatusColor(applicant.status)}
                           variant="filled"
                         />
                       </TableCell>
@@ -347,8 +388,8 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
               </Table>
             </TableContainer>
           )}
-        </CardContent>
-      </Card>
+        </Box>
+      </Box>
 
       {/* View Applicant Details Dialog */}
       <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -372,7 +413,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                 <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
                   Status
                 </Typography>
-                <Chip label={selectedApplicant.status} color={getStatusColor(selectedApplicant.status) as any} />
+                <Chip label={selectedApplicant.status} color={getStatusColor(selectedApplicant.status)} />
               </Box>
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
