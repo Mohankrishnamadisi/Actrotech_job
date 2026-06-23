@@ -66,7 +66,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
       body2: { fontSize: '0.95rem', lineHeight: 1.65 },
       button: { textTransform: 'none', fontWeight: 700 },
     },
-    shape: { borderRadius: 20 },
+    shape: { borderRadius: 8 },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
@@ -101,7 +101,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
       MuiPaper: {
         styleOverrides: {
           root: {
-            borderRadius: 24,
+            borderRadius: 8,
             boxShadow: palette.mode === 'dark'
               ? '0 24px 80px rgba(15, 23, 42, 0.42)'
               : '0 18px 70px rgba(15, 23, 42, 0.08)',
@@ -115,7 +115,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
               ? 'linear-gradient(180deg, rgba(15,23,42,0.96), rgba(17,24,39,0.94))'
               : 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))',
             border: `1px solid ${palette.mode === 'dark' ? 'rgba(148,163,184,0.12)' : 'rgba(148,163,184,0.16)'}`,
-            borderRadius: 24,
+            borderRadius: 8,
             boxShadow: palette.mode === 'dark'
               ? '0 30px 90px rgba(15, 23, 42, 0.38)'
               : '0 24px 70px rgba(15, 23, 42, 0.08)',
@@ -128,7 +128,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
           root: {
             textTransform: 'none',
             fontWeight: 700,
-            borderRadius: 999,
+            borderRadius: 8,
             padding: '12px 24px',
             boxShadow: 'none',
             transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease',
@@ -167,7 +167,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              borderRadius: 16,
+              borderRadius: 8,
               backgroundColor: palette.mode === 'dark' ? '#111827' : '#FFFFFF',
               '& fieldset': {
                 borderColor: palette.divider,
@@ -200,7 +200,7 @@ const createAppTheme = (themeMode: ThemeMode) => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: 999,
+            borderRadius: 8,
             fontWeight: 700,
             backgroundColor: palette.mode === 'dark' ? 'rgba(148, 163, 184, 0.08)' : 'rgba(37, 99, 235, 0.08)',
           },
