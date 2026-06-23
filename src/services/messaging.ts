@@ -162,11 +162,27 @@ export const messagingService = {
             participantName = (participantData && (participantData.name || participantData.full_name)) || 'Candidate';
             participantAvatar = participantData?.avatar_url;
           } else {
-            const { data: recruiterData } = await supabase
-              .from('recruiters')
-              .select('id, company_name, company_logo_url, user_id')
-              .or(`id.eq.${participantId},user_id.eq.${participantId}`)
-              .maybeSingle();
+            // Prefer matching by recruiters.id (which should equal auth.user.id). If not found, fall back to user_id.
+            let recruiterData: any = null;
+            try {
+              const byId = await supabase
+                .from('recruiters')
+                .select('id, company_name, company_logo_url, user_id')
+                .eq('id', participantId)
+                .maybeSingle();
+              recruiterData = byId.data || null;
+            } catch (err) {
+              // ignore and try fallback
+            }
+
+            if (!recruiterData) {
+              const byUser = await supabase
+                .from('recruiters')
+                .select('id, company_name, company_logo_url, user_id')
+                .eq('user_id', participantId)
+                .maybeSingle();
+              recruiterData = byUser.data || null;
+            }
 
             participantName = (recruiterData && (recruiterData.company_name || 'Recruiter')) || 'Recruiter';
             participantAvatar = recruiterData?.company_logo_url || undefined;

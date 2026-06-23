@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '@store/index';
 import { subscriptionService } from '@services/api';
+import { USER_ROLES } from '@constants/index';
 
 export const useAuth = () => {
   const { user, setUser, setLoading, setError } = useAuthStore();
@@ -68,8 +69,12 @@ export const useSubscription = (userId: string | null) => {
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // Only job seekers should have subscription records. Avoid fetching for other roles.
+  const { user } = useAuthStore();
+
   useEffect(() => {
     if (!userId) return;
+    if (!user || user.role !== USER_ROLES.JOB_SEEKER) return; // skip for recruiters/admins
 
     const fetchSubscription = async () => {
       setLoading(true);
@@ -84,7 +89,7 @@ export const useSubscription = (userId: string | null) => {
     };
 
     fetchSubscription();
-  }, [userId]);
+  }, [userId, user]);
 
   return { subscription, loading };
 };

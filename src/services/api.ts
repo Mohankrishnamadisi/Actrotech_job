@@ -98,12 +98,25 @@ export const recruiterService = {
       industry: profileData.industry || profileData.industryType || null,
       employee_count: profileData.employee_count || profileData.employeeCount || null,
       description: profileData.description || profileData.company_description || profileData.companyDescription || null,
+      // keep legacy `location` if provided
       location: profileData.location || null,
       company_email: profileData.company_email || profileData.companyEmail || null,
       company_phone: profileData.company_phone || profileData.companyPhone || null,
-      company_address: profileData.company_address || profileData.companyAddress || null,
+      // company_address: prefer explicit company_address or companyAddress, fall back to location
+      company_address:
+        profileData.company_address || profileData.companyAddress || profileData.location || null,
+      // GST/CIN and HR contact fields
+      gst_number: profileData.gst_number || profileData.gstNumber || null,
+      cin_number: profileData.cin_number || profileData.cinNumber || null,
+      hr_name: profileData.hr_name || profileData.hrContactPerson || profileData.hrContact || null,
+      hr_email: profileData.hr_email || profileData.hrEmail || null,
+      hr_phone: profileData.hr_phone || profileData.hrPhone || null,
       company_name_original: profileData.company_name || profileData.companyName || null,
     };
+
+    // Log payload for debugging to verify what is being sent to Supabase
+    // eslint-disable-next-line no-console
+    console.info('createRecruiterProfile payload:', JSON.parse(JSON.stringify(payload)));
 
     const { data, error } = await supabase
       .from('recruiters')
@@ -593,9 +606,9 @@ export const subscriptionService = {
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return data || null;
+      .maybeSingle();
+    if (error) throw error;
+    return data ?? null;
   },
 
   async updateSubscription(subscriptionId: string, updates: Record<string, unknown>) {
