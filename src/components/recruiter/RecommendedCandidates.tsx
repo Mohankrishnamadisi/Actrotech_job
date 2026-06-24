@@ -104,6 +104,11 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
   }, [jobId, filterKey, page]);
 
   const handleInvite = async (item: RecommendedCandidate) => {
+    if (onMessageClick) {
+      onMessageClick(item.candidate.id, item.candidate.name || 'Candidate');
+      return;
+    }
+
     setInvitingId(item.candidate.id);
     try {
       await inviteCandidateToApply(
@@ -533,7 +538,10 @@ function RecommendedCandidateDialog({
         <Button
           variant="contained"
           startIcon={<SendIcon />}
-          onClick={() => onInvite(item)}
+          onClick={() => {
+            onInvite(item);
+            if (onMessage) onClose();
+          }}
           disabled={inviting}
         >
           {inviting ? 'Inviting...' : 'Invite To Apply'}
