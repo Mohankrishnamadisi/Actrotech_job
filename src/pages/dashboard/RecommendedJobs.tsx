@@ -13,7 +13,7 @@ import {
   Divider,
   Alert,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { userService, jobService } from '@services/api';
@@ -48,6 +48,11 @@ export const RecommendedJobs: React.FC = () => {
 
     fetchData();
   }, [user?.id]);
+
+  // optional minMatch query param to filter results (50-100 by default if provided)
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  const minMatch = Math.max(0, parseInt(search.get('minMatch') || '0', 10) || 0);
 
   const calculateMatchPercentage = (jobSkills: string[]) => {
     if (!jobSkills || jobSkills.length === 0) return 0;
@@ -87,9 +92,10 @@ export const RecommendedJobs: React.FC = () => {
           </Alert>
         ) : (
           <Grid container spacing={3}>
-            {jobs.map((job) => {
-              const matchPercentage = calculateMatchPercentage(job.skills || []);
-              return (
+            {jobs
+              .map((job) => ({ job, matchPercentage: calculateMatchPercentage(job.skills || []) }))
+              .filter(({ matchPercentage }) => matchPercentage >= minMatch && matchPercentage <= 100)
+              .map(({ job, matchPercentage }) => (
                 <Grid item xs={12} md={6} key={job.id}>
                   <Paper
                     sx={{
@@ -165,8 +171,7 @@ export const RecommendedJobs: React.FC = () => {
                     </Button>
                   </Paper>
                 </Grid>
-              );
-            })}
+              ))}
           </Grid>
         )}
       </Container>

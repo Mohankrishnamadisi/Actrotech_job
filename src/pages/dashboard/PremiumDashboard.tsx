@@ -15,7 +15,12 @@ import {
   MenuItem,
   IconButton,
   Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import {
   Work as WorkIcon,
   Favorite as FavoriteIcon,
@@ -26,12 +31,14 @@ import {
   Rocket as RocketIcon,
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
+  Public as PublicIcon,
+  AccountCircle as AccountIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
 import { useThemeMode } from '@hooks/index';
 import { useAuthStore } from '@store/index';
-import { userService, applicationService, savedService, notificationService } from '@services/api';
+import { userService, applicationService, savedService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { ROUTES } from '@constants/index';
 import { useTheme } from '@mui/material/styles';
@@ -48,6 +55,9 @@ export const PremiumDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [profileStrength, setProfileStrength] = useState(0);
   const [userSkills, setUserSkills] = useState<string[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
+  const [openMatched, setOpenMatched] = useState(false);
+  const MotionCard = motion(Card);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -86,6 +96,17 @@ export const PremiumDashboard: React.FC = () => {
           (((conversations as any[]) || [])
             .reduce((count, conv) => count + (conv.unreadCount || 0), 0))
         );
+
+          // load recommended jobs for premium users
+          try {
+            const skillList = (profile?.skills && Array.isArray(profile.skills) && profile.skills.length) ? profile.skills : (profile?.skills || []);
+            if (skillList && skillList.length > 0) {
+              const res = await jobService.getJobsBySkills(skillList, 1, 6);
+              setRecommendedJobs(res.data || []);
+            }
+          } catch (err) {
+            console.error('Failed to load recommended jobs for premium dashboard:', err);
+          }
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -153,115 +174,124 @@ export const PremiumDashboard: React.FC = () => {
         </Box>
         </Box>
 
-        {/* Stats Dashboard */}
+        {/* Stats Dashboard (dynamic) */}
+        {/** use animated cards and a mapped stats array for maintainability **/}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3} onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)}>
-            <Card sx={{ cursor: 'pointer', transition: 'all 0.3s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }}>
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <WorkIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.primary.main }} />
-                <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{applicationCount}</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Applications</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3} onClick={() => navigate(ROUTES.DASHBOARD_SAVED_JOBS)}>
-            <Card sx={{ cursor: 'pointer', transition: 'all 0.3s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }}>
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <FavoriteIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.error.main }} />
-                <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{savedJobsCount}</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Saved Jobs</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <TrendingUpIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.success.main }} />
-                <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{profileStrength}%</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Profile Strength</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-              <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                <VideocamIcon sx={{ fontSize: 36, mb: 1, color: theme.palette.secondary.main }} />
-                <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{userSkills.length}</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>Skills</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          {([
+            { label: 'Applications', value: applicationCount, icon: WorkIcon, color: theme.palette.primary.main, to: ROUTES.DASHBOARD_APPLICATIONS },
+            { label: 'Saved Jobs', value: savedJobsCount, icon: FavoriteIcon, color: theme.palette.error.main, to: ROUTES.DASHBOARD_SAVED_JOBS },
+            { label: 'Profile Strength', value: `${profileStrength}%`, icon: TrendingUpIcon, color: theme.palette.success.main },
+            { label: 'Skills', value: userSkills.length, icon: VideocamIcon, color: theme.palette.secondary.main },
+          ] as const).map((stat, idx) => (
+            <Grid item xs={12} sm={6} md={3} key={String(stat.label)} onClick={() => { if ((stat as any).to) navigate((stat as any).to); }}>
+              <MotionCard sx={{ cursor: 'pointer', transition: 'all 0.32s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }}>
+                <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                  <stat.icon sx={{ fontSize: 36, mb: 1, color: stat.color }} />
+                  <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{stat.value}</Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>{stat.label}</Typography>
+                </CardContent>
+              </MotionCard>
+            </Grid>
+          ))}
         </Grid>
 
-        {/* Quick Actions */}
+        {/* Quick Actions (dynamic) */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>Quick Actions</Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" color="primary" fullWidth onClick={() => navigate(ROUTES.JOBS)} sx={{ p: 2, fontWeight: 700 }}>
-                Browse Jobs
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" color="success" fullWidth onClick={() => navigate('/dashboard/remote-jobs')} sx={{ p: 2, fontWeight: 700 }}>
-                Remote Jobs
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" color="secondary" fullWidth onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ p: 2, fontWeight: 700 }}>
-                Complete Profile
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button variant="contained" color="warning" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ p: 2, fontWeight: 700 }}>
-                Recommended
-              </Button>
-            </Grid>
+            {([
+              { label: 'Browse Jobs', to: ROUTES.JOBS, color: 'primary', icon: WorkIcon },
+              { label: 'Remote Jobs', to: `${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`, color: 'success', icon: PublicIcon },
+              { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, color: 'secondary', icon: AccountIcon },
+              { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', color: 'warning', icon: TrendingUpIcon },
+            ] as const).map((action, idx) => (
+              <Grid item xs={6} sm={4} md={3} key={action.label}>
+                <MotionCard
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  sx={{ cursor: 'pointer', borderRadius: 2, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  onClick={() => {
+                    if (action.label === 'Matched Jobs') {
+                      setOpenMatched(true);
+                    } else {
+                      navigate(action.to);
+                    }
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <action.icon sx={{ fontSize: 36, color: (theme.palette as any)[action.color]?.main || theme.palette.primary.main, mb: 1 }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{action.label}</Typography>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            ))}
           </Grid>
         </Box>
 
-        {/* Exclusive Tools */}
+        {/* Matched Jobs Modal (shows top recommended jobs) */}
+        <Dialog open={openMatched} onClose={() => setOpenMatched(false)} fullWidth maxWidth="md">
+          <DialogTitle>Top Matched Jobs</DialogTitle>
+          <DialogContent>
+            {recommendedJobs && recommendedJobs.length > 0 ? (
+              <Grid container spacing={2}>
+                {recommendedJobs.map((job: any) => (
+                  <Grid item xs={12} md={6} key={job.id}>
+                    <Card variant="outlined" sx={{ p: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>{job.title}</Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>{job.company_name}</Typography>
+                        <Box sx={{ mt: 1 }}>
+                          <Button size="small" onClick={() => navigate(`${ROUTES.JOB_DETAILS}/${job.id}`)}>View</Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Typography>No matched jobs available right now.</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setOpenMatched(false); navigate('/dashboard/recommended-jobs'); }}>View All</Button>
+            <Button onClick={() => setOpenMatched(false)} variant="contained">Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Exclusive Tools (config-driven) */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>🎯 Exclusive Premium Tools</Typography>
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <VideocamIcon sx={{ fontSize: 48, mb: 2, color: theme.palette.primary.main }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Mock Interviews</Typography>
-                  <Button variant="contained" color="primary" fullWidth onClick={() => navigate('/dashboard/mock-interviews')} sx={{ fontWeight: 700 }}>
-                    Start Practice
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <DescriptionIcon sx={{ fontSize: 48, mb: 2, color: theme.palette.secondary.main }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Resume Review</Typography>
-                  <Button variant="contained" color="secondary" fullWidth onClick={() => navigate('/dashboard/resume-review')} sx={{ fontWeight: 700 }}>
-                    Get Review
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <RocketIcon sx={{ fontSize: 48, mb: 2, color: theme.palette.error.main }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Priority Apply</Typography>
-                  <Button variant="contained" color="error" fullWidth onClick={() => navigate('/dashboard/priority-apply')} sx={{ fontWeight: 700 }}>
-                    Apply Now
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
+            {( [
+                { key: 'mock_interviews', icon: VideocamIcon, title: 'Mock Interviews', to: '/dashboard/mock-interviews', color: 'primary' },
+                { key: 'resume_review', icon: DescriptionIcon, title: 'Resume Review', to: '/dashboard/resume-review', color: 'secondary' },
+                { key: 'interview_prep', icon: ChatIcon, title: 'Interview Preparation', to: 'https://www.ambitionbox.com/interviews?campaign=desktop_nav', external: true, color: 'primary' },
+            ] as const ).map((tool, idx) => (
+              <Grid item xs={12} sm={6} md={4} key={tool.key}>
+                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }} sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <tool.icon sx={{ fontSize: 48, mb: 2, color: (theme.palette as any)[tool.color]?.main || theme.palette.primary.main }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>{tool.title}</Typography>
+                    <Button
+                      variant="contained"
+                      color={tool.color as any}
+                      fullWidth
+                      onClick={() => {
+                        if ((tool as any).external || String(tool.to).startsWith('http')) {
+                          window.open(String(tool.to), '_blank', 'noopener');
+                        } else {
+                          navigate(String(tool.to));
+                        }
+                      }}
+                      sx={{ fontWeight: 700 }}
+                    >
+                      {tool.key === 'interview_prep' ? 'Open Interview Prep' : tool.title.includes('Mock') ? 'Start Practice' : 'Get Review'}
+                    </Button>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            ))}
           </Grid>
         </Box>
 
@@ -274,9 +304,19 @@ export const PremiumDashboard: React.FC = () => {
                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
                   {userSkills.length > 0 ? `Matched with ${userSkills.slice(0, 3).join(', ')}...` : 'Add skills to profile'}
                 </Typography>
-                <Button variant="contained" color="warning" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ fontWeight: 700 }}>
-                  View All
-                </Button>
+                <Box sx={{ display: 'grid', gap: 1 }}>
+                  {recommendedJobs.length > 0 ? (
+                    recommendedJobs.map((job) => (
+                      <Button key={job.id} variant="outlined" fullWidth sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(`/jobs/${job.id}`)}>
+                        {job.title} • {job.company_name}
+                      </Button>
+                    ))
+                  ) : (
+                    <Button variant="contained" color="warning" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ fontWeight: 700 }}>
+                      View All
+                    </Button>
+                  )}
+                </Box>
               </CardContent>
             </Card>
           </Grid>

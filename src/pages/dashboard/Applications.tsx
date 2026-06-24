@@ -18,6 +18,7 @@ import { applicationService } from '@services/api';
 import { formatDate } from '@utils/index';
 import { ROUTES } from '@constants/index';
 import { Link as RouterLink } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 type UserApplication = {
   id: string;
@@ -34,6 +35,9 @@ export const ApplicationsPage: React.FC = () => {
   const { user } = useAuthStore();
   const [applications, setApplications] = useState<UserApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  const filter = search.get('filter');
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -83,7 +87,12 @@ export const ApplicationsPage: React.FC = () => {
                   />
                 </ListItem>
               ) : (
-                applications.map((application) => (
+                // apply optional filter (e.g., ?filter=remote)
+                (filter === 'remote' ? applications.filter(a => {
+                  const loc = String(a.jobs?.location || '').toLowerCase();
+                  const workMode = String((a as any).jobs?.work_mode || (a as any).jobs?.workMode || '').toLowerCase();
+                  return loc.includes('remote') || workMode === 'remote' || workMode.includes('remote');
+                }) : applications).map((application) => (
                   <React.Fragment key={application.id}>
                     <ListItem alignItems="flex-start">
                       <ListItemText
