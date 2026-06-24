@@ -495,6 +495,7 @@ export const ROUTES = {
   DASHBOARD_SETTINGS_PREFERENCES: '/dashboard/settings/preferences',
   DASHBOARD_SETTINGS_BLOCKED: '/dashboard/settings/blocked-companies',
   RECRUITER_DASHBOARD: '/recruiter/dashboard',
+  RECRUITER_SUBSCRIPTION: '/recruiter/subscription',
   RECRUITER_POST_JOB: '/recruiter/post-job',
   RECRUITER_JOBS: '/recruiter/jobs',
   RECRUITER_APPLICANTS: '/recruiter/applicants',

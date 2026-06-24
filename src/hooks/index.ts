@@ -74,7 +74,6 @@ export const useSubscription = (userId: string | null) => {
 
   useEffect(() => {
     if (!userId) return;
-    if (!user || user.role !== USER_ROLES.JOB_SEEKER) return; // skip for recruiters/admins
 
     const fetchSubscription = async () => {
       setLoading(true);
@@ -89,7 +88,7 @@ export const useSubscription = (userId: string | null) => {
     };
 
     fetchSubscription();
-  }, [userId, user]);
+  }, [userId]);
 
   return { subscription, loading };
 };

@@ -57,8 +57,7 @@ import AnalyticsPage from './admin/pages/Analytics';
 import BulkImport from './admin/pages/BulkImport';
 import DataIntegrity from './admin/pages/DataIntegrity';
 import SystemHealthPage from './admin/pages/SystemHealth';
-import SettingsPage from './admin/pages/Settings';
-
+import SettingsPage from './admin/pages/Settings';import { RecruiterSubscriptionPage } from '@pages/recruiter/RecruiterSubscriptionPage';
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
@@ -196,6 +195,14 @@ const AnimatedRoutes: React.FC = () => {
           element={
             <ProtectedRoute requiredRole={USER_ROLES.RECRUITER}>
               <RecruiterDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.RECRUITER_SUBSCRIPTION}
+          element={
+            <ProtectedRoute requiredRole={USER_ROLES.RECRUITER}>
+              <RecruiterSubscriptionPage />
             </ProtectedRoute>
           }
         />

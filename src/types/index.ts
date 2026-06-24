@@ -207,11 +207,13 @@ export interface JobApplication {
 export interface Subscription {
   id: string;
   userId: string;
-  plan: 'basic' | 'premium' | 'pro';
+  plan: 'free' | 'basic' | 'premium' | 'pro' | 'enterprise';
   status: 'active' | 'expired' | 'cancelled';
   startDate: string;
   endDate: string;
-  autoRenew: boolean;
+  paymentId?: string;
+  amount?: number;
+  autoRenew?: boolean;
   createdAt: string;
 }
 

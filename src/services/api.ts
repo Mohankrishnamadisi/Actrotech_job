@@ -755,8 +755,31 @@ export const applicationService = {
 
 // Subscription operations
 export const subscriptionService = {
-  async createSubscription(userId: string, plan: string, expiryDate: string) {
+  async createSubscription(
+    userId: string,
+    plan: string,
+    expiryDate: string | null,
+    amount = 0,
+    paymentId?: string
+  ) {
     const startDate = new Date().toISOString();
+
+    const { data: activeSubscriptions, error: activeSubscriptionsError } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    if (activeSubscriptionsError) throw activeSubscriptionsError;
+    if (activeSubscriptions && activeSubscriptions.length > 0) {
+      const { error: expireError } = await supabase
+        .from('subscriptions')
+        .update({ status: 'expired' })
+        .eq('user_id', userId)
+        .eq('status', 'active');
+      if (expireError) throw expireError;
+    }
+
     const { data, error } = await supabase
       .from('subscriptions')
       .insert([
@@ -766,10 +789,36 @@ export const subscriptionService = {
           status: 'active',
           start_date: startDate,
           end_date: expiryDate,
+          payment_id: paymentId,
+          amount,
         },
       ])
       .select();
     if (error) throw error;
+
+    const lowerPlan = plan.toLowerCase();
+    if (['premium', 'pro', 'enterprise'].includes(lowerPlan)) {
+      const { data: creditsData, error: creditsError } = await supabase
+        .from('recruiter_credits')
+        .select('*')
+        .eq('recruiter_id', userId)
+        .maybeSingle();
+      if (creditsError) throw creditsError;
+
+      if (creditsData) {
+        const { error: updateError } = await supabase
+          .from('recruiter_credits')
+          .update({ available_credits: -1 })
+          .eq('recruiter_id', userId);
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('recruiter_credits')
+          .insert({ recruiter_id: userId, available_credits: -1, used_credits: 0 });
+        if (insertError) throw insertError;
+      }
+    }
+
     return data[0];
   },
 

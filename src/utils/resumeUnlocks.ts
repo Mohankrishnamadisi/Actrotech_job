@@ -98,16 +98,17 @@ export async function getActiveRecruiterSubscription(recruiterId: string): Promi
   return data || null;
 }
 
-export function normalizePlanLabel(plan?: string | null): 'FREE' | 'PREMIUM' | 'PRO' {
+export function normalizePlanLabel(plan?: string | null): 'FREE' | 'PREMIUM' | 'PRO' | 'ENTERPRISE' {
   const normalized = String(plan || '').toLowerCase();
   if (normalized === 'premium') return 'PREMIUM';
   if (normalized === 'pro') return 'PRO';
+  if (normalized === 'enterprise') return 'ENTERPRISE';
   return 'FREE';
 }
 
 export function isUnlimitedPlan(plan?: string | null): boolean {
   const label = normalizePlanLabel(plan);
-  return label === 'PREMIUM' || label === 'PRO';
+  return label === 'PREMIUM' || label === 'PRO' || label === 'ENTERPRISE';
 }
 
 export async function getResumeUnlockContext(

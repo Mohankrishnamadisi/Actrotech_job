@@ -204,6 +204,15 @@ export const Navbar: React.FC = () => {
                   >
                     Dashboard
                   </MenuItem>
+                  {user.role === USER_ROLES.RECRUITER && (
+                    <MenuItem
+                      component={RouterLink}
+                      to={ROUTES.RECRUITER_SUBSCRIPTION}
+                      onClick={handleMobileMenuClose}
+                    >
+                      Subscription
+                    </MenuItem>
+                  )}
                   <MenuItem onClick={() => { handleMenuClose(); handleLogout(); }}>
                     Logout
                   </MenuItem>
@@ -310,61 +319,28 @@ export const Navbar: React.FC = () => {
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                {user?.role === USER_ROLES.JOB_SEEKER && (
-                  <IconButton
+                {user?.role === USER_ROLES.RECRUITER && (
+                  <Button
                     component={RouterLink}
-                    to={ROUTES.PRICING}
+                    to={ROUTES.RECRUITER_SUBSCRIPTION}
+                    variant="contained"
                     size="small"
                     sx={{
-                      p: 0.75,
-                      borderRadius: '10px',
-                      minWidth: 0,
+                      textTransform: 'none',
+                      px: 1.5,
+                      py: 0.7,
+                      minWidth: 140,
+                      borderRadius: 2,
+                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
                       color: '#ffffff',
-                      transition: 'transform 180ms ease, box-shadow 180ms ease',
-                      position: 'relative',
+                      boxShadow: '0 12px 24px rgba(245, 158, 11, 0.18)',
                       '&:hover': {
-                        transform: 'scale(1.05)',
-                      },
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: '10px',
-                        background: 'radial-gradient(circle at top left, rgba(255,255,255,0.5), transparent 38%)',
-                        opacity: 0,
-                        transition: 'opacity 300ms ease',
-                      },
-                      '&:hover::before': {
-                        opacity: 1,
+                        background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
                       },
                     }}
-                    title="Subscription Plans"
                   >
-                    <Box
-                      component="img"
-                      src="/crown.png"
-                      alt="Crown"
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        filter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
-                        WebkitFilter: 'invert(90%) sepia(95%) saturate(850%) hue-rotate(2deg) brightness(1.18) contrast(1.1)',
-                        animation: 'crownShine 2.4s ease-in-out infinite',
-                        transformOrigin: 'center center',
-                        display: 'block',
-                      }}
-                    />
-                    <Box
-                      component="span"
-                      sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: '10px',
-                        pointerEvents: 'none',
-                        boxShadow: '0 0 10px 4px rgba(255, 215, 0, 0.22)',
-                      }}
-                    />
-                  </IconButton>
+                    ⭐ Subscription
+                  </Button>
                 )}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography
