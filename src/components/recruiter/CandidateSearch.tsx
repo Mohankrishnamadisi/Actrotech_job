@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -22,6 +22,8 @@ import {
   Paper,
 } from '@mui/material';
 import {
+  CheckCircle as CheckCircleIcon,
+  Lock as LockIcon,
   Search as SearchIcon,
   Visibility as ViewIcon,
   Message as MessageIcon,
@@ -32,6 +34,7 @@ import { motion } from 'framer-motion';
 import { candidateService, savedService } from '@services/api';
 import { AddToPoolButton } from './talentPool/AddToPoolButton';
 import { ResumeUnlockContact } from './ResumeUnlockContact';
+import { getResumeUnlockMap } from '@utils/resumeUnlocks';
 import toast from 'react-hot-toast';
 
 interface CandidateSearchProps {
@@ -58,6 +61,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [savedCandidates, setSavedCandidates] = useState<Set<string>>(new Set());
+  const [unlockedCandidates, setUnlockedCandidates] = useState<Record<string, boolean>>({});
 
   const [filters, setFilters] = useState({
     title: '',
@@ -87,9 +91,12 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
       }
 
       const result = await candidateService.searchCandidates(searchFilters);
-      setSearchResults(result.data || []);
+      const candidates = result.data || [];
+      setSearchResults(candidates);
+      const unlockMap = await getResumeUnlockMap(recruiterId, candidates.map((candidate: Candidate) => candidate.id));
+      setUnlockedCandidates(unlockMap);
 
-      if (result.data && result.data.length === 0) {
+      if (candidates.length === 0) {
         toast('No candidates found matching your criteria', {
           duration: 4000,
           position: 'top-center',
@@ -259,6 +266,14 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                           <Typography sx={{ fontWeight: 600 }}>{candidate.name}</Typography>
+                          <Chip
+                            icon={unlockedCandidates[candidate.id] ? <CheckCircleIcon /> : <LockIcon />}
+                            label={unlockedCandidates[candidate.id] ? 'Unlocked' : 'Locked'}
+                            size="small"
+                            color={unlockedCandidates[candidate.id] ? 'success' : 'default'}
+                            variant={unlockedCandidates[candidate.id] ? 'outlined' : 'filled'}
+                            sx={{ fontWeight: 800 }}
+                          />
                           {candidate.experience_years && (
                             <Chip
                               label={`${candidate.experience_years}y exp`}
@@ -329,15 +344,18 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                 recruiterId={recruiterId}
                 candidateId={selectedCandidate.id}
                 onUnlocked={(contact) =>
-                  setSelectedCandidate((current) =>
-                    current
-                      ? {
-                          ...current,
-                          email: contact.email || current.email,
-                          phone: contact.phone || current.phone,
-                        }
-                      : current
-                  )
+                  {
+                    setUnlockedCandidates((current) => ({ ...current, [selectedCandidate.id]: true }));
+                    setSelectedCandidate((current) =>
+                      current
+                        ? {
+                            ...current,
+                            email: contact.email || current.email,
+                            phone: contact.phone || current.phone,
+                          }
+                        : current
+                    );
+                  }
                 }
               />
 

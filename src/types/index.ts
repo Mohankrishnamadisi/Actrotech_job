@@ -230,7 +230,7 @@ export interface Payment {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'job_match' | 'application_status' | 'new_job' | 'subscription' | 'resume_unlocked';
+  type: 'job_match' | 'application_status' | 'new_job' | 'subscription';
   title: string;
   message: string;
   read: boolean;

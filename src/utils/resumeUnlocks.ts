@@ -5,6 +5,7 @@ import type {
   ResumeUnlockCandidateStat,
   ResumeUnlockContext,
   ResumeUnlockResult,
+  Subscription,
 } from '@types';
 
 const DEFAULT_CREDITS = 100;
@@ -21,12 +22,26 @@ export async function getRecruiterCredits(recruiterId: string): Promise<Recruite
 }
 
 export async function ensureRecruiterCredits(recruiterId: string): Promise<RecruiterCredits> {
+  const subscription = await getActiveRecruiterSubscription(recruiterId);
+  const isUnlimited = isUnlimitedPlan(subscription?.plan);
   const existing = await getRecruiterCredits(recruiterId);
-  if (existing) return existing;
+  if (existing) {
+    if (isUnlimited && existing.available_credits !== -1) {
+      const { data, error } = await supabase
+        .from('recruiter_credits')
+        .update({ available_credits: -1 })
+        .eq('recruiter_id', recruiterId)
+        .select('*')
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return existing;
+  }
 
   const { data, error } = await supabase
     .from('recruiter_credits')
-    .insert({ recruiter_id: recruiterId, available_credits: DEFAULT_CREDITS, used_credits: 0 })
+    .insert({ recruiter_id: recruiterId, available_credits: isUnlimited ? -1 : DEFAULT_CREDITS, used_credits: 0 })
     .select('*')
     .single();
 
@@ -47,6 +62,52 @@ export async function getResumeUnlock(
 
   if (error) throw error;
   return data || null;
+}
+
+export async function getResumeUnlockMap(
+  recruiterId: string,
+  candidateIds: string[]
+): Promise<Record<string, boolean>> {
+  const uniqueIds = [...new Set(candidateIds.filter(Boolean))];
+  if (!recruiterId || uniqueIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('resume_unlocks')
+    .select('candidate_id')
+    .eq('recruiter_id', recruiterId)
+    .in('candidate_id', uniqueIds);
+
+  if (error) throw error;
+  return (data || []).reduce<Record<string, boolean>>((map, row) => {
+    map[row.candidate_id] = true;
+    return map;
+  }, {});
+}
+
+export async function getActiveRecruiterSubscription(recruiterId: string): Promise<Subscription | null> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', recruiterId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || null;
+}
+
+export function normalizePlanLabel(plan?: string | null): 'FREE' | 'PREMIUM' | 'PRO' {
+  const normalized = String(plan || '').toLowerCase();
+  if (normalized === 'premium') return 'PREMIUM';
+  if (normalized === 'pro') return 'PRO';
+  return 'FREE';
+}
+
+export function isUnlimitedPlan(plan?: string | null): boolean {
+  const label = normalizePlanLabel(plan);
+  return label === 'PREMIUM' || label === 'PRO';
 }
 
 export async function getResumeUnlockContext(
@@ -140,7 +201,11 @@ export const resumeUnlockService = {
   getRecruiterCredits,
   ensureRecruiterCredits,
   getResumeUnlock,
+  getResumeUnlockMap,
   getResumeUnlockContext,
   unlockCandidateContact,
   getResumeUnlockAnalytics,
+  getActiveRecruiterSubscription,
+  normalizePlanLabel,
+  isUnlimitedPlan,
 };

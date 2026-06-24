@@ -37,6 +37,7 @@ import {
   LocalOffer as TagIcon,
   FolderSpecial as PoolIcon,
   CreditScore as CreditScoreIcon,
+  WorkspacePremium as PlanIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -53,8 +54,13 @@ import { CandidateSearch } from '@components/recruiter/CandidateSearch';
 import { TagManager } from '@components/recruiter/TagManager';
 import { TalentPool } from '@components/recruiter/TalentPool';
 import toast from 'react-hot-toast';
-import type { Job, RecruiterCredits, ResumeUnlockCandidateStat } from '@types';
-import { ensureRecruiterCredits, getResumeUnlockAnalytics } from '@utils/resumeUnlocks';
+import type { Job, RecruiterCredits, ResumeUnlockCandidateStat, Subscription } from '@types';
+import {
+  ensureRecruiterCredits,
+  getActiveRecruiterSubscription,
+  getResumeUnlockAnalytics,
+  normalizePlanLabel,
+} from '@utils/resumeUnlocks';
 
 // ATS Pipeline
 import PipelineBoard from '../../features/ats/PipelineBoard';
@@ -108,6 +114,7 @@ export const RecruiterDashboard: React.FC = () => {
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [credits, setCredits] = useState<RecruiterCredits | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [unlockAnalytics, setUnlockAnalytics] = useState<{
     totalCreditsUsed: number;
     totalUnlocks: number;
@@ -126,7 +133,7 @@ export const RecruiterDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, creditsData, unlockStats] = await Promise.all([
+      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, creditsData, unlockStats, subscriptionData] = await Promise.all([
         statsService.getRecruiterStats(user?.id || ''),
         recruiterService.getRecruiterProfile(user?.id || ''),
         notificationService.getUnreadNotifications(user?.id || ''),
@@ -134,12 +141,14 @@ export const RecruiterDashboard: React.FC = () => {
         jobService.getRecruiterJobs(user?.id || ''),
         ensureRecruiterCredits(user?.id || ''),
         getResumeUnlockAnalytics(user?.id || ''),
+        getActiveRecruiterSubscription(user?.id || ''),
       ]);
 
       setStats(statsData);
       setRecruiterProfile(profileData);
       setJobs(recruiterJobs || []);
       setCredits(creditsData);
+      setSubscription(subscriptionData);
       setUnlockAnalytics(unlockStats);
       setRecommendedJobId((current) => current || recruiterJobs?.[0]?.id || '');
       setNotificationsCount((unreadNotif || []).length);
@@ -197,6 +206,9 @@ export const RecruiterDashboard: React.FC = () => {
     stats.total_jobs === 0
       ? 'No jobs posted yet. Post a job to start winning top talent.'
       : `You currently have ${stats.active_jobs} active job posting(s) and ${stats.total_applicants} applicants across ${stats.total_jobs} jobs. Shortlist rate is ${shortlistRate}% and average applicants per job is ${averageApplicants}.`;
+  const planLabel = normalizePlanLabel(subscription?.plan);
+  const creditsLabel = credits?.available_credits === -1 ? '∞' : String(credits?.available_credits ?? 100);
+  const usedCreditsLabel = credits?.available_credits === -1 ? '0' : String(credits?.used_credits ?? 0);
 
   return (
     <Layout>
@@ -231,6 +243,30 @@ export const RecruiterDashboard: React.FC = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Box
+                  sx={{
+                    minWidth: 176,
+                    px: 2,
+                    py: 1.25,
+                    borderRadius: 2,
+                    bgcolor: '#fff',
+                    border: '1px solid rgba(10,102,194,0.16)',
+                    boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CreditScoreIcon sx={{ color: '#0A66C2', fontSize: 18 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                      Credits: {creditsLabel}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                    <PlanIcon sx={{ color: '#16A34A', fontSize: 18 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                      Plan: {planLabel}
+                    </Typography>
+                  </Box>
+                </Box>
                 <IconButton
                   onClick={() => navigate(ROUTES.MESSAGING)}
                   sx={{ background: 'rgba(79,70,229,0.08)' }}
@@ -276,7 +312,7 @@ export const RecruiterDashboard: React.FC = () => {
                 fullWidth
                 variant="outlined"
                 startIcon={<SearchIcon />}
-                onClick={() => setCurrentTab(5)}
+                onClick={() => setCurrentTab(6)}
                 sx={{ py: 1.5, fontWeight: 600 }}
               >
                 Search Candidates
@@ -379,10 +415,10 @@ export const RecruiterDashboard: React.FC = () => {
                                 </Typography>
                               </Box>
                               <Typography variant="h4" sx={{ fontWeight: 900, color: '#0A66C2' }}>
-                                {credits?.available_credits === -1 ? 'Unlimited' : credits?.available_credits ?? 100}
+                                {creditsLabel}
                               </Typography>
                               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                                Used Credits: {credits?.used_credits ?? 0}
+                                Plan: {planLabel} - Used Credits: {usedCreditsLabel}
                               </Typography>
                             </CardContent>
                           </Card>
@@ -408,6 +444,31 @@ export const RecruiterDashboard: React.FC = () => {
                               </Typography>
                               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
                                 Total Credits Used: {unlockAnalytics.totalCreditsUsed}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Card
+                            sx={{
+                              background: 'rgba(245,158,11,0.09)',
+                              border: '1px solid rgba(245,158,11,0.26)',
+                              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+                              borderRadius: 3,
+                            }}
+                          >
+                            <CardContent>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                <CreditScoreIcon sx={{ color: '#D97706' }} />
+                                <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                                  Credits Used
+                                </Typography>
+                              </Box>
+                              <Typography variant="h4" sx={{ fontWeight: 900, color: '#D97706' }}>
+                                {unlockAnalytics.totalCreditsUsed}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                                Free-plan unlock credits consumed
                               </Typography>
                             </CardContent>
                           </Card>

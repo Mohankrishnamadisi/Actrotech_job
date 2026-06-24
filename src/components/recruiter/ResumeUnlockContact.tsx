@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -14,6 +14,7 @@ import {
 import {
   CheckCircle as CheckCircleIcon,
   Email as EmailIcon,
+  Lock as LockIcon,
   LockOpen as LockOpenIcon,
   Phone as PhoneIcon,
 } from '@mui/icons-material';
@@ -34,8 +35,7 @@ interface ResumeUnlockContactProps {
   onUnlocked?: (contact: { email?: string | null; phone?: string | null; credits?: RecruiterCredits | null }) => void;
 }
 
-const MASKED_PHONE = '**********';
-const MASKED_EMAIL = '**********';
+const MASKED_VALUE = '**************';
 
 export const ResumeUnlockContact: React.FC<ResumeUnlockContactProps> = ({
   recruiterId,
@@ -53,6 +53,11 @@ export const ResumeUnlockContact: React.FC<ResumeUnlockContactProps> = ({
   const [loading, setLoading] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const onUnlockedRef = useRef(onUnlocked);
+
+  useEffect(() => {
+    onUnlockedRef.current = onUnlocked;
+  }, [onUnlocked]);
 
   useEffect(() => {
     let active = true;
@@ -78,6 +83,20 @@ export const ResumeUnlockContact: React.FC<ResumeUnlockContactProps> = ({
               }
             : current
           );
+          onUnlockedRef.current?.({
+            email: result.candidate_email || email,
+            phone: result.candidate_phone || phone,
+            credits: {
+              ...(context.credits || {
+                id: '',
+                recruiter_id: recruiterId || '',
+                created_at: '',
+                updated_at: '',
+              }),
+              available_credits: result.available_credits,
+              used_credits: result.used_credits,
+            } as RecruiterCredits,
+          });
         }
       } catch (err) {
         console.error('Failed to load resume unlock context:', err);
@@ -103,7 +122,7 @@ export const ResumeUnlockContact: React.FC<ResumeUnlockContactProps> = ({
 
   const creditLabel = useMemo(() => {
     if (loading) return 'Checking credits';
-    if (isUnlimited) return 'Remaining Credits: Unlimited';
+    if (isUnlimited) return 'Remaining Credits: ∞';
     return `Remaining Credits: ${credits?.available_credits ?? 0}`;
   }, [credits?.available_credits, isUnlimited, loading]);
 
@@ -169,12 +188,16 @@ export const ResumeUnlockContact: React.FC<ResumeUnlockContactProps> = ({
 
       <Box sx={{ display: 'grid', gap: 0.75 }}>
         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <PhoneIcon fontSize="small" />
-          <strong>Phone:</strong> {unlocked ? visiblePhone || 'Not provided' : MASKED_PHONE}
+          {unlocked ? <PhoneIcon fontSize="small" /> : <LockIcon fontSize="small" color="action" />}
+          <strong>Phone:</strong> {unlocked ? visiblePhone || 'Not provided' : MASKED_VALUE}
         </Typography>
         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EmailIcon fontSize="small" />
-          <strong>Email:</strong> {unlocked ? visibleEmail || 'Not provided' : MASKED_EMAIL}
+          {unlocked ? <EmailIcon fontSize="small" /> : <LockIcon fontSize="small" color="action" />}
+          <strong>Email:</strong> {unlocked ? visibleEmail || 'Not provided' : MASKED_VALUE}
+        </Typography>
+        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {unlocked ? <LockOpenIcon fontSize="small" color="success" /> : <LockIcon fontSize="small" color="action" />}
+          <strong>Resume:</strong> {unlocked ? 'Unlocked' : 'Locked'}
         </Typography>
       </Box>
 
@@ -196,20 +219,20 @@ export const ResumeUnlockContact: React.FC<ResumeUnlockContactProps> = ({
             onClick={() => setConfirmOpen(true)}
             sx={{ bgcolor: '#0A66C2', fontWeight: 800, textTransform: 'none' }}
           >
-            {hasCredits ? 'Unlock Contact' : 'No Credits Remaining'}
+            {hasCredits ? 'Unlock Candidate' : 'No Credits Remaining'}
           </Button>
         </Box>
       )}
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 900 }}>Unlock Candidate Contact?</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 900 }}>Unlock Candidate Contact Details?</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Unlocking reveals this candidate&apos;s phone and email for your recruiter account.
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: 'grid', gap: 1 }}>
-            <Typography variant="body2"><strong>Credits Cost:</strong> 1</Typography>
+            <Typography variant="body2"><strong>Credits Required:</strong> 1</Typography>
             <Typography variant="body2"><strong>{creditLabel}</strong></Typography>
           </Box>
         </DialogContent>

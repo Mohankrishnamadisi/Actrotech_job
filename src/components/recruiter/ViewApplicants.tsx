@@ -24,10 +24,12 @@ import {
   Tabs,
   Tab,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import {
   GetApp as DownloadIcon,
+  Lock as LockIcon,
   Message as MessageIcon,
   Search as SearchIcon,
   Visibility as ViewIcon,
@@ -40,6 +42,7 @@ import type { Job } from '@types';
 import { calculateMatchScore, getMatchScoreHex, type MatchScoreResult } from '@utils/matchScore';
 import { downloadApplicantsCsv } from '@utils/applicantCsv';
 import { ApplicantDetailsModal } from './ApplicantDetailsModal';
+import { getResumeUnlockMap } from '@utils/resumeUnlocks';
 import { BulkActionsToolbar, type BulkToolbarAction } from './BulkActionsToolbar';
 import { BulkConfirmationDialog } from './BulkConfirmationDialog';
 import { BulkMessageDialog } from './BulkMessageDialog';
@@ -113,6 +116,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [messageOpen, setMessageOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<PendingConfirmation | null>(null);
+  const [unlockedApplicants, setUnlockedApplicants] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchJobs();
@@ -144,6 +148,11 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
       const result = await getJobApplicantsPaginated(selectedJobId, page + 1, rowsPerPage);
       setApplicants(result.data || []);
       setTotalApplicants(result.total);
+      const unlockMap = await getResumeUnlockMap(
+        recruiterId,
+        (result.data || []).map((applicant) => applicant.user_id)
+      );
+      setUnlockedApplicants(unlockMap);
     } catch (err) {
       console.error('Error fetching applicants:', err);
       toast.error('Failed to fetch applicants');
@@ -641,6 +650,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                       const matchHex = getMatchScoreHex(matchScore.score);
                       const profile = applicant.profiles;
                       const checked = selectedIds.has(applicant.id);
+                      const isUnlocked = Boolean(unlockedApplicants[applicant.user_id]);
                       return (
                         <TableRow key={applicant.id} hover selected={checked}>
                           <TableCell padding="none" sx={{ width: 70, minWidth: 70, maxWidth: 70 }}>
@@ -649,7 +659,21 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                             </Box>
                           </TableCell>
                           <TableCell sx={{ pl: 3 }}><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
-                          <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>**********</Typography></TableCell>
+                          <TableCell>
+                            {isUnlocked ? (
+                              <Typography variant="body2" sx={{ fontSize: 12 }} noWrap>
+                                {profile?.email || 'Not provided'}
+                              </Typography>
+                            ) : (
+                              <Chip
+                                icon={<LockIcon />}
+                                label="Email Locked"
+                                size="small"
+                                variant="filled"
+                                sx={{ fontWeight: 800 }}
+                              />
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
                               {getApplicantTags(applicant).slice(0, 3).map((tag) => <Chip key={tag} label={tag} size="small" variant="outlined" />)}
@@ -670,7 +694,30 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}</Typography></TableCell>
                           <TableCell align="right">
                             <IconButton size="small" onClick={() => handleViewApplicant(applicant)} title="View details"><ViewIcon fontSize="small" /></IconButton>
-                            {applicant.resume_url && <IconButton size="small" href={applicant.resume_url} target="_blank" rel="noopener noreferrer" title="Download resume"><DownloadIcon fontSize="small" /></IconButton>}
+                            {applicant.resume_url && isUnlocked && (
+                              <Tooltip title={isUnlocked ? 'View resume' : 'Unlock candidate to download resume.'}>
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    href={String(applicant.resume_url)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="View resume"
+                                  >
+                                    <DownloadIcon fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            )}
+                            {applicant.resume_url && !isUnlocked && (
+                              <Tooltip title="Unlock candidate to download resume.">
+                                <span>
+                                  <IconButton size="small" disabled title="Unlock candidate to download resume.">
+                                    <LockIcon fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            )}
                             <IconButton size="small" onClick={() => onChatClick?.(applicant.user_id, profile?.name || 'Candidate')} title="Send message"><MessageIcon fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
@@ -731,6 +778,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
           jobId={selectedJobId}
           recruiterId={recruiterId}
           onStatusChange={handleStatusChanged}
+          onUnlocked={() => setUnlockedApplicants((current) => ({ ...current, [selectedApplicant.user_id]: true }))}
         />
       )}
 

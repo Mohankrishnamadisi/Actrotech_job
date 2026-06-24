@@ -20,10 +20,12 @@ import {
   Chip,
   Divider,
   LinearProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Download as DownloadIcon,
+  Lock as LockIcon,
   LocationOn as LocationIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
@@ -46,6 +48,7 @@ interface ApplicantDetailsModalProps {
   availableTags?: CandidateTag[];
   onStatusChange?: () => void;
   onTagsChange?: () => void;
+  onUnlocked?: () => void;
 }
 
 const MotionCard = motion(Card);
@@ -60,15 +63,18 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   availableTags = [],
   onStatusChange,
   onTagsChange,
+  onUnlocked,
 }) => {
   const [loading, setLoading] = useState(false);
   const [applicant, setApplicant] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [status, setStatus] = useState('applied');
   const [saving, setSaving] = useState(false);
+  const [contactUnlocked, setContactUnlocked] = useState(false);
 
   useEffect(() => {
     if (open && applicantId) {
+      setContactUnlocked(false);
       fetchApplicantDetails();
     }
   }, [open, applicantId]);
@@ -229,11 +235,15 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                             candidateId={candidateId}
                             jobId={jobId}
                             onUnlocked={(contact) =>
-                              setProfile((current: any) => ({
-                                ...(current || {}),
-                                email: contact.email || current?.email,
-                                phone: contact.phone || current?.phone,
-                              }))
+                              {
+                                setContactUnlocked(true);
+                                onUnlocked?.();
+                                setProfile((current: any) => ({
+                                  ...(current || {}),
+                                  email: contact.email || current?.email,
+                                  phone: contact.phone || current?.phone,
+                                }));
+                              }
                             }
                           />
                         </Box>
@@ -447,7 +457,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
             </Grid>
 
             {/* Resume */}
-            {profile?.resume_url && (
+            {resumeUrl && (
               <Grid item xs={12}>
                 <MotionCard initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <CardContent>
@@ -457,21 +467,26 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                           Resume
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Click the download button to view the full resume
+                          {contactUnlocked ? 'Candidate resume is available for this recruiter account.' : 'Resume Locked'}
                         </Typography>
                       </Box>
-                      <Button
-                        variant="contained"
-                        endIcon={<DownloadIcon />}
-                        onClick={downloadResume}
-                        sx={{
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          textTransform: 'none',
-                          fontWeight: 600,
-                        }}
-                      >
-                        View Resume
-                      </Button>
+                      <Tooltip title={contactUnlocked ? 'View resume' : 'Unlock candidate to download resume.'}>
+                        <span>
+                          <Button
+                            variant="contained"
+                            endIcon={contactUnlocked ? <DownloadIcon /> : <LockIcon />}
+                            onClick={downloadResume}
+                            disabled={!contactUnlocked}
+                            sx={{
+                              background: contactUnlocked ? '#0A66C2' : undefined,
+                              textTransform: 'none',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {contactUnlocked ? 'View Resume' : 'Resume Locked'}
+                          </Button>
+                        </span>
+                      </Tooltip>
                     </Box>
                   </CardContent>
                 </MotionCard>
