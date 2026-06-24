@@ -27,6 +27,7 @@ import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
 import { calculateProfileCompletion, formatDate } from '@utils/index';
+import computeAIMatch from '@utils/aiJobMatch';
 import { applicationService, savedService, notificationService, userService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { INTERVIEW_ROLES } from '@constants/index';
@@ -55,6 +56,7 @@ export const Dashboard: React.FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
+  const [profileStrength, setProfileStrength] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -134,11 +136,51 @@ export const Dashboard: React.FC = () => {
     loadDashboardData();
   }, [user?.id, profile?.skills, skills]);
 
-  const stats = [
+  useEffect(() => {
+    // Only compute profile strength for subscribed candidates
+    if (!subscription) {
+      setProfileStrength(null);
+      return;
+    }
+
+    if (!profile || !recommendedJobs || recommendedJobs.length === 0) {
+      setProfileStrength(null);
+      return;
+    }
+
+    try {
+      const scores = recommendedJobs.map((job) => computeAIMatch(profile, job).score);
+      if (scores.length === 0) {
+        setProfileStrength(null);
+        return;
+      }
+      const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      setProfileStrength(avg);
+    } catch (err) {
+      console.error('Failed to compute profile strength:', err);
+      setProfileStrength(null);
+    }
+  }, [profile, recommendedJobs, subscription]);
+
+  const stats: Array<{ label: string; value: React.ReactNode; icon: any; color: string }> = [
     { label: 'Applications', value: recentApplications.length, icon: WorkIcon, color: '#1D4ED8' },
     { label: 'Saved Jobs', value: savedCount, icon: BookmarkIcon, color: '#10B981' },
     { label: 'Notifications', value: notificationsCount, icon: NotificationsIcon, color: '#F59E0B' },
   ];
+
+  if (subscription) {
+    if (profileStrength != null) {
+      stats.push({ label: 'Profile Strength', value: `${profileStrength}%`, icon: PersonIcon, color: '#059669' });
+    } else {
+      stats.push({ label: 'Profile Strength', value: (
+        <Button variant="text" size="small" onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}>Complete Profile</Button>
+      ), icon: PersonIcon, color: '#059669' });
+    }
+  } else {
+    stats.push({ label: 'Profile Strength', value: (
+      <Button variant="contained" size="small" onClick={() => navigate(ROUTES.PRICING)}>Upgrade</Button>
+    ), icon: PersonIcon, color: '#059669' });
+  }
 
   return (
     <Layout>

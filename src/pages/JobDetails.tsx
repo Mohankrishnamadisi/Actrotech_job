@@ -24,8 +24,10 @@ import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
 import { jobService, userService, applicationService, savedService, chatService } from '@services/api';
 import { useAuthStore } from '@store/index';
+import { USER_ROLES } from '@constants/index';
 import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
+import computeAIMatch from '@utils/aiJobMatch';
 import { ROUTES } from '@constants/index';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
@@ -51,6 +53,7 @@ export const JobDetails: React.FC = () => {
   const [coverLetter, setCoverLetter] = useState('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUrl, setResumeUrl] = useState('');
+  const [profile, setProfile] = useState<Record<string, any> | null>(null);
   const [currentCtc, setCurrentCtc] = useState('');
   const [expectedCtc, setExpectedCtc] = useState('');
   const [noticePeriod, setNoticePeriod] = useState('');
@@ -104,6 +107,7 @@ export const JobDetails: React.FC = () => {
       try {
         const profile = await userService.getProfile(user.id);
         if (profile) {
+          setProfile(profile);
           setResumeUrl(profile.resume_url || profile.resumeUrl || '');
           setCurrentCtc(profile.current_ctc || profile.currentCtc || '');
           setExpectedCtc(profile.expected_ctc || profile.expectedCtc || '');
@@ -116,6 +120,34 @@ export const JobDetails: React.FC = () => {
 
     loadProfileData();
   }, [user?.id]);
+
+  const [aiMatch, setAiMatch] = useState<any | null>(null);
+  const [matchLoading, setMatchLoading] = useState(false);
+
+  useEffect(() => {
+    const compute = async () => {
+      if (!job) return;
+      // Only show compute for job seekers
+      if (!user || user.role !== USER_ROLES.JOB_SEEKER) return;
+      setMatchLoading(true);
+      try {
+        const profileToUse = profile || (user?.id ? await userService.getProfile(user.id) : null);
+        if (!profileToUse) {
+          setAiMatch(null);
+          return;
+        }
+        const result = computeAIMatch(profileToUse, job as any);
+        setAiMatch(result);
+      } catch (err) {
+        console.error('Failed to compute AI match:', err);
+        setAiMatch(null);
+      } finally {
+        setMatchLoading(false);
+      }
+    };
+
+    compute();
+  }, [job, profile, user]);
 
   if (loading) return <Loading />;
   if (!job || error)
@@ -566,6 +598,61 @@ export const JobDetails: React.FC = () => {
                     </Typography>
                   </Box>
                 </Box>
+
+                {/* AI Match Score (only for job seekers) */}
+                {user?.role === USER_ROLES.JOB_SEEKER && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                      AI Match Score
+                    </Typography>
+
+                    {matchLoading ? (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                        <CircularProgress size={28} />
+                      </Box>
+                    ) : subscription ? (
+                      aiMatch ? (
+                        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: aiMatch.color === 'success' ? 'success.main' : aiMatch.color === 'warning' ? 'warning.main' : 'error.main' }}>
+                              {aiMatch.score}%
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              {aiMatch.label}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ mb: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Matching Skills</Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.matchedSkills.join(', ') || 'None'}</Typography>
+                          </Box>
+                          <Box sx={{ mb: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Missing Skills</Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.missingSkills.join(', ') || 'None'}</Typography>
+                          </Box>
+                          <Box sx={{ mb: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Experience Match</Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.experiencePercent}%</Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Profile Improvement Suggestions</Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.suggestions.join(' • ')}</Typography>
+                          </Box>
+                        </Card>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>No profile data to compute match.</Typography>
+                      )
+                    ) : (
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+                        <Box sx={{ filter: 'blur(4px)', userSelect: 'none' }}>
+                          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>🔒 Premium Feature</Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>Know how well your profile matches this job.</Typography>
+                          <Button variant="contained" fullWidth onClick={() => navigate(ROUTES.PRICING)}>Upgrade to Premium</Button>
+                        </Box>
+                        <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }} />
+                      </Card>
+                    )}
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </Grid>
