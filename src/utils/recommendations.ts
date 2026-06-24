@@ -16,14 +16,12 @@ const PROFILE_SELECT = `
   id,
   name,
   email,
-  headline,
-  title,
+  bio,
   location,
   city,
   state,
   country,
   skills,
-  experience_years,
   experience,
   education,
   expected_ctc,
@@ -63,7 +61,7 @@ export async function getRecommendedCandidates(
   }
 
   if (filters.minExperience !== undefined && filters.minExperience > 0) {
-    query = query.gte('experience_years', filters.minExperience);
+    query = query.gte('experience', filters.minExperience);
   }
 
   const requestedSkills = normalizeSkills(filters.skills);

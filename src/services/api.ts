@@ -942,7 +942,7 @@ export const candidateService = {
       .eq('role', 'job_seeker');
 
     if (filters?.title) {
-      query = query.ilike('headline', `%${filters.title}%`);
+      query = query.ilike('bio', `%${filters.title}%`);
     }
     if (filters?.location) {
       query = query.ilike('location', `%${filters.location}%`);
@@ -955,7 +955,7 @@ export const candidateService = {
       }
     }
     if (filters?.experience !== undefined && filters?.experience !== null) {
-      query = query.gte('experience_years', filters.experience);
+      query = query.gte('experience', filters.experience);
     }
 
     const { data, error, count } = await query

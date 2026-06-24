@@ -77,42 +77,84 @@ export const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
         position: 'sticky',
         top: 12,
         zIndex: 10,
-        mb: 2,
-        border: '1px solid rgba(14, 116, 144, 0.16)',
+        mb: 1.25,
+        width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
+        border: '1px solid rgba(14, 116, 144, 0.14)',
         borderRadius: 2,
-        overflow: 'hidden',
+        overflow: 'visible',
+        boxShadow: '0 14px 38px rgba(15, 23, 42, 0.09)',
+        background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', p: 1.5, bgcolor: '#fff' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(6, minmax(72px, 1fr))',
+            lg: 'repeat(8, minmax(68px, 1fr))',
+            xl: 'repeat(10, minmax(68px, 1fr))',
+          },
+          alignItems: 'center',
+          gap: 0.75,
+          p: { xs: 1, md: 1 },
+          minWidth: 0,
+          '& .MuiButton-root': {
+            minHeight: 32,
+            py: 0.4,
+            px: 0.8,
+            fontSize: 12,
+            lineHeight: 1.15,
+            whiteSpace: 'nowrap',
+          },
+          '& .MuiButton-startIcon': {
+            mr: 0.5,
+            '& svg': { fontSize: 16 },
+          },
+          '& .MuiInputBase-root': {
+            minHeight: 32,
+            fontSize: 12,
+          },
+          '& .MuiInputBase-input': {
+            py: 0.6,
+          },
+          '& .MuiInputLabel-root': {
+            fontSize: 12,
+          },
+        }}
+      >
         <Chip
           color="primary"
           label={`${selectedCount} ${selectedCount === 1 ? 'Candidate' : 'Candidates'} Selected`}
-          sx={{ fontWeight: 800, borderRadius: 1 }}
+          sx={{ fontWeight: 900, borderRadius: 1, height: 32, width: '100%', '& .MuiChip-label': { px: 1, fontSize: 12 } }}
         />
         <Tooltip title="Shortlist selected candidates">
           <span>
-            <Button disabled={disabled} startIcon={<ShortlistIcon />} variant="contained" onClick={() => onAction({ type: 'shortlist' })}>
+            <Button fullWidth disabled={disabled} startIcon={<ShortlistIcon />} variant="contained" onClick={() => onAction({ type: 'shortlist' })}>
               Shortlist
             </Button>
           </span>
         </Tooltip>
         <Tooltip title="Reject selected candidates">
           <span>
-            <Button disabled={disabled} color="error" startIcon={<RejectIcon />} variant="outlined" onClick={() => onAction({ type: 'reject' })}>
+            <Button fullWidth disabled={disabled} color="error" startIcon={<RejectIcon />} variant="outlined" onClick={() => onAction({ type: 'reject' })}>
               Reject
             </Button>
           </span>
         </Tooltip>
-        <FormControl size="small" sx={{ minWidth: 190 }} disabled={disabled}>
+        <FormControl fullWidth size="small" disabled={disabled}>
           <InputLabel>ATS Stage</InputLabel>
           <Select value={stage} label="ATS Stage" onChange={(event) => setStage(event.target.value as AtsStage)}>
             {ATS_STAGES.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
           </Select>
         </FormControl>
-        <Button disabled={disabled} startIcon={<StageIcon />} variant="outlined" onClick={() => onAction({ type: 'move_stage', stage })}>
+        <Button fullWidth disabled={disabled} startIcon={<StageIcon />} variant="outlined" onClick={() => onAction({ type: 'move_stage', stage })}>
           Move
         </Button>
-        <FormControl size="small" sx={{ minWidth: 210 }} disabled={disabled}>
+        <FormControl fullWidth size="small" disabled={disabled}>
           <InputLabel>Tags</InputLabel>
           <Select
             multiple
@@ -120,17 +162,18 @@ export const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
             input={<OutlinedInput label="Tags" />}
             renderValue={(selected) => selected.join(', ')}
             onChange={(event) => setSelectedTags(typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value)}
+            sx={{ minWidth: 0 }}
           >
             {tagOptions.map((tag) => <MenuItem key={tag} value={tag}>{tag}</MenuItem>)}
           </Select>
         </FormControl>
-        <Button disabled={disabled || selectedTags.length === 0} startIcon={<TagIcon />} variant="outlined" onClick={() => onAction({ type: 'add_tags', values: selectedTags })}>
+        <Button fullWidth disabled={disabled || selectedTags.length === 0} startIcon={<TagIcon />} variant="outlined" onClick={() => onAction({ type: 'add_tags', values: selectedTags })}>
           Add Tags
         </Button>
-        <Button disabled={disabled || selectedTags.length === 0} startIcon={<RemoveIcon />} variant="text" onClick={() => onAction({ type: 'remove_tags', values: selectedTags })}>
+        <Button fullWidth disabled={disabled || selectedTags.length === 0} startIcon={<RemoveIcon />} variant="text" onClick={() => onAction({ type: 'remove_tags', values: selectedTags })}>
           Remove Tags
         </Button>
-        <FormControl size="small" sx={{ minWidth: 230 }} disabled={disabled}>
+        <FormControl fullWidth size="small" disabled={disabled}>
           <InputLabel>Talent Pool</InputLabel>
           <Select
             multiple
@@ -138,24 +181,25 @@ export const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
             input={<OutlinedInput label="Talent Pool" />}
             renderValue={(selected) => selected.join(', ')}
             onChange={(event) => setSelectedPools(typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value)}
+            sx={{ minWidth: 0 }}
           >
             {poolOptions.map((pool) => <MenuItem key={pool} value={pool}>{pool}</MenuItem>)}
           </Select>
         </FormControl>
-        <Button disabled={disabled || selectedPools.length === 0} startIcon={<PoolIcon />} variant="outlined" onClick={() => onAction({ type: 'add_pool', values: selectedPools })}>
+        <Button fullWidth disabled={disabled || selectedPools.length === 0} startIcon={<PoolIcon />} variant="outlined" onClick={() => onAction({ type: 'add_pool', values: selectedPools })}>
           Add Pool
         </Button>
-        <Button disabled={disabled || selectedPools.length === 0} startIcon={<RemoveIcon />} variant="text" onClick={() => onAction({ type: 'remove_pool', values: selectedPools })}>
+        <Button fullWidth disabled={disabled || selectedPools.length === 0} startIcon={<RemoveIcon />} variant="text" onClick={() => onAction({ type: 'remove_pool', values: selectedPools })}>
           Remove Pool
         </Button>
-        <Button disabled={disabled} startIcon={<MessageIcon />} variant="outlined" onClick={() => onAction({ type: 'message' })}>
+        <Button fullWidth disabled={disabled} startIcon={<MessageIcon />} variant="outlined" onClick={() => onAction({ type: 'message' })}>
           Message
         </Button>
-        <Button disabled={disabled} startIcon={<ExportIcon />} variant="outlined" onClick={() => onAction({ type: 'export_csv' })}>
+        <Button fullWidth disabled={disabled} startIcon={<ExportIcon />} variant="outlined" onClick={() => onAction({ type: 'export_csv' })}>
           CSV
         </Button>
-        <Box sx={{ flex: 1 }} />
-        <Button disabled={processing || selectedCount === 0} onClick={onClear}>Deselect All</Button>
+        <Box sx={{ display: 'none' }} />
+        <Button fullWidth disabled={processing || selectedCount === 0} onClick={onClear}>Deselect All</Button>
         {processing && (
           <Stack direction="row" spacing={1} alignItems="center">
             <CircularProgress size={18} />

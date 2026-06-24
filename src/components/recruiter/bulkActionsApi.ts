@@ -42,9 +42,7 @@ export interface CandidateProfile {
   country?: string | null;
   skills?: string[] | string | null;
   experience?: string | null;
-  experience_years?: number | null;
-  headline?: string | null;
-  title?: string | null;
+  bio?: string | null;
   [key: string]: unknown;
 }
 

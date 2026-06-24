@@ -70,9 +70,10 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`recruiter-tabpanel-${index}`}
       aria-labelledby={`recruiter-tab-${index}`}
+      style={{ width: '100%', minWidth: 0, overflow: 'visible' }}
       {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ py: 3, width: '100%', minWidth: 0, overflow: 'visible' }}>{children}</Box>}
     </div>
   );
 }
@@ -186,7 +187,16 @@ export const RecruiterDashboard: React.FC = () => {
 
   return (
     <Layout>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container
+        maxWidth={false}
+        sx={{
+          py: { xs: 2, md: 4 },
+          px: { xs: 1.5, sm: 2.5, lg: 4 },
+          width: '100%',
+          maxWidth: '1680px',
+          overflowX: 'hidden',
+        }}
+      >
         {/* Header */}
         <Box
           sx={{
@@ -280,10 +290,18 @@ export const RecruiterDashboard: React.FC = () => {
           sx={{
             boxShadow: '0 28px 70px rgba(15, 23, 42, 0.08)',
             borderRadius: 3,
-            overflow: 'hidden',
+            overflow: 'visible',
+            minWidth: 0,
           }}
         >
-          <Box sx={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.1), rgba(245,158,11,0.1))' }}>
+          <Box
+            sx={{
+              background: 'linear-gradient(90deg, rgba(59,130,246,0.1), rgba(245,158,11,0.1))',
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              overflow: 'hidden',
+            }}
+          >
             <Tabs
               value={currentTab}
               onChange={(_, newValue) => setCurrentTab(newValue)}
@@ -316,7 +334,7 @@ export const RecruiterDashboard: React.FC = () => {
             </Tabs>
           </Box>
 
-          <CardContent>
+          <CardContent sx={{ p: { xs: 1.5, md: 2.5 }, minWidth: 0, overflow: 'visible' }}>
             {/* Dashboard Overview Tab */}
             <TabPanel value={currentTab} index={0}>
               <Grid container spacing={3}>

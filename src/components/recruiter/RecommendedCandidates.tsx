@@ -312,7 +312,7 @@ function RecommendedCandidateCard({
               {name}
             </Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
-              {candidate.headline || candidate.title || 'Job Seeker'}
+              {candidate.bio || 'Job Seeker'}
             </Typography>
           </Box>
           <Chip
@@ -331,7 +331,7 @@ function RecommendedCandidateCard({
         <Box sx={{ display: 'grid', gap: 0.75, mb: 1.75 }}>
           <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <WorkIcon sx={{ fontSize: 17 }} />
-            {candidate.experience_years != null ? `${candidate.experience_years} years` : candidate.experience || 'Experience not specified'}
+            {candidate.experience || 'Experience not specified'}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <LocationIcon sx={{ fontSize: 17 }} />
@@ -464,7 +464,7 @@ function RecommendedCandidateDialog({
               {name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {candidate.headline || candidate.title || 'Job Seeker'}
+              {candidate.bio || 'Job Seeker'}
             </Typography>
             <Chip
               label={item.matchScore.label}
@@ -487,7 +487,7 @@ function RecommendedCandidateDialog({
           </Typography>
           <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <WorkIcon fontSize="small" />
-            {candidate.experience_years != null ? `${candidate.experience_years} years` : candidate.experience || 'Experience not specified'}
+            {candidate.experience || 'Experience not specified'}
           </Typography>
 
           <Box>

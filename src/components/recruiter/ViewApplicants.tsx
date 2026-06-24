@@ -346,12 +346,53 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexDirection: { xs: 'column', lg: 'row' } }}>
-        <Box sx={{ width: { xs: '100%', lg: 320 }, minWidth: { lg: 320 }, height: { lg: 'calc(100vh - 160px)' }, display: 'flex', flexDirection: 'column' }}>
-          <Card sx={{ flex: '0 0 auto', mb: 2 }}>
-            <CardContent sx={{ position: 'sticky', top: 16, zIndex: 5, background: 'transparent' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>Jobs ordered by post date</Typography>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
+    >
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '280px minmax(0, 1fr)' },
+          gap: { xs: 1.5, lg: 2 },
+          alignItems: 'start',
+          width: '100%',
+          maxWidth: '100%',
+          minWidth: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <Box
+          sx={{
+            width: '100%',
+            minWidth: 0,
+            minHeight: { lg: 620 },
+            height: { lg: 'calc(100vh - 116px)' },
+            maxHeight: { lg: 'calc(100vh - 116px)' },
+            display: 'flex',
+            flexDirection: 'column',
+            position: { lg: 'sticky' },
+            top: { lg: 96 },
+          }}
+        >
+          <Card
+            sx={{
+              flex: '0 0 auto',
+              mb: 1.25,
+              borderRadius: 2,
+              border: '1px solid rgba(148, 163, 184, 0.22)',
+              boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)',
+              background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+            }}
+          >
+            <CardContent sx={{ p: 1.5 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 0.5, color: '#0f172a' }}>
+                Job Openings
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1.25 }}>
+                Ordered by latest posting date
+              </Typography>
               <TextField
                 placeholder="Search jobs"
                 size="small"
@@ -359,30 +400,66 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1.5,
+                    bgcolor: '#fff',
+                    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)',
+                  },
+                }}
               />
             </CardContent>
           </Card>
 
-          <Card sx={{ flex: '1 1 auto', overflow: 'hidden', width: '100%' }}>
-            <CardContent sx={{ height: '100%', p: 1 }}>
-              <Box sx={{ height: '100%', overflowY: 'auto', pr: 1 }}>
-                <Box sx={{ display: 'grid', gap: 1.25 }}>
+          <Card
+            sx={{
+              flex: '1 1 auto',
+              overflow: 'hidden',
+              width: '100%',
+              minHeight: { xs: 360, lg: 0 },
+              borderRadius: 2,
+              border: '1px solid rgba(148, 163, 184, 0.22)',
+              boxShadow: '0 24px 70px rgba(15, 23, 42, 0.08)',
+            }}
+          >
+            <CardContent sx={{ height: '100%', p: 0.75 }}>
+              <Box
+                sx={{
+                  height: '100%',
+                  overflowY: 'auto',
+                  pr: 0.75,
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': { width: 8 },
+                  '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(100,116,139,0.35)', borderRadius: 99 },
+                }}
+              >
+                <Box sx={{ display: 'grid', gap: 0.9 }}>
                   {filteredJobs.map((job) => (
                     <Box
                       key={job.id}
                       onClick={() => setSelectedJobId(job.id)}
                       sx={{
-                        p: 2,
-                        borderRadius: 2,
+                        p: 1.35,
+                        minHeight: 74,
+                        borderRadius: 1.5,
                         cursor: 'pointer',
-                        border: selectedJobId === job.id ? '1px solid #0A66C2' : '1px solid rgba(148, 163, 184, 0.28)',
-                        backgroundColor: selectedJobId === job.id ? 'rgba(10, 102, 194, 0.08)' : '#fff',
-                        transition: 'all 0.18s ease',
-                        '&:hover': { boxShadow: '0 6px 18px rgba(15,23,42,0.06)' },
+                        border: selectedJobId === job.id ? '1px solid #0A66C2' : '1px solid rgba(148, 163, 184, 0.22)',
+                        background: selectedJobId === job.id
+                          ? 'linear-gradient(135deg, rgba(10,102,194,0.13), rgba(14,165,233,0.08))'
+                          : '#fff',
+                        boxShadow: selectedJobId === job.id
+                          ? '0 16px 36px rgba(10, 102, 194, 0.15)'
+                          : '0 10px 28px rgba(15, 23, 42, 0.04)',
+                        transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 18px 40px rgba(15,23,42,0.09)',
+                          borderColor: 'rgba(10,102,194,0.45)',
+                        },
                       }}
                     >
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>{job.title}</Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5, color: '#020617' }}>{job.title}</Typography>
+                      <Typography variant="caption" sx={{ color: '#475569', fontWeight: 600 }}>
                         Posted {job.created_at ? format(new Date(job.created_at as string), 'dd MMM yyyy') : 'Unknown'}
                       </Typography>
                     </Box>
@@ -393,13 +470,22 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
           </Card>
         </Box>
 
-        <Box sx={{ flex: 1, width: '100%' }}>
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 1 }}>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>Selected job</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>{selectedJob.title}</Typography>
+        <Box sx={{ width: '100%', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
+          <Card
+            sx={{
+              mb: 1.25,
+              borderRadius: 2,
+              border: '1px solid rgba(148, 163, 184, 0.22)',
+              boxShadow: '0 20px 60px rgba(15, 23, 42, 0.06)',
+              background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+              overflow: 'hidden',
+            }}
+          >
+            <CardContent sx={{ p: { xs: 1.5, md: 1.75 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.25, mb: 0.75 }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="overline" sx={{ color: '#0A66C2', fontWeight: 900, letterSpacing: 0, lineHeight: 1 }}>Selected job</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#020617', lineHeight: 1.15 }}>{selectedJob.title}</Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     {selectedJob.status ? `${selectedJob.status} - ` : ''}
                     Posted {selectedJob.created_at ? format(new Date(selectedJob.created_at as string), 'dd MMM yyyy') : 'Unknown'} - {totalApplicants} applicant(s)
@@ -408,25 +494,35 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                 {selectedIds.size > 0 && <Chip color="primary" label={selectedText(selectedIds.size)} sx={{ fontWeight: 800, borderRadius: 1 }} />}
               </Box>
 
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 1, mb: 2 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(5, minmax(110px, 1fr))' }, gap: 0.8, my: 1.25 }}>
                 {Object.entries(statusCounts).map(([status, count]) => (
-                  <Paper key={status} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-                    <Typography variant="caption" color="text.secondary">{labelize(status)}</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{count}</Typography>
+                  <Paper
+                    key={status}
+                    variant="outlined"
+                    sx={{
+                      p: 1,
+                      borderRadius: 1.5,
+                      bgcolor: '#fff',
+                      borderColor: 'rgba(148, 163, 184, 0.25)',
+                      boxShadow: '0 10px 30px rgba(15, 23, 42, 0.04)',
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{labelize(status)}</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>{count}</Typography>
                   </Paper>
                 ))}
               </Box>
 
               <Tabs value={statusFilter} onChange={(_, value) => setStatusFilter(value)} sx={{ mb: 0, borderBottom: '1px solid #e0e0e0' }} variant="scrollable">
-                <Tab label={`All (${applicants.length})`} value="all" sx={{ textTransform: 'none' }} />
-                <Tab label={`Applied (${statusCounts.applied})`} value="applied" sx={{ textTransform: 'none' }} />
-                <Tab label={`Under Review (${statusCounts.under_review})`} value="under_review" sx={{ textTransform: 'none' }} />
-                <Tab label={`Shortlisted (${statusCounts.shortlisted})`} value="shortlisted" sx={{ textTransform: 'none' }} />
-                <Tab label={`Rejected (${statusCounts.rejected})`} value="rejected" sx={{ textTransform: 'none' }} />
+                <Tab label={`All (${applicants.length})`} value="all" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                <Tab label={`Applied (${statusCounts.applied})`} value="applied" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                <Tab label={`Under Review (${statusCounts.under_review})`} value="under_review" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                <Tab label={`Shortlisted (${statusCounts.shortlisted})`} value="shortlisted" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                <Tab label={`Rejected (${statusCounts.rejected})`} value="rejected" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
               </Tabs>
 
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
-                <FormControl size="small" sx={{ minWidth: 190 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.25 }}>
+                <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
                   <InputLabel>Sort By Match Score</InputLabel>
                   <Select value={sortMode} label="Sort By Match Score" onChange={(event) => setSortMode(event.target.value as SortMode)}>
                     <MenuItem value="applied_desc">Newest Applied</MenuItem>
@@ -434,7 +530,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                     <MenuItem value="match_asc">Match Score: Low to High</MenuItem>
                   </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 180 }}>
+                <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
                   <InputLabel>Filter By Match Score</InputLabel>
                   <Select value={matchScoreFilter} label="Filter By Match Score" onChange={(event) => setMatchScoreFilter(event.target.value as MatchScoreFilter)}>
                     <MenuItem value="all">All Scores</MenuItem>
@@ -461,12 +557,70 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
           ) : visibleApplicants.length === 0 ? (
             <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', py: 4 }}>No applicants match the selected filters.</Typography>
           ) : (
-            <Paper sx={{ overflow: 'hidden', border: '1px solid rgba(148, 163, 184, 0.24)' }}>
-              <TableContainer sx={{ maxHeight: 'calc(100vh - 280px)' }}>
-                <Table stickyHeader size="small">
+            <Paper
+              sx={{
+                width: '100%',
+                maxWidth: '100%',
+                minWidth: 0,
+                overflow: 'hidden',
+                border: '1px solid rgba(148, 163, 184, 0.24)',
+                borderRadius: 2,
+                boxShadow: '0 24px 70px rgba(15, 23, 42, 0.08)',
+                bgcolor: '#fff',
+              }}
+            >
+              <TableContainer
+                sx={{
+                  width: '100%',
+                  maxWidth: '100%',
+                  maxHeight: 'calc(100vh - 280px)',
+                  overflowX: 'auto',
+                  overflowY: 'auto',
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': { height: 10, width: 10 },
+                  '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(100,116,139,0.35)', borderRadius: 99 },
+                  '&::-webkit-scrollbar-track': { bgcolor: 'rgba(226,232,240,0.7)' },
+                }}
+              >
+                <Table
+                  stickyHeader
+                  size="small"
+                  sx={{
+                    minWidth: 980,
+                    tableLayout: 'fixed',
+                    '& .MuiTableCell-root': {
+                      px: 0.75,
+                      py: 0.55,
+                      fontSize: 12,
+                      lineHeight: 1.25,
+                    },
+                    '& .MuiTableCell-paddingCheckbox': {
+                      width: 44,
+                      minWidth: 44,
+                      pl: 0.5,
+                      pr: 0.25,
+                      textAlign: 'center',
+                    },
+                    '& .MuiCheckbox-root': {
+                      p: 0.5,
+                    },
+                    '& .MuiTableRow-root': {
+                      height: 40,
+                    },
+                    '& .MuiChip-root': {
+                      height: 22,
+                      maxWidth: '100%',
+                    },
+                    '& .MuiChip-label': {
+                      px: 0.75,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                >
                   <TableHead>
                     <TableRow>
-                      <TableCell padding="checkbox">
+                      <TableCell padding="checkbox" sx={{ bgcolor: '#f8fafc' }}>
                         <Checkbox
                           indeterminate={!allVisibleSelected && someVisibleSelected}
                           checked={allVisibleSelected}
@@ -474,15 +628,15 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           inputProps={{ 'aria-label': 'Select all candidates' }}
                         />
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Name</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Email</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Tags</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Talent Pool</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>ATS Stage</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Match Score</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }}>Applied</TableCell>
-                      <TableCell sx={{ fontWeight: 800, bgcolor: '#f8fafc' }} align="right">Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 118, pl: 1.25 }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 168 }}>Email</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 118 }}>Tags</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 130 }}>Talent Pool</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 112 }}>ATS Stage</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 112 }}>Match Score</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 96 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 102 }}>Applied</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 86 }} align="right">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -496,16 +650,16 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           <TableCell padding="checkbox">
                             <Checkbox checked={checked} onChange={() => toggleApplicant(applicant.id)} inputProps={{ 'aria-label': `Select ${profile?.name || 'candidate'}` }} />
                           </TableCell>
-                          <TableCell><Typography sx={{ fontWeight: 700 }}>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
-                          <TableCell>{profile?.email || 'N/A'}</TableCell>
+                          <TableCell sx={{ pl: 1.25 }}><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
+                          <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{profile?.email || 'N/A'}</Typography></TableCell>
                           <TableCell>
-                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', minWidth: 120 }}>
+                            <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
                               {getApplicantTags(applicant).slice(0, 3).map((tag) => <Chip key={tag} label={tag} size="small" variant="outlined" />)}
                               {getApplicantTags(applicant).length === 0 && <Typography variant="caption" color="text.secondary">No tags</Typography>}
                             </Box>
                           </TableCell>
                           <TableCell>
-                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', minWidth: 120 }}>
+                            <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
                               {getApplicantTalentPools(applicant).slice(0, 2).map((pool) => <Chip key={pool} label={pool} size="small" color="info" variant="outlined" />)}
                               {getApplicantTalentPools(applicant).length === 0 && <Typography variant="caption" color="text.secondary">None</Typography>}
                             </Box>
@@ -515,7 +669,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                             <Chip label={matchScore.label} size="small" sx={{ fontWeight: 800, bgcolor: `${matchHex}14`, color: matchHex, border: `1px solid ${matchHex}33` }} />
                           </TableCell>
                           <TableCell><Chip label={labelize(applicant.status)} size="small" color={getStatusColor(applicant.status)} variant="filled" /></TableCell>
-                          <TableCell>{applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}</TableCell>
+                          <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}</Typography></TableCell>
                           <TableCell align="right">
                             <IconButton size="small" onClick={() => handleViewApplicant(applicant)} title="View details"><ViewIcon fontSize="small" /></IconButton>
                             {applicant.resume_url && <IconButton size="small" href={applicant.resume_url} target="_blank" rel="noopener noreferrer" title="Download resume"><DownloadIcon fontSize="small" /></IconButton>}

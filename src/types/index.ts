@@ -330,10 +330,9 @@ export interface TalentPoolCandidateProfile {
   id: string;
   name?: string | null;
   email?: string | null;
-  headline?: string | null;
+  bio?: string | null;
   location?: string | null;
   skills?: string[] | string | null;
-  experience_years?: number | null;
   experience?: string | null;
   avatar_url?: string | null;
   role?: string | null;
@@ -359,14 +358,12 @@ export interface RecommendedCandidateProfile {
   id: string;
   name?: string | null;
   email?: string | null;
-  headline?: string | null;
-  title?: string | null;
+  bio?: string | null;
   location?: string | null;
   city?: string | null;
   state?: string | null;
   country?: string | null;
   skills?: string[] | string | null;
-  experience_years?: number | null;
   experience?: string | null;
   education?: unknown;
   expected_ctc?: string | number | null;
