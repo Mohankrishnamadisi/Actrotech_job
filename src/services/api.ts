@@ -369,51 +369,78 @@ export const jobService = {
   async createJob(userId: string, jobData: Partial<Job>) {
     if (!userId) throw new Error('Missing userId for createJob');
 
-    const payload: Record<string, unknown> = {
-      ...jobData,
+    // List of ALL camelCase properties to EXCLUDE from the payload
+    // These should NEVER be sent to Supabase as they are not actual database columns
+    const camelCasePropertiesToRemove = new Set([
+      'salaryMax',
+      'salaryMin',
+      'positionsAvailable',
+      'companyLogoUrl',
+      'applicationDeadline',
+      'applicationLink',
+      'applicationUrl',
+      'workMode',
+      'screeningQuestions',
+      'applicationsCount',
+      'createdAt',
+      'updatedAt',
+      'jobType',
+      'postedBy',
+    ]);
+
+    // Fields that should NEVER be sent to Supabase (read-only)
+    const readOnlyFields = new Set(['created_at', 'applications_count']);
+
+    // Build clean payload with ONLY valid snake_case database columns
+    const createPayload: Record<string, unknown> = {
       posted_by: userId,
       status: 'published',
     };
 
-    if (jobData.jobType && !payload.job_type) {
-      payload.job_type = jobData.jobType;
+    Object.entries(jobData).forEach(([key, value]) => {
+      // Skip camelCase properties - they are not database columns
+      if (camelCasePropertiesToRemove.has(key)) {
+        console.log(`[createJob] Removing camelCase property: ${key}`);
+        return;
+      }
+
+      // Skip read-only fields
+      if (readOnlyFields.has(key)) {
+        console.log(`[createJob] Skipping read-only field: ${key}`);
+        return;
+      }
+
+      // Only add if value is defined
+      if (value !== undefined && value !== null) {
+        createPayload[key] = value;
+      }
+    });
+
+    // Normalize arrays
+    if (!Array.isArray(createPayload.skills)) {
+      createPayload.skills = [];
     }
-    if (jobData.workMode && !payload.work_mode) {
-      payload.work_mode = jobData.workMode;
-    }
-    // ensure company_name is used; do not send a legacy `company` field
-    if (jobData.company_name && !payload.company_name) {
-      payload.company_name = jobData.company_name;
+    if (!Array.isArray(createPayload.screening_questions)) {
+      createPayload.screening_questions = [];
     }
 
-    // normalize arrays and numeric fields
-    if (!Array.isArray(payload.skills)) payload.skills = jobData.skills || [];
-    if (!Array.isArray(payload.screening_questions)) payload.screening_questions = jobData.screening_questions || jobData.screeningQuestions || [];
-    if (jobData.applicationLink && !payload.application_link) {
-      payload.application_link = jobData.applicationLink;
+    // Convert numeric string fields to numbers
+    if (createPayload.positions_available && typeof createPayload.positions_available === 'string') {
+      createPayload.positions_available = parseInt(createPayload.positions_available as string, 10) || 1;
     }
-    if (jobData.application_link && !payload.application_link) {
-      payload.application_link = jobData.application_link;
+    if (createPayload.salary_min && typeof createPayload.salary_min === 'string') {
+      createPayload.salary_min = parseInt(createPayload.salary_min as string, 10);
     }
-    if (jobData.applicationUrl && !payload.application_link) {
-      payload.application_link = jobData.applicationUrl;
+    if (createPayload.salary_max && typeof createPayload.salary_max === 'string') {
+      createPayload.salary_max = parseInt(createPayload.salary_max as string, 10);
     }
-    if (jobData.application_url && !payload.application_link) {
-      payload.application_link = jobData.application_url;
-    }
-    if (payload.positions_available && typeof payload.positions_available === 'string') {
-      payload.positions_available = parseInt(payload.positions_available as string, 10) || 1;
-    }
-    if (payload.salary_min && typeof payload.salary_min === 'string') {
-      payload.salary_min = parseInt(payload.salary_min as string, 10);
-    }
-    if (payload.salary_max && typeof payload.salary_max === 'string') {
-      payload.salary_max = parseInt(payload.salary_max as string, 10);
-    }
+
+    console.log('CREATE PAYLOAD', JSON.stringify(createPayload, null, 2));
+    console.log('[createJob] Payload keys:', Object.keys(createPayload));
 
     const { data, error } = await supabase
       .from('jobs')
-      .insert([payload])
+      .insert([createPayload])
       .select();
     if (error) throw error;
 
@@ -456,34 +483,59 @@ export const jobService = {
   },
 
   async updateJob(jobId: string, updates: Record<string, unknown>) {
-    const payload: Record<string, unknown> = { ...updates };
+    // List of ALL camelCase properties to EXCLUDE from the payload
+    // These should NEVER be sent to Supabase as they are not actual database columns
+    const camelCasePropertiesToRemove = new Set([
+      'salaryMax',
+      'salaryMin',
+      'positionsAvailable',
+      'companyLogoUrl',
+      'applicationDeadline',
+      'applicationLink',
+      'applicationUrl',
+      'workMode',
+      'screeningQuestions',
+      'applicationsCount',
+      'createdAt',
+      'updatedAt',
+      'jobType',
+      'postedBy',
+    ]);
 
-    if ((updates as any).jobType && !payload.job_type) {
-      payload.job_type = (updates as any).jobType;
-    }
-    if ((updates as any).workMode && !payload.work_mode) {
-      payload.work_mode = (updates as any).workMode;
-    }
-    if ((updates as any).applicationLink && !payload.application_link) {
-      payload.application_link = (updates as any).applicationLink;
-    }
-    if ((updates as any).application_link && !payload.application_link) {
-      payload.application_link = (updates as any).application_link;
-    }
-    if ((updates as any).applicationUrl && !payload.application_link) {
-      payload.application_link = (updates as any).applicationUrl;
-    }
-    if ((updates as any).application_url && !payload.application_link) {
-      payload.application_link = (updates as any).application_url;
-    }
-    // ensure company_name is used; do not set a legacy `company` field
-    if ((updates as any).company_name && !payload.company_name) {
-      payload.company_name = (updates as any).company_name;
-    }
+    // Fields that should NEVER be sent to Supabase (read-only)
+    const readOnlyFields = new Set(['created_at', 'applications_count']);
+
+    // Build clean payload with ONLY valid snake_case database columns
+    const updatePayload: Record<string, unknown> = {};
+
+    Object.entries(updates).forEach(([key, value]) => {
+      // Skip camelCase properties - they are not database columns
+      if (camelCasePropertiesToRemove.has(key)) {
+        console.log(`[updateJob] Removing camelCase property: ${key}`);
+        return;
+      }
+
+      // Skip read-only fields
+      if (readOnlyFields.has(key)) {
+        console.log(`[updateJob] Skipping read-only field: ${key}`);
+        return;
+      }
+
+      // Only add if value is defined
+      if (value !== undefined && value !== null) {
+        updatePayload[key] = value;
+      }
+    });
+
+    // Add current timestamp for updated_at
+    updatePayload.updated_at = new Date().toISOString();
+
+    console.log('UPDATE PAYLOAD', JSON.stringify(updatePayload, null, 2));
+    console.log('[updateJob] Final payload keys:', Object.keys(updatePayload));
 
     const { data, error } = await supabase
       .from('jobs')
-      .update(payload)
+      .update(updatePayload)
       .eq('id', jobId)
       .select();
     if (error) throw error;
