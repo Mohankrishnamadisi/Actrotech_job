@@ -36,6 +36,8 @@ import {
   AccountTree as AccountTreeIcon,
   LocalOffer as TagIcon,
   FolderSpecial as PoolIcon,
+  CreditScore as CreditScoreIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
@@ -51,7 +53,8 @@ import { CandidateSearch } from '@components/recruiter/CandidateSearch';
 import { TagManager } from '@components/recruiter/TagManager';
 import { TalentPool } from '@components/recruiter/TalentPool';
 import toast from 'react-hot-toast';
-import type { Job } from '@types';
+import type { Job, RecruiterCredits, ResumeUnlockCandidateStat } from '@types';
+import { ensureRecruiterCredits, getResumeUnlockAnalytics } from '@utils/resumeUnlocks';
 
 // ATS Pipeline
 import PipelineBoard from '../../features/ats/PipelineBoard';
@@ -104,6 +107,12 @@ export const RecruiterDashboard: React.FC = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [credits, setCredits] = useState<RecruiterCredits | null>(null);
+  const [unlockAnalytics, setUnlockAnalytics] = useState<{
+    totalCreditsUsed: number;
+    totalUnlocks: number;
+    mostViewedCandidates: ResumeUnlockCandidateStat[];
+  }>({ totalCreditsUsed: 0, totalUnlocks: 0, mostViewedCandidates: [] });
   const [jobs, setJobs] = useState<Job[]>([]);
   const [recommendedJobId, setRecommendedJobId] = useState('');
   const navigate = useNavigate();
@@ -117,17 +126,21 @@ export const RecruiterDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsData, profileData, unreadNotif, conversations, recruiterJobs] = await Promise.all([
+      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, creditsData, unlockStats] = await Promise.all([
         statsService.getRecruiterStats(user?.id || ''),
         recruiterService.getRecruiterProfile(user?.id || ''),
         notificationService.getUnreadNotifications(user?.id || ''),
         messagingService.getConversations(user?.id || ''),
         jobService.getRecruiterJobs(user?.id || ''),
+        ensureRecruiterCredits(user?.id || ''),
+        getResumeUnlockAnalytics(user?.id || ''),
       ]);
 
       setStats(statsData);
       setRecruiterProfile(profileData);
       setJobs(recruiterJobs || []);
+      setCredits(creditsData);
+      setUnlockAnalytics(unlockStats);
       setRecommendedJobId((current) => current || recruiterJobs?.[0]?.id || '');
       setNotificationsCount((unreadNotif || []).length);
       setUnreadMessagesCount(
@@ -349,6 +362,56 @@ export const RecruiterDashboard: React.FC = () => {
                       </Typography>
 
                       <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Card
+                            sx={{
+                              background: 'rgba(10,102,194,0.08)',
+                              border: '1px solid rgba(10,102,194,0.24)',
+                              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+                              borderRadius: 3,
+                            }}
+                          >
+                            <CardContent>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                <CreditScoreIcon sx={{ color: '#0A66C2' }} />
+                                <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                                  Credits Remaining
+                                </Typography>
+                              </Box>
+                              <Typography variant="h4" sx={{ fontWeight: 900, color: '#0A66C2' }}>
+                                {credits?.available_credits === -1 ? 'Unlimited' : credits?.available_credits ?? 100}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                                Used Credits: {credits?.used_credits ?? 0}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Card
+                            sx={{
+                              background: 'rgba(34,197,94,0.08)',
+                              border: '1px solid rgba(34,197,94,0.24)',
+                              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+                              borderRadius: 3,
+                            }}
+                          >
+                            <CardContent>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                <VisibilityIcon sx={{ color: '#16A34A' }} />
+                                <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                                  Total Unlocks
+                                </Typography>
+                              </Box>
+                              <Typography variant="h4" sx={{ fontWeight: 900, color: '#16A34A' }}>
+                                {unlockAnalytics.totalUnlocks}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                                Total Credits Used: {unlockAnalytics.totalCreditsUsed}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
                         {[
                           { label: 'Average Applicants / Job', value: averageApplicants, accent: '#A78BFA' },
                           { label: 'Shortlist Rate', value: `${shortlistRate}%`, accent: '#FBBF24' },
@@ -418,6 +481,50 @@ export const RecruiterDashboard: React.FC = () => {
                         <br />
                         • Leverage chat to convert top candidates before they accept other offers.
                       </Typography>
+                    </CardContent>
+                  </MotionCard>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <MotionCard initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
+                        Most Viewed Candidates
+                      </Typography>
+                      {unlockAnalytics.mostViewedCandidates.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                          No candidate contacts unlocked yet.
+                        </Typography>
+                      ) : (
+                        <Grid container spacing={1.25}>
+                          {unlockAnalytics.mostViewedCandidates.map((candidate) => (
+                            <Grid item xs={12} sm={6} md={4} key={candidate.candidate_id}>
+                              <Card
+                                sx={{
+                                  borderRadius: 2,
+                                  border: '1px solid rgba(148,163,184,0.22)',
+                                  boxShadow: 'none',
+                                }}
+                              >
+                                <CardContent sx={{ p: 1.5 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
+                                    {candidate.candidate_name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                    Unlocks: {candidate.unlock_count}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                    Last viewed:{' '}
+                                    {candidate.last_unlocked_at
+                                      ? new Date(candidate.last_unlocked_at).toLocaleDateString()
+                                      : 'Unknown'}
+                                  </Typography>
+                                </CardContent>
+                              </Card>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      )}
                     </CardContent>
                   </MotionCard>
                 </Grid>

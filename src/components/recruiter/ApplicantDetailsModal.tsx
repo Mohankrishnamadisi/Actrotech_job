@@ -24,8 +24,6 @@ import {
 import {
   Close as CloseIcon,
   Download as DownloadIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
   LocationOn as LocationIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
@@ -35,6 +33,7 @@ import { applicationService } from '@services/api';
 import type { CandidateTag } from '@types';
 import { CandidateTagAssigner } from './CandidateTagAssigner';
 import { CandidateNotesPanel } from './CandidateNotesPanel';
+import { ResumeUnlockContact } from './ResumeUnlockContact';
 import { calculateMatchScore, getMatchScoreHex } from '@utils/matchScore';
 
 interface ApplicantDetailsModalProps {
@@ -216,18 +215,6 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                         />
                       </Box>
                       <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', color: 'text.secondary', fontSize: 14 }}>
-                        {profile?.email && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <EmailIcon sx={{ fontSize: 18 }} />
-                            {profile.email}
-                          </Box>
-                        )}
-                        {profile?.phone && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <PhoneIcon sx={{ fontSize: 18 }} />
-                            {profile.phone}
-                          </Box>
-                        )}
                         {profile?.location && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <LocationIcon sx={{ fontSize: 18 }} />
@@ -235,6 +222,22 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                           </Box>
                         )}
                       </Box>
+                      {recruiterId && candidateId && (
+                        <Box sx={{ mt: 2, maxWidth: 520 }}>
+                          <ResumeUnlockContact
+                            recruiterId={recruiterId}
+                            candidateId={candidateId}
+                            jobId={jobId}
+                            onUnlocked={(contact) =>
+                              setProfile((current: any) => ({
+                                ...(current || {}),
+                                email: contact.email || current?.email,
+                                phone: contact.phone || current?.phone,
+                              }))
+                            }
+                          />
+                        </Box>
+                      )}
                     </Box>
                   </Box>
                 </CardContent>

@@ -649,7 +649,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                             </Box>
                           </TableCell>
                           <TableCell sx={{ pl: 3 }}><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
-                          <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{profile?.email || 'N/A'}</Typography></TableCell>
+                          <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>**********</Typography></TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
                               {getApplicantTags(applicant).slice(0, 3).map((tag) => <Chip key={tag} label={tag} size="small" variant="outlined" />)}
@@ -729,6 +729,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
           applicantId={selectedApplicant.id}
           candidateId={selectedApplicant.user_id}
           jobId={selectedJobId}
+          recruiterId={recruiterId}
           onStatusChange={handleStatusChanged}
         />
       )}

@@ -230,7 +230,7 @@ export interface Payment {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'job_match' | 'application_status' | 'new_job' | 'subscription';
+  type: 'job_match' | 'application_status' | 'new_job' | 'subscription' | 'resume_unlocked';
   title: string;
   message: string;
   read: boolean;
@@ -271,6 +271,53 @@ export interface RecruiterStats {
   total_applicants: number;
   shortlisted: number;
   rejected: number;
+  total_credits_used?: number;
+  total_unlocks?: number;
+  most_viewed_candidates?: ResumeUnlockCandidateStat[];
+}
+
+export interface RecruiterCredits {
+  id: string;
+  recruiter_id: string;
+  available_credits: number;
+  used_credits: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResumeUnlock {
+  id: string;
+  recruiter_id: string;
+  candidate_id: string;
+  job_id?: string | null;
+  credits_used: number;
+  unlocked_at: string;
+}
+
+export interface ResumeUnlockCandidateStat {
+  candidate_id: string;
+  candidate_name: string;
+  candidate_email?: string | null;
+  unlock_count: number;
+  last_unlocked_at?: string | null;
+}
+
+export interface ResumeUnlockContext {
+  credits: RecruiterCredits | null;
+  unlock: ResumeUnlock | null;
+  isUnlocked: boolean;
+}
+
+export interface ResumeUnlockResult {
+  already_unlocked: boolean;
+  unlock_id: string;
+  candidate_id: string;
+  candidate_email?: string | null;
+  candidate_phone?: string | null;
+  available_credits: number;
+  used_credits: number;
+  credits_used: number;
+  unlocked_at: string;
 }
 
 export interface AuthResponse {
@@ -330,9 +377,12 @@ export interface TalentPoolCandidateProfile {
   id: string;
   name?: string | null;
   email?: string | null;
+  phone?: string | null;
+  headline?: string | null;
   bio?: string | null;
   location?: string | null;
   skills?: string[] | string | null;
+  experience_years?: number | string | null;
   experience?: string | null;
   avatar_url?: string | null;
   role?: string | null;
@@ -358,6 +408,7 @@ export interface RecommendedCandidateProfile {
   id: string;
   name?: string | null;
   email?: string | null;
+  phone?: string | null;
   bio?: string | null;
   location?: string | null;
   city?: string | null;

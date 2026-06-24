@@ -22,7 +22,6 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  Email as EmailIcon,
   LocationOn as LocationIcon,
   Message as MessageIcon,
   PersonSearch as PersonSearchIcon,
@@ -33,6 +32,7 @@ import {
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { AddToPoolButton } from './talentPool/AddToPoolButton';
+import { ResumeUnlockContact } from './ResumeUnlockContact';
 import {
   getRecommendedCandidates,
   inviteCandidateToApply,
@@ -482,11 +482,11 @@ function RecommendedCandidateDialog({
             />
           </Box>
 
-          {candidate.email && (
-            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EmailIcon fontSize="small" /> {candidate.email}
-            </Typography>
-          )}
+          <ResumeUnlockContact
+            recruiterId={recruiterId}
+            candidateId={candidate.id}
+            jobId={item.job.id}
+          />
           <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <LocationIcon fontSize="small" /> {candidate.location || 'Location not specified'}
           </Typography>

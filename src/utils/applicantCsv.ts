@@ -22,8 +22,8 @@ export function buildApplicantsCsv(applicants: BulkApplicant[]): string {
     const matchScore = applicant.match_score == null ? '' : `${applicant.match_score}%`;
     return [
       profile?.name || profile?.full_name || 'Unknown',
-      profile?.email || '',
-      profile?.phone || '',
+      '**********',
+      '**********',
       getLocation(profile),
       getExperience(applicant),
       skills,

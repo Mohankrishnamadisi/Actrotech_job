@@ -31,6 +31,7 @@ import {
 import { motion } from 'framer-motion';
 import { candidateService, savedService } from '@services/api';
 import { AddToPoolButton } from './talentPool/AddToPoolButton';
+import { ResumeUnlockContact } from './ResumeUnlockContact';
 import toast from 'react-hot-toast';
 
 interface CandidateSearchProps {
@@ -42,6 +43,7 @@ interface Candidate {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   headline: string;
   location: string;
   skills: string[];
@@ -323,12 +325,21 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                 </Typography>
               </Box>
 
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Email
-                </Typography>
-                <Typography>{selectedCandidate.email}</Typography>
-              </Box>
+              <ResumeUnlockContact
+                recruiterId={recruiterId}
+                candidateId={selectedCandidate.id}
+                onUnlocked={(contact) =>
+                  setSelectedCandidate((current) =>
+                    current
+                      ? {
+                          ...current,
+                          email: contact.email || current.email,
+                          phone: contact.phone || current.phone,
+                        }
+                      : current
+                  )
+                }
+              />
 
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>

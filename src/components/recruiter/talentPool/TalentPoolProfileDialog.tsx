@@ -13,11 +13,13 @@ import {
 import { Message as MessageIcon } from '@mui/icons-material';
 import type { TalentPoolCandidate } from '@types';
 import { normalizeSkills } from '@utils/matchScore';
+import { ResumeUnlockContact } from '../ResumeUnlockContact';
 
 interface TalentPoolProfileDialogProps {
   open: boolean;
   onClose: () => void;
   entry: TalentPoolCandidate | null;
+  recruiterId?: string;
   matchScore?: number;
   onMessage?: (candidateId: string, candidateName: string) => void;
 }
@@ -26,6 +28,7 @@ export const TalentPoolProfileDialog: React.FC<TalentPoolProfileDialogProps> = (
   open,
   onClose,
   entry,
+  recruiterId,
   matchScore,
   onMessage,
 }) => {
@@ -63,13 +66,11 @@ export const TalentPoolProfileDialog: React.FC<TalentPoolProfileDialogProps> = (
               )}
             </Box>
 
-            {profile.email && (
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  Email
-                </Typography>
-                <Typography variant="body2">{profile.email}</Typography>
-              </Box>
+            {recruiterId && (
+              <ResumeUnlockContact
+                recruiterId={recruiterId}
+                candidateId={profile.id}
+              />
             )}
 
             <Box>

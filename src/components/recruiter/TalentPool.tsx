@@ -381,6 +381,7 @@ export const TalentPool: React.FC<TalentPoolProps> = ({ recruiterId, onChatClick
         open={!!viewTarget}
         onClose={() => setViewTarget(null)}
         entry={viewTarget}
+        recruiterId={recruiterId}
         matchScore={viewTarget ? getMatchScore(viewTarget) : undefined}
         onMessage={onChatClick}
       />
