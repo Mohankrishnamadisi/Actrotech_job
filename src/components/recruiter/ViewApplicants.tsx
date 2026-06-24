@@ -33,6 +33,7 @@ import {
   Message as MessageIcon,
   Search as SearchIcon,
   Visibility as ViewIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -595,10 +596,10 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
-                  <InputLabel>Filter By Priority</InputLabel>
-                  <Select value={priorityFilter} label="Filter By Priority" onChange={(event) => setPriorityFilter(event.target.value as 'all' | 'priority')}>
+                  <InputLabel>Filter By Featured</InputLabel>
+                  <Select value={priorityFilter} label="Filter By Featured" onChange={(event) => setPriorityFilter(event.target.value as 'all' | 'priority')}>
                     <MenuItem value="all">All Applicants</MenuItem>
-                    <MenuItem value="priority">Priority Applicants Only</MenuItem>
+                    <MenuItem value="priority">Top Applicants Only</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -715,7 +716,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography>
                               {isPriorityApplicant(applicant) && (
-                                <Chip label="⭐ Priority" size="small" color="warning" sx={{ fontWeight: 800 }} />
+                                <Chip icon={<StarIcon sx={{ color: '#F59E0B', fontSize: 16 }} />} size="small" color="warning" sx={{ fontWeight: 800, minWidth: 28, px: 0.4 }} />
                               )}
                             </Box>
                           </TableCell>

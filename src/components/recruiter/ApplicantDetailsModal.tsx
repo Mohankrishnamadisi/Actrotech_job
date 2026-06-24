@@ -425,10 +425,10 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                   </Typography>
                   <Box sx={{ space: 2 }}>
                     <Box sx={{ mb: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
-                        Priority Application
-                      </Typography>
-                      <Chip label={applicant.priority_application || applicant.priorityApplication ? 'YES' : 'NO'} size="small" color={applicant.priority_application || applicant.priorityApplication ? 'warning' : 'default'} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                          Featured Application
+                        </Typography>
+                        <Chip label={applicant.priority_application || applicant.priorityApplication ? 'YES' : 'NO'} size="small" color={applicant.priority_application || applicant.priorityApplication ? 'warning' : 'default'} />
                     </Box>
                     {applicant?.cover_letter && (
                       <Box sx={{ mb: 2 }}>
