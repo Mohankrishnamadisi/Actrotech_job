@@ -20,8 +20,6 @@ import {
   Avatar,
   IconButton,
   Paper,
-  Divider,
-  LinearProgress,
   Tooltip,
 } from '@mui/material';
 import {
@@ -35,8 +33,6 @@ import {
   Download as DownloadIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  LocationOn as LocationIcon,
-  School as SchoolIcon,
   Work as WorkIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
@@ -77,11 +73,13 @@ interface Candidate {
   education?: string | null;
   gender?: string | null;
   notice_period?: string | null;
-  work_experience?: Array<Record<string, unknown>>;
-  education_details?: Array<Record<string, unknown>>;
+  work_experience?: Array<Record<string, any>>;
+  education_details?: Array<Record<string, any>>;
   linkedin_url?: string | null;
   portfolio_url?: string | null;
-  [key: string]: unknown;
+  subscriptionPlan?: string;
+  isPremiumCandidate?: boolean;
+  [key: string]: any;
 }
 
 export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, onChatClick }) => {
@@ -89,7 +87,6 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const [loading, setLoading] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(false);
   const [savedCandidates, setSavedCandidates] = useState<Set<string>>(new Set());
   const [unlockedCandidates, setUnlockedCandidates] = useState<Record<string, boolean>>({});
 
@@ -121,9 +118,9 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
       }
 
       const result = await candidateService.searchCandidates(searchFilters);
-      const candidates = result.data || [];
+      const candidates = (result.data || []) as any as Candidate[];
       setSearchResults(candidates);
-      const unlockMap = await getResumeUnlockMap(recruiterId, candidates.map((candidate: Candidate) => candidate.id));
+      const unlockMap = await getResumeUnlockMap(recruiterId, candidates.map((candidate) => candidate.id));
       setUnlockedCandidates(unlockMap);
 
       if (candidates.length === 0) {
@@ -142,7 +139,6 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   };
 
   const handleViewCandidate = async (candidate: Candidate) => {
-    setProfileLoading(true);
     try {
       const profile = await candidateService.getCandidateProfile(candidate.id);
       setSelectedCandidate(profile as Candidate);
@@ -150,8 +146,6 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
     } catch (err) {
       console.error('Error loading candidate profile:', err);
       toast.error('Failed to load candidate profile');
-    } finally {
-      setProfileLoading(false);
     }
   };
 
@@ -305,6 +299,15 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                           <Typography sx={{ fontWeight: 600 }}>{candidate.name}</Typography>
+                          {candidate.isPremiumCandidate && (
+                            <Chip
+                              label={candidate.subscriptionPlan?.toUpperCase() || 'PREMIUM'}
+                              size="small"
+                              color="warning"
+                              variant="outlined"
+                              sx={{ fontWeight: 800 }}
+                            />
+                          )}
                           <Chip
                             icon={unlockedCandidates[candidate.id] ? <CheckCircleIcon /> : <LockIcon />}
                             label={unlockedCandidates[candidate.id] ? 'Unlocked' : 'Locked'}

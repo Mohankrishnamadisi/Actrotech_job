@@ -15,7 +15,7 @@ const getExperience = (applicant: BulkApplicant): string => {
 };
 
 export function buildApplicantsCsv(applicants: BulkApplicant[]): string {
-  const columns = ['Name', 'Email', 'Phone', 'Location', 'Experience', 'Skills', 'Status', 'Match Score'];
+  const columns = ['Name', 'Email', 'Phone', 'Location', 'Experience', 'Skills', 'Status', 'Match Score', 'Priority'];
   const rows = applicants.map((applicant) => {
     const profile = applicant.profiles;
     const skills = toStringArray(profile?.skills).join(', ');
@@ -29,6 +29,7 @@ export function buildApplicantsCsv(applicants: BulkApplicant[]): string {
       skills,
       getApplicantStage(applicant),
       matchScore,
+      (applicant.priority_application || applicant.priorityApplication) ? 'YES' : 'NO',
     ].map(csvEscape);
   });
 

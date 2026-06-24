@@ -104,6 +104,7 @@ export const RecruiterDashboard: React.FC = () => {
     total_applicants: 0,
     shortlisted: 0,
     rejected: 0,
+    priority_applicants: 0,
   });
   const [loading, setLoading] = useState(true);
   const [recruiterProfile, setRecruiterProfile] = useState<any>(null);
@@ -477,6 +478,7 @@ export const RecruiterDashboard: React.FC = () => {
                           { label: 'Average Applicants / Job', value: averageApplicants, accent: '#A78BFA' },
                           { label: 'Shortlist Rate', value: `${shortlistRate}%`, accent: '#FBBF24' },
                           { label: 'Rejection Rate', value: `${rejectionRate}%`, accent: '#EF4444' },
+                          { label: 'Priority Applicants', value: stats.priority_applicants || 0, accent: '#F59E0B' },
                           { label: 'Active Job Pulse', value: stats.active_jobs, accent: '#22C55E' },
                         ].map((item) => (
                           <Grid item xs={12} sm={6} md={3} key={item.label}>

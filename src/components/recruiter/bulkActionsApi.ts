@@ -128,12 +128,20 @@ export async function getJobApplicantsPaginated(
     .from('job_applications')
     .select('*, profiles(*)', { count: 'exact' })
     .eq('job_id', jobId)
+    // Priority applications first, then newest
+    .order('priority_application', { ascending: false })
     .order('applied_at', { ascending: false })
     .range(from, to);
 
   if (error) throw error;
   const total = count || 0;
-  return { data: (data || []) as BulkApplicant[], total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
+  const normalizedData = ((data || []) as BulkApplicant[]).map((applicant) => ({
+    ...applicant,
+    priority_application: Boolean(applicant.priority_application ?? applicant.priorityApplication),
+    priorityApplication: Boolean(applicant.priority_application ?? applicant.priorityApplication),
+  }));
+
+  return { data: normalizedData, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
 export async function bulkUpdateApplicationStatus(

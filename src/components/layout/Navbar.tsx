@@ -117,7 +117,6 @@ export const Navbar: React.FC = () => {
       elevation={0}
       sx={{
         background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(18px)',
         borderBottom: '1px solid rgba(226,232,240,0.9)',
       }}
     >
@@ -204,15 +203,13 @@ export const Navbar: React.FC = () => {
                   >
                     Dashboard
                   </MenuItem>
-                  {user.role === USER_ROLES.RECRUITER && (
-                    <MenuItem
-                      component={RouterLink}
-                      to={ROUTES.RECRUITER_SUBSCRIPTION}
-                      onClick={handleMobileMenuClose}
-                    >
-                      Subscription
-                    </MenuItem>
-                  )}
+                  <MenuItem
+                    component={RouterLink}
+                    to={user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_SUBSCRIPTION : ROUTES.PRICING}
+                    onClick={handleMobileMenuClose}
+                  >
+                    Subscription
+                  </MenuItem>
                   <MenuItem onClick={() => { handleMenuClose(); handleLogout(); }}>
                     Logout
                   </MenuItem>
@@ -319,29 +316,58 @@ export const Navbar: React.FC = () => {
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                {user?.role === USER_ROLES.RECRUITER && (
-                  <Button
-                    component={RouterLink}
-                    to={ROUTES.RECRUITER_SUBSCRIPTION}
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      textTransform: 'none',
-                      px: 1.5,
-                      py: 0.7,
-                      minWidth: 140,
-                      borderRadius: 2,
-                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 12px 24px rgba(245, 158, 11, 0.18)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+                <Button
+                  component={RouterLink}
+                  to={user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_SUBSCRIPTION : ROUTES.PRICING}
+                  variant="contained"
+                  size="small"
+                  startIcon={
+                    <Box
+                      component="img"
+                      src="/crown.png"
+                      alt="Crown icon"
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        display: 'block',
+                        animation: 'crownGlow 3s ease-in-out infinite',
+                      }}
+                    />
+                  }
+                  sx={{
+                    textTransform: 'none',
+                    px: 1.5,
+                    py: 0.7,
+                    minWidth: 140,
+                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 12px 24px rgba(245, 158, 11, 0.18)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+                    },
+                    '@keyframes crownGlow': {
+                      '0%, 100%': {
+                        transform: 'rotate(0deg)',
+                        boxShadow: '0 0 0 rgba(255, 215, 0, 0)',
                       },
-                    }}
-                  >
-                    ⭐ Subscription
-                  </Button>
-                )}
+                      '25%': {
+                        transform: 'rotate(6deg)',
+                        boxShadow: '0 0 10px rgba(245, 158, 11, 0.45)',
+                      },
+                      '50%': {
+                        transform: 'rotate(0deg)',
+                        boxShadow: '0 0 0 rgba(255, 215, 0, 0)',
+                      },
+                      '75%': {
+                        transform: 'rotate(-6deg)',
+                        boxShadow: '0 0 10px rgba(245, 158, 11, 0.45)',
+                      },
+                    },
+                  }}
+                >
+                  {subscription ? 'Subscribed' : 'Subscribe'}
+                </Button>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography
                     variant="body2"

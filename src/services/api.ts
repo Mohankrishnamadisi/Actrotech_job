@@ -240,7 +240,7 @@ export const recruiterService = {
 
     const { data: applications, error: appError } = await supabase
       .from('job_applications')
-      .select('id, status')
+      .select('id, status, priority_application')
       .in(
         'job_id',
         jobs?.map((j) => j.id) || []
@@ -253,6 +253,7 @@ export const recruiterService = {
       total_applicants: applications?.length || 0,
       shortlisted: applications?.filter((a) => a.status === 'shortlisted').length || 0,
       rejected: applications?.filter((a) => a.status === 'rejected').length || 0,
+      priority_applicants: applications?.filter((a) => a.priority_application).length || 0,
     };
     return stats;
   },
@@ -595,21 +596,37 @@ export const applicationService = {
     expectedCtc?: string,
     noticePeriod?: string
   ) {
+    // Determine if this application should be marked as priority
+    let isPriority = false;
+    try {
+      const sub = await subscriptionService.getUserSubscription(userId);
+      const plan = String(sub?.plan || '').toLowerCase();
+      const status = String(sub?.status || '').toLowerCase();
+      isPriority = status === 'active' && ['premium', 'pro', 'enterprise'].includes(plan);
+      console.log('Subscription for candidate', userId, { plan, status, sub });
+      console.log('Priority Application flag for candidate', userId, isPriority);
+    } catch (err) {
+      // ignore subscription lookup errors and treat as non-priority
+      console.error('Failed to lookup subscription for priority apply:', err);
+    }
+
+    const applicationPayload = {
+      job_id: jobId,
+      user_id: userId,
+      resume_url: resumeUrl,
+      cover_letter: coverLetter,
+      screening_answers: screeningAnswers,
+      current_ctc: currentCtc,
+      expected_ctc: expectedCtc,
+      notice_period: noticePeriod,
+      status: 'applied',
+      priority_application: isPriority,
+    };
+    console.log('Inserting job application payload', applicationPayload);
+
     const { data, error } = await supabase
       .from('job_applications')
-      .insert([
-        {
-          job_id: jobId,
-          user_id: userId,
-          resume_url: resumeUrl,
-          cover_letter: coverLetter,
-          screening_answers: screeningAnswers,
-          current_ctc: currentCtc,
-          expected_ctc: expectedCtc,
-          notice_period: noticePeriod,
-          status: 'applied',
-        },
-      ])
+      .insert([applicationPayload])
       .select();
     if (error) throw error;
 
@@ -656,6 +673,7 @@ export const applicationService = {
       .from('job_applications')
       .select('*, jobs(*)')
       .eq('user_id', userId)
+      .order('priority_application', { ascending: false })
       .order('applied_at', { ascending: false });
     if (error) throw error;
     return data;
@@ -666,6 +684,7 @@ export const applicationService = {
       .from('job_applications')
       .select('*, profiles(*)')
       .eq('job_id', jobId)
+      .order('priority_application', { ascending: false })
       .order('applied_at', { ascending: false });
     if (error) throw error;
     return data;
@@ -831,6 +850,26 @@ export const subscriptionService = {
       .maybeSingle();
     if (error) throw error;
     return data ?? null;
+  },
+
+  async getActiveSubscriptionsForUserIds(userIds: string[]) {
+    const uniqueIds = [...new Set(userIds.filter(Boolean))];
+    if (uniqueIds.length === 0) return {};
+
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('user_id, plan')
+      .eq('status', 'active')
+      .in('user_id', uniqueIds);
+    if (error) throw error;
+
+    return (data || []).reduce<Record<string, string>>((map, row) => {
+      const id = String(row.user_id || '');
+      if (id) {
+        map[id] = String(row.plan || 'free').toLowerCase();
+      }
+      return map;
+    }, {});
   },
 
   async updateSubscription(subscriptionId: string, updates: Record<string, unknown>) {
@@ -1034,9 +1073,31 @@ export const statsService = {
   },
 };
 
+const buildSubscriptionMap = async (userIds: string[]) => {
+  const uniqueIds = [...new Set(userIds.filter(Boolean))];
+  if (uniqueIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('user_id, plan')
+    .eq('status', 'active')
+    .in('user_id', uniqueIds);
+  if (error) throw error;
+
+  return (data || []).reduce<Record<string, string>>((map, row) => {
+    const id = String(row.user_id || '');
+    if (id) {
+      map[id] = String(row.plan || 'free').toLowerCase();
+    }
+    return map;
+  }, {});
+};
+
+const isPremiumPlan = (plan?: string) => ['premium', 'pro', 'enterprise'].includes(String(plan || 'free').toLowerCase());
+
 // Candidate search operations
 export const candidateService = {
-  async searchCandidates(filters: Record<string, unknown>, page = 1, limit = 20) {
+  async searchCandidates(filters: Record<string, unknown>, page = 1, limit = 20): Promise<{ data: Array<Record<string, any>>; total: number }> {
     let query = supabase
       .from('profiles')
       .select('*', { count: 'exact' })
@@ -1064,7 +1125,32 @@ export const candidateService = {
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) throw error;
-    return { data: data || [], total: count || 0 };
+
+    const candidates = (data || []) as Array<Record<string, unknown>>;
+    const userIds = candidates.map((candidate) => String(candidate.id)).filter(Boolean);
+    const subscriptionMap = await buildSubscriptionMap(userIds);
+
+    const getCreatedAt = (item: any) => new Date(String(item.created_at || item.createdAt || '')).getTime();
+
+    const enrichedCandidates = candidates
+      .map((candidate) => {
+        const plan = subscriptionMap[String(candidate.id)] || 'free';
+        const isPremiumCandidate = isPremiumPlan(plan);
+        return {
+          ...candidate,
+          subscription_plan: plan,
+          subscriptionPlan: plan,
+          isPremiumCandidate,
+        };
+      })
+      .sort((a, b) => {
+        const aPremium = Boolean((a as any).isPremiumCandidate);
+        const bPremium = Boolean((b as any).isPremiumCandidate);
+        if (aPremium !== bPremium) return aPremium ? -1 : 1;
+        return getCreatedAt(b) - getCreatedAt(a);
+      });
+
+    return { data: enrichedCandidates, total: count || 0 };
   },
 
   async getCandidateProfile(userId: string) {

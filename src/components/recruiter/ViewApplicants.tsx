@@ -111,6 +111,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [selectedApplicant, setSelectedApplicant] = useState<BulkApplicant | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState<'all' | 'priority'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('applied_desc');
   const [matchScoreFilter, setMatchScoreFilter] = useState<MatchScoreFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -159,16 +160,21 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     setLoading(true);
     try {
       const result = await getJobApplicantsPaginated(selectedJobId, page + 1, rowsPerPage);
-      setApplicants(result.data || []);
+      const normalizedApplicants = (result.data || []).map((applicant) => ({
+        ...applicant,
+        priority_application: Boolean(applicant.priority_application ?? applicant.priorityApplication),
+        priorityApplication: Boolean(applicant.priority_application ?? applicant.priorityApplication),
+      }));
+      setApplicants(normalizedApplicants);
       setTotalApplicants(result.total);
       const unlockMap = await getResumeUnlockMap(
         recruiterId,
-        (result.data || []).map((applicant) => applicant.user_id)
+        normalizedApplicants.map((applicant) => applicant.user_id)
       );
       setUnlockedApplicants(unlockMap);
 
       // Fetch tag assignments for all candidates
-      const candidateIds = (result.data || []).map((applicant) => applicant.user_id);
+      const candidateIds = normalizedApplicants.map((applicant) => applicant.user_id);
       if (candidateIds.length > 0) {
         try {
           const assignments = await candidateTagService.getAssignmentsForCandidates(candidateIds);
@@ -204,6 +210,8 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
       selectedJob
     );
 
+  const isPriorityApplicant = (applicant: BulkApplicant) => Boolean(applicant.priority_application ?? applicant.priorityApplication);
+
   const enrichedApplicants = useMemo(
     () => applicants.map((applicant) => ({ ...applicant, match_score: getApplicantMatchScore(applicant).score })),
     [applicants, selectedJob]
@@ -219,12 +227,19 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
         if (matchScoreFilter === 'below_70') return score < 70;
         return true;
       })
+      .filter((applicant) => {
+        if (priorityFilter === 'priority') return isPriorityApplicant(applicant);
+        return true;
+      })
       .sort((a, b) => {
+        const pa = isPriorityApplicant(a);
+        const pb = isPriorityApplicant(b);
+        if (pa !== pb) return pa ? -1 : 1;
         if (sortMode === 'match_desc') return (b.match_score || 0) - (a.match_score || 0);
         if (sortMode === 'match_asc') return (a.match_score || 0) - (b.match_score || 0);
         return new Date(b.applied_at || 0).getTime() - new Date(a.applied_at || 0).getTime();
       });
-  }, [enrichedApplicants, matchScoreFilter, sortMode, statusFilter]);
+  }, [enrichedApplicants, matchScoreFilter, sortMode, statusFilter, priorityFilter]);
 
   const selectedApplicants = useMemo(
     () => enrichedApplicants.filter((applicant) => selectedIds.has(applicant.id)),
@@ -579,6 +594,13 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                     <MenuItem value="below_70">Below 70 Red</MenuItem>
                   </Select>
                 </FormControl>
+                <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
+                  <InputLabel>Filter By Priority</InputLabel>
+                  <Select value={priorityFilter} label="Filter By Priority" onChange={(event) => setPriorityFilter(event.target.value as 'all' | 'priority')}>
+                    <MenuItem value="all">All Applicants</MenuItem>
+                    <MenuItem value="priority">Priority Applicants Only</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
             </CardContent>
           </Card>
@@ -689,7 +711,14 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                               <Checkbox checked={checked} onChange={() => toggleApplicant(applicant.id)} inputProps={{ 'aria-label': `Select ${profile?.name || 'candidate'}` }} sx={{ width: 32, height: 32 }} />
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ pl: 3 }}><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
+                          <TableCell sx={{ pl: 3 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography>
+                              {isPriorityApplicant(applicant) && (
+                                <Chip label="⭐ Priority" size="small" color="warning" sx={{ fontWeight: 800 }} />
+                              )}
+                            </Box>
+                          </TableCell>
                           <TableCell>
                             {isUnlocked ? (
                               <Typography variant="body2" sx={{ fontSize: 12 }} noWrap>

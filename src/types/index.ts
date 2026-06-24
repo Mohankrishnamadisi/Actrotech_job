@@ -200,6 +200,8 @@ export interface JobApplication {
   applied_at?: string;
   updatedAt?: string;
   updated_at?: string;
+  priorityApplication?: boolean;
+  priority_application?: boolean;
   profiles?: any;
   [key: string]: unknown;
 }

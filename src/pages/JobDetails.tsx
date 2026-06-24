@@ -364,7 +364,7 @@ export const JobDetails: React.FC = () => {
         answer: screeningAnswers[question] || '',
       }))?.filter((item) => item.answer.trim()) || [];
 
-      await applicationService.applyForJob(
+      const applicationResult = await applicationService.applyForJob(
         job.id,
         user.id,
         finalResumeUrl,
@@ -375,15 +375,27 @@ export const JobDetails: React.FC = () => {
         noticePeriod
       );
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Application submitted!',
-        text: 'Your application has been sent successfully.',
-        timer: 1800,
-        showConfirmButton: false,
-        background: '#FFFFFF',
-        color: '#172033',
-      });
+      if (applicationResult && (applicationResult.priority_application || applicationResult.priorityApplication)) {
+        await Swal.fire({
+          icon: 'success',
+          title: '⭐ Priority Application Submitted',
+          text: 'Your priority application has been submitted and will be shown to the recruiter first.',
+          timer: 2000,
+          showConfirmButton: false,
+          background: '#FFFFFF',
+          color: '#172033',
+        });
+      } else {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Application submitted!',
+          text: 'Your application has been sent successfully.',
+          timer: 1800,
+          showConfirmButton: false,
+          background: '#FFFFFF',
+          color: '#172033',
+        });
+      }
       setHasApplied(true);
       setApplyDialogOpen(false);
       navigate(ROUTES.JOBS);
@@ -556,6 +568,12 @@ export const JobDetails: React.FC = () => {
                 >
                   {hasApplied ? 'Already Applied' : 'Apply Now'}
                 </Button>
+
+                {subscription && ['premium', 'pro'].includes(String(subscription.plan || '').toLowerCase() as any) && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    <Chip label="⭐ Priority Apply Available" sx={{ background: 'linear-gradient(90deg,#f59e0b,#f97316)', color: '#fff', fontWeight: 800 }} />
+                  </Box>
+                )}
 
                 <Button
                   variant="outlined"
