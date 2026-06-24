@@ -38,7 +38,8 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { jobService } from '@services/api';
-import type { Job } from '@types';
+import { candidateTagService } from '@services/candidateTags';
+import type { Job, CandidateTag } from '@types';
 import { calculateMatchScore, getMatchScoreHex, type MatchScoreResult } from '@utils/matchScore';
 import { downloadApplicantsCsv } from '@utils/applicantCsv';
 import { ApplicantDetailsModal } from './ApplicantDetailsModal';
@@ -117,9 +118,12 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [messageOpen, setMessageOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<PendingConfirmation | null>(null);
   const [unlockedApplicants, setUnlockedApplicants] = useState<Record<string, boolean>>({});
+  const [recruiterTags, setRecruiterTags] = useState<CandidateTag[]>([]);
+  const [tagAssignmentsByCandidate, setTagAssignmentsByCandidate] = useState<Record<string, CandidateTag[]>>({});
 
   useEffect(() => {
     fetchJobs();
+    fetchTags();
   }, [recruiterId]);
 
   useEffect(() => {
@@ -130,6 +134,15 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     setSelectedIds(new Set());
     setPage(0);
   }, [selectedJobId]);
+
+  const fetchTags = async () => {
+    try {
+      const tags = await candidateTagService.getRecruiterTags(recruiterId);
+      setRecruiterTags(tags);
+    } catch (err) {
+      console.error('Error fetching tags:', err);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -153,6 +166,24 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
         (result.data || []).map((applicant) => applicant.user_id)
       );
       setUnlockedApplicants(unlockMap);
+
+      // Fetch tag assignments for all candidates
+      const candidateIds = (result.data || []).map((applicant) => applicant.user_id);
+      if (candidateIds.length > 0) {
+        try {
+          const assignments = await candidateTagService.getAssignmentsForCandidates(candidateIds);
+          const tagsByCandidate: Record<string, CandidateTag[]> = {};
+          candidateIds.forEach((id) => {
+            tagsByCandidate[id] = assignments
+              .filter((a) => a.candidate_id === id && a.candidate_tags)
+              .map((a) => a.candidate_tags!)
+              .filter((tag, idx, arr) => arr.findIndex((t) => t.id === tag.id) === idx); // deduplicate
+          });
+          setTagAssignmentsByCandidate(tagsByCandidate);
+        } catch (err) {
+          console.error('Error fetching tag assignments:', err);
+        }
+      }
     } catch (err) {
       console.error('Error fetching applicants:', err);
       toast.error('Failed to fetch applicants');
@@ -676,8 +707,14 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
-                              {getApplicantTags(applicant).slice(0, 3).map((tag) => <Chip key={tag} label={tag} size="small" variant="outlined" />)}
-                              {getApplicantTags(applicant).length === 0 && <Typography variant="caption" color="text.secondary">No tags</Typography>}
+                              {(() => {
+                                const existingTags = getApplicantTags(applicant).slice(0, 3);
+                                const assignedTags = (tagAssignmentsByCandidate[applicant.user_id] || []).map((t) => t.name).slice(0, 3);
+                                const allTags = Array.from(new Set([...existingTags, ...assignedTags]));
+                                return allTags.length > 0
+                                  ? allTags.map((tag) => <Chip key={tag} label={tag} size="small" variant="outlined" />)
+                                  : <Typography variant="caption" color="text.secondary">No tags</Typography>;
+                              })()}
                             </Box>
                           </TableCell>
                           <TableCell>
@@ -777,7 +814,9 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
           candidateId={selectedApplicant.user_id}
           jobId={selectedJobId}
           recruiterId={recruiterId}
+          availableTags={recruiterTags}
           onStatusChange={handleStatusChanged}
+          onTagsChange={fetchTags}
           onUnlocked={() => setUnlockedApplicants((current) => ({ ...current, [selectedApplicant.user_id]: true }))}
         />
       )}

@@ -20,6 +20,9 @@ import {
   Avatar,
   IconButton,
   Paper,
+  Divider,
+  LinearProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -29,6 +32,13 @@ import {
   Message as MessageIcon,
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
+  Download as DownloadIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  LocationOn as LocationIcon,
+  School as SchoolIcon,
+  Work as WorkIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { candidateService, savedService } from '@services/api';
@@ -52,6 +62,25 @@ interface Candidate {
   skills: string[];
   experience_years: number;
   avatar?: string;
+  avatar_url?: string | null;
+  profile_image_url?: string | null;
+  resume_url?: string | null;
+  experience?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  current_company?: string | null;
+  current_ctc?: string | null;
+  expected_ctc?: string | null;
+  date_of_birth?: string | null;
+  education?: string | null;
+  gender?: string | null;
+  notice_period?: string | null;
+  work_experience?: Array<Record<string, unknown>>;
+  education_details?: Array<Record<string, unknown>>;
+  linkedin_url?: string | null;
+  portfolio_url?: string | null;
   [key: string]: unknown;
 }
 
@@ -60,6 +89,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const [loading, setLoading] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [savedCandidates, setSavedCandidates] = useState<Set<string>>(new Set());
   const [unlockedCandidates, setUnlockedCandidates] = useState<Record<string, boolean>>({});
 
@@ -111,9 +141,18 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
     }
   };
 
-  const handleViewCandidate = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setViewDialogOpen(true);
+  const handleViewCandidate = async (candidate: Candidate) => {
+    setProfileLoading(true);
+    try {
+      const profile = await candidateService.getCandidateProfile(candidate.id);
+      setSelectedCandidate(profile as Candidate);
+      setViewDialogOpen(true);
+    } catch (err) {
+      console.error('Error loading candidate profile:', err);
+      toast.error('Failed to load candidate profile');
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   const handleSaveCandidate = async (candidateId: string) => {
@@ -323,84 +362,350 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
         </CardContent>
       </Card>
 
-      {/* View Candidate Dialog */}
-      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Candidate Profile</DialogTitle>
-        <DialogContent dividers sx={{ py: 2 }}>
+      {/* Enhanced Candidate Profile Dialog */}
+      <Dialog 
+        open={viewDialogOpen} 
+        onClose={() => setViewDialogOpen(false)} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ p: 0 }}>
           {selectedCandidate && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ textAlign: 'center' }}>
+            <Box
+              sx={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                p: 3,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderRadius: '12px 12px 0 0',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
                   src={selectedCandidate.avatar}
-                  sx={{ width: 80, height: 80, mx: 'auto', mb: 1 }}
+                  sx={{
+                    width: 70,
+                    height: 70,
+                    border: '4px solid white',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  }}
                 />
-                <Typography sx={{ fontWeight: 600, fontSize: 18 }}>{selectedCandidate.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {selectedCandidate.headline}
-                </Typography>
-              </Box>
-
-              <ResumeUnlockContact
-                recruiterId={recruiterId}
-                candidateId={selectedCandidate.id}
-                onUnlocked={(contact) =>
-                  {
-                    setUnlockedCandidates((current) => ({ ...current, [selectedCandidate.id]: true }));
-                    setSelectedCandidate((current) =>
-                      current
-                        ? {
-                            ...current,
-                            email: contact.email || current.email,
-                            phone: contact.phone || current.phone,
-                          }
-                        : current
-                    );
-                  }
-                }
-              />
-
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  Location
-                </Typography>
-                <Typography>{selectedCandidate.location || 'N/A'}</Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary', mb: 1 }}>
-                  Skills
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {selectedCandidate.skills?.map((skill) => (
-                    <Chip key={skill} label={skill} size="small" />
-                  ))}
+                <Box>
+                  <Typography sx={{ fontWeight: 700, fontSize: 20 }}>
+                    {selectedCandidate.name}
+                  </Typography>
+                  <Typography sx={{ opacity: 0.9, fontSize: 14 }}>
+                    {selectedCandidate.headline}
+                  </Typography>
                 </Box>
               </Box>
+              <IconButton
+                onClick={() => setViewDialogOpen(false)}
+                sx={{ color: 'white' }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          )}
+        </DialogTitle>
 
-              {selectedCandidate.experience_years && (
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                    Experience
+        <DialogContent sx={{ p: 3, bgcolor: '#fafafa' }}>
+          {selectedCandidate && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Key Info Section */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+                {selectedCandidate.experience_years && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <WorkIcon sx={{ fontSize: 20, color: '#667eea' }} />
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        EXPERIENCE
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ fontWeight: 600 }}>
+                      {selectedCandidate.experience_years} years
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Contact Section - Resume Unlock */}
+              <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LockIcon sx={{ fontSize: 20, color: '#667eea' }} />
+                  Contact Information
+                </Typography>
+                {unlockedCandidates[selectedCandidate.id] ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {selectedCandidate.email && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <EmailIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                        <Typography sx={{ wordBreak: 'break-all' }}>
+                          {selectedCandidate.email}
+                        </Typography>
+                      </Box>
+                    )}
+                    {selectedCandidate.phone && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <PhoneIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                        <Typography>{selectedCandidate.phone}</Typography>
+                      </Box>
+                    )}
+                    {selectedCandidate.resume_url && (
+                      <Button
+                        href={selectedCandidate.resume_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        startIcon={<DownloadIcon />}
+                        sx={{ mt: 1, textTransform: 'none' }}
+                      >
+                        View Resume
+                      </Button>
+                    )}
+                  </Box>
+                ) : (
+                  <ResumeUnlockContact
+                    recruiterId={recruiterId}
+                    candidateId={selectedCandidate.id}
+                    onUnlocked={(contact) => {
+                      setUnlockedCandidates((current) => ({ ...current, [selectedCandidate.id]: true }));
+                      setSelectedCandidate((current) =>
+                        current
+                          ? {
+                              ...current,
+                              email: contact.email || current.email,
+                              phone: contact.phone || current.phone,
+                            }
+                          : current
+                      );
+                    }}
+                  />
+                )}
+              </Box>
+
+              {/* Profile Details Section */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 2 }}>
+                {selectedCandidate.current_company && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      CURRENT COMPANY
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_company}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.current_ctc && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      CURRENT CTC
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_ctc}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.expected_ctc && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      EXPECTED CTC
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.expected_ctc}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.date_of_birth && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      DATE OF BIRTH
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{new Date(selectedCandidate.date_of_birth).toLocaleDateString()}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.gender && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      GENDER
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.gender}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.notice_period && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      NOTICE PERIOD
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.notice_period}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.education && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      EDUCATION
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.education}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.experience && !selectedCandidate.experience_years && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      EXPERIENCE
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.experience}</Typography>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Address Section */}
+              {(selectedCandidate.address || selectedCandidate.city || selectedCandidate.state || selectedCandidate.country) && (
+                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                    Location
                   </Typography>
-                  <Typography>{selectedCandidate.experience_years} years</Typography>
+                  <Typography sx={{ color: 'text.secondary', mb: 1 }}>
+                    {selectedCandidate.address || ''}
+                  </Typography>
+                  <Typography sx={{ color: 'text.secondary' }}>
+                    {[selectedCandidate.city, selectedCandidate.state, selectedCandidate.country]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Education Timeline */}
+              {Array.isArray(selectedCandidate.education_details) && selectedCandidate.education_details.length > 0 && (
+                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                    Education Details
+                  </Typography>
+                  <Box sx={{ display: 'grid', gap: 2 }}>
+                    {selectedCandidate.education_details.map((item, index) => (
+                      <Box key={index} sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                        <Typography sx={{ fontWeight: 700 }}>{item.degree || item.qualification || item.field || 'Education'}</Typography>
+                        <Typography sx={{ color: 'text.secondary', mb: 0.5 }}>
+                          {item.institution || item.school || item.college || ''}
+                        </Typography>
+                        <Typography sx={{ color: 'text.secondary' }}>
+                          {[item.year, item.grade].filter(Boolean).join(' • ')}
+                        </Typography>
+                        {item.description && (
+                          <Typography sx={{ color: 'text.secondary', mt: 1 }}>{item.description}</Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Work Experience Timeline */}
+              {Array.isArray(selectedCandidate.work_experience) && selectedCandidate.work_experience.length > 0 && (
+                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                    Work Experience
+                  </Typography>
+                  <Box sx={{ display: 'grid', gap: 2 }}>
+                    {selectedCandidate.work_experience.map((item, index) => (
+                      <Box key={index} sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                        <Typography sx={{ fontWeight: 700 }}>{item.title || item.role || item.position || 'Role'}</Typography>
+                        <Typography sx={{ color: 'text.secondary', mb: 0.5 }}>
+                          {item.company || item.organization || ''}
+                        </Typography>
+                        <Typography sx={{ color: 'text.secondary' }}>
+                          {[item.start_date, item.end_date].filter(Boolean).join(' - ')}
+                        </Typography>
+                        {item.description && (
+                          <Typography sx={{ color: 'text.secondary', mt: 1 }}>{item.description}</Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Skills Section */}
+              {selectedCandidate.skills && selectedCandidate.skills.length > 0 && (
+                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleIcon sx={{ fontSize: 20, color: '#667eea' }} />
+                    Skills & Expertise
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {selectedCandidate.skills.map((skill) => (
+                      <Chip
+                        key={skill}
+                        label={skill}
+                        sx={{
+                          bgcolor: '#f0f4ff',
+                          color: '#667eea',
+                          fontWeight: 600,
+                          border: '1px solid #e0e7ff',
+                          '&:hover': { bgcolor: '#e0e7ff' },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Additional Info */}
+              {selectedCandidate.bio && (
+                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                    About
+                  </Typography>
+                  <Typography sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                    {selectedCandidate.bio}
+                  </Typography>
                 </Box>
               )}
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+
+        <DialogActions sx={{ p: 2.5, bgcolor: '#f9fafb', gap: 1, borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={() => setViewDialogOpen(false)}>
+            Close
+          </Button>
           {selectedCandidate && (
-            <Button
-              variant="contained"
-              onClick={() => {
-                onChatClick?.(selectedCandidate.id, selectedCandidate.name);
-                setViewDialogOpen(false);
-              }}
-              startIcon={<MessageIcon />}
-            >
-              Send Message
-            </Button>
+            <>
+              <Tooltip title="Save this candidate">
+                <IconButton
+                  onClick={() => handleSaveCandidate(selectedCandidate.id)}
+                  color={savedCandidates.has(selectedCandidate.id) ? 'primary' : 'default'}
+                >
+                  {savedCandidates.has(selectedCandidate.id) ? (
+                    <BookmarkIcon />
+                  ) : (
+                    <BookmarkBorderIcon />
+                  )}
+                </IconButton>
+              </Tooltip>
+              {unlockedCandidates[selectedCandidate.id] && (
+                <AddToPoolButton
+                  candidateId={selectedCandidate.id}
+                  recruiterId={recruiterId}
+                />
+              )}
+              <Button
+                variant="contained"
+                onClick={() => {
+                  onChatClick?.(selectedCandidate.id, selectedCandidate.name);
+                  setViewDialogOpen(false);
+                }}
+                startIcon={<MessageIcon />}
+                sx={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Send Message
+              </Button>
+            </>
           )}
         </DialogActions>
       </Dialog>
