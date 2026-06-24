@@ -595,11 +595,14 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                       lineHeight: 1.25,
                     },
                     '& .MuiTableCell-paddingCheckbox': {
-                      width: 44,
-                      minWidth: 44,
-                      pl: 0.5,
-                      pr: 0.25,
+                      width: 70,
+                      minWidth: 70,
+                      pl: 1,
+                      pr: 1,
                       textAlign: 'center',
+                    },
+                    '& .MuiTableCell-paddingCheckbox + .MuiTableCell-root': {
+                      pl: 4,
                     },
                     '& .MuiCheckbox-root': {
                       p: 0.5,
@@ -628,7 +631,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           inputProps={{ 'aria-label': 'Select all candidates' }}
                         />
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 118, pl: 1.25 }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 150 }}>Name</TableCell>
                       <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 168 }}>Email</TableCell>
                       <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 118 }}>Tags</TableCell>
                       <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 130 }}>Talent Pool</TableCell>
@@ -650,7 +653,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           <TableCell padding="checkbox">
                             <Checkbox checked={checked} onChange={() => toggleApplicant(applicant.id)} inputProps={{ 'aria-label': `Select ${profile?.name || 'candidate'}` }} />
                           </TableCell>
-                          <TableCell sx={{ pl: 1.25 }}><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
+                          <TableCell><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
                           <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{profile?.email || 'N/A'}</Typography></TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
