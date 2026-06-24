@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { IconButton } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import {
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  useMediaQuery,
+  useTheme,
+  Box,
+  Typography,
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@store/index';
 import { USER_ROLES } from '@constants/index';
@@ -15,75 +24,64 @@ const MessagingPageContent: React.FC<{
 }> = ({ userId, userRole }) => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <div style={{ display: 'flex', height: '100vh', gap: 0, background: 'var(--color-page)' }}>
-      {/* Sidebar - Inbox */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        style={{
-          width: selectedConversation ? '0' : '360px',
-          overflowY: 'auto',
-          borderRight: '1px solid rgba(15,23,42,0.06)',
-          background: '#fff',
-          transition: 'width 0.3s ease',
-        }}
-      >
-        {!selectedConversation && (
-          <div>
-            <div style={{ padding: 8, borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <IconButton size="small" onClick={() => navigate(-1)} aria-label="back" sx={{ marginLeft: 0 }}>
-                <ArrowBackIcon />
-              </IconButton>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Messages</h2>
-            </div>
-            <div style={{ padding: 12 }}>
-              <MessageInbox userId={userId} userRole={userRole} onSelectConversation={setSelectedConversation} />
-            </div>
-          </div>
-        )}
-      </motion.div>
+    <Dialog
+      open
+      onClose={() => navigate(-1)}
+      fullWidth
+      maxWidth="md"
+      fullScreen={isSmall}
+      PaperProps={{
+        sx: {
+          borderRadius: isSmall ? 0 : 2,
+          overflow: 'hidden',
+        },
+      }}
+    >
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>Messages</Typography>
+        </Box>
+        <IconButton aria-label="close" onClick={() => navigate(-1)} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ p: { xs: 1, sm: 2 }, background: 'var(--color-page)' }}>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ display: 'flex', gap: 2, height: isSmall ? '100%' : 560 }}>
+            <Box sx={{ width: selectedConversation ? (isSmall ? '100%' : 320) : 320, flexShrink: 0, bgcolor: '#fff', borderRadius: 1, overflow: 'auto', border: '1px solid rgba(15,23,42,0.06)' }}>
+              <Box sx={{ p: 1, borderBottom: '1px solid rgba(15,23,42,0.06)', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>Inbox</Typography>
+              </Box>
+              <Box sx={{ p: 1 }}>
+                <MessageInbox userId={userId} userRole={userRole} onSelectConversation={setSelectedConversation} />
+              </Box>
+            </Box>
 
-      {/* Main - Conversation Detail */}
-      {selectedConversation && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            background: '#fff',
-          }}
-        >
-          <MessageDetail
-            conversation={selectedConversation}
-            userId={userId}
-            userRole={userRole}
-            onBack={() => setSelectedConversation(null)}
-          />
+            <Box sx={{ flex: 1, display: selectedConversation ? 'block' : 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {selectedConversation ? (
+                <Box sx={{ width: '100%', bgcolor: '#fff', border: '1px solid rgba(15,23,42,0.06)', borderRadius: 1, overflow: 'hidden' }}>
+                  <MessageDetail
+                    conversation={selectedConversation}
+                    userId={userId}
+                    userRole={userRole}
+                    onBack={() => setSelectedConversation(null)}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center', color: 'text.secondary', width: '100%' }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>💬</div>
+                  <Typography>Select a conversation to start chatting</Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
         </motion.div>
-      )}
-
-      {/* Empty state */}
-      {!selectedConversation && (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
-            <div>Select a conversation to start chatting</div>
-          </div>
-        </div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
