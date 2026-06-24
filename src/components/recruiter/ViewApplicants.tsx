@@ -594,16 +594,6 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                       fontSize: 12,
                       lineHeight: 1.25,
                     },
-                    '& .MuiTableCell-paddingCheckbox': {
-                      width: 70,
-                      minWidth: 70,
-                      pl: 1,
-                      pr: 1,
-                      textAlign: 'center',
-                    },
-                    '& .MuiTableCell-paddingCheckbox + .MuiTableCell-root': {
-                      pl: 4,
-                    },
                     '& .MuiCheckbox-root': {
                       p: 0.5,
                     },
@@ -623,15 +613,18 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                 >
                   <TableHead>
                     <TableRow>
-                      <TableCell padding="checkbox" sx={{ bgcolor: '#f8fafc' }}>
-                        <Checkbox
-                          indeterminate={!allVisibleSelected && someVisibleSelected}
-                          checked={allVisibleSelected}
-                          onChange={toggleVisibleApplicants}
-                          inputProps={{ 'aria-label': 'Select all candidates' }}
-                        />
+                      <TableCell padding="none" sx={{ bgcolor: '#f8fafc', width: 70, minWidth: 70, maxWidth: 70 }}>
+                        <Box sx={{ width: 70, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Checkbox
+                            indeterminate={!allVisibleSelected && someVisibleSelected}
+                            checked={allVisibleSelected}
+                            onChange={toggleVisibleApplicants}
+                            inputProps={{ 'aria-label': 'Select all candidates' }}
+                            sx={{ width: 32, height: 32 }}
+                          />
+                        </Box>
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 150 }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 150, pl: 3 }}>Name</TableCell>
                       <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 168 }}>Email</TableCell>
                       <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 118 }}>Tags</TableCell>
                       <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 130 }}>Talent Pool</TableCell>
@@ -650,10 +643,12 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                       const checked = selectedIds.has(applicant.id);
                       return (
                         <TableRow key={applicant.id} hover selected={checked}>
-                          <TableCell padding="checkbox">
-                            <Checkbox checked={checked} onChange={() => toggleApplicant(applicant.id)} inputProps={{ 'aria-label': `Select ${profile?.name || 'candidate'}` }} />
+                          <TableCell padding="none" sx={{ width: 70, minWidth: 70, maxWidth: 70 }}>
+                            <Box sx={{ width: 70, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Checkbox checked={checked} onChange={() => toggleApplicant(applicant.id)} inputProps={{ 'aria-label': `Select ${profile?.name || 'candidate'}` }} sx={{ width: 32, height: 32 }} />
+                            </Box>
                           </TableCell>
-                          <TableCell><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
+                          <TableCell sx={{ pl: 3 }}><Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography></TableCell>
                           <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{profile?.email || 'N/A'}</Typography></TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'wrap', minWidth: 0 }}>
@@ -759,4 +754,3 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     </motion.div>
   );
 };
-
