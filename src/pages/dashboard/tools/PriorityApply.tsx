@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { userService, jobService } from '@services/api';
+import { calculateMatchScore } from '@utils/matchScore';
 import { ROUTES } from '@constants/index';
 
 const getJobList = (response: any): any[] => {
@@ -51,9 +52,12 @@ export const PriorityApply: React.FC = () => {
           const priorityJobs = getJobList(recommendedJobs)
             .map((job: any) => ({
               ...job,
-              matchScore: calculateMatchScore(job.skills || [], skills),
+              matchScore: calculateMatchScore(
+                { ...job, skills: job.skills || [], min_experience_months: job.min_experience_months ?? job.min_experience_months },
+                { skills, total_experience_months: profile?.total_experience_months, preferred_job_titles: profile?.preferred_job_titles }
+              ).score,
             }))
-            .filter((job: any) => job.matchScore >= 70)
+            .filter((job: any) => job.matchScore >= 80)
             .sort((a: any, b: any) => b.matchScore - a.matchScore)
             .slice(0, 20);
 
@@ -69,15 +73,6 @@ export const PriorityApply: React.FC = () => {
     fetchData();
   }, [user?.id]);
 
-  const calculateMatchScore = (jobSkills: string[], userSkills: string[]) => {
-    if (!jobSkills || jobSkills.length === 0) return 0;
-    const matches = jobSkills.filter((skill) =>
-      userSkills.some((userSkill) =>
-        String(userSkill).toLowerCase() === String(skill).toLowerCase()
-      )
-    ).length;
-    return Math.round((matches / jobSkills.length) * 100);
-  };
 
   if (loading) {
     return (

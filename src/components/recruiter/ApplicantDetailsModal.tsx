@@ -282,40 +282,42 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                     </Box>
 
                     <Grid container spacing={2}>
-                      {Object.values(matchScore.breakdown).map((item) => (
-                        <Grid item xs={12} sm={6} md={4} key={item.label}>
-                          <Box
-                            sx={{
-                              p: 1.5,
-                              borderRadius: 1,
-                              border: '1px solid rgba(148, 163, 184, 0.24)',
-                              bgcolor: 'rgba(248,250,252,0.7)',
-                            }}
-                          >
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
-                              <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                                {item.label}
-                              </Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 800 }}>
-                                {item.points}/{item.weight}
-                              </Typography>
-                            </Box>
-                            <LinearProgress
-                              variant="determinate"
-                              value={item.percent}
+                      {Object.values(matchScore.breakdown)
+                        .filter((item) => item.weight > 0)
+                        .map((item) => (
+                          <Grid item xs={12} sm={6} md={4} key={item.label}>
+                            <Box
                               sx={{
-                                height: 6,
-                                borderRadius: 3,
-                                bgcolor: 'rgba(148,163,184,0.18)',
-                                '& .MuiLinearProgress-bar': {
-                                  bgcolor: getMatchScoreHex(item.percent),
-                                  borderRadius: 3,
-                                },
+                                p: 1.5,
+                                borderRadius: 1,
+                                border: '1px solid rgba(148, 163, 184, 0.24)',
+                                bgcolor: 'rgba(248,250,252,0.7)',
                               }}
-                            />
-                          </Box>
-                        </Grid>
-                      ))}
+                            >
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                                <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                                  {item.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                                  {item.points}/{item.weight}
+                                </Typography>
+                              </Box>
+                              <LinearProgress
+                                variant="determinate"
+                                value={item.percent}
+                                sx={{
+                                  height: 6,
+                                  borderRadius: 3,
+                                  bgcolor: 'rgba(148,163,184,0.18)',
+                                  '& .MuiLinearProgress-bar': {
+                                    bgcolor: getMatchScoreHex(item.percent),
+                                    borderRadius: 3,
+                                  },
+                                }}
+                              />
+                            </Box>
+                          </Grid>
+                        ))}
                     </Grid>
 
                     <Grid container spacing={2} sx={{ mt: 0.5 }}>

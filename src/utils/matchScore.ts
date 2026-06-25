@@ -31,12 +31,12 @@ type CandidateLike = Record<string, any> | null | undefined;
 type JobLike = Partial<Job> | Record<string, any> | null | undefined;
 
 const WEIGHTS = {
-  skills: 40,
-  experience: 20,
-  location: 10,
-  salary: 10,
-  education: 10,
-  title: 10,
+  skills: 50,
+  experience: 25,
+  location: 0,
+  salary: 0,
+  education: 0,
+  title: 25,
 } as const;
 
 const emptyBreakdown = (label: string, weight: number): MatchScoreBreakdownItem => ({
@@ -46,16 +46,47 @@ const emptyBreakdown = (label: string, weight: number): MatchScoreBreakdownItem 
   points: 0,
 });
 
+const SKILL_SYNONYMS: Record<string, string> = {
+  js: 'javascript',
+  javascript: 'javascript',
+  ts: 'typescript',
+  typescript: 'typescript',
+  reactjs: 'react',
+  'react.js': 'react',
+  nodejs: 'node',
+  'node.js': 'node',
+  'c#': 'csharp',
+  'c++': 'cplusplus',
+  html5: 'html',
+  css3: 'css',
+  'vue.js': 'vue',
+  'next.js': 'next',
+  'nuxt.js': 'nuxt',
+};
+
 export function normalizeSkills(skills: unknown): string[] {
   if (!skills) return [];
   if (Array.isArray(skills)) return skills.map((s) => String(s).trim()).filter(Boolean);
   if (typeof skills === 'string') {
     return skills
       .split(/[,|;\/\n]/)
-      .map((s) => s.trim())
+      .map((s) => String(s).trim())
       .filter(Boolean);
   }
   return [];
+}
+
+function normalizeSkill(value: unknown): string {
+  const text = normalizeText(value)
+    .replace(/[\s._\-\/]+/g, ' ')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .trim();
+
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => SKILL_SYNONYMS[token] ?? token)
+    .join(' ');
 }
 
 export function calculateSkillMatchScore(jobSkills: unknown, candidateSkills: unknown): number {
@@ -65,9 +96,11 @@ export function calculateSkillMatchScore(jobSkills: unknown, candidateSkills: un
   if (!requiredSkills.length) return 100;
   if (!profileSkills.length) return 0;
 
-  const normalizedCandidate = profileSkills.map(normalizeToken);
-  const matches = requiredSkills.filter((skill) =>
-    normalizedCandidate.some((candidateSkill) => skillsMatch(candidateSkill, normalizeToken(skill)))
+  const normalizedCandidate = profileSkills.map(normalizeSkill);
+  const normalizedRequired = requiredSkills.map(normalizeSkill);
+
+  const matches = normalizedRequired.filter((skill) =>
+    normalizedCandidate.some((candidateSkill) => skillsMatch(candidateSkill, skill))
   ).length;
 
   return Math.round((matches / requiredSkills.length) * 100);
@@ -149,32 +182,37 @@ function makeBreakdown(label: string, weight: number, percent: number): MatchSco
 function getMatchedSkills(jobSkills: unknown, candidateSkills: unknown): string[] {
   const requiredSkills = normalizeSkills(jobSkills);
   const profileSkills = normalizeSkills(candidateSkills);
-  const normalizedCandidate = profileSkills.map(normalizeToken);
+  const normalizedCandidate = profileSkills.map(normalizeSkill);
 
   return requiredSkills.filter((skill) =>
-    normalizedCandidate.some((candidateSkill) => skillsMatch(candidateSkill, normalizeToken(skill)))
+    normalizedCandidate.some((candidateSkill) => skillsMatch(candidateSkill, normalizeSkill(skill)))
   );
 }
 
 function getMissingSkills(jobSkills: unknown, candidateSkills: unknown): string[] {
   const requiredSkills = normalizeSkills(jobSkills);
   const profileSkills = normalizeSkills(candidateSkills);
-  const normalizedCandidate = profileSkills.map(normalizeToken);
+  const normalizedCandidate = profileSkills.map(normalizeSkill);
 
   return requiredSkills.filter(
-    (skill) => !normalizedCandidate.some((candidateSkill) => skillsMatch(candidateSkill, normalizeToken(skill)))
+    (skill) => !normalizedCandidate.some((candidateSkill) => skillsMatch(candidateSkill, normalizeSkill(skill)))
   );
 }
 
 function scoreExperience(candidate: CandidateLike, job: JobLike): number {
-  const required = parseExperienceRequirement(job?.experience ?? job?.experience_years ?? job?.min_experience);
+  const required = parseExperienceRequirement(
+    job?.min_experience_months ?? job?.experience ?? job?.experience_years ?? job?.min_experience
+  );
   const candidateMonths = parseCandidateExperienceMonths(candidate);
 
   if (required.min == null) return 100;
   if (candidateMonths == null) return 0;
-  if (candidateMonths >= required.min && (required.max == null || candidateMonths <= required.max + 24)) return 100;
-  if (candidateMonths >= required.min * 0.75) return 75;
-  if (candidateMonths >= required.min * 0.5) return 50;
+  if (candidateMonths >= required.min) return 100;
+
+  const ratio = candidateMonths / required.min;
+  if (ratio >= 0.9) return 90;
+  if (ratio >= 0.75) return 75;
+  if (ratio >= 0.5) return 50;
   return 20;
 }
 
@@ -286,32 +324,9 @@ function buildStrengths(input: {
   return strengths.slice(0, 5);
 }
 
-function parseExperienceRequirement(value: unknown): { min: number | null; max: number | null } {
-  if (value == null || value === '') return { min: null, max: null };
-  if (typeof value === 'number') return { min: value, max: null };
-
-  const text = String(value).toLowerCase();
-  if (text.includes('fresher') || text.includes('entry') || text.includes('0 year')) {
-    return { min: 0, max: 1 };
-  }
-
-  const numbers = [...text.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0]));
-  if (numbers.length >= 2) return { min: Math.min(numbers[0], numbers[1]), max: Math.max(numbers[0], numbers[1]) };
-  if (numbers.length === 1) return { min: numbers[0], max: null };
-  return { min: null, max: null };
-}
-
-function parseYears(value: unknown): number | null {
-  if (value == null || value === '') return null;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-  const text = String(value).toLowerCase();
-  if (text.includes('fresher')) return 0;
-  const match = text.match(/\d+(?:\.\d+)?/);
-  return match ? Number(match[0]) : null;
-}
-
 function calculateTitleMatchScore(candidate: CandidateLike, job: JobLike): number {
-  const jobTitle = normalizeTitle(job?.title);
+  const rawJobTitle = normalizeTitle(job?.title);
+  const jobTitle = stripSeniority(rawJobTitle);
   const candidateTitles = normalizeTitleArray(
     candidate?.preferred_job_titles ||
       candidate?.preferredJobTitles ||
@@ -320,21 +335,57 @@ function calculateTitleMatchScore(candidate: CandidateLike, job: JobLike): numbe
       []
   );
 
-  if (!jobTitle || candidateTitles.length === 0) return 0;
+  if (!rawJobTitle || candidateTitles.length === 0) return 0;
 
-  if (candidateTitles.some((title) => title === jobTitle)) return 100;
-  if (candidateTitles.some((title) => jobTitle.includes(title) || title.includes(jobTitle))) return 90;
-  if (candidateTitles.some((title) => titleGroupMatch(title, jobTitle))) return 85;
+  const strippedCandidateTitles = candidateTitles.map(stripSeniority);
 
-  const overlap = candidateTitles.reduce((best, title) => {
-    const shared = tokenOverlap(title, jobTitle);
+  if (
+    strippedCandidateTitles.some(
+      (title) => title === rawJobTitle || title === jobTitle || title === stripSeniority(jobTitle)
+    )
+  ) {
+    return 100;
+  }
+
+  if (
+    strippedCandidateTitles.some(
+      (title) =>
+        rawJobTitle.includes(title) ||
+        title.includes(rawJobTitle) ||
+        jobTitle.includes(title) ||
+        title.includes(jobTitle)
+    )
+  ) {
+    return 95;
+  }
+
+  if (
+    strippedCandidateTitles.some(
+      (title) =>
+        titleGroupMatch(title, rawJobTitle) ||
+        titleGroupMatch(title, jobTitle) ||
+        titleGroupMatch(stripSeniority(title), stripSeniority(rawJobTitle))
+    )
+  ) {
+    return 90;
+  }
+
+  const overlap = strippedCandidateTitles.reduce((best, title) => {
+    const shared = tokenOverlap(title, rawJobTitle);
     return Math.max(best, shared);
   }, 0);
 
-  if (overlap >= 3) return 80;
-  if (overlap >= 2) return 60;
-  if (overlap >= 1) return 35;
+  if (overlap >= 3) return 85;
+  if (overlap >= 2) return 70;
+  if (overlap >= 1) return 45;
   return 0;
+}
+
+function stripSeniority(value: string): string {
+  return value
+    .replace(/\b(senior|sr|junior|jr|lead|principal|staff|associate|intern|manager|director|entry level|mid level)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function normalizeTitle(value: unknown): string {
