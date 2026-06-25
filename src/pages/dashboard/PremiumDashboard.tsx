@@ -205,7 +205,6 @@ export const PremiumDashboard: React.FC = () => {
           <Grid container spacing={2}>
             {([
               { label: 'Browse Jobs', to: ROUTES.JOBS, color: 'primary', icon: WorkIcon },
-              { label: 'Remote Jobs', to: `${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`, color: 'success', icon: PublicIcon },
               { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, color: 'secondary', icon: AccountIcon },
               { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', color: 'warning', icon: TrendingUpIcon },
             ] as const).map((action, idx) => (
@@ -227,6 +226,78 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
         </Box>
 
+        {/* Remote Job Hub */}
+        <Box sx={{ mb: 4, p: 3, borderRadius: 3, background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(14, 165, 233, 0.12))', border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(56, 189, 248, 0.24)' : 'rgba(16, 185, 129, 0.24)'}` }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Remote Job Hub</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 660 }}>
+                Premium remote job options in one place. Explore new remote roles, review your remote applications, and open the latest priority matches with a polished gradient experience.
+              </Typography>
+            </Box>
+            <Chip label="Remote Focus" color="success" sx={{ fontWeight: 700, px: 2, py: 1 }} />
+          </Box>
+
+          <Grid container spacing={2}>
+            {([
+              {
+                title: 'Explore Remote Jobs',
+                description: 'Browse remote roles tailored to your skills.',
+                action: () => navigate('/dashboard/remote-jobs'),
+                gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              },
+              {
+                title: 'Remote Applications',
+                description: 'See status of remote jobs you already applied to.',
+                action: () => navigate(`${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`),
+                gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+              },
+              {
+                title: 'Priority Remote Matches',
+                description: 'Open the newest high-match remote roles.',
+                action: () => navigate('/dashboard/remote-jobs'),
+                gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+              },
+            ] as const).map((item, idx) => (
+              <Grid item xs={12} sm={6} md={4} key={item.title}>
+                <MotionCard
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  sx={{
+                    borderRadius: 3,
+                    minHeight: 180,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    background: theme.palette.mode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.96)',
+                    border: `1px solid ${theme.palette.divider}`,
+                    boxShadow: theme.palette.mode === 'dark' ? '0 24px 60px rgba(0,0,0,0.18)' : '0 12px 30px rgba(16, 185, 129, 0.12)',
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>{item.title}</Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>{item.description}</Typography>
+                  </CardContent>
+                  <Box sx={{ px: 3, pb: 3 }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={item.action}
+                      sx={{
+                        background: item.gradient,
+                        fontWeight: 700,
+                        textTransform: 'none',
+                      }}
+                    >
+                      Open
+                    </Button>
+                  </Box>
+                </MotionCard>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
 
         {/* Exclusive Tools (config-driven) */}
         <Box sx={{ mb: 4 }}>
@@ -290,17 +361,6 @@ export const PremiumDashboard: React.FC = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Priority Matches (Remote)</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>Remote jobs matching your skills with high relevance.</Typography>
-                <Button variant="contained" color="success" fullWidth onClick={() => navigate('/dashboard/remote-jobs')} sx={{ fontWeight: 700 }}>
-                  Explore Remote
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
         </Grid>
       </Container>
     </Layout>
