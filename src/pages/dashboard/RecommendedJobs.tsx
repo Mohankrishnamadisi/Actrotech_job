@@ -3,8 +3,6 @@ import {
   Box,
   Container,
   Grid,
-  Card,
-  CardContent,
   Typography,
   Button,
   Chip,
@@ -18,6 +16,12 @@ import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { userService, jobService } from '@services/api';
 import { ROUTES } from '@constants/index';
+
+const getJobList = (response: any): any[] => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
 
 export const RecommendedJobs: React.FC = () => {
   const { user } = useAuthStore();
@@ -37,7 +41,7 @@ export const RecommendedJobs: React.FC = () => {
 
         if (skills.length > 0) {
           const recommendedJobs = await jobService.getJobsBySkills(skills, 1, 50);
-          setJobs(recommendedJobs || []);
+          setJobs(getJobList(recommendedJobs));
         }
       } catch (error) {
         console.error('Error fetching recommended jobs:', error);

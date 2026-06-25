@@ -28,7 +28,6 @@ import {
   Star as StarIcon,
   Videocam as VideocamIcon,
   Description as DescriptionIcon,
-  Rocket as RocketIcon,
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
   Public as PublicIcon,
@@ -42,6 +41,12 @@ import { userService, applicationService, savedService, notificationService, job
 import { messagingService } from '@services/messaging';
 import { ROUTES } from '@constants/index';
 import { useTheme } from '@mui/material/styles';
+
+const getJobList = (response: any): any[] => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
 
 export const PremiumDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -102,7 +107,7 @@ export const PremiumDashboard: React.FC = () => {
             const skillList = (profile?.skills && Array.isArray(profile.skills) && profile.skills.length) ? profile.skills : (profile?.skills || []);
             if (skillList && skillList.length > 0) {
               const res = await jobService.getJobsBySkills(skillList, 1, 6);
-              setRecommendedJobs(res.data || []);
+              setRecommendedJobs(getJobList(res));
             }
           } catch (err) {
             console.error('Failed to load recommended jobs for premium dashboard:', err);

@@ -3,8 +3,6 @@ import {
   Box,
   Container,
   Grid,
-  Card,
-  CardContent,
   Typography,
   Button,
   Chip,
@@ -19,6 +17,12 @@ import { useAuthStore } from '@store/index';
 import { userService, jobService } from '@services/api';
 import { ROUTES } from '@constants/index';
 
+const getJobList = (response: any): any[] => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
 export const RemoteJobs: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -32,12 +36,12 @@ export const RemoteJobs: React.FC = () => {
       try {
         setLoading(true);
         const profile = await userService.getProfile(user.id);
-        const skills = profile?.skills || [];
+        const skills: string[] = profile?.skills || [];
         setUserSkills(skills);
 
         // Get all remote jobs and filter by user skills
         const allJobs = await jobService.getJobs({ work_mode: 'Remote' }, 1, 50);
-        const remoteJobsWithSkills = (allJobs || []).filter((job: any) =>
+        const remoteJobsWithSkills = getJobList(allJobs).filter((job: any) =>
           (job.skills || []).some((jobSkill: string) =>
             skills.some((userSkill) =>
               String(userSkill).toLowerCase() === String(jobSkill).toLowerCase()
@@ -50,7 +54,7 @@ export const RemoteJobs: React.FC = () => {
         // Fallback: try getJobsBySkills
         if (userSkills.length > 0) {
           const recommendedJobs = await jobService.getJobsBySkills(userSkills, 1, 50);
-          const remote = (recommendedJobs || []).filter(
+          const remote = getJobList(recommendedJobs).filter(
             (job: any) => job.work_mode === 'Remote' || job.workMode === 'Remote'
           );
           setJobs(remote);

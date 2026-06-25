@@ -3,8 +3,6 @@ import {
   Box,
   Container,
   Grid,
-  Card,
-  CardContent,
   Typography,
   Button,
   Chip,
@@ -25,6 +23,12 @@ import { useAuthStore } from '@store/index';
 import { userService, jobService } from '@services/api';
 import { ROUTES } from '@constants/index';
 
+const getJobList = (response: any): any[] => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
 export const PriorityApply: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -44,7 +48,7 @@ export const PriorityApply: React.FC = () => {
         if (skills.length > 0) {
           const recommendedJobs = await jobService.getJobsBySkills(skills, 1, 50);
           // Priority apply focuses on high-match jobs with urgent hiring
-          const priorityJobs = (recommendedJobs || [])
+          const priorityJobs = getJobList(recommendedJobs)
             .map((job: any) => ({
               ...job,
               matchScore: calculateMatchScore(job.skills || [], skills),
@@ -260,7 +264,7 @@ export const PriorityApply: React.FC = () => {
         </Grid>
 
         {jobs.length > 0 && (
-          <Alert severity="tip" sx={{ mt: 4 }}>
+          <Alert severity="info" sx={{ mt: 4 }}>
             💡 Tip: Applications through Priority Apply are fast-tracked to recruiters. Increase your chances by
             completing your profile!
           </Alert>
