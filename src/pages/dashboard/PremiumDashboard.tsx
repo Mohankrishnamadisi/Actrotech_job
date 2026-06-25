@@ -27,6 +27,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Star as StarIcon,
   Videocam as VideocamIcon,
+  Visibility as VisibilityIcon,
   Description as DescriptionIcon,
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
@@ -39,6 +40,12 @@ import { useThemeMode } from '@hooks/index';
 import { useAuthStore } from '@store/index';
 import { userService, applicationService, savedService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
+import {
+  getCandidateProfileViewCount,
+  getCandidateProfileViewRecruiters,
+  getCandidateResumeUnlockCount,
+  getCandidateResumeUnlockRecruiters,
+} from '@utils/resumeUnlocks';
 import { ROUTES } from '@constants/index';
 import { useTheme } from '@mui/material/styles';
 
@@ -59,6 +66,12 @@ export const PremiumDashboard: React.FC = () => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [profileStrength, setProfileStrength] = useState(0);
+  const [resumeDownloadCount, setResumeDownloadCount] = useState<number>(0);
+  const [profileViewCount, setProfileViewCount] = useState<number>(0);
+  const [interactionModalOpen, setInteractionModalOpen] = useState(false);
+  const [interactionModalTitle, setInteractionModalTitle] = useState('');
+  const [interactionLoading, setInteractionLoading] = useState(false);
+  const [interactionItems, setInteractionItems] = useState<any[]>([]);
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const MotionCard = motion(Card);
@@ -100,6 +113,23 @@ export const PremiumDashboard: React.FC = () => {
           (((conversations as any[]) || [])
             .reduce((count, conv) => count + (conv.unreadCount || 0), 0))
         );
+
+        try {
+          const [downloadCount, viewCount] = await Promise.all([
+            getCandidateResumeUnlockCount(user.id),
+            getCandidateProfileViewCount(user.id),
+          ]);
+          setResumeDownloadCount(downloadCount);
+          setProfileViewCount(viewCount);
+        } catch (err) {
+          console.error('Failed to load recruiter interaction counts:', err);
+        }
+
+        const loadInteractionList = async () => {
+          setInteractionItems([]);
+          setInteractionModalOpen(false);
+        };
+        await loadInteractionList();
 
           // load recommended jobs for premium users
           try {
@@ -184,10 +214,26 @@ export const PremiumDashboard: React.FC = () => {
           {([
             { label: 'Applications', value: applicationCount, icon: WorkIcon, color: theme.palette.primary.main, to: ROUTES.DASHBOARD_APPLICATIONS },
             { label: 'Saved Jobs', value: savedJobsCount, icon: FavoriteIcon, color: theme.palette.error.main, to: ROUTES.DASHBOARD_SAVED_JOBS },
-            { label: 'Profile Strength', value: `${profileStrength}%`, icon: TrendingUpIcon, color: theme.palette.success.main },
-            { label: 'Skills', value: userSkills.length, icon: VideocamIcon, color: theme.palette.secondary.main },
+            { label: 'Resume Downloads', value: resumeDownloadCount, icon: VideocamIcon, color: theme.palette.success.main, action: async () => {
+              if (!user?.id) return;
+              setInteractionModalTitle('Recruiters who downloaded your resume');
+              setInteractionLoading(true);
+              setInteractionModalOpen(true);
+              const items = await getCandidateResumeUnlockRecruiters(user.id);
+              setInteractionItems(items);
+              setInteractionLoading(false);
+            } },
+            { label: 'Profile Views', value: profileViewCount, icon: VisibilityIcon, color: theme.palette.secondary.main, action: async () => {
+              if (!user?.id) return;
+              setInteractionModalTitle('Recruiters who viewed your profile');
+              setInteractionLoading(true);
+              setInteractionModalOpen(true);
+              const items = await getCandidateProfileViewRecruiters(user.id);
+              setInteractionItems(items);
+              setInteractionLoading(false);
+            } },
           ] as const).map((stat, idx) => (
-            <Grid item xs={12} sm={6} md={3} key={String(stat.label)} onClick={() => { if ((stat as any).to) navigate((stat as any).to); }}>
+            <Grid item xs={12} sm={6} md={3} key={String(stat.label)} onClick={() => { if ((stat as any).action) (stat as any).action(); else if ((stat as any).to) navigate((stat as any).to); }}>
               <MotionCard sx={{ cursor: 'pointer', transition: 'all 0.32s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }}>
                 <CardContent sx={{ textAlign: 'center', py: 3 }}>
                   <stat.icon sx={{ fontSize: 36, mb: 1, color: stat.color }} />
@@ -362,6 +408,40 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
 
         </Grid>
+
+        <Dialog open={interactionModalOpen} onClose={() => setInteractionModalOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle>{interactionModalTitle}</DialogTitle>
+          <DialogContent dividers>
+            {interactionLoading ? (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Loading recruiters...</Typography>
+            ) : interactionItems.length === 0 ? (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                No recruiter interactions found yet.
+              </Typography>
+            ) : (
+              <Box sx={{ display: 'grid', gap: 2 }}>
+                {interactionItems.map((item, index) => (
+                  <Card key={item.recruiter_id || index} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                      {item.recruiter_name}
+                    </Typography>
+                    {item.company_name && (
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {item.company_name}
+                      </Typography>
+                    )}
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {item.total_unlocks != null ? `${item.total_unlocks} downloads` : `${item.total_views} views`} • {item.last_unlocked_at || item.last_viewed_at || 'Recent'}
+                    </Typography>
+                  </Card>
+                ))}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setInteractionModalOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Layout>
   );

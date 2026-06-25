@@ -27,6 +27,7 @@ import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
 import { calculateProfileCompletion, formatDate, getProfileCompletionGradient, getProfileCompletionColor } from '@utils/index';
+import { getCandidateProfileViewCount, getCandidateResumeUnlockCount } from '@utils/resumeUnlocks';
 import computeAIMatch from '@utils/aiJobMatch';
 import { applicationService, savedService, notificationService, userService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
@@ -54,6 +55,8 @@ export const Dashboard: React.FC = () => {
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [skills, setSkills] = useState<string[]>([]);
+  const [resumeDownloadCount, setResumeDownloadCount] = useState<number | null>(null);
+  const [profileViewCount, setProfileViewCount] = useState<number | null>(null);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
   const [profileStrength, setProfileStrength] = useState<number | null>(null);
@@ -114,6 +117,19 @@ export const Dashboard: React.FC = () => {
           (((conversations as any[]) || [])
             .reduce((count, conv) => count + (conv.unreadCount || 0), 0))
         );
+
+        try {
+          const [downloads, views] = await Promise.all([
+            getCandidateResumeUnlockCount(user.id),
+            getCandidateProfileViewCount(user.id),
+          ]);
+          setResumeDownloadCount(downloads);
+          setProfileViewCount(views);
+        } catch (err) {
+          console.error('Failed to load recruiter interaction counts:', err);
+          setResumeDownloadCount(0);
+          setProfileViewCount(0);
+        }
 
         // load recommended jobs based on skills
         try {
@@ -412,19 +428,29 @@ export const Dashboard: React.FC = () => {
             <Card sx={{ borderRadius: 3, p: 2, height: '100%' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                  Your Skills
+                  Recruiter Interest
                 </Typography>
-                {skills && skills.length ? (
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                    {skills.map((s) => (
-                      <Chip key={s} label={s} color="primary" variant="outlined" />
-                    ))}
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                  Track how many recruiters have downloaded your resume and viewed your profile.
+                </Typography>
+                <Box sx={{ display: 'grid', gap: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, background: 'rgba(16, 185, 129, 0.08)', borderRadius: 2 }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Resume downloads
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {resumeDownloadCount === null ? '—' : resumeDownloadCount}
+                    </Typography>
                   </Box>
-                ) : (
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                    Add skills in your profile to get personalized recommendations.
-                  </Typography>
-                )}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, background: 'rgba(59, 130, 246, 0.08)', borderRadius: 2 }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Recruiter profile views
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {profileViewCount === null ? '—' : profileViewCount}
+                    </Typography>
+                  </Box>
+                </Box>
                 <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                   <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" sx={{ textTransform: 'none' }}>
                     Edit Profile
