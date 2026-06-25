@@ -26,7 +26,7 @@ import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
-import { calculateProfileCompletion, formatDate } from '@utils/index';
+import { calculateProfileCompletion, formatDate, getProfileCompletionGradient, getProfileCompletionColor } from '@utils/index';
 import computeAIMatch from '@utils/aiJobMatch';
 import { applicationService, savedService, notificationService, userService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
@@ -254,24 +254,49 @@ export const Dashboard: React.FC = () => {
           ))}
         </Grid>
 
-        {profileCompletion < 80 && (
-          <Card sx={{ mb: 4, background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Card
+          sx={{
+            mb: 4,
+            background: getProfileCompletionGradient(profileCompletion),
+            color: '#fff',
+            border: '1px solid transparent',
+            boxShadow: '0 20px 40px rgba(15,23,42,0.08)',
+          }}
+        >
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff' }}>
                   Complete Your Profile
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                  {profileCompletion}%
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                  Track your profile readiness and get seen by employers.
                 </Typography>
               </Box>
-              <LinearProgress variant="determinate" value={profileCompletion} sx={{ mb: 2, height: 6, borderRadius: 3 }} />
-              <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" startIcon={<PersonIcon />}>
-                Update Profile
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#fff' }}>
+                  {profileCompletion}%
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  {profileCompletion === 100 ? 'Excellent profile' : profileCompletion < 60 ? 'Needs improvement' : 'Almost there'}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ width: '100%', height: 16, borderRadius: 8, background: 'rgba(255,255,255,0.2)', overflow: 'hidden', mb: 3 }}>
+              <Box
+                sx={{
+                  width: `${profileCompletion}%`,
+                  height: '100%',
+                  background: 'rgba(255,255,255,0.95)',
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </Box>
+            <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" sx={{ background: '#fff', color: '#0F172A' }}>
+              Update Profile
+            </Button>
+          </CardContent>
+        </Card>
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>

@@ -42,7 +42,7 @@ import { ProfileSkeleton } from '@components/common/LoadingSkeleton';
 import { useAuthStore } from '@store/index';
 import { userService } from '@services/api';
 import { EXPERIENCE_LEVELS, GENDER_OPTIONS, INDIAN_STATES } from '@constants/index';
-import { calculateProfileCompletion } from '../../utils/index';
+import { calculateProfileCompletion, getProfileCompletionGradient } from '../../utils/index';
 import { generatePreferredJobTitleSuggestions } from '../../utils/titleSuggestions';
 import { formatExperienceString, getTotalExperienceMonths, parseExperienceStringParts } from '../../utils/experience';
 import toast from 'react-hot-toast';
@@ -341,27 +341,40 @@ export const ProfilePage: React.FC = () => {
           <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
             Complete your profile to help employers find you
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Profile Completion</Typography>
-                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700 }}>{completion}%</Typography>
+          <Card
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              background: getProfileCompletionGradient(completion),
+              color: '#fff',
+              mb: 2,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff' }}>Profile Completion</Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                  Optional fields like social links, projects, certifications, and work experience do not block 100% completion.
+                </Typography>
               </Box>
-              <LinearProgress
-                variant="determinate"
-                value={completion}
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#fff' }}>{completion}%</Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  {completion === 100 ? 'Perfect profile' : completion < 60 ? 'Add more details' : 'Almost there'}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ width: '100%', height: 12, borderRadius: 6, background: 'rgba(255,255,255,0.2)', overflow: 'hidden', mb: 1 }}>
+              <Box
                 sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: 'rgba(148, 163, 184, 0.2)',
-                  '& .MuiLinearProgress-bar': {
-                    borderRadius: 4,
-                    background: '#1D4ED8',
-                  },
+                  width: `${completion}%`,
+                  height: '100%',
+                  background: 'rgba(255,255,255,0.95)',
+                  transition: 'width 0.3s ease',
                 }}
               />
             </Box>
-          </Box>
+          </Card>
         </Box>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

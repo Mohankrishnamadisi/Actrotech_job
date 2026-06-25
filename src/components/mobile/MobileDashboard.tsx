@@ -12,7 +12,7 @@ import { MobileLayout } from '@components/layout/MobileLayout';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
-import { calculateProfileCompletion, formatDate } from '@utils/index';
+import { calculateProfileCompletion, formatDate, getProfileCompletionGradient } from '@utils/index';
 import { applicationService, savedService, notificationService, userService } from '@services/api';
 
 type RecentApplication = {
@@ -150,49 +150,62 @@ export const MobileDashboard: React.FC = () => {
           ))}
         </Grid>
 
-        {profileCompletion < 80 && (
-          <Card sx={{ mb: 3, background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-            <CardContent sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Complete Your Profile
+        <Card
+          sx={{
+            mb: 3,
+            background: getProfileCompletionGradient(profileCompletion),
+            border: '1px solid transparent',
+            color: '#fff',
+          }}
+        >
+          <CardContent sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, flexWrap: 'wrap', gap: 1 }}>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#fff' }}>
+                  Profile Completion
                 </Typography>
-                <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                  {profileCompletion}%
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                  Optional fields do not block 100% completion.
                 </Typography>
               </Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#fff' }}>
+                {profileCompletion}%
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                width: '100%',
+                height: 8,
+                borderRadius: 4,
+                background: 'rgba(255,255,255,0.2)',
+                overflow: 'hidden',
+                mb: 2,
+              }}
+            >
               <Box
                 sx={{
-                  width: '100%',
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: '#D1E7FF',
-                  overflow: 'hidden',
-                  mb: 2,
+                  height: '100%',
+                  width: `${profileCompletion}%`,
+                  background: 'rgba(255,255,255,0.95)',
+                  transition: 'width 0.3s ease',
                 }}
-              >
-                <Box
-                  sx={{
-                    height: '100%',
-                    width: `${profileCompletion}%`,
-                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                    transition: 'width 0.3s ease',
-                  }}
-                />
-              </Box>
-              <Button
-                component={RouterLink}
-                to={ROUTES.DASHBOARD_PROFILE}
-                variant="contained"
-                fullWidth
-                size="small"
-                sx={{ py: 1 }}
-              >
-                Update Profile
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+              />
+            </Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mb: 2 }}>
+              {profileCompletion === 100 ? 'Excellent profile' : profileCompletion < 60 ? 'Need more details' : 'Almost there'}
+            </Typography>
+            <Button
+              component={RouterLink}
+              to={ROUTES.DASHBOARD_PROFILE}
+              variant="contained"
+              fullWidth
+              size="small"
+              sx={{ py: 1, background: '#fff', color: '#0F172A' }}
+            >
+              Update Profile
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card sx={{ mb: 3 }}>
           <CardContent sx={{ p: 2 }}>

@@ -94,21 +94,47 @@ export const getFreshnessDate = (freshness: string): string | null => {
   return date.toISOString();
 };
 
+const PROFILE_COMPLETION_FIELDS = [
+  'fullName',
+  'email',
+  'phone',
+  'gender',
+  'dateOfBirth',
+  'address',
+  'city',
+  'state',
+  'country',
+  'bio',
+  'experience',
+  'skills',
+  'preferredJobTitles',
+  'education',
+  'resumeUrl',
+];
+
 export const calculateProfileCompletion = (profile: Record<string, unknown>): number => {
-  const fields = [
-    'fullName', 'email', 'phone', 'gender', 'dateOfBirth',
-    'address', 'city', 'state', 'country', 'bio', 'experience',
-    'currentCompany', 'skills', 'preferredJobTitles', 'education', 'workExperience',
-    'resumeUrl', 'socialLinks',
-  ];
   let filled = 0;
-  fields.forEach((field) => {
+  PROFILE_COMPLETION_FIELDS.forEach((field) => {
     const value = profile[field];
-    if (Array.isArray(value) ? value.length > 0 : value && String(value).trim()) {
+    if (Array.isArray(value)) {
+      if (value.length > 0) filled++;
+    } else if (value && String(value).trim()) {
       filled++;
     }
   });
-  return Math.round((filled / fields.length) * 100);
+  return Math.round((filled / PROFILE_COMPLETION_FIELDS.length) * 100);
+};
+
+export const getProfileCompletionColor = (completion: number) => {
+  if (completion === 100) return '#047857';
+  if (completion < 60) return '#B91C1C';
+  return '#B45309';
+};
+
+export const getProfileCompletionGradient = (completion: number) => {
+  if (completion === 100) return 'linear-gradient(135deg, #16A34A 0%, #22C55E 100%)';
+  if (completion < 60) return 'linear-gradient(135deg, #DC2626 0%, #F87171 100%)';
+  return 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)';
 };
 
 export const truncateText = (text: string, length: number) => {
