@@ -36,6 +36,7 @@ import {
   Work as WorkIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
+import { formatExperienceString } from '@utils/experience';
 import { motion } from 'framer-motion';
 import { candidateService, savedService } from '@services/api';
 import { AddToPoolButton } from './talentPool/AddToPoolButton';
@@ -56,7 +57,9 @@ interface Candidate {
   headline: string;
   location: string;
   skills: string[];
-  experience_years: number;
+  experience_years?: number;
+  experience_months?: number;
+  total_experience_months?: number;
   avatar?: string;
   avatar_url?: string | null;
   profile_image_url?: string | null;
@@ -316,9 +319,12 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                             variant={unlockedCandidates[candidate.id] ? 'outlined' : 'filled'}
                             sx={{ fontWeight: 800 }}
                           />
-                          {candidate.experience_years && (
+                          {((candidate.experience_years != null && candidate.experience_years >= 0) || candidate.experience) && (
                             <Chip
-                              label={`${candidate.experience_years}y exp`}
+                              label={
+                                formatExperienceString(candidate.experience_years, candidate.experience_months) ||
+                                String(candidate.experience || 'Experience').trim()
+                              }
                               size="small"
                               variant="outlined"
                             />
@@ -425,7 +431,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {/* Key Info Section */}
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
-                {selectedCandidate.experience_years && (
+                {((selectedCandidate.experience_years != null && selectedCandidate.experience_years >= 0) || selectedCandidate.experience) && (
                   <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <WorkIcon sx={{ fontSize: 20, color: '#667eea' }} />
@@ -434,7 +440,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                       </Typography>
                     </Box>
                     <Typography sx={{ fontWeight: 600 }}>
-                      {selectedCandidate.experience_years} years
+                      {formatExperienceString(selectedCandidate.experience_years, selectedCandidate.experience_months) || selectedCandidate.experience || 'Not specified'}
                     </Typography>
                   </Box>
                 )}

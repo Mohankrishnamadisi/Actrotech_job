@@ -12,6 +12,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  SelectChangeEvent,
   MenuItem,
   Chip,
   Grid,
@@ -39,7 +40,9 @@ import { ProfileSkeleton } from '@components/common/LoadingSkeleton';
 import { useAuthStore } from '@store/index';
 import { userService } from '@services/api';
 import { EXPERIENCE_LEVELS, GENDER_OPTIONS, INDIAN_STATES } from '@constants/index';
-import { calculateProfileCompletion } from '@utils/index';
+import { calculateProfileCompletion } from '../../utils/index';
+import { generatePreferredJobTitleSuggestions } from '../../utils/titleSuggestions';
+import { formatExperienceString, getTotalExperienceMonths, parseExperienceStringParts } from '../../utils/experience';
 import toast from 'react-hot-toast';
 import type { Certification, Project, Education, WorkExperience } from '../../types';
 
@@ -63,6 +66,8 @@ export const ProfilePage: React.FC = () => {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [resume, setResume] = useState<File | null>(null);
   const [skillInput, setSkillInput] = useState('');
+  const [preferredTitleInput, setPreferredTitleInput] = useState('');
+  const [preferredTitleSuggestions, setPreferredTitleSuggestions] = useState<string[]>([]);
   const [profileImageUrl, setProfileImageUrl] = useState('');
   const [resumeUrl, setResumeUrl] = useState('');
 
@@ -78,7 +83,10 @@ export const ProfilePage: React.FC = () => {
     country: 'India',
     bio: '',
     experience: '',
+    experienceYears: '' as string | number,
+    experienceMonths: '' as string | number,
     skills: [] as string[],
+    preferredJobTitles: [] as string[],
     education: [] as Education[],
     workExperience: [] as WorkExperience[],
     certifications: [] as Certification[],
@@ -105,6 +113,7 @@ export const ProfilePage: React.FC = () => {
       try {
         const profile = await userService.getProfile(user.id);
         if (profile) {
+          const parsedExperience = parseExperienceStringParts(profile.experience || '');
           setFormData({
             fullName: profile.name || user.name,
             email: profile.email || user.email,
@@ -116,8 +125,18 @@ export const ProfilePage: React.FC = () => {
             state: profile.state || '',
             country: profile.country || 'India',
             bio: profile.bio || '',
-            experience: profile.experience || '',
+            experience:
+              profile.experience || formatExperienceString(profile.experience_years, profile.experience_months),
+            experienceYears:
+              profile.experience_years != null
+                ? profile.experience_years
+                : parsedExperience.years ?? '',
+            experienceMonths:
+              profile.experience_months != null
+                ? profile.experience_months
+                : parsedExperience.months ?? '',
             skills: profile.skills || [],
+            preferredJobTitles: profile.preferred_job_titles || [],
             education: profile.education_details || [],
             workExperience: profile.work_experience || [],
             certifications: profile.certifications || [],
@@ -138,6 +157,17 @@ export const ProfilePage: React.FC = () => {
     loadProfile();
   }, [user?.id, user?.name, user?.email]);
 
+  useEffect(() => {
+    const suggestions = generatePreferredJobTitleSuggestions({
+      skills: formData.skills,
+      experience: formData.experience,
+      profileBio: formData.bio,
+    }).filter(
+      (title: string) => !formData.preferredJobTitles.some((selected) => selected.toLowerCase() === title.toLowerCase())
+    );
+    setPreferredTitleSuggestions(suggestions.slice(0, 10));
+  }, [formData.skills, formData.experience, formData.bio, formData.preferredJobTitles]);
+
   const completion = calculateProfileCompletion({
     fullName: formData.fullName,
     email: formData.email,
@@ -157,9 +187,34 @@ export const ProfilePage: React.FC = () => {
     socialLinks: formData.linkedinUrl || formData.portfolioUrl,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value } = e.target as { name: string; value: unknown };
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target as { name?: string; value: unknown };
+    if (!name) return;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const { name, value } = event.target as { name?: string; value: unknown };
+    if (!name) return;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const addPreferredTitle = (title: string) => {
+    const normalized = title.trim();
+    if (!normalized) return;
+    setFormData((prev) => {
+      const existing = prev.preferredJobTitles.map((item) => item.toLowerCase());
+      if (existing.includes(normalized.toLowerCase())) return prev;
+      if (prev.preferredJobTitles.length >= 20) return prev;
+      return { ...prev, preferredJobTitles: [...prev.preferredJobTitles, normalized] };
+    });
+  };
+
+  const removePreferredTitle = (title: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      preferredJobTitles: prev.preferredJobTitles.filter((item) => item.toLowerCase() !== title.toLowerCase()),
+    }));
   };
 
   const handleSave = async () => {
@@ -182,8 +237,12 @@ export const ProfilePage: React.FC = () => {
         state: formData.state,
         country: formData.country,
         bio: formData.bio,
-        experience: formData.experience,
+        experience: formatExperienceString(formData.experienceYears, formData.experienceMonths),
+        experience_years: Number(formData.experienceYears) || 0,
+        experience_months: Number(formData.experienceMonths) || 0,
+        total_experience_months: getTotalExperienceMonths(formData.experienceYears, formData.experienceMonths),
         skills: formData.skills,
+        preferred_job_titles: formData.preferredJobTitles,
         education_details: formData.education,
         work_experience: formData.workExperience,
         certifications: formData.certifications,
@@ -209,7 +268,16 @@ export const ProfilePage: React.FC = () => {
         country: updatedProfile.country || prev.country,
         bio: updatedProfile.bio || prev.bio,
         experience: updatedProfile.experience || prev.experience,
+        experienceYears:
+          updatedProfile.experience_years != null
+            ? updatedProfile.experience_years
+            : parseExperienceStringParts(updatedProfile.experience || prev.experience).years ?? prev.experienceYears,
+        experienceMonths:
+          updatedProfile.experience_months != null
+            ? updatedProfile.experience_months
+            : parseExperienceStringParts(updatedProfile.experience || prev.experience).months ?? prev.experienceMonths,
         skills: updatedProfile.skills || prev.skills,
+        preferredJobTitles: updatedProfile.preferred_job_titles || updatedProfile.preferredJobTitles || prev.preferredJobTitles,
         education: updatedProfile.education_details || updatedProfile.education || prev.education,
         workExperience: updatedProfile.work_experience || updatedProfile.workExperience || prev.workExperience,
         certifications: updatedProfile.certifications || prev.certifications,
@@ -298,54 +366,90 @@ export const ProfilePage: React.FC = () => {
               <TabPanel value={tabValue} index={0}>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
+                    <TextField fullWidth label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField fullWidth label="Email" name="email" value={formData.email} disabled />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+                    <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleInputChange} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
                       <InputLabel>Gender</InputLabel>
-                      <Select name="gender" value={formData.gender} onChange={handleChange} label="Gender">
+                      <Select name="gender" value={formData.gender} onChange={handleSelectChange} label="Gender">
                         {GENDER_OPTIONS.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField fullWidth label="Date of Birth" name="dateOfBirth" type="date"
-                      value={formData.dateOfBirth} onChange={handleChange} InputLabelProps={{ shrink: true }} />
+                      value={formData.dateOfBirth} onChange={handleInputChange} InputLabelProps={{ shrink: true }} />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12} sm={3}>
                     <FormControl fullWidth>
-                      <InputLabel>Experience Level</InputLabel>
-                      <Select name="experience" value={formData.experience} onChange={handleChange} label="Experience Level">
-                        {EXPERIENCE_LEVELS.map((l) => <MenuItem key={l} value={l}>{l}</MenuItem>)}
+                      <InputLabel>Years</InputLabel>
+                      <Select
+                        name="experienceYears"
+                        value={formData.experienceYears}
+                        onChange={handleSelectChange}
+                        label="Years"
+                      >
+                        {Array.from({ length: 31 }, (_, i) => i).map((years) => (
+                          <MenuItem key={years} value={years}>
+                            {years}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Months</InputLabel>
+                      <Select
+                        name="experienceMonths"
+                        value={formData.experienceMonths}
+                        onChange={handleSelectChange}
+                        label="Months"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i).map((months) => (
+                          <MenuItem key={months} value={months}>
+                            {months}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ pt: 1.5 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Total Experience
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatExperienceString(formData.experienceYears, formData.experienceMonths) || 'Not specified'}
+                      </Typography>
+                    </Box>
+                  </Grid>
                   <Grid item xs={12}>
-                    <TextField fullWidth label="Address" name="address" value={formData.address} onChange={handleChange} multiline rows={2} />
+                    <TextField fullWidth label="Address" name="address" value={formData.address} onChange={handleInputChange} multiline rows={2} />
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <TextField fullWidth label="City" name="city" value={formData.city} onChange={handleChange} />
+                    <TextField fullWidth label="City" name="city" value={formData.city} onChange={handleInputChange} />
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <FormControl fullWidth>
                       <InputLabel>State</InputLabel>
-                      <Select name="state" value={formData.state} onChange={handleChange} label="State">
+                      <Select name="state" value={formData.state} onChange={handleSelectChange} label="State">
                         {INDIAN_STATES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleChange} />
+                    <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleInputChange} />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Bio" name="bio" multiline rows={3} value={formData.bio}
-                      onChange={handleChange} placeholder="Tell employers about yourself..." />
+                      onChange={handleInputChange} placeholder="Tell employers about yourself..." />
                   </Grid>
                 </Grid>
               </TabPanel>
@@ -397,18 +501,80 @@ export const ProfilePage: React.FC = () => {
               <TabPanel value={tabValue} index={2}>
                 <Box sx={{ mb: 4 }}>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Skills</Typography>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                     <TextField fullWidth size="small" placeholder="Add a skill..." value={skillInput}
                       onChange={(e) => setSkillInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), skillInput.trim() && setFormData((p) => ({ ...p, skills: [...p.skills, skillInput.trim()] })), setSkillInput(''))} />
                     <Button variant="contained" onClick={() => { if (skillInput.trim()) { setFormData((p) => ({ ...p, skills: [...p.skills, skillInput.trim()] })); setSkillInput(''); } }}>Add</Button>
                   </Box>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
                     {formData.skills.map((skill) => (
                       <Chip key={skill} label={skill} color="primary" icon={<CheckIcon />}
                         onDelete={() => setFormData((p) => ({ ...p, skills: p.skills.filter((s) => s !== skill) }))} />
                     ))}
                   </Box>
+                </Box>
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Preferred Job Titles</Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                    Add the titles you want to be matched with. Use suggestions or enter your own.
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Add a preferred title..."
+                      value={preferredTitleInput}
+                      onChange={(e) => setPreferredTitleInput(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === 'Enter' &&
+                        (e.preventDefault(),
+                        preferredTitleInput.trim() &&
+                          (addPreferredTitle(preferredTitleInput), setPreferredTitleInput('')))
+                      }
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        if (preferredTitleInput.trim()) {
+                          addPreferredTitle(preferredTitleInput);
+                          setPreferredTitleInput('');
+                        }
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    {formData.preferredJobTitles.map((title) => (
+                      <Chip
+                        key={title}
+                        label={title}
+                        color="secondary"
+                        onDelete={() => removePreferredTitle(title)}
+                      />
+                    ))}
+                    <Chip label={`${formData.preferredJobTitles.length}/20 selected`} size="small" variant="outlined" />
+                  </Box>
+                  {preferredTitleSuggestions.length > 0 && (
+                    <Box>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                        {preferredTitleSuggestions.length} suggested title{preferredTitleSuggestions.length === 1 ? '' : 's'} available
+                      </Typography>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Suggested Titles</Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {preferredTitleSuggestions.map((suggestion) => (
+                          <Chip
+                            key={suggestion}
+                            label={suggestion}
+                            variant="outlined"
+                            onClick={() => addPreferredTitle(suggestion)}
+                            sx={{ cursor: 'pointer' }}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </Box>
                 <Divider sx={{ my: 3 }} />
                 <Box sx={{ mb: 4 }}>
@@ -463,14 +629,14 @@ export const ProfilePage: React.FC = () => {
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField fullWidth label="LinkedIn URL" name="linkedinUrl" value={formData.linkedinUrl}
-                      onChange={handleChange} InputProps={{ startAdornment: <LinkedInIcon sx={{ mr: 1, color: 'primary.main' }} /> }} />
+                      onChange={handleInputChange} InputProps={{ startAdornment: <LinkedInIcon sx={{ mr: 1, color: 'primary.main' }} /> }} />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Portfolio URL" name="portfolioUrl" value={formData.portfolioUrl}
-                      onChange={handleChange} InputProps={{ startAdornment: <LanguageIcon sx={{ mr: 1, color: 'primary.main' }} /> }} />
+                      onChange={handleInputChange} InputProps={{ startAdornment: <LanguageIcon sx={{ mr: 1, color: 'primary.main' }} /> }} />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField fullWidth label="GitHub URL" name="githubUrl" value={formData.githubUrl} onChange={handleChange} />
+                    <TextField fullWidth label="GitHub URL" name="githubUrl" value={formData.githubUrl} onChange={handleInputChange} />
                   </Grid>
                 </Grid>
               </TabPanel>

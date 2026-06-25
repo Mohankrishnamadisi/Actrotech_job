@@ -24,6 +24,8 @@ const CANDIDATE_SELECT = `
     location,
     skills,
     experience_years,
+    experience_months,
+    total_experience_months,
     experience,
     avatar_url,
     role
@@ -176,6 +178,8 @@ export async function getPoolCandidates(
     location,
     skills,
     experience_years,
+    experience_months,
+    total_experience_months,
     experience,
     avatar_url,
     role
@@ -188,6 +192,8 @@ export async function getPoolCandidates(
     location,
     skills,
     experience_years,
+    experience_months,
+    total_experience_months,
     experience,
     avatar_url,
     role
@@ -210,7 +216,7 @@ export async function getPoolCandidates(
   }
 
   if (filters.minExperience !== undefined && filters.minExperience > 0) {
-    query = query.filter('profiles.experience_years', 'gte', filters.minExperience);
+    query = query.filter('profiles.total_experience_months', 'gte', filters.minExperience * 12);
   }
 
   if (filters.skill?.trim()) {

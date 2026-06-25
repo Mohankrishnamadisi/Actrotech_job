@@ -1117,7 +1117,10 @@ export const candidateService = {
       }
     }
     if (filters?.experience !== undefined && filters?.experience !== null) {
-      query = query.gte('experience', filters.experience);
+      const experienceMonths = Number(filters.experience) * 12;
+      if (!Number.isNaN(experienceMonths)) {
+        query = query.gte('total_experience_months', experienceMonths);
+      }
     }
 
     const { data, error, count } = await query

@@ -19,6 +19,7 @@ import {
 import { motion } from 'framer-motion';
 import type { TalentPoolCandidate } from '@types';
 import { normalizeSkills } from '@utils/matchScore';
+import { formatExperienceString } from '@utils/experience';
 
 interface PoolCandidateCardProps {
   entry: TalentPoolCandidate;
@@ -54,8 +55,8 @@ export const PoolCandidateCard: React.FC<PoolCandidateCardProps> = ({
   const name = profile?.name || 'Candidate';
   const skills = normalizeSkills(profile?.skills);
   const experience =
-    profile?.experience_years != null
-      ? `${profile.experience_years} yrs`
+    profile?.experience_years != null || profile?.experience_months != null
+      ? formatExperienceString(profile?.experience_years, profile?.experience_months)
       : profile?.experience || null;
 
   return (

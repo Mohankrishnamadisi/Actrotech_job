@@ -9,9 +9,15 @@ const csvEscape = (value: unknown): string => {
 const getLocation = (profile: BulkApplicant['profiles']): string =>
   String(profile?.location || [profile?.city, profile?.state, profile?.country].filter(Boolean).join(', ') || '');
 
+import { formatExperienceString } from '@utils/experience';
+
 const getExperience = (applicant: BulkApplicant): string => {
   const profile = applicant.profiles;
-  return String(profile?.experience || profile?.experience_years || applicant.experience || '');
+  if (!profile) return '';
+  if (profile.experience_years != null || profile.experience_months != null) {
+    return formatExperienceString(profile.experience_years, profile.experience_months);
+  }
+  return String(profile.experience || applicant.experience || '');
 };
 
 export function buildApplicantsCsv(applicants: BulkApplicant[]): string {

@@ -60,6 +60,10 @@ export interface JobSeekerProfile {
   bio?: string;
   skills: string[];
   experience?: string;
+  experienceYears?: number;
+  experienceMonths?: number;
+  totalExperienceMonths?: number;
+  preferredJobTitles?: string[];
   currentCompany?: string;
   currentCtc?: string;
   expectedCtc?: string;
@@ -87,6 +91,10 @@ export interface JobSeeker extends User {
   state?: string;
   country?: string;
   experience?: string;
+  experienceYears?: number;
+  experienceMonths?: number;
+  totalExperienceMonths?: number;
+  preferredJobTitles?: string[];
   currentCompany?: string;
   currentCtc?: string;
   expectedCtc?: string;
@@ -387,6 +395,8 @@ export interface TalentPoolCandidateProfile {
   location?: string | null;
   skills?: string[] | string | null;
   experience_years?: number | string | null;
+  experience_months?: number | string | null;
+  total_experience_months?: number | string | null;
   experience?: string | null;
   avatar_url?: string | null;
   role?: string | null;
@@ -419,7 +429,11 @@ export interface RecommendedCandidateProfile {
   state?: string | null;
   country?: string | null;
   skills?: string[] | string | null;
+  experience_years?: number | string | null;
+  experience_months?: number | string | null;
+  total_experience_months?: number | string | null;
   experience?: string | null;
+  preferredJobTitles?: string[];
   education?: unknown;
   expected_ctc?: string | number | null;
   current_ctc?: string | number | null;

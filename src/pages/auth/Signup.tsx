@@ -11,6 +11,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  SelectChangeEvent,
   MenuItem,
   Stepper,
   Step,
@@ -43,8 +44,8 @@ import {
   GENDER_OPTIONS,
   INDIAN_STATES,
   NOTICE_PERIOD_OPTIONS,
-  EXPERIENCE_LEVELS,
 } from '@constants/index';
+import { formatExperienceString, getTotalExperienceMonths } from '@utils/experience';
 import {
   validateEmail,
   validatePassword,
@@ -57,6 +58,8 @@ import toast from 'react-hot-toast';
 
 const MotionCard = motion(Card);
 const steps = ['Personal Info', 'Education & Skills', 'Professional Details'];
+const EXPERIENCE_YEARS_OPTIONS = Array.from({ length: 31 }, (_, i) => i);
+const EXPERIENCE_MONTHS_OPTIONS = Array.from({ length: 12 }, (_, i) => i);
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -87,6 +90,8 @@ export const Signup: React.FC = () => {
     education: '',
     skills: [] as string[],
     experience: '',
+    experienceYears: '',
+    experienceMonths: '',
     currentCompany: '',
     currentCtc: '',
     expectedCtc: '',
@@ -95,10 +100,16 @@ export const Signup: React.FC = () => {
     portfolioUrl: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value } = e.target as { name: string; value: unknown };
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
+  ) => {
+    const { name, value } = ('target' in e ? e.target : { name: undefined, value: undefined }) as {
+      name?: string;
+      value: unknown;
+    };
+    if (!name) return;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (name in errors) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleAddSkill = () => {
@@ -139,7 +150,11 @@ export const Signup: React.FC = () => {
     }
 
     if (step === 2) {
-      if (!formData.experience) newErrors.experience = 'Experience is required';
+      const years = Number(formData.experienceYears);
+      const months = Number(formData.experienceMonths);
+      if ((Number.isNaN(years) || years <= 0) && (Number.isNaN(months) || months <= 0)) {
+        newErrors.experience = 'Experience is required';
+      }
       if (!formData.noticePeriod) newErrors.noticePeriod = 'Notice period is required';
       if (formData.linkedinUrl && !validateURL(formData.linkedinUrl)) {
         newErrors.linkedinUrl = 'Invalid LinkedIn URL';
@@ -196,7 +211,10 @@ export const Signup: React.FC = () => {
           country: formData.country,
           education: formData.education,
           skills: formData.skills,
-          experience: formData.experience,
+          experience: formatExperienceString(formData.experienceYears, formData.experienceMonths),
+          experience_years: Number(formData.experienceYears) || 0,
+          experience_months: Number(formData.experienceMonths) || 0,
+          total_experience_months: getTotalExperienceMonths(formData.experienceYears, formData.experienceMonths),
           current_company: formData.currentCompany,
           current_ctc: formData.currentCtc,
           expected_ctc: formData.expectedCtc,
@@ -586,22 +604,49 @@ export const Signup: React.FC = () => {
 
                 {activeStep === 2 && (
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={3}>
                       <FormControl fullWidth error={!!errors.experience}>
-                        <InputLabel>Total Experience *</InputLabel>
+                        <InputLabel>Years *</InputLabel>
                         <Select
-                          name="experience"
-                          value={formData.experience}
+                          name="experienceYears"
+                          value={formData.experienceYears}
                           onChange={handleChange}
-                          label="Total Experience *"
+                          label="Years *"
                         >
-                          {EXPERIENCE_LEVELS.map((l) => (
-                            <MenuItem key={l} value={l}>
-                              {l}
+                          {EXPERIENCE_YEARS_OPTIONS.map((years) => (
+                            <MenuItem key={years} value={years}>
+                              {years}
                             </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <FormControl fullWidth error={!!errors.experience}>
+                        <InputLabel>Months *</InputLabel>
+                        <Select
+                          name="experienceMonths"
+                          value={formData.experienceMonths}
+                          onChange={handleChange}
+                          label="Months *"
+                        >
+                          {EXPERIENCE_MONTHS_OPTIONS.map((months) => (
+                            <MenuItem key={months} value={months}>
+                              {months}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ pt: 1.5 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                          Selected Experience
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {formatExperienceString(formData.experienceYears, formData.experienceMonths) || 'Select total experience'}
+                        </Typography>
+                      </Box>
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth error={!!errors.noticePeriod}>

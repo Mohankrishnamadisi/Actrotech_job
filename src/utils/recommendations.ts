@@ -23,6 +23,10 @@ const PROFILE_SELECT = `
   country,
   skills,
   experience,
+  experience_years,
+  experience_months,
+  total_experience_months,
+  preferred_job_titles,
   education,
   expected_ctc,
   current_ctc,
@@ -61,7 +65,7 @@ export async function getRecommendedCandidates(
   }
 
   if (filters.minExperience !== undefined && filters.minExperience > 0) {
-    query = query.gte('experience', filters.minExperience);
+    query = query.gte('total_experience_months', filters.minExperience * 12);
   }
 
   const requestedSkills = normalizeSkills(filters.skills);

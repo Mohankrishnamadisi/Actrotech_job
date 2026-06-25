@@ -1,4 +1,5 @@
 import type { Job } from '@types';
+import { parseExperienceRequirement, parseCandidateExperienceMonths } from '@utils/experience';
 
 export type MatchScoreColor = 'success' | 'warning' | 'error';
 
@@ -22,6 +23,7 @@ export interface MatchScoreResult {
     location: MatchScoreBreakdownItem;
     salary: MatchScoreBreakdownItem;
     education: MatchScoreBreakdownItem;
+    title: MatchScoreBreakdownItem;
   };
 }
 
@@ -29,11 +31,12 @@ type CandidateLike = Record<string, any> | null | undefined;
 type JobLike = Partial<Job> | Record<string, any> | null | undefined;
 
 const WEIGHTS = {
-  skills: 50,
+  skills: 40,
   experience: 20,
   location: 10,
   salary: 10,
   education: 10,
+  title: 10,
 } as const;
 
 const emptyBreakdown = (label: string, weight: number): MatchScoreBreakdownItem => ({
@@ -79,6 +82,7 @@ export function calculateMatchScore(candidate: CandidateLike, job: JobLike): Mat
   const locationPercent = scoreLocation(candidate, job);
   const salaryPercent = scoreSalary(candidate, job);
   const educationPercent = scoreEducation(candidate, job);
+  const titlePercent = calculateTitleMatchScore(candidate, job);
 
   const breakdown = {
     skills: makeBreakdown('Skills Match', WEIGHTS.skills, skillsPercent),
@@ -86,6 +90,7 @@ export function calculateMatchScore(candidate: CandidateLike, job: JobLike): Mat
     location: makeBreakdown('Location Match', WEIGHTS.location, locationPercent),
     salary: makeBreakdown('Salary Match', WEIGHTS.salary, salaryPercent),
     education: makeBreakdown('Education Match', WEIGHTS.education, educationPercent),
+    title: makeBreakdown('Title Match', WEIGHTS.title, titlePercent),
   };
 
   const score = clampScore(
@@ -93,7 +98,8 @@ export function calculateMatchScore(candidate: CandidateLike, job: JobLike): Mat
       breakdown.experience.points +
       breakdown.location.points +
       breakdown.salary.points +
-      breakdown.education.points
+      breakdown.education.points +
+      breakdown.title.points
   );
 
   return {
@@ -110,6 +116,7 @@ export function calculateMatchScore(candidate: CandidateLike, job: JobLike): Mat
       locationPercent,
       salaryPercent,
       educationPercent,
+      titlePercent,
       candidate,
       job,
     }),
@@ -161,18 +168,13 @@ function getMissingSkills(jobSkills: unknown, candidateSkills: unknown): string[
 
 function scoreExperience(candidate: CandidateLike, job: JobLike): number {
   const required = parseExperienceRequirement(job?.experience ?? job?.experience_years ?? job?.min_experience);
-  const years = parseYears(
-    candidate?.experience_years ??
-      candidate?.total_experience ??
-      candidate?.experience ??
-      candidate?.work_experience
-  );
+  const candidateMonths = parseCandidateExperienceMonths(candidate);
 
   if (required.min == null) return 100;
-  if (years == null) return 0;
-  if (years >= required.min && (required.max == null || years <= required.max + 2)) return 100;
-  if (years >= required.min * 0.75) return 75;
-  if (years >= required.min * 0.5) return 50;
+  if (candidateMonths == null) return 0;
+  if (candidateMonths >= required.min && (required.max == null || candidateMonths <= required.max + 24)) return 100;
+  if (candidateMonths >= required.min * 0.75) return 75;
+  if (candidateMonths >= required.min * 0.5) return 50;
   return 20;
 }
 
@@ -251,6 +253,7 @@ function buildStrengths(input: {
   locationPercent: number;
   salaryPercent: number;
   educationPercent: number;
+  titlePercent: number;
   candidate: CandidateLike;
   job: JobLike;
 }): string[] {
@@ -262,6 +265,9 @@ function buildStrengths(input: {
     strengths.push(`Matches key skills: ${input.matchedSkills.slice(0, 3).join(', ')}`);
   }
 
+  if (input.titlePercent >= 80) {
+    strengths.push('Preferred job titles align closely with the role');
+  }
   if (input.experiencePercent >= 100) strengths.push('Experience aligns with the role requirement');
   if (input.locationPercent >= 90) strengths.push('Location or work mode is a strong fit');
   if (input.salaryPercent >= 100) strengths.push('Salary expectation appears aligned');
@@ -302,6 +308,67 @@ function parseYears(value: unknown): number | null {
   if (text.includes('fresher')) return 0;
   const match = text.match(/\d+(?:\.\d+)?/);
   return match ? Number(match[0]) : null;
+}
+
+function calculateTitleMatchScore(candidate: CandidateLike, job: JobLike): number {
+  const jobTitle = normalizeTitle(job?.title);
+  const candidateTitles = normalizeTitleArray(
+    candidate?.preferred_job_titles ||
+      candidate?.preferredJobTitles ||
+      candidate?.headline ||
+      candidate?.title ||
+      []
+  );
+
+  if (!jobTitle || candidateTitles.length === 0) return 0;
+
+  if (candidateTitles.some((title) => title === jobTitle)) return 100;
+  if (candidateTitles.some((title) => jobTitle.includes(title) || title.includes(jobTitle))) return 90;
+  if (candidateTitles.some((title) => titleGroupMatch(title, jobTitle))) return 85;
+
+  const overlap = candidateTitles.reduce((best, title) => {
+    const shared = tokenOverlap(title, jobTitle);
+    return Math.max(best, shared);
+  }, 0);
+
+  if (overlap >= 3) return 80;
+  if (overlap >= 2) return 60;
+  if (overlap >= 1) return 35;
+  return 0;
+}
+
+function normalizeTitle(value: unknown): string {
+  return String(value || '').toLowerCase().replace(/[\s._\-\/]+/g, ' ').trim();
+}
+
+function normalizeTitleArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map(normalizeTitle).filter(Boolean);
+  if (typeof value === 'string') {
+    return value
+      .split(/[,;\/\n]/)
+      .map(normalizeTitle)
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function tokenOverlap(a: string, b: string): number {
+  const aTokens = new Set(a.split(/\W+/).filter(Boolean));
+  const bTokens = new Set(b.split(/\W+/).filter(Boolean));
+  return [...aTokens].filter((token) => bTokens.has(token)).length;
+}
+
+function titleGroupMatch(a: string, b: string): boolean {
+  const groups = [
+    ['frontend developer', 'frontend engineer', 'ui developer', 'ui/ux developer', 'web developer', 'javascript developer', 'software engineer frontend', 'react developer', 'react engineer', 'ui designer'],
+    ['backend developer', 'backend engineer', 'api developer', 'software engineer backend', 'node developer', 'node engineer'],
+    ['full stack developer', 'full stack engineer', 'software engineer', 'web application developer', 'backend developer', 'frontend developer'],
+    ['data scientist', 'machine learning engineer', 'data analyst', 'ai engineer'],
+    ['devops engineer', 'site reliability engineer', 'cloud engineer', 'infrastructure engineer'],
+  ];
+
+  return groups.some((group) => group.includes(a) && group.includes(b));
 }
 
 function parseSalary(value: unknown): number | null {
@@ -379,5 +446,6 @@ export const emptyMatchScore: MatchScoreResult = {
     location: emptyBreakdown('Location Match', WEIGHTS.location),
     salary: emptyBreakdown('Salary Match', WEIGHTS.salary),
     education: emptyBreakdown('Education Match', WEIGHTS.education),
+    title: emptyBreakdown('Title Match', WEIGHTS.title),
   },
 };

@@ -98,7 +98,7 @@ export const calculateProfileCompletion = (profile: Record<string, unknown>): nu
   const fields = [
     'fullName', 'email', 'phone', 'gender', 'dateOfBirth',
     'address', 'city', 'state', 'country', 'bio', 'experience',
-    'currentCompany', 'skills', 'education', 'workExperience',
+    'currentCompany', 'skills', 'preferredJobTitles', 'education', 'workExperience',
     'resumeUrl', 'socialLinks',
   ];
   let filled = 0;

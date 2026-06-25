@@ -13,6 +13,7 @@ import {
 import { Message as MessageIcon } from '@mui/icons-material';
 import type { TalentPoolCandidate } from '@types';
 import { normalizeSkills } from '@utils/matchScore';
+import { formatExperienceString } from '@utils/experience';
 import { ResumeUnlockContact } from '../ResumeUnlockContact';
 
 interface TalentPoolProfileDialogProps {
@@ -85,8 +86,8 @@ export const TalentPoolProfileDialog: React.FC<TalentPoolProfileDialogProps> = (
                 Experience
               </Typography>
               <Typography variant="body2">
-                {profile.experience_years != null
-                  ? `${profile.experience_years} years`
+                {profile.experience_years != null || profile.experience_months != null
+                  ? formatExperienceString(profile.experience_years, profile.experience_months)
                   : profile.experience || 'Not specified'}
               </Typography>
             </Box>
