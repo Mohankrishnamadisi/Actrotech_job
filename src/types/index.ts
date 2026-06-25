@@ -66,6 +66,8 @@ export interface JobSeekerProfile {
   preferredJobTitles?: string[];
   currentDesignation?: string;
   current_designation?: string;
+  isFresher?: boolean;
+  is_fresher?: boolean;
   currentCompany?: string;
   currentCtc?: string;
   expectedCtc?: string;
@@ -99,6 +101,8 @@ export interface JobSeeker extends User {
   preferredJobTitles?: string[];
   currentDesignation?: string;
   current_designation?: string;
+  isFresher?: boolean;
+  is_fresher?: boolean;
   currentCompany?: string;
   currentCtc?: string;
   expectedCtc?: string;

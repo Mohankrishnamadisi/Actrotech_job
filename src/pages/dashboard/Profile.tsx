@@ -10,10 +10,12 @@ import {
   Avatar,
   Divider,
   FormControl,
+  FormControlLabel,
   InputLabel,
   Select,
   SelectChangeEvent,
   MenuItem,
+  Switch,
   Chip,
   Grid,
   Paper,
@@ -83,6 +85,7 @@ export const ProfilePage: React.FC = () => {
     country: 'India',
     bio: '',
     currentDesignation: '',
+    isFresher: false,
     experience: '',
     experienceYears: '' as string | number,
     experienceMonths: '' as string | number,
@@ -127,8 +130,11 @@ export const ProfilePage: React.FC = () => {
             country: profile.country || 'India',
             bio: profile.bio || '',
             currentDesignation: profile.current_designation || profile.currentDesignation || '',
+            isFresher: profile.is_fresher || profile.isFresher || false,
             experience:
-              profile.experience || formatExperienceString(profile.experience_years, profile.experience_months),
+              profile.is_fresher || profile.isFresher
+                ? 'Fresher'
+                : profile.experience || formatExperienceString(profile.experience_years, profile.experience_months),
             experienceYears:
               profile.experience_years != null
                 ? profile.experience_years
@@ -195,6 +201,21 @@ export const ProfilePage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target as { name?: string; checked: boolean };
+    if (!name) return;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+      experience:
+        name === 'isFresher'
+          ? checked
+            ? 'Fresher'
+            : formatExperienceString(prev.experienceYears, prev.experienceMonths)
+          : prev.experience,
+    }));
+  };
+
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const { name, value } = event.target as { name?: string; value: unknown };
     if (!name) return;
@@ -240,10 +261,13 @@ export const ProfilePage: React.FC = () => {
         country: formData.country,
         bio: formData.bio,
         current_designation: formData.currentDesignation,
-        experience: formatExperienceString(formData.experienceYears, formData.experienceMonths),
-        experience_years: Number(formData.experienceYears) || 0,
-        experience_months: Number(formData.experienceMonths) || 0,
-        total_experience_months: getTotalExperienceMonths(formData.experienceYears, formData.experienceMonths),
+        is_fresher: formData.isFresher,
+        experience: formData.isFresher ? 'Fresher' : formatExperienceString(formData.experienceYears, formData.experienceMonths),
+        experience_years: formData.isFresher ? 0 : Number(formData.experienceYears) || 0,
+        experience_months: formData.isFresher ? 0 : Number(formData.experienceMonths) || 0,
+        total_experience_months: formData.isFresher
+          ? 0
+          : getTotalExperienceMonths(formData.experienceYears, formData.experienceMonths),
         skills: formData.skills,
         preferred_job_titles: formData.preferredJobTitles,
         education_details: formData.education,
@@ -390,50 +414,6 @@ export const ProfilePage: React.FC = () => {
                     <TextField fullWidth label="Date of Birth" name="dateOfBirth" type="date"
                       value={formData.dateOfBirth} onChange={handleInputChange} InputLabelProps={{ shrink: true }} />
                   </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel>Years</InputLabel>
-                      <Select
-                        name="experienceYears"
-                        value={formData.experienceYears}
-                        onChange={handleSelectChange}
-                        label="Years"
-                      >
-                        {Array.from({ length: 31 }, (_, i) => i).map((years) => (
-                          <MenuItem key={years} value={years}>
-                            {years}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel>Months</InputLabel>
-                      <Select
-                        name="experienceMonths"
-                        value={formData.experienceMonths}
-                        onChange={handleSelectChange}
-                        label="Months"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => i).map((months) => (
-                          <MenuItem key={months} value={months}>
-                            {months}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box sx={{ pt: 1.5 }}>
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                        Total Experience
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatExperienceString(formData.experienceYears, formData.experienceMonths) || 'Not specified'}
-                      </Typography>
-                    </Box>
-                  </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Address" name="address" value={formData.address} onChange={handleInputChange} multiline rows={2} />
                   </Grid>
@@ -463,6 +443,74 @@ export const ProfilePage: React.FC = () => {
 
               <TabPanel value={tabValue} index={1}>
                 <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Experience</Typography>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={formData.isFresher}
+                          onChange={handleToggleChange}
+                          name="isFresher"
+                          color="primary"
+                        />
+                      }
+                      label="I am a Fresher"
+                    />
+                  </Box>
+                  {!formData.isFresher ? (
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel>Years</InputLabel>
+                          <Select
+                            name="experienceYears"
+                            value={formData.experienceYears}
+                            onChange={handleSelectChange}
+                            label="Years"
+                          >
+                            {Array.from({ length: 31 }, (_, i) => i).map((years) => (
+                              <MenuItem key={years} value={years}>
+                                {years}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel>Months</InputLabel>
+                          <Select
+                            name="experienceMonths"
+                            value={formData.experienceMonths}
+                            onChange={handleSelectChange}
+                            label="Months"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i).map((months) => (
+                              <MenuItem key={months} value={months}>
+                                {months}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Box sx={{ pt: 1.5 }}>
+                          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            Total Experience
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {formatExperienceString(formData.experienceYears, formData.experienceMonths) || 'Not specified'}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  ) : (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Select Fresher if you have no prior work experience. This will save your profile as a fresher and skip the years/months fields.
+                      </Typography>
+                    </Box>
+                  )}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>Education</Typography>
                     <Button size="small" variant="contained" onClick={() => { setNewEducation({ degree: '', school: '', year: '' }); setEditingEducationId(null); setEducationDialogOpen(true); }}>Add</Button>
