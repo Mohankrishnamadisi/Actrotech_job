@@ -16,6 +16,8 @@ import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { userService, jobService } from '@services/api';
 import { ROUTES } from '@constants/index';
+import { calculateMatchScore } from '@utils/matchScore';
+import { formatExperienceString, getTotalExperienceMonths } from '@utils/experience';
 
 const getJobList = (response: any): any[] => {
   if (Array.isArray(response)) return response;
@@ -29,19 +31,44 @@ export const RecommendedJobs: React.FC = () => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userSkills, setUserSkills] = useState<string[]>([]);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) return;
       try {
         setLoading(true);
-        const profile = await userService.getProfile(user.id);
-        const skills = profile?.skills || [];
+        const profileData = await userService.getProfile(user.id);
+        setProfile(profileData);
+
+        const skills: string[] = profileData?.skills || [];
         setUserSkills(skills);
 
-        if (skills.length > 0) {
-          const recommendedJobs = await jobService.getJobsBySkills(skills, 1, 50);
-          setJobs(getJobList(recommendedJobs));
+        const preferredTitles: string[] = profileData?.preferred_job_titles || profileData?.preferredJobTitles || [];
+        const currentDesignation: string = profileData?.current_designation || profileData?.currentDesignation || '';
+        const searchTerms = [...preferredTitles, currentDesignation]
+          .filter(Boolean)
+          .map((term) => String(term).trim())
+          .filter(Boolean)
+          .slice(0, 5);
+
+        const jobsBySkills = skills.length > 0
+          ? getJobList(await jobService.getJobsBySkills(skills, 1, 100))
+          : [];
+
+        const titleSearchResponses = await Promise.all(
+          searchTerms.map((term) => jobService.getJobs({ keyword: term }, 1, 50).catch(() => ({ data: [] })))
+        );
+        const jobsByTitles = titleSearchResponses.flatMap(getJobList);
+
+        const combinedJobs = [...jobsBySkills, ...jobsByTitles];
+        const uniqueJobs = Array.from(new Map(combinedJobs.map((job) => [job.id, job])).values());
+
+        if (uniqueJobs.length === 0 && !skills.length && !searchTerms.length) {
+          const allJobsResponse = await jobService.getJobs({}, 1, 50);
+          setJobs(getJobList(allJobsResponse));
+        } else {
+          setJobs(uniqueJobs);
         }
       } catch (error) {
         console.error('Error fetching recommended jobs:', error);
@@ -58,14 +85,24 @@ export const RecommendedJobs: React.FC = () => {
   const search = new URLSearchParams(location.search);
   const minMatch = Math.max(0, parseInt(search.get('minMatch') || '0', 10) || 0);
 
-  const calculateMatchPercentage = (jobSkills: string[]) => {
-    if (!jobSkills || jobSkills.length === 0) return 0;
-    const matches = jobSkills.filter((skill) =>
-      userSkills.some((userSkill) =>
-        String(userSkill).toLowerCase() === String(skill).toLowerCase()
-      )
-    ).length;
-    return Math.round((matches / jobSkills.length) * 100);
+  const calculateMatchPercentage = (job: any) => {
+    if (!profile) return 0;
+
+    const candidate = {
+      ...profile,
+      preferred_job_titles: profile.preferred_job_titles || profile.preferredJobTitles || [],
+      preferredJobTitles: profile.preferred_job_titles || profile.preferredJobTitles || [],
+      current_designation: profile.current_designation || profile.currentDesignation || '',
+      currentDesignation: profile.current_designation || profile.currentDesignation || '',
+      experience:
+        profile.experience ||
+        formatExperienceString(profile.experience_years, profile.experience_months),
+      total_experience_months:
+        profile.total_experience_months ?? getTotalExperienceMonths(profile.experience_years, profile.experience_months),
+    };
+
+    const score = calculateMatchScore(candidate, job).score;
+    return Math.round(score);
   };
 
   if (loading) {
@@ -97,8 +134,9 @@ export const RecommendedJobs: React.FC = () => {
         ) : (
           <Grid container spacing={3}>
             {jobs
-              .map((job) => ({ job, matchPercentage: calculateMatchPercentage(job.skills || []) }))
+              .map((job) => ({ job, matchPercentage: calculateMatchPercentage(job) }))
               .filter(({ matchPercentage }) => matchPercentage >= minMatch && matchPercentage <= 100)
+              .sort((a, b) => b.matchPercentage - a.matchPercentage)
               .map(({ job, matchPercentage }) => (
                 <Grid item xs={12} md={6} key={job.id}>
                   <Paper

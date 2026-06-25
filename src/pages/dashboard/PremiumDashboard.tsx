@@ -61,7 +61,6 @@ export const PremiumDashboard: React.FC = () => {
   const [profileStrength, setProfileStrength] = useState(0);
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
-  const [openMatched, setOpenMatched] = useState(false);
   const MotionCard = motion(Card);
 
   useEffect(() => {
@@ -216,13 +215,7 @@ export const PremiumDashboard: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
                   sx={{ cursor: 'pointer', borderRadius: 2, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={() => {
-                    if (action.label === 'Matched Jobs') {
-                      setOpenMatched(true);
-                    } else {
-                      navigate(action.to);
-                    }
-                  }}
+                  onClick={() => navigate(action.to)}
                 >
                   <CardContent sx={{ textAlign: 'center' }}>
                     <action.icon sx={{ fontSize: 36, color: (theme.palette as any)[action.color]?.main || theme.palette.primary.main, mb: 1 }} />
@@ -234,35 +227,6 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
         </Box>
 
-        {/* Matched Jobs Modal (shows top recommended jobs) */}
-        <Dialog open={openMatched} onClose={() => setOpenMatched(false)} fullWidth maxWidth="md">
-          <DialogTitle>Top Matched Jobs</DialogTitle>
-          <DialogContent>
-            {recommendedJobs && recommendedJobs.length > 0 ? (
-              <Grid container spacing={2}>
-                {recommendedJobs.map((job: any) => (
-                  <Grid item xs={12} md={6} key={job.id}>
-                    <Card variant="outlined" sx={{ p: 2 }}>
-                      <CardContent>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>{job.title}</Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>{job.company_name}</Typography>
-                        <Box sx={{ mt: 1 }}>
-                          <Button size="small" onClick={() => navigate(`${ROUTES.JOB_DETAILS}/${job.id}`)}>View</Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography>No matched jobs available right now.</Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => { setOpenMatched(false); navigate('/dashboard/recommended-jobs'); }}>View All</Button>
-            <Button onClick={() => setOpenMatched(false)} variant="contained">Close</Button>
-          </DialogActions>
-        </Dialog>
 
         {/* Exclusive Tools (config-driven) */}
         <Box sx={{ mb: 4 }}>
