@@ -267,7 +267,7 @@ export const Navbar: React.FC = () => {
                     },
                   }}
                 >
-                  Post a Job
+                  Hire Talent ⭐
                 </Button>
               </MotionBox>
             )}
