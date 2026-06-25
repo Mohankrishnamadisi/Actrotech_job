@@ -64,6 +64,8 @@ export interface JobSeekerProfile {
   experienceMonths?: number;
   totalExperienceMonths?: number;
   preferredJobTitles?: string[];
+  currentDesignation?: string;
+  current_designation?: string;
   currentCompany?: string;
   currentCtc?: string;
   expectedCtc?: string;
@@ -95,6 +97,8 @@ export interface JobSeeker extends User {
   experienceMonths?: number;
   totalExperienceMonths?: number;
   preferredJobTitles?: string[];
+  currentDesignation?: string;
+  current_designation?: string;
   currentCompany?: string;
   currentCtc?: string;
   expectedCtc?: string;

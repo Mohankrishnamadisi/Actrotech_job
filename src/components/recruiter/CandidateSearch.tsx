@@ -60,6 +60,8 @@ interface Candidate {
   experience_years?: number;
   experience_months?: number;
   total_experience_months?: number;
+  current_designation?: string | null;
+  currentDesignation?: string | null;
   avatar?: string;
   avatar_url?: string | null;
   profile_image_url?: string | null;
@@ -337,7 +339,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                             {candidate.headline}
                           </Typography>
                           <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
-                            📍 {candidate.location || 'Location not specified'}
+                            {candidate.current_designation ? `Current Designation: ${candidate.current_designation}` : `📍 ${candidate.location || 'Location not specified'}`}
                           </Typography>
                           {candidate.skills && candidate.skills.length > 0 && (
                             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
@@ -502,6 +504,22 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
 
               {/* Profile Details Section */}
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 2 }}>
+                {selectedCandidate.current_designation && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      CURRENT DESIGNATION
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_designation}</Typography>
+                  </Box>
+                )}
+                {selectedCandidate.current_designation && (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
+                      CURRENT DESIGNATION
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_designation}</Typography>
+                  </Box>
+                )}
                 {selectedCandidate.current_company && (
                   <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>

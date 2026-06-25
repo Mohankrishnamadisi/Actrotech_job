@@ -82,6 +82,7 @@ export const ProfilePage: React.FC = () => {
     state: '',
     country: 'India',
     bio: '',
+    currentDesignation: '',
     experience: '',
     experienceYears: '' as string | number,
     experienceMonths: '' as string | number,
@@ -125,6 +126,7 @@ export const ProfilePage: React.FC = () => {
             state: profile.state || '',
             country: profile.country || 'India',
             bio: profile.bio || '',
+            currentDesignation: profile.current_designation || profile.currentDesignation || '',
             experience:
               profile.experience || formatExperienceString(profile.experience_years, profile.experience_months),
             experienceYears:
@@ -237,6 +239,7 @@ export const ProfilePage: React.FC = () => {
         state: formData.state,
         country: formData.country,
         bio: formData.bio,
+        current_designation: formData.currentDesignation,
         experience: formatExperienceString(formData.experienceYears, formData.experienceMonths),
         experience_years: Number(formData.experienceYears) || 0,
         experience_months: Number(formData.experienceMonths) || 0,
@@ -267,6 +270,7 @@ export const ProfilePage: React.FC = () => {
         state: updatedProfile.state || prev.state,
         country: updatedProfile.country || prev.country,
         bio: updatedProfile.bio || prev.bio,
+        currentDesignation: updatedProfile.current_designation || updatedProfile.currentDesignation || prev.currentDesignation,
         experience: updatedProfile.experience || prev.experience,
         experienceYears:
           updatedProfile.experience_years != null
@@ -446,6 +450,9 @@ export const ProfilePage: React.FC = () => {
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleInputChange} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField fullWidth label="Current Designation" name="currentDesignation" value={formData.currentDesignation} onChange={handleInputChange} />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Bio" name="bio" multiline rows={3} value={formData.bio}
@@ -675,7 +682,7 @@ export const ProfilePage: React.FC = () => {
           <DialogTitle>{editingWorkExpId ? 'Edit Experience' : 'Add Experience'}</DialogTitle>
           <DialogContent sx={{ pt: 2 }}>
             <TextField fullWidth label="Company" value={newWorkExp.company} onChange={(e) => setNewWorkExp({ ...newWorkExp, company: e.target.value })} sx={{ mb: 2 }} />
-            <TextField fullWidth label="Position" value={newWorkExp.position} onChange={(e) => setNewWorkExp({ ...newWorkExp, position: e.target.value })} sx={{ mb: 2 }} />
+            <TextField fullWidth label="Designation / Position" value={newWorkExp.position} onChange={(e) => setNewWorkExp({ ...newWorkExp, position: e.target.value })} sx={{ mb: 2 }} />
             <TextField fullWidth label="Duration" value={newWorkExp.duration} onChange={(e) => setNewWorkExp({ ...newWorkExp, duration: e.target.value })} sx={{ mb: 2 }} />
             <TextField fullWidth label="Description" multiline rows={3} value={newWorkExp.description} onChange={(e) => setNewWorkExp({ ...newWorkExp, description: e.target.value })} />
           </DialogContent>
