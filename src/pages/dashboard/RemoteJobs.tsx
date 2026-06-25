@@ -183,7 +183,7 @@ export const RemoteJobs: React.FC = () => {
                     <Button
                       variant="contained"
                       fullWidth
-                      onClick={() => navigate(`${ROUTES.JOB_DETAILS}/${job.id}`)}
+                      onClick={() => navigate(ROUTES.JOB_DETAILS.replace(':id', String(job.id)))}
                       sx={{
                         background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
                         fontWeight: 700,
