@@ -21,14 +21,16 @@ import {
   Bookmark as BookmarkIcon,
   Notifications as NotificationsIcon,
   Person as PersonIcon,
+  Visibility as VisibilityIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { useSubscription } from '@hooks/index';
 import { ROUTES } from '@constants/index';
-import { calculateProfileCompletion, formatDate, getProfileCompletionGradient, getProfileCompletionColor } from '@utils/index';
-import { getCandidateProfileViewCount, getCandidateResumeUnlockCount } from '@utils/resumeUnlocks';
-import computeAIMatch from '@utils/aiJobMatch';
+import { calculateProfileCompletion, formatDate, getProfileCompletionGradient } from '@utils/index';
+import { useTheme } from '@mui/material/styles';
+import { getCandidateProfileViewCount, getCandidateResumeUnlockCount, getCandidateProfileViewRecruiters, getCandidateResumeUnlockRecruiters } from '@utils/resumeUnlocks';
 import { applicationService, savedService, notificationService, userService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { INTERVIEW_ROLES } from '@constants/index';
@@ -40,6 +42,19 @@ type RecentApplication = {
   jobs?: {
     title?: string;
     company_name?: string;
+    location?: string;
+  };
+};
+
+type DashboardSectionKey = 'applications' | 'saved' | 'resume' | 'profile' | null;
+
+type SavedJobItem = {
+  id: string;
+  jobs?: {
+    id?: string;
+    title?: string;
+    company_name?: string;
+    location?: string;
   };
 };
 
@@ -51,16 +66,44 @@ export const Dashboard: React.FC = () => {
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [profile, setProfile] = useState<any | null>(null);
   const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
+  const [savedJobs, setSavedJobs] = useState<SavedJobItem[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [skills, setSkills] = useState<string[]>([]);
   const [resumeDownloadCount, setResumeDownloadCount] = useState<number | null>(null);
   const [profileViewCount, setProfileViewCount] = useState<number | null>(null);
+  const [resumeUnlockers, setResumeUnlockers] = useState<any[]>([]);
+  const [profileViewers, setProfileViewers] = useState<any[]>([]);
+  const [selectedSection, setSelectedSection] = useState<DashboardSectionKey>(null);
+  const [sectionLoading, setSectionLoading] = useState(false);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
-  const [profileStrength, setProfileStrength] = useState<number | null>(null);
   const navigate = useNavigate();
+  const theme = useTheme();
+
+  const handleSectionSelect = async (section: DashboardSectionKey) => {
+    if (!user?.id) return;
+    if (selectedSection === section) {
+      setSelectedSection(null);
+      return;
+    }
+
+    setSelectedSection(section);
+    if (section === 'resume' && resumeUnlockers.length === 0) {
+      setSectionLoading(true);
+      const items = await getCandidateResumeUnlockRecruiters(user.id);
+      setResumeUnlockers(items);
+      setSectionLoading(false);
+    }
+    if (section === 'profile' && profileViewers.length === 0) {
+      setSectionLoading(true);
+      const items = await getCandidateProfileViewRecruiters(user.id);
+      setProfileViewers(items);
+      setSectionLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -111,6 +154,7 @@ export const Dashboard: React.FC = () => {
         ]);
 
         setRecentApplications(applications || []);
+        setSavedJobs(savedJobs || []);
         setSavedCount((savedJobs || []).length);
         setNotificationsCount((notifications || []).length);
         setUnreadMessagesCount(
@@ -152,51 +196,13 @@ export const Dashboard: React.FC = () => {
     loadDashboardData();
   }, [user?.id, profile?.skills, skills]);
 
-  useEffect(() => {
-    // Only compute profile strength for subscribed candidates
-    if (!subscription) {
-      setProfileStrength(null);
-      return;
-    }
-
-    if (!profile || !recommendedJobs || recommendedJobs.length === 0) {
-      setProfileStrength(null);
-      return;
-    }
-
-    try {
-      const scores = recommendedJobs.map((job) => computeAIMatch(profile, job).score);
-      if (scores.length === 0) {
-        setProfileStrength(null);
-        return;
-      }
-      const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-      setProfileStrength(avg);
-    } catch (err) {
-      console.error('Failed to compute profile strength:', err);
-      setProfileStrength(null);
-    }
-  }, [profile, recommendedJobs, subscription]);
-
-  const stats: Array<{ label: string; value: React.ReactNode; icon: any; color: string }> = [
-    { label: 'Applications', value: recentApplications.length, icon: WorkIcon, color: '#1D4ED8' },
-    { label: 'Saved Jobs', value: savedCount, icon: BookmarkIcon, color: '#10B981' },
-    { label: 'Notifications', value: notificationsCount, icon: NotificationsIcon, color: '#F59E0B' },
+  const stats: Array<{ key: DashboardSectionKey; label: string; value: React.ReactNode; icon: any; color: string; bg: string }> = [
+    { key: 'applications', label: 'Applications', value: recentApplications.length, icon: WorkIcon, color: '#1D4ED8', bg: 'linear-gradient(135deg, rgba(59,130,246,0.16), rgba(59,130,246,0.05))' },
+    { key: 'saved', label: 'Saved Jobs', value: savedCount, icon: BookmarkIcon, color: '#10B981', bg: 'linear-gradient(135deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))' },
+    { key: 'resume', label: 'Resume Downloads', value: resumeDownloadCount ?? 0, icon: DownloadIcon, color: '#F59E0B', bg: 'linear-gradient(135deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))' },
+    { key: 'profile', label: 'Profile Views', value: profileViewCount ?? 0, icon: VisibilityIcon, color: '#8B5CF6', bg: 'linear-gradient(135deg, rgba(139,92,246,0.16), rgba(139,92,246,0.05))' },
   ];
 
-  if (subscription) {
-    if (profileStrength != null) {
-      stats.push({ label: 'Profile Strength', value: `${profileStrength}%`, icon: PersonIcon, color: '#059669' });
-    } else {
-      stats.push({ label: 'Profile Strength', value: (
-        <Button variant="text" size="small" onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}>Complete Profile</Button>
-      ), icon: PersonIcon, color: '#059669' });
-    }
-  } else {
-    stats.push({ label: 'Profile Strength', value: (
-      <Button variant="contained" size="small" onClick={() => navigate(ROUTES.PRICING)}>Upgrade</Button>
-    ), icon: PersonIcon, color: '#059669' });
-  }
 
   return (
     <Layout>
@@ -234,41 +240,196 @@ export const Dashboard: React.FC = () => {
           </Box>
         </Box>
 
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {stats.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={4} key={stat.label}>
-              <MotionCard
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                      {stat.label}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Card sx={{ mb: 4, p: 3, borderRadius: 4, boxShadow: '0 20px 60px rgba(15,23,42,0.06)', background: theme.palette.background.paper }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>
+            Quick candidate overview
+          </Typography>
+          <Grid container spacing={2}>
+            {stats.map((stat, index) => (
+              <Grid item xs={12} sm={6} md={3} key={stat.label}>
+                <MotionCard
+                  onClick={() => handleSectionSelect(stat.key)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.06 }}
+                  sx={{
+                    cursor: 'pointer',
+                    background: stat.bg,
+                    borderRadius: 3,
+                    border: selectedSection === stat.key ? `2px solid ${stat.color}` : '1px solid rgba(145,158,171,0.16)',
+                    boxShadow: selectedSection === stat.key ? `0 18px 40px ${stat.color}20` : 'none',
+                  }}
+                >
+                  <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1, minHeight: 140 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                        {stat.label}
+                      </Typography>
+                      <Box sx={{ width: 44, height: 44, borderRadius: 2, background: `${stat.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <stat.icon sx={{ color: stat.color, fontSize: 24 }} />
+                      </Box>
+                    </Box>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#111827' }}>
                       {stat.value}
                     </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 2,
-                      background: `${stat.color}20`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <stat.icon sx={{ color: stat.color, fontSize: 28 }} />
-                  </Box>
-                </CardContent>
-              </MotionCard>
-            </Grid>
-          ))}
-        </Grid>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Tap to open details.
+                    </Typography>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Card sx={{ mt: 3, borderRadius: 3, p: 2, background: theme.palette.mode === 'dark' ? '#0F172A' : '#F8FAFC' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Quick view
+                </Typography>
+                {selectedSection ? (
+                  <Button variant="outlined" onClick={() => setSelectedSection(null)}>
+                    Close
+                  </Button>
+                ) : null}
+              </Box>
+              {!selectedSection ? (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Select any of the four cards above to preview the matching list right here.
+                </Typography>
+              ) : sectionLoading ? (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Loading details...
+                </Typography>
+              ) : selectedSection === 'applications' ? (
+                <List>
+                  {recentApplications.length ? (
+                    recentApplications.map((application) => (
+                      <ListItem key={application.id} sx={{ px: 0 }}>
+                        <ListItemText
+                          primary={application.jobs?.title || 'Unknown role'}
+                          secondary={
+                            <>
+                              <Typography component="span" variant="body2" sx={{ color: 'text.secondary' }}>
+                                {application.jobs?.company_name || 'Unknown company'}
+                              </Typography>
+                              {application.jobs?.location ? ` • ${application.jobs.location}` : ''}
+                            </>
+                          }
+                        />
+                        <Box sx={{ textAlign: 'right' }}>
+                          <Chip
+                            label={(application.status || 'applied').replace('_', ' ').toUpperCase()}
+                            size="small"
+                            color={
+                              application.status === 'shortlisted'
+                                ? 'success'
+                                : application.status === 'under_review'
+                                ? 'warning'
+                                : application.status === 'rejected'
+                                ? 'error'
+                                : application.status === 'accepted'
+                                ? 'primary'
+                                : 'default'
+                            }
+                          />
+                          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
+                            {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
+                          </Typography>
+                        </Box>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem>
+                      <ListItemText
+                        primary="No applications yet"
+                        secondary="Apply to jobs to see your application history here."
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              ) : selectedSection === 'saved' ? (
+                <List>
+                  {savedJobs.length ? (
+                    savedJobs.map((item) => (
+                      <ListItem key={item.id} sx={{ px: 0 }}>
+                        <ListItemText
+                          primary={item.jobs?.title || 'Role unavailable'}
+                          secondary={
+                            <>
+                              <Typography component="span" variant="body2" sx={{ color: 'text.secondary' }}>
+                                {item.jobs?.company_name || 'Company unavailable'}
+                              </Typography>
+                              {item.jobs?.location ? ` • ${item.jobs.location}` : ''}
+                            </>
+                          }
+                        />
+                        {item.jobs?.id ? (
+                          <Button component={RouterLink} to={ROUTES.JOB_DETAILS.replace(':id', item.jobs.id)} size="small">
+                            View Job
+                          </Button>
+                        ) : null}
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem>
+                      <ListItemText
+                        primary="No saved jobs yet"
+                        secondary="Save a job to revisit it later."
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              ) : selectedSection === 'resume' ? (
+                <List>
+                  {resumeUnlockers.length ? (
+                    resumeUnlockers.map((item, index) => (
+                      <ListItem key={`${item.recruiter_id}-${index}`} sx={{ px: 0 }}>
+                        <ListItemText
+                          primary={item.recruiter_name || 'Recruiter'}
+                          secondary={`${item.company_name || 'Recruiter company'} • ${item.total_unlocks} resume downloads`}
+                        />
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {item.last_unlocked_at ? formatDate(item.last_unlocked_at) : 'No date'}
+                        </Typography>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem>
+                      <ListItemText
+                        primary="No resume downloads yet"
+                        secondary="Recruiters will appear here once they download your resume."
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              ) : selectedSection === 'profile' ? (
+                <List>
+                  {profileViewers.length ? (
+                    profileViewers.map((item, index) => (
+                      <ListItem key={`${item.recruiter_id}-${index}`} sx={{ px: 0 }}>
+                        <ListItemText
+                          primary={item.recruiter_name || 'Recruiter'}
+                          secondary={`${item.company_name || 'Recruiter company'} • ${item.total_views} profile views`}
+                        />
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {item.last_viewed_at ? formatDate(item.last_viewed_at) : 'No date'}
+                        </Typography>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem>
+                      <ListItemText
+                        primary="No profile views yet"
+                        secondary="Recruiter views are shown here as they happen."
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              ) : null}
+            </CardContent>
+          </Card>
+        </Card>
 
         <Card
           sx={{
