@@ -21,6 +21,49 @@ const normalizeJob = (job: Record<string, any>): Job => ({
   updatedAt: job.updatedAt ?? job.updated_at,
 } as Job);
 
+const parseNumericExperienceYears = (value: unknown): number | null => {
+  const text = String(value ?? '').trim();
+  if (!/^\d+$/.test(text)) return null;
+  const years = Number(text);
+  return Number.isNaN(years) ? null : years;
+};
+
+const matchesExperienceYears = (jobExperience: unknown, years: number): boolean => {
+  const experienceText = String(jobExperience ?? '').trim().toLowerCase();
+  if (!experienceText) return false;
+
+  if (experienceText.includes('fresher')) {
+    return years === 0;
+  }
+
+  const rangeMatch = experienceText.match(/(\d+)\s*(?:-|to)\s*(\d+)/i);
+  if (rangeMatch) {
+    const min = Number(rangeMatch[1]);
+    const max = Number(rangeMatch[2]);
+    if (!Number.isNaN(min) && !Number.isNaN(max)) {
+      return years >= min && years <= max;
+    }
+  }
+
+  const plusMatch = experienceText.match(/(\d+)\s*\+/);
+  if (plusMatch) {
+    const min = Number(plusMatch[1]);
+    if (!Number.isNaN(min)) {
+      return years >= min;
+    }
+  }
+
+  const singleMatch = experienceText.match(/(\d+)/);
+  if (singleMatch) {
+    const single = Number(singleMatch[1]);
+    if (!Number.isNaN(single)) {
+      return years === single;
+    }
+  }
+
+  return false;
+};
+
 // User operations
 export const userService = {
   async createProfile(userId: string, profileData: Partial<JobSeeker | Recruiter>) {
@@ -264,14 +307,11 @@ export const jobService = {
   async getJobs(filters?: Record<string, unknown>, page = 1, limit = 20) {
     let query = supabase.from('jobs').select('*', { count: 'exact' }).eq('status', 'published');
 
-    const keyword = filters?.keyword ? String(filters.keyword) : null;
-    if (keyword) {
-      const escapedKeyword = keyword.replace(/%/g, '\\%').replace(/_/g, '\\_');
-      const keywordPattern = `%${escapedKeyword}%`;
-      query = query.or(
-        `title.ilike.${keywordPattern},company_name.ilike.${keywordPattern},skills.cs.{${keyword}}`
-      );
-    }
+    const keywordInput = filters?.keyword ? String(filters.keyword).trim() : '';
+    const keywordLower = keywordInput.toLowerCase();
+    const experienceInput = filters?.experience ? String(filters.experience).trim() : '';
+    const numericExperienceYears = parseNumericExperienceYears(experienceInput);
+
     if (filters?.location) {
       query = query.ilike('location', `%${filters.location}%`);
     }
@@ -314,7 +354,7 @@ export const jobService = {
         `category.eq.${JSON.stringify(term)},title.ilike.%${escaped}%,description.ilike.%${escaped}%,company_name.ilike.%${escaped}%,skills.cs.{${term}}`
       );
     }
-    if (filters?.experience) {
+    if (experienceInput && numericExperienceYears === null) {
       query = query.ilike('experience', `%${filters.experience}%`);
     }
     if (filters?.education) {
@@ -327,12 +367,46 @@ export const jobService = {
       }
     }
 
-    const { data, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+    const needsInMemoryFiltering = Boolean(keywordInput) || numericExperienceYears !== null;
+
+    if (!needsInMemoryFiltering) {
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      if (error) throw error;
+      return { data: (data || []).map(normalizeJob), total: count || 0 };
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return { data: (data || []).map(normalizeJob), total: count || 0 };
+
+    let normalizedJobs = (data || []).map(normalizeJob);
+
+    if (numericExperienceYears !== null) {
+      normalizedJobs = normalizedJobs.filter((job) =>
+        matchesExperienceYears((job as Record<string, unknown>).experience, numericExperienceYears)
+      );
+    }
+
+    const matchesKeyword = (value: unknown) => String(value || '').toLowerCase().includes(keywordLower);
+
+    const filteredJobs = keywordInput ? normalizedJobs.filter((job) => {
+      const skills = Array.isArray(job.skills) ? job.skills : [];
+
+      return (
+        matchesKeyword(job.title)
+        || matchesKeyword(job.company_name)
+        || matchesKeyword(job.description)
+        || skills.some((skill) => matchesKeyword(skill))
+      );
+    }) : normalizedJobs;
+
+    const startIndex = (page - 1) * limit;
+    const paginatedJobs = filteredJobs.slice(startIndex, startIndex + limit);
+
+    return { data: paginatedJobs, total: filteredJobs.length };
   },
 
   async getJobById(id: string) {

@@ -236,8 +236,27 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
         </Fab>
       ) : null}
 
-      <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
-        <DialogTitle sx={{ pb: 1 }}>
+      <Dialog
+        open={dialogOpen}
+        onClose={closeDialog}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+            border: '1px solid rgba(37, 99, 235, 0.18)',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.22)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            pb: 1.4,
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(16,185,129,0.1) 100%)',
+            borderBottom: '1px solid rgba(37, 99, 235, 0.15)',
+          }}
+        >
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
             <Stack direction="row" spacing={1} alignItems="center">
               <HeadsetMicIcon color="primary" />
@@ -245,12 +264,46 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
                 Customer Care Support
               </Typography>
             </Stack>
-            <Chip label={contactLabel} color="info" size="small" />
+            <Chip
+              label={contactLabel}
+              color="info"
+              size="small"
+              sx={{ fontWeight: 700, bgcolor: 'rgba(3, 105, 161, 0.14)' }}
+            />
           </Stack>
         </DialogTitle>
 
-        <DialogContent dividers>
-          <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2 }}>
+        <DialogContent
+          dividers
+          sx={{
+            px: { xs: 2, md: 3 },
+            py: 2.5,
+            bgcolor: 'rgba(248, 250, 252, 0.75)',
+          }}
+        >
+          <Tabs
+            value={tab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{
+              mb: 2.5,
+              bgcolor: '#FFFFFF',
+              borderRadius: 2,
+              p: 0.5,
+              border: '1px solid rgba(148, 163, 184, 0.25)',
+              '& .MuiTabs-indicator': { display: 'none' },
+              '& .MuiTab-root': {
+                borderRadius: 1.5,
+                textTransform: 'none',
+                minHeight: 40,
+                fontWeight: 600,
+              },
+              '& .Mui-selected': {
+                bgcolor: 'rgba(37, 99, 235, 0.12)',
+                color: 'primary.main',
+              },
+            }}
+          >
             <Tab label="Raise Ticket" />
             <Tab label={
               unseenCount > 0
@@ -267,7 +320,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           {errorMessage ? <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert> : null}
 
           {tab === 0 ? (
-            <Stack spacing={2}>
+            <Stack spacing={2} sx={{ p: { xs: 0.5, md: 1 }, bgcolor: '#FFFFFF', borderRadius: 2, border: '1px solid rgba(148, 163, 184, 0.2)' }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
                   select
@@ -311,7 +364,18 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
               />
 
               <Box>
-                <Button variant="contained" onClick={submitTicket} disabled={loading}>
+                <Button
+                  variant="contained"
+                  onClick={submitTicket}
+                  disabled={loading}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    px: 3,
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                    boxShadow: '0 10px 24px rgba(37,99,235,0.28)',
+                  }}
+                >
                   Submit Ticket
                 </Button>
               </Box>
@@ -328,7 +392,17 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
                 <List sx={{ p: 0 }}>
                   {tickets.map((ticket) => (
                     <React.Fragment key={ticket.id}>
-                      <ListItem alignItems="flex-start" sx={{ px: 0 }}>
+                      <ListItem
+                        alignItems="flex-start"
+                        sx={{
+                          px: 1.2,
+                          py: 1.1,
+                          mb: 1,
+                          borderRadius: 2,
+                          bgcolor: '#FFFFFF',
+                          border: '1px solid rgba(148, 163, 184, 0.22)',
+                        }}
+                      >
                         <ListItemText
                           primary={
                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -355,11 +429,16 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
                             </Box>
                           }
                         />
-                        <Button size="small" variant="outlined" onClick={() => openTicketDetail(ticket)} sx={{ ml: 1.2, mt: 0.5 }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => openTicketDetail(ticket)}
+                          sx={{ ml: 1.2, mt: 0.5, textTransform: 'none', fontWeight: 600 }}
+                        >
                           Open
                         </Button>
                       </ListItem>
-                      <Divider />
+                      <Divider sx={{ opacity: 0.6 }} />
                     </React.Fragment>
                   ))}
                 </List>
@@ -368,16 +447,26 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           ) : null}
 
           {tab === 2 ? (
-            <Stack spacing={2}>
+            <Stack spacing={2} sx={{ p: { xs: 0.5, md: 1 }, bgcolor: '#FFFFFF', borderRadius: 2, border: '1px solid rgba(148, 163, 184, 0.2)' }}>
               <Alert severity="info">
                 Support hours: Monday to Saturday, 9:00 AM - 7:00 PM.
               </Alert>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <Button startIcon={<EmailIcon />} variant="outlined" href="mailto:support@actrojobs.com">
+                <Button
+                  startIcon={<EmailIcon />}
+                  variant="outlined"
+                  href="mailto:support@actrojobs.com"
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
                   support@actrojobs.com
                 </Button>
-                <Button startIcon={<PhoneIcon />} variant="outlined" href="tel:+919876543210">
+                <Button
+                  startIcon={<PhoneIcon />}
+                  variant="outlined"
+                  href="tel:+919876543210"
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
                   +91 98765 43210
                 </Button>
               </Stack>
@@ -405,8 +494,10 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           ) : null}
         </DialogContent>
 
-        <DialogActions>
-          <Button onClick={closeDialog}>Close</Button>
+        <DialogActions sx={{ px: 2.5, py: 1.4, borderTop: '1px solid rgba(148, 163, 184, 0.2)', bgcolor: '#FFFFFF' }}>
+          <Button onClick={closeDialog} sx={{ textTransform: 'none', fontWeight: 600 }}>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
 

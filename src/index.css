@@ -103,3 +103,83 @@ a:hover {
 ::-ms-input-placeholder {
   color: #8a97aa;
 }
+
+.ac-sw-popup {
+  border-radius: 20px !important;
+  border: 1px solid rgba(37, 99, 235, 0.16) !important;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 38%),
+    radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.08), transparent 42%),
+    #ffffff !important;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.2) !important;
+  padding: 1.35rem 1.35rem 1.1rem !important;
+}
+
+.ac-sw-title {
+  font-size: 1.45rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  letter-spacing: 0.01em;
+}
+
+.ac-sw-content {
+  color: #334155 !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.ac-sw-icon {
+  margin-top: 0.2rem !important;
+  margin-bottom: 0.8rem !important;
+}
+
+.ac-sw-actions {
+  gap: 10px;
+  margin-top: 1.2rem !important;
+}
+
+.ac-sw-popup .swal2-styled {
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  padding: 0.62rem 1.15rem !important;
+  box-shadow: none !important;
+}
+
+.ac-sw-confirm {
+  border: 1px solid rgba(37, 99, 235, 0.25) !important;
+}
+
+.ac-sw-cancel,
+.ac-sw-deny {
+  border: 1px solid rgba(100, 116, 139, 0.32) !important;
+}
+
+@keyframes acSwPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.965);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes acSwPopOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+.ac-sw-show {
+  animation: acSwPopIn 0.24s ease-out;
+}
+
+.ac-sw-hide {
+  animation: acSwPopOut 0.16s ease-in;
+}

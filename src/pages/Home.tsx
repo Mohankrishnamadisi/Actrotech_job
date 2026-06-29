@@ -23,6 +23,7 @@ import { motion } from 'framer-motion';
 import {
   Search as SearchIcon,
   LocationOn as LocationOnIcon,
+  Timeline as TimelineIcon,
   WorkOutline as WorkIcon,
   Code as CodeIcon,
   Storage as StorageIcon,
@@ -129,6 +130,25 @@ export const Home: React.FC = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
+  const sectionRevealVariants = {
+    hidden: { opacity: 0, y: 22 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.55,
+        ease: 'easeOut',
+        staggerChildren: 0.08,
+        delayChildren: 0.06,
+      },
+    },
+  };
+
+  const sectionItemVariants = {
+    hidden: { opacity: 0, y: 14, scale: 0.985 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.42, ease: 'easeOut' } },
+  };
+
   const filteredInterviewRoles = INTERVIEW_ROLES.filter((role) => {
     const matchesSearch = role.title.toLowerCase().includes(roleSearch.toLowerCase()) ||
       role.description.toLowerCase().includes(roleSearch.toLowerCase());
@@ -136,22 +156,42 @@ export const Home: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const experienceOptions = Array.from({ length: 26 }, (_, i) => `${i} years`);
-
   return (
     <Layout>
       <MotionBox
         sx={{
           background: `
-            linear-gradient(115deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 253, 250, 0.88) 42%, rgba(239, 246, 255, 0.96) 100%),
-            repeating-linear-gradient(135deg, rgba(37, 99, 235, 0.07) 0 1px, transparent 1px 34px)
+            radial-gradient(circle at 14% 18%, rgba(14, 165, 233, 0.2), transparent 34%),
+            radial-gradient(circle at 87% 12%, rgba(16, 185, 129, 0.2), transparent 32%),
+            linear-gradient(112deg, rgba(255, 255, 255, 0.97) 0%, rgba(240, 253, 250, 0.92) 44%, rgba(239, 246, 255, 0.97) 100%),
+            repeating-linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0 1px, transparent 1px 34px)
           `,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          py: { xs: 7, md: 11 },
+          py: { xs: 7.5, md: 11.5 },
           mb: 6,
           position: 'relative',
           overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: -100,
+            right: -100,
+            width: 260,
+            height: 260,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.14), transparent 70%)',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: -120,
+            left: -120,
+            width: 280,
+            height: 280,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.14), transparent 72%)',
+          },
         }}
         variants={containerVariants}
         initial="hidden"
@@ -174,7 +214,7 @@ export const Home: React.FC = () => {
             <MotionTypography
               variant="h1"
               sx={{
-                fontSize: { xs: '2.5rem', md: '4.5rem' },
+                fontSize: { xs: '2.25rem', md: '4.4rem' },
                 fontWeight: 800,
                 mb: 2,
                 background: 'linear-gradient(90deg, #172033 0%, #2563EB 45%, #0F766E 100%)',
@@ -186,7 +226,7 @@ export const Home: React.FC = () => {
                 cursor: 'default',
               }}
               animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-              whileHover={{ letterSpacing: '0.35em', scale: 1.02 }}
+              whileHover={{ scale: 1.01 }}
               transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             >
               Find Your Dream Job
@@ -205,6 +245,27 @@ export const Home: React.FC = () => {
             >
               Search and apply for top jobs across India's leading companies.
             </MotionTypography>
+
+            <Box sx={{ mt: 2.2, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
+              {topCompanies.slice(0, 4).map((company) => (
+                <Chip
+                  key={company.name}
+                  label={`${company.name} - ${company.hiring}`}
+                  onClick={() => {
+                    const filters = new URLSearchParams();
+                    filters.append('keyword', company.name);
+                    navigate(`${ROUTES.JOBS}?${filters.toString()}`);
+                  }}
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.8)',
+                    border: '1px solid rgba(148, 163, 184, 0.35)',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: '#ffffff' },
+                  }}
+                />
+              ))}
+            </Box>
           </MotionBox>
 
           <MotionBox variants={itemVariants} whileHover={{ y: -4 }}>
@@ -212,15 +273,15 @@ export const Home: React.FC = () => {
               elevation={0}
               sx={{
                 p: { xs: 2.5, md: 4 },
-                background: 'rgba(255, 255, 255, 0.88)',
+                background: 'rgba(255, 255, 255, 0.92)',
                 backdropFilter: 'blur(18px)',
                 border: '1px solid',
-                borderColor: 'rgba(255, 255, 255, 0.76)',
-                borderRadius: 2,
-                boxShadow: '0 24px 60px rgba(15, 23, 42, 0.12)',
+                borderColor: 'rgba(148, 163, 184, 0.28)',
+                borderRadius: 3,
+                boxShadow: '0 28px 64px rgba(15, 23, 42, 0.14)',
                 transition: 'box-shadow 0.25s ease, transform 0.25s ease',
                 '&:hover': {
-                  boxShadow: '0 30px 70px rgba(15, 23, 42, 0.16)',
+                  boxShadow: '0 34px 74px rgba(15, 23, 42, 0.17)',
                 },
               }}
             >
@@ -273,20 +334,35 @@ export const Home: React.FC = () => {
                   />
                 </Grid>
                 <Grid item xs={12} md={2}>
-                  <FormControl fullWidth>
-                    <InputLabel>Experience</InputLabel>
-                    <Select
-                      value={experience}
-                      onChange={(e) => setExperience(e.target.value)}
-                      label="Experience"
-                      sx={{ height: 64, fontSize: '0.95rem' }}
-                    >
-                      <MenuItem value="">Any</MenuItem>
-                      {experienceOptions.map((option) => (
-                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <TextField
+                    fullWidth
+                    placeholder="Experience"
+                    value={experience}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) {
+                        setExperience(value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (['.', ',', 'e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    inputProps={{
+                      inputMode: 'numeric',
+                      pattern: '[0-9]*',
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <TimelineIcon sx={{ color: 'primary.main' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ '& .MuiOutlinedInput-root': { height: 64, fontSize: '0.95rem' } }}
+                  />
                 </Grid>
                 <Grid item xs={12} md={3}>
                   <MotionButton
@@ -301,7 +377,13 @@ export const Home: React.FC = () => {
                       py: 1.75,
                       fontSize: '1rem',
                       fontWeight: 700,
-                      borderRadius: 2,
+                      borderRadius: 2.2,
+                      background: 'linear-gradient(90deg, #0284c7, #2563eb)',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        background: 'linear-gradient(90deg, #0369a1, #1d4ed8)',
+                        boxShadow: 'none',
+                      },
                     }}
                   >
                     <SearchIcon sx={{ mr: 1 }} /> Search Jobs
@@ -315,29 +397,33 @@ export const Home: React.FC = () => {
 
       <Container maxWidth="lg" sx={{ pb: 8 }}>
         <MotionBox
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={sectionRevealVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
         >
-          <Typography
+          <MotionTypography
+            variants={sectionItemVariants}
             variant="h4"
             sx={{ fontWeight: 700, mb: 1, textAlign: 'center' }}
           >
             Browse by Category
-          </Typography>
-          <Typography
+          </MotionTypography>
+          <MotionTypography
+            variants={sectionItemVariants}
             variant="body1"
             sx={{ color: 'text.secondary', mb: 4, textAlign: 'center' }}
           >
             Explore opportunities in your field of expertise
-          </Typography>
+          </MotionTypography>
 
-          <Grid container spacing={2.5}>
+          <MotionBox variants={sectionRevealVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <Grid container spacing={2.5}>
             {JOB_CATEGORIES.map((category, index) => {
               const Icon = categoryIcons[category] || WorkIcon;
               return (
                 <Grid item xs={6} sm={4} md={3} key={category}>
+                  <MotionBox variants={sectionItemVariants}>
                   <MotionCard
                     whileHover={{ y: -6, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -352,9 +438,21 @@ export const Home: React.FC = () => {
                       border: '1px solid',
                       borderColor: 'divider',
                       transition: 'all 0.2s ease',
+                      borderRadius: 3,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: 4,
+                        background: categoryIconColors[index % categoryIconColors.length],
+                      },
                       '&:hover': {
                         borderColor: '#AFC1DD',
-                        boxShadow: '0 12px 28px rgba(15, 23, 42, 0.08)',
+                        boxShadow: '0 16px 34px rgba(15, 23, 42, 0.10)',
                       },
                     }}
                   >
@@ -380,28 +478,42 @@ export const Home: React.FC = () => {
                       </Typography>
                     </CardContent>
                   </MotionCard>
+                  </MotionBox>
                 </Grid>
               );
             })}
-          </Grid>
+            </Grid>
+          </MotionBox>
         </MotionBox>
 
         <MotionBox
           sx={{ mt: 8, mb: 6 }}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={sectionRevealVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
+          <MotionTypography variants={sectionItemVariants} variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
             Jobs You May Be Interested In
-          </Typography>
-          <Grid container spacing={2}>
+          </MotionTypography>
+          <MotionBox variants={sectionRevealVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <Grid container spacing={2}>
             {suggestedJobs.map((job) => (
               <Grid item xs={12} sm={6} md={3} key={job.title + job.company}>
+                <MotionBox variants={sectionItemVariants}>
                 <MotionCard
                   whileHover={{ y: -6 }}
-                  sx={{ borderRadius: 3, p: 2, minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+                  sx={{
+                    borderRadius: 3,
+                    p: 2,
+                    minHeight: 220,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    border: '1px solid rgba(226, 232, 240, 1)',
+                    background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                    boxShadow: '0 14px 30px rgba(15, 23, 42, 0.07)',
+                  }}
                 >
                   <Box>
                     <Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 700, mb: 1 }}>
@@ -430,21 +542,25 @@ export const Home: React.FC = () => {
                     View Jobs
                   </Button>
                 </MotionCard>
+                </MotionBox>
               </Grid>
             ))}
-          </Grid>
+            </Grid>
+          </MotionBox>
         </MotionBox>
 
         <MotionBox
           sx={{ mb: 6 }}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={sectionRevealVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <Grid container spacing={2}>
+          <MotionBox variants={sectionRevealVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)' }}>
+              <MotionBox variants={sectionItemVariants}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)', boxShadow: '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                   Top Companies Hiring Now
                 </Typography>
@@ -474,10 +590,12 @@ export const Home: React.FC = () => {
                   Explore all top company jobs
                 </Button>
               </Card>
+              </MotionBox>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%)' }}>
+              <MotionBox variants={sectionItemVariants}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%)', boxShadow: '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                   Featured Companies Actively Hiring
                 </Typography>
@@ -510,24 +628,27 @@ export const Home: React.FC = () => {
                   ))}
                 </Grid>
               </Card>
+              </MotionBox>
             </Grid>
-          </Grid>
+            </Grid>
+          </MotionBox>
         </MotionBox>
 
         <MotionBox
           sx={{ mb: 8 }}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={sectionRevealVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, background: 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
+          <MotionBox variants={sectionItemVariants}>
+            <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, background: 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', border: '1px solid', borderColor: 'divider', boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)' }}>
+            <MotionTypography variants={sectionItemVariants} variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
               Interview Questions by Role
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, textAlign: 'center' }}>
+            </MotionTypography>
+            <MotionTypography variants={sectionItemVariants} variant="body1" sx={{ color: 'text.secondary', mb: 3, textAlign: 'center' }}>
               Discover role-specific interview questions and prepare with real AmbitionBox resources.
-            </Typography>
+            </MotionTypography>
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 3, alignItems: 'center', justifyContent: 'space-between' }}>
               <TextField
@@ -561,9 +682,11 @@ export const Home: React.FC = () => {
               </FormControl>
             </Box>
 
-            <Grid container spacing={3}>
+            <MotionBox variants={sectionRevealVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <Grid container spacing={3}>
               {filteredInterviewRoles.slice(0, 4).map((role) => (
                 <Grid item xs={12} sm={6} md={3} key={role.title}>
+                  <MotionBox variants={sectionItemVariants}>
                   <MotionCard
                     component="button"
                     type="button"
@@ -592,7 +715,8 @@ export const Home: React.FC = () => {
                       },
                     }}
                     initial="hidden"
-                    animate="visible"
+                    whileInView="visible"
+                    viewport={{ once: true }}
                     variants={roleCardVariants}
                   >
                     <Box>
@@ -612,6 +736,7 @@ export const Home: React.FC = () => {
                       </Box>
                     </Box>
                   </MotionCard>
+                  </MotionBox>
                 </Grid>
               ))}
               {filteredInterviewRoles.length === 0 && (
@@ -621,13 +746,20 @@ export const Home: React.FC = () => {
                   </Typography>
                 </Grid>
               )}
-            </Grid>
+              </Grid>
+            </MotionBox>
             {filteredInterviewRoles.length > 4 && (
               <Box sx={{ mt: 4, overflowX: 'auto', py: 1, mx: -2, px: 2 }}>
-                <Box sx={{ display: 'flex', gap: 2, minWidth: 'max-content' }}>
+                <MotionBox
+                  variants={sectionRevealVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  sx={{ display: 'flex', gap: 2, minWidth: 'max-content' }}
+                >
                   {filteredInterviewRoles.slice(4).map((role) => (
+                    <MotionBox key={role.title} variants={sectionItemVariants}>
                     <MotionCard
-                      key={role.title}
                       component="button"
                       type="button"
                       whileHover={{ y: -6, scale: 1.02 }}
@@ -656,7 +788,8 @@ export const Home: React.FC = () => {
                         },
                       }}
                       initial="hidden"
-                      animate="visible"
+                      whileInView="visible"
+                      viewport={{ once: true }}
                       variants={roleCardVariants}
                     >
                       <Box>
@@ -676,42 +809,64 @@ export const Home: React.FC = () => {
                         </Box>
                       </Box>
                     </MotionCard>
+                    </MotionBox>
                   ))}
-                </Box>
+                </MotionBox>
               </Box>
             )}
-          </Paper>
+            </Paper>
+          </MotionBox>
         </MotionBox>
 
         <MotionBox
           sx={{
-            textAlign: 'center',
+            textAlign: { xs: 'center', md: 'left' },
             mt: 8,
             p: { xs: 4, md: 6 },
-            background: 'linear-gradient(135deg, #FFFFFF 0%, #F0FDFA 46%, #EFF6FF 100%)',
-            borderRadius: 2,
+            background:
+              'radial-gradient(circle at 20% 25%, rgba(56, 189, 248, 0.2), transparent 35%), radial-gradient(circle at 84% 18%, rgba(16, 185, 129, 0.2), transparent 35%), linear-gradient(135deg, #ffffff 0%, #f0fdff 48%, #eff6ff 100%)',
+            borderRadius: 3,
             border: '1px solid',
             borderColor: 'rgba(203, 213, 225, 0.8)',
-            boxShadow: '0 20px 42px rgba(15, 23, 42, 0.08)',
+            boxShadow: '0 24px 50px rgba(15, 23, 42, 0.10)',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 3,
           }}
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           whileHover={{ y: -4 }}
           viewport={{ once: true }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-            Ready to start your job search?
-          </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4 }}>
-            Join thousands of job seekers who have found their dream jobs on Actro Jobs
-          </Typography>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1.5 }}>
+              Ready to start your job search?
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              Join thousands of job seekers who have found their dream jobs on Actro Jobs.
+            </Typography>
+          </Box>
           <MotionButton
             variant="contained"
             size="large"
             onClick={() => navigate(ROUTES.JOBS)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            sx={{ px: 5, py: 1.5 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            sx={{
+              px: 4.5,
+              py: 1.4,
+              borderRadius: 2.2,
+              textTransform: 'none',
+              fontWeight: 700,
+              background: 'linear-gradient(90deg, #0284c7, #2563eb)',
+              boxShadow: 'none',
+              '&:hover': {
+                background: 'linear-gradient(90deg, #0369a1, #1d4ed8)',
+                boxShadow: 'none',
+              },
+            }}
           >
             Explore Jobs Now
           </MotionButton>

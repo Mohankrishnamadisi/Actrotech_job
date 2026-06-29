@@ -9,7 +9,7 @@ import {
 import { MobileLayout } from '@components/layout/MobileLayout';
 import { useAuthStore } from '@store/index';
 import { ROUTES } from '@constants/index';
-import Swal from 'sweetalert2';
+import Swal from '@utils/sweetAlert';
 
 interface JobDetailsProps {
   title?: string;

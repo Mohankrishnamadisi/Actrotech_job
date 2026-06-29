@@ -260,6 +260,13 @@ const AppContent: React.FC = () => {
   useNotificationAlerts(user?.id || null);
 
   useEffect(() => {
+    const hash = window.location.hash || '';
+    if (hash.startsWith('#access_token=') || hash.startsWith('#error=')) {
+      window.location.replace(`${window.location.origin}/#/auth/callback${hash}`);
+    }
+  }, []);
+
+  useEffect(() => {
     const initAuth = async () => {
       setLoading(true);
       try {

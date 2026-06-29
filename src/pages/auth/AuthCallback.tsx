@@ -1,11 +1,37 @@
 import React, { useEffect } from 'react';
 import { CircularProgress, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '@services/supabase';
+import { authService, supabase } from '@services/supabase';
 import { userService, recruiterService } from '@services/api';
 import type { Recruiter } from '@types';
 import { useAuthStore } from '@store/index';
 import { ROUTES, USER_ROLES } from '@constants/index';
+
+const restoreSessionFromHashToken = async () => {
+  const fullHash = window.location.hash || '';
+  const secondHashIndex = fullHash.indexOf('#', 1);
+  if (secondHashIndex === -1) {
+    return;
+  }
+
+  const tokenFragment = fullHash.slice(secondHashIndex + 1);
+  const params = new URLSearchParams(tokenFragment);
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+
+  if (!accessToken || !refreshToken) {
+    return;
+  }
+
+  const { error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+
+  if (error) {
+    throw error;
+  }
+};
 
 export const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +40,7 @@ export const AuthCallback: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
+        await restoreSessionFromHashToken();
         const session = await authService.getSession();
         const user = (session as any)?.user;
         if (!user) {

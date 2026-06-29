@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Swal from 'sweetalert2';
+import Swal from '@utils/sweetAlert';
 import { motion } from 'framer-motion';
 import { messagingService, Message, Conversation } from '@services/messaging';
 import ComposeMessage from './ComposeMessage';

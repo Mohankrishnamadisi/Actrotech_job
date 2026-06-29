@@ -27,7 +27,7 @@ import {
   Notifications as NotificationsIcon,
   AttachMoney as PricingIcon,
 } from '@mui/icons-material';
-import Swal from 'sweetalert2';
+import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';

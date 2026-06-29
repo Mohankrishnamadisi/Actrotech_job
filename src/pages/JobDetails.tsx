@@ -17,9 +17,22 @@ import {
   Tabs,
   Tab,
   CircularProgress,
+  Divider,
+  Stack,
+  LinearProgress,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LocationOn as LocationOnIcon, Work as WorkIcon, MonetizationOn as MonetizationOnIcon, BookmarkBorder as BookmarkBorderIcon, Bookmark as BookmarkIcon, Share as ShareIcon } from '@mui/icons-material';
+import {
+  LocationOn as LocationOnIcon,
+  Work as WorkIcon,
+  MonetizationOn as MonetizationOnIcon,
+  BookmarkBorder as BookmarkBorderIcon,
+  Bookmark as BookmarkIcon,
+  Share as ShareIcon,
+  CalendarMonth as CalendarMonthIcon,
+  Bolt as BoltIcon,
+  WorkspacePremium as WorkspacePremiumIcon,
+} from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
 import { jobService, userService, applicationService, savedService, chatService } from '@services/api';
@@ -29,7 +42,7 @@ import { useSubscription } from '@hooks/index';
 import { formatDate, formatJobSalary } from '@utils/index';
 import computeAIMatch from '@utils/aiJobMatch';
 import { ROUTES } from '@constants/index';
-import Swal from 'sweetalert2';
+import Swal from '@utils/sweetAlert';
 import toast from 'react-hot-toast';
 import type { Job } from '../types';
 
@@ -165,6 +178,10 @@ export const JobDetails: React.FC = () => {
   const hasAccess = !requiresSubscription || !!subscription;
   const showRemotePremium = workModeLabel === 'Remote' && !subscription;
   const isRecruiterOwner = Boolean(user?.id && job.posted_by === user.id);
+  const postedOn = formatDate(job.createdAt || job.created_at || new Date().toISOString());
+  const screeningQuestions = job.screeningQuestions || [];
+  const applicationsCount = job.applicationsCount || 0;
+  const canUseNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   const handleRecommendedMessage = (candidateId: string, candidateName: string) => {
     setSelectedChatUser({ id: candidateId, name: candidateName });
@@ -414,76 +431,188 @@ export const JobDetails: React.FC = () => {
 
   return (
     <Layout>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Grid container spacing={3}>
-          {/* Main Content */}
-          <Grid item xs={12} md={8}>
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                      {job.title}
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2, ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}>
-                      {showRemotePremium ? 'Upgrade to view company' : job.company_name}
-                    </Typography>
-                  </Box>
-                  <Button variant="text" startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />} onClick={handleSaveToggle} disabled={savedLoading}>
-                    {isSaved ? 'Saved' : 'Save'}
-                  </Button>
-                </Box>
+      <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 } }}>
+        <Card
+          sx={{
+            mb: 3,
+            borderRadius: 4,
+            border: '1px solid rgba(148, 163, 184, 0.28)',
+            background:
+              'radial-gradient(circle at 18% 20%, rgba(56, 189, 248, 0.24), transparent 36%), radial-gradient(circle at 88% 12%, rgba(37, 99, 235, 0.20), transparent 38%), linear-gradient(135deg, #0f172a, #1e293b)',
+            color: '#f8fafc',
+            boxShadow: '0 30px 70px rgba(15, 23, 42, 0.24)',
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2.2, md: 3.2 } }}>
+            <Grid container spacing={2.5} alignItems="center">
+              <Grid item xs={12} md={8}>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 800,
+                    lineHeight: 1.12,
+                    fontSize: { xs: '1.65rem', md: '2.3rem' },
+                    mb: 1,
+                  }}
+                >
+                  {job.title}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'rgba(226, 232, 240, 0.92)',
+                    mb: 1.5,
+                    ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
+                  }}
+                >
+                  {showRemotePremium ? 'Upgrade to view company' : job.company_name}
+                </Typography>
 
-                {/* Job Meta */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationOnIcon sx={{ color: 'primary.main' }} />
-                    <Typography variant="body2">{job.location}</Typography>
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 1.6 }}>
+                  <Chip label={jobTypeLabel} sx={{ bgcolor: 'rgba(56, 189, 248, 0.2)', color: '#e0f2fe', fontWeight: 700 }} />
+                  <Chip label={workModeLabel} sx={{ bgcolor: 'rgba(59, 130, 246, 0.22)', color: '#dbeafe', fontWeight: 700 }} />
+                  <Chip
+                    icon={<CalendarMonthIcon sx={{ color: '#bfdbfe !important' }} />}
+                    label={`Posted ${postedOn}`}
+                    sx={{ bgcolor: 'rgba(148, 163, 184, 0.18)', color: '#e2e8f0', fontWeight: 600 }}
+                  />
+                </Stack>
+
+                <Stack direction="row" spacing={2.2} useFlexGap flexWrap="wrap">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                    <LocationOnIcon sx={{ color: '#7dd3fc' }} />
+                    <Typography variant="body2" sx={{ color: '#e2e8f0' }}>{job.location}</Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <WorkIcon sx={{ color: 'primary.main' }} />
-                    <Typography variant="body2">{jobTypeLabel}</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <WorkIcon sx={{ color: 'primary.main' }} />
-                    <Typography variant="body2">{workModeLabel}</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <MonetizationOnIcon sx={{ color: 'success.main' }} />
-                    <Typography variant="body2" sx={{ color: 'success.main' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                    <MonetizationOnIcon sx={{ color: '#86efac' }} />
+                    <Typography variant="body2" sx={{ color: '#bbf7d0', fontWeight: 700 }}>
                       {formatJobSalary(job.salaryMin, job.salaryMax)}
                     </Typography>
                   </Box>
-                  {job.positionsAvailable || job.positions_available ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <WorkIcon sx={{ color: 'primary.main' }} />
-                      <Typography variant="body2" sx={showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}}>
-                        {showRemotePremium ? 'Positions hidden • Upgrade' : `Hiring ${job.positionsAvailable || job.positions_available} position${(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}`}
+                  {(job.positionsAvailable || job.positions_available) ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                      <WorkIcon sx={{ color: '#93c5fd' }} />
+                      <Typography variant="body2" sx={{ color: '#dbeafe', ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}) }}>
+                        {showRemotePremium ? 'Positions hidden - Upgrade' : `Hiring ${job.positionsAvailable || job.positions_available} position${(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}`}
                       </Typography>
                     </Box>
                   ) : null}
-                </Box>
+                </Stack>
+              </Grid>
 
-                {/* Skills */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Required Skills
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {job.skills.map((skill) => (
-                      <Chip key={skill} label={skill} color="primary" variant="outlined" />
-                    ))}
-                  </Box>
+              <Grid item xs={12} md={4}>
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 3,
+                    border: '1px solid rgba(148, 163, 184, 0.34)',
+                    background: 'rgba(15, 23, 42, 0.28)',
+                    backdropFilter: 'blur(6px)',
+                  }}
+                >
+                  <Button
+                    variant={isSaved ? 'contained' : 'outlined'}
+                    fullWidth
+                    startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                    onClick={handleSaveToggle}
+                    disabled={savedLoading}
+                    sx={{
+                      mb: 1.2,
+                      color: isSaved ? '#e0f2fe' : '#e2e8f0',
+                      borderColor: 'rgba(148, 163, 184, 0.45)',
+                      bgcolor: isSaved ? 'rgba(37, 99, 235, 0.62)' : 'rgba(30, 41, 59, 0.55)',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      '&:hover': {
+                        bgcolor: isSaved ? 'rgba(29, 78, 216, 0.72)' : 'rgba(51, 65, 85, 0.72)',
+                        borderColor: 'rgba(148, 163, 184, 0.62)',
+                      },
+                    }}
+                  >
+                    {isSaved ? 'Saved to Favorites' : 'Save Job'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<ShareIcon />}
+                    onClick={() => {
+                      if (!hasAccess) {
+                        toast.error('Upgrade to premium to share remote jobs');
+                        return;
+                      }
+
+                      if (canUseNativeShare) {
+                        navigator.share({
+                          title: job.title,
+                          text: `Check out this job: ${job.title} at ${job.company_name}`,
+                          url: window.location.href,
+                        });
+                        return;
+                      }
+
+                      navigator.clipboard.writeText(window.location.href)
+                        .then(() => toast.success('Job link copied to clipboard'))
+                        .catch(() => toast.error('Unable to share this link right now'));
+                    }}
+                    sx={{
+                      color: '#e2e8f0',
+                      borderColor: 'rgba(148, 163, 184, 0.45)',
+                      bgcolor: 'rgba(2, 132, 199, 0.34)',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      '&:hover': {
+                        bgcolor: 'rgba(3, 105, 161, 0.48)',
+                        borderColor: 'rgba(148, 163, 184, 0.62)',
+                      },
+                    }}
+                    disabled={!hasAccess}
+                  >
+                    Share Job
+                  </Button>
+                  {!hasAccess ? (
+                    <Alert severity="info" sx={{ mt: 1.3, bgcolor: 'rgba(224, 242, 254, 0.95)' }}>
+                      Remote job details are available only for premium members.
+                    </Alert>
+                  ) : null}
                 </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Card
+              sx={{
+                borderRadius: 4,
+                border: '1px solid',
+                borderColor: 'divider',
+                background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.07)',
+              }}
+            >
+              <CardContent sx={{ p: { xs: 2, md: 2.8 } }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.3 }}>
+                  Required Skills
+                </Typography>
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2.4 }}>
+                  {job.skills.map((skill) => (
+                    <Chip key={skill} label={skill} variant="outlined" sx={{ fontWeight: 600, bgcolor: 'rgba(224, 242, 254, 0.45)' }} />
+                  ))}
+                </Stack>
 
                 {isRecruiterOwner && (
                   <Tabs
                     value={jobDetailsTab}
                     onChange={(_, value) => setJobDetailsTab(value)}
-                    sx={{ mb: 3, borderBottom: '1px solid rgba(148, 163, 184, 0.18)' }}
+                    sx={{
+                      mb: 2.4,
+                      borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+                      '& .MuiTab-root': { textTransform: 'none', fontWeight: 700 },
+                    }}
                   >
-                    <Tab label="Job Details" sx={{ textTransform: 'none', fontWeight: 700 }} />
-                    <Tab label="Recommended Candidates" sx={{ textTransform: 'none', fontWeight: 700 }} />
+                    <Tab label="Job Details" />
+                    <Tab label="Recommended Candidates" />
                   </Tabs>
                 )}
 
@@ -497,130 +626,134 @@ export const JobDetails: React.FC = () => {
                     />
                   </Suspense>
                 ) : !hasAccess && requiresSubscription ? (
-                  <Box sx={{ p: 3, border: '1px solid rgba(186, 230, 253, 1)', borderRadius: 2, background: '#EFF6FF' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                  <Box sx={{ p: 3, border: '1px solid rgba(191, 219, 254, 1)', borderRadius: 3, background: 'linear-gradient(180deg, #eff6ff, #dbeafe)' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.8 }}>
                       Premium Remote Job
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Remote Jobs are available only for Premium Members. Upgrade to access full job details and apply.
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.4 }}>
+                      Remote jobs are available only for premium members. Upgrade to unlock full details and apply instantly.
                     </Typography>
+                    <Button variant="contained" onClick={() => navigate(ROUTES.PRICING)}>
+                      Upgrade Now
+                    </Button>
                   </Box>
                 ) : (
-                  <>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                        Job Description
-                      </Typography>
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: 'text.secondary' }}>
-                        {job.description}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                        Screening Questions
-                      </Typography>
-                      {job.screeningQuestions?.length ? (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          {job.screeningQuestions.map((question) => (
-                            <Typography key={question} variant="body2" sx={{ color: 'text.secondary' }}>
-                              • {question}
-                            </Typography>
-                          ))}
-                        </Box>
-                      ) : (
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          No screening questions for this role.
+                  <Stack spacing={2}>
+                    <Card variant="outlined" sx={{ borderRadius: 3, bgcolor: '#ffffff' }}>
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.4 }}>
+                          Job Description
                         </Typography>
-                      )}
-                    </Box>
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: 'text.secondary', lineHeight: 1.7 }}>
+                          {job.description}
+                        </Typography>
+                      </CardContent>
+                    </Card>
 
-                    <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(148, 163, 184, 0.1)' }}>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Posted on {formatDate(job.createdAt || job.created_at || new Date().toISOString())}
-                      </Typography>
+                    <Card variant="outlined" sx={{ borderRadius: 3, bgcolor: '#ffffff' }}>
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.2 }}>
+                          Screening Questions
+                        </Typography>
+                        {screeningQuestions.length ? (
+                          <Stack spacing={1}>
+                            {screeningQuestions.map((question, index) => (
+                              <Box key={question} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                                <Chip label={index + 1} size="small" sx={{ minWidth: 28, fontWeight: 700 }} />
+                                <Typography variant="body2" sx={{ color: 'text.secondary', pt: 0.25 }}>
+                                  {question}
+                                </Typography>
+                              </Box>
+                            ))}
+                          </Stack>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            No screening questions for this role.
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, color: 'text.secondary', px: 0.4 }}>
+                      <CalendarMonthIcon sx={{ fontSize: 18 }} />
+                      <Typography variant="caption">Posted on {postedOn}</Typography>
                     </Box>
-                  </>
+                  </Stack>
                 )}
               </CardContent>
             </Card>
           </Grid>
 
-          {/* Sidebar */}
           <Grid item xs={12} md={4}>
-            <Card sx={{ position: 'sticky', top: 80 }}>
-              <CardContent>
-                {!hasAccess && (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    <Typography variant="body2">
-                      Remote Jobs are available only for Premium Members.
-                    </Typography>
-                  </Alert>
-                )}
-
+            <Card
+              sx={{
+                position: 'sticky',
+                top: 80,
+                borderRadius: 4,
+                border: '1px solid',
+                borderColor: 'divider',
+                background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                boxShadow: '0 20px 42px rgba(15, 23, 42, 0.09)',
+              }}
+            >
+              <CardContent sx={{ p: 2.2 }}>
                 <Button
                   variant="contained"
                   fullWidth
                   size="large"
                   onClick={handleApplyClick}
                   disabled={!hasAccess || hasApplied}
-                  sx={{ mb: 2 }}
+                  sx={{
+                    mb: 1.3,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    py: 1.2,
+                    background: 'linear-gradient(90deg, #0284c7, #2563eb)',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      background: 'linear-gradient(90deg, #0369a1, #1d4ed8)',
+                      boxShadow: 'none',
+                    },
+                  }}
                 >
                   {hasApplied ? 'Already Applied' : 'Apply Now'}
                 </Button>
 
                 {subscription && ['premium', 'pro'].includes(String(subscription.plan || '').toLowerCase() as any) && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                    <Chip label="⭐ Priority Apply Available" sx={{ background: 'linear-gradient(90deg,#f59e0b,#f97316)', color: '#fff', fontWeight: 800 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.4 }}>
+                    <Chip
+                      icon={<BoltIcon sx={{ color: '#fff !important' }} />}
+                      label="Priority Apply Enabled"
+                      sx={{ background: 'linear-gradient(90deg,#f59e0b,#f97316)', color: '#fff', fontWeight: 800 }}
+                    />
                   </Box>
                 )}
 
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<ShareIcon />}
-                  onClick={() => {
-                    if (!hasAccess) {
-                      toast.error('Upgrade to premium to share remote jobs');
-                      return;
-                    }
-                    navigator.share({
-                      title: job.title,
-                      text: `Check out this job: ${job.title} at ${job.company_name}`,
-                      url: window.location.href,
-                    });
-                  }}
-                  disabled={!hasAccess}
-                >
-                  Share Job
-                </Button>
+                <Divider sx={{ my: 1.6 }} />
 
-                <Box sx={{ mt: 4 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                    Job Details
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Experience:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {job.experience}
-                    </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.4 }}>
+                  Quick Snapshot
+                </Typography>
+                <Stack spacing={1.2} sx={{ mb: 2.2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>Experience</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{job.experience || 'Not specified'}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Applications:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {job.applicationsCount || 0}
-                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>Applications</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{applicationsCount}</Typography>
                   </Box>
-                </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>Work Mode</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{workModeLabel}</Typography>
+                  </Box>
+                </Stack>
 
-                {/* AI Match Score (only for job seekers) */}
                 {user?.role === USER_ROLES.JOB_SEEKER && (
-                  <Box sx={{ mt: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.4, display: 'flex', alignItems: 'center', gap: 0.7 }}>
+                      <WorkspacePremiumIcon sx={{ color: 'primary.main' }} />
                       AI Match Score
                     </Typography>
 
@@ -630,29 +763,40 @@ export const JobDetails: React.FC = () => {
                       </Box>
                     ) : subscription ? (
                       aiMatch ? (
-                        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                        <Card variant="outlined" sx={{ p: 1.6, borderRadius: 2.5, bgcolor: '#fff' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="h4" sx={{ fontWeight: 700, color: aiMatch.color === 'success' ? 'success.main' : aiMatch.color === 'warning' ? 'warning.main' : 'error.main' }}>
+                            <Typography
+                              variant="h4"
+                              sx={{
+                                fontWeight: 800,
+                                color: aiMatch.color === 'success' ? 'success.main' : aiMatch.color === 'warning' ? 'warning.main' : 'error.main',
+                              }}
+                            >
                               {aiMatch.score}%
                             </Typography>
                             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                               {aiMatch.label}
                             </Typography>
                           </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.max(0, Math.min(100, Number(aiMatch.score) || 0))}
+                            sx={{ height: 8, borderRadius: 99, mb: 1.3 }}
+                          />
                           <Box sx={{ mb: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Matching Skills</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Matching Skills</Typography>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.matchedSkills.join(', ') || 'None'}</Typography>
                           </Box>
                           <Box sx={{ mb: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Missing Skills</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Missing Skills</Typography>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.missingSkills.join(', ') || 'None'}</Typography>
                           </Box>
                           <Box sx={{ mb: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Experience Match</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Experience Match</Typography>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.experiencePercent}%</Typography>
                           </Box>
                           <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Profile Improvement Suggestions</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Suggestions</Typography>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>{aiMatch.suggestions.join(' • ')}</Typography>
                           </Box>
                         </Card>
@@ -660,13 +804,12 @@ export const JobDetails: React.FC = () => {
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>No profile data to compute match.</Typography>
                       )
                     ) : (
-                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2.5, position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg,#f8fafc,#eef2ff)' }}>
                         <Box sx={{ filter: 'blur(4px)', userSelect: 'none' }}>
-                          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>🔒 Premium Feature</Typography>
-                          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>Know how well your profile matches this job.</Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.8 }}>Premium Feature</Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.8 }}>Know how well your profile matches this job.</Typography>
                           <Button variant="contained" fullWidth onClick={() => navigate(ROUTES.PRICING)}>Upgrade to Premium</Button>
                         </Box>
-                        <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }} />
                       </Card>
                     )}
                   </Box>

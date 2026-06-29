@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button, IconButton } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
-import Swal from 'sweetalert2';
+import Swal from '@utils/sweetAlert';
 import { messagingService, Conversation } from '@services/messaging';
 import { userService } from '@services/api';
 

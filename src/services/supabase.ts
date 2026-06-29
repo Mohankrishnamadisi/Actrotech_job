@@ -11,7 +11,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   supabaseAnonKey = supabaseAnonKey || 'placeholder-key';
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
 // Auth functions
 export const authService = {

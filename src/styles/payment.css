@@ -1,0 +1,317 @@
+/* Payment Section Styles */
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+  }
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Payment Method Cards */
+.payment-method-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-method-card:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.payment-method-card:hover:before {
+  left: 100%;
+}
+
+.payment-method-card.selected {
+  animation: glow 2s infinite;
+}
+
+/* Price Breakdown Container */
+.payment-breakdown {
+  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.payment-breakdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+  pointer-events: none;
+}
+
+/* Total Amount Display */
+.total-amount {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 16px;
+  border-radius: 12px;
+  text-align: center;
+  animation: slideInUp 0.6s ease-out;
+}
+
+.total-amount-value {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* Payment Button */
+.payment-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 700;
+  padding: 14px 48px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+}
+
+.payment-button:active {
+  transform: translateY(0);
+}
+
+.payment-button:disabled {
+  background: #D1D5DB;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.payment-button:hover::after {
+  left: 100%;
+}
+
+/* Feature List */
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: #F0FDF4;
+  animation: slideInRight 0.4s ease-out;
+}
+
+.feature-list-item svg {
+  color: #10B981;
+  flex-shrink: 0;
+  animation: checkmark 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Trust Badges */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #F3F4F6;
+  color: #6B7280;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  animation: fadeInScale 0.4s ease-out;
+}
+
+.trust-badge:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.trust-badge:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* Card Details Input */
+.card-input-field {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+}
+
+.card-input-field::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.card-input-field:focus {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Stepper */
+.payment-stepper {
+  background: transparent !important;
+}
+
+/* Modal */
+.payment-modal {
+  backdrop-filter: blur(4px);
+}
+
+.payment-modal-content {
+  border-radius: 16px;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+}
+
+/* Success Animation */
+.success-checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: #10B981;
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+  animation: fadeInScale 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.success-checkmark svg {
+  color: white;
+  font-size: 48px;
+  animation: checkmark 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-method-card {
+    padding: 16px;
+  }
+
+  .total-amount-value {
+    font-size: 1.5rem;
+  }
+
+  .payment-button {
+    padding: 12px 32px;
+    font-size: 0.9rem;
+  }
+
+  .trust-badge {
+    margin: 8px 0;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .payment-breakdown {
+    background: linear-gradient(135deg, #374151 0%, #1F2937 100%);
+  }
+
+  .payment-method-card {
+    background: #1F2937;
+    border-color: #374151;
+  }
+
+  .trust-badge {
+    background: #374151;
+    color: #D1D5DB;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

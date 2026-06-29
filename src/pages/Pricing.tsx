@@ -19,6 +19,7 @@ import {
   RadioGroup,
   Paper,
   Divider,
+  Chip,
 } from '@mui/material';
 import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
@@ -29,6 +30,8 @@ import { subscriptionService, paymentService } from '@services/api';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@constants/index';
 import toast from 'react-hot-toast';
+import { PaymentSection } from '@components/payments/PaymentSection';
+import { PaymentModal } from '@components/payments/PaymentModal';
 
 export const Pricing: React.FC = () => {
   const { user } = useAuthStore();
@@ -36,6 +39,7 @@ export const Pricing: React.FC = () => {
   const [selectedPlanId, setSelectedPlanId] = useState(SUBSCRIPTION_PLANS[0]?.id || 'basic');
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'phonepe' | 'credit_card' | 'upi'>('razorpay');
   const [loading, setLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const selectedPlan = useMemo(
     () => SUBSCRIPTION_PLANS.find((plan) => plan.id === selectedPlanId) ?? SUBSCRIPTION_PLANS[0],
@@ -87,21 +91,46 @@ export const Pricing: React.FC = () => {
     }
   };
 
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    toast.success('Subscription successful! Your premium access is now active.');
+    setTimeout(() => {
+      navigate(ROUTES.DASHBOARD);
+    }, 1500);
+  };
+
   const features = [
-    { name: 'Access to Onsite jobs', free: true, basic: true, premium: true, pro: true },
-    { name: 'View job details', free: true, basic: true, premium: true, pro: true },
-    { name: 'Save jobs', free: false, basic: '5 jobs', premium: 'Unlimited', pro: 'Unlimited' },
-    { name: 'Access to Remote jobs', free: false, basic: false, premium: true, pro: true },
-    { name: 'Access to Hybrid jobs', free: false, basic: false, premium: true, pro: true },
-    { name: 'Email notifications', free: false, basic: true, premium: true, pro: true },
-    { name: 'Apply without resume upload', free: false, basic: false, premium: true, pro: true },
-    { name: 'Weekly job digest', free: false, basic: false, premium: true, pro: true },
-    { name: 'Priority job recommendations', free: false, basic: false, premium: true, pro: true },
-    { name: 'Early access to new jobs', free: false, basic: false, premium: false, pro: true },
-    { name: 'Mock interview sessions', free: false, basic: false, premium: false, pro: true },
-    { name: '1-on-1 career coaching', free: false, basic: false, premium: false, pro: true },
-    { name: 'Resume review & optimization', free: false, basic: false, premium: false, pro: true },
-    { name: 'Portfolio building assistance', free: false, basic: false, premium: false, pro: true },
+    // Job Access Features
+    { category: 'Job Access', name: 'Access to Onsite jobs', basic: true, premium: true, pro: true },
+    { category: 'Job Access', name: 'Access to Remote & Hybrid jobs', basic: false, premium: true, pro: true },
+    { category: 'Job Access', name: 'Early access to new jobs', basic: false, premium: false, pro: true },
+    
+    // Application Features
+    { category: 'Applications', name: 'Save jobs', basic: '5 jobs', premium: 'Unlimited', pro: 'Unlimited' },
+    { category: 'Applications', name: 'Apply without resume upload', basic: false, premium: true, pro: true },
+    { category: 'Applications', name: 'Bulk apply feature', basic: false, premium: false, pro: true },
+    
+    // Recommendations & Matching
+    { category: 'Recommendations', name: 'Job recommendations', basic: false, premium: true, pro: true },
+    { category: 'Recommendations', name: 'Priority job recommendations', basic: false, premium: true, pro: true },
+    { category: 'Recommendations', name: 'AI Matched Jobs (Dashboard)', basic: false, premium: true, pro: true },
+    { category: 'Recommendations', name: 'Personalized job matching', basic: false, premium: false, pro: true },
+    
+    // Dashboard & Tools
+    { category: 'Premium Dashboard', name: 'Remote Hub access', basic: false, premium: true, pro: true },
+    { category: 'Premium Dashboard', name: 'Premium Command Deck', basic: false, premium: true, pro: true },
+    { category: 'Premium Dashboard', name: 'Profile visibility boost', basic: false, premium: true, pro: true },
+    
+    // Communication
+    { category: 'Communication', name: 'Email notifications', basic: true, premium: true, pro: true },
+    { category: 'Communication', name: 'Weekly job digest', basic: false, premium: true, pro: true },
+    { category: 'Communication', name: 'Direct recruiter messaging', basic: false, premium: true, pro: true },
+    
+    // Career Tools (Pro Only)
+    { category: 'Career Tools', name: 'Mock interview sessions', basic: false, premium: false, pro: true },
+    { category: 'Career Tools', name: '1-on-1 career coaching', basic: false, premium: false, pro: true },
+    { category: 'Career Tools', name: 'Resume review & optimization', basic: false, premium: false, pro: true },
+    { category: 'Career Tools', name: 'Portfolio building assistance', basic: false, premium: false, pro: true },
   ];
 
   return (
@@ -126,242 +155,346 @@ export const Pricing: React.FC = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={3} sx={{ mb: 8 }}>
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={3}>
-              {SUBSCRIPTION_PLANS.map((plan) => (
-                <Grid item xs={12} sm={6} key={plan.id}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      position: 'relative',
-                      border: plan.recommended ? '2px solid' : '1px solid',
-                      borderColor: plan.recommended ? 'primary.main' : 'divider',
-                      transform: plan.recommended ? 'scale(1.03)' : 'scale(1)',
-                      borderRadius: 4,
-                      background: plan.recommended ? 'linear-gradient(180deg, rgba(37,99,235,0.08), #FFFFFF)' : '#FFFFFF',
-                      boxShadow: plan.recommended ? '0 24px 60px rgba(37,99,235,0.14)' : '0 12px 32px rgba(15,23,42,0.08)',
-                    }}
-                  >
-                    {plan.recommended && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: -12,
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          background: '#1D4ED8',
-                          color: '#FFFFFF',
-                          px: 2,
-                          py: 0.5,
-                          borderRadius: '16px',
-                        }}
-                      >
-                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                          Most Popular
-                        </Typography>
-                      </Box>
-                    )}
-
-                    <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', pt: plan.recommended ? 3 : 2 }}>
-                      <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-                        {plan.name}
-                      </Typography>
-                      <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
-                        {plan.durationLabel}
-                      </Typography>
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', display: 'inline' }}>
-                          ₹{plan.price}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', ml: 1 }}>
-                          /{plan.period}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ mb: 3, flex: 1 }}>
-                        {plan.features.map((feature) => (
-                          <Box key={feature} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <CheckCircleIcon sx={{ fontSize: 18, color: 'success.main' }} />
-                            <Typography variant="body2">{feature}</Typography>
-                          </Box>
-                        ))}
-                      </Box>
-
-                      <Button
-                        variant={selectedPlanId === plan.id ? 'contained' : 'outlined'}
-                        fullWidth
-                        onClick={() => setSelectedPlanId(plan.id)}
-                        color="primary"
-                        sx={{
-                          textTransform: 'none',
-                          py: 1.3,
-                          fontWeight: 700,
-                          ...(selectedPlanId === plan.id && {
-                            background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                            color: '#FFFFFF',
-                          }),
-                        }}
-                      >
-                        {selectedPlanId === plan.id ? `Selected ${plan.name}` : `Choose ${plan.name}`}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Paper
-            sx={{
-              p: 3,
-              position: 'sticky',
-              top: 24,
-              borderRadius: 4,
-              border: '1px solid rgba(37, 99, 235, 0.12)',
-              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.08)',
-              background: '#FFFFFF',
-            }}
-            elevation={3}
-          >
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                Checkout Summary
-              </Typography>
-
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
-                Plan selected
-              </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-                {selectedPlan.name} • {selectedPlan.durationLabel}
-              </Typography>
-
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
-                Payment method
-              </Typography>
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <RadioGroup
-                  value={paymentMethod}
-                  onChange={(event) => setPaymentMethod(event.target.value as any)}
+        {/* Plan Selection */}
+        <Box sx={{ mb: 8, width: '80%', mx: 'auto', px: { xs: 2, sm: 3, md: 0 } }}>
+          <Grid container spacing={3}>
+            {SUBSCRIPTION_PLANS.map((plan) => (
+              <Grid item xs={12} sm={6} md={4} key={plan.id}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    border: plan.recommended ? '2px solid' : '1px solid',
+                    borderColor: plan.recommended ? 'primary.main' : 'divider',
+                    transform: plan.recommended ? 'scale(1.02)' : 'scale(1)',
+                    borderRadius: 4,
+                    background: plan.recommended ? 'linear-gradient(180deg, rgba(37,99,235,0.08), #FFFFFF)' : '#FFFFFF',
+                    boxShadow: plan.recommended ? '0 24px 60px rgba(37,99,235,0.14)' : '0 12px 32px rgba(15,23,42,0.08)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: plan.recommended ? '0 32px 80px rgba(37,99,235,0.2)' : '0 20px 40px rgba(15,23,42,0.12)',
+                    },
+                  }}
                 >
-                  <FormControlLabel value="razorpay" control={<Radio />} label="Razorpay" />
-                  <FormControlLabel value="phonepe" control={<Radio />} label="PhonePe" />
-                  <FormControlLabel value="upi" control={<Radio />} label="UPI" />
-                  <FormControlLabel value="credit_card" control={<Radio />} label="Credit / Debit Card" />
-                </RadioGroup>
-              </FormControl>
+                  {plan.recommended && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -12,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#1D4ED8',
+                        color: '#FFFFFF',
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: '16px',
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                        Most Popular
+                      </Typography>
+                    </Box>
+                  )}
 
-              <Divider sx={{ my: 2 }} />
+                  <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', pt: plan.recommended ? 3 : 2 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                      {plan.name}
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
+                      {plan.durationLabel}
+                    </Typography>
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', display: 'inline' }}>
+                        ₹{plan.price}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', ml: 1 }}>
+                        /{plan.period}
+                      </Typography>
+                    </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Base price</Typography>
-                <Typography variant="body2">{formatCurrency(selectedPlan.price)}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Gateway fee ({SUBSCRIPTION_GATEWAY_FEE_PERCENT}%)</Typography>
-                <Typography variant="body2">{formatCurrency(gatewayFee)}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">GST ({SUBSCRIPTION_GST_PERCENT}%)</Typography>
-                <Typography variant="body2">{formatCurrency(gstAmount)}</Typography>
-              </Box>
-              <Divider sx={{ my: 2 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Total</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>{formatCurrency(totalAmount)}</Typography>
-              </Box>
+                    <Box sx={{ mb: 3, flex: 1 }}>
+                      {plan.features.map((feature) => (
+                        <Box key={feature} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <CheckCircleIcon sx={{ fontSize: 18, color: 'success.main' }} />
+                          <Typography variant="body2">{feature}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
 
-              <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                onClick={handleSubscribe}
-                disabled={loading}
-                sx={{
-                  mt: 2,
-                  py: 1.5,
-                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                  boxShadow: '0 14px 30px rgba(37, 99, 235, 0.18)',
-                  textTransform: 'none',
-                }}
-              >
-                {loading ? 'Processing...' : `Subscribe for ₹${totalAmount}`}
-              </Button>
-            </Paper>
+                    <Button
+                      variant={selectedPlanId === plan.id ? 'contained' : 'outlined'}
+                      fullWidth
+                      onClick={() => setSelectedPlanId(plan.id)}
+                      color="primary"
+                      sx={{
+                        textTransform: 'none',
+                        py: 1.3,
+                        fontWeight: 700,
+                        ...(selectedPlanId === plan.id && {
+                          background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                          color: '#FFFFFF',
+                        }),
+                      }}
+                    >
+                      {selectedPlanId === plan.id ? `Selected ${plan.name}` : `Choose ${plan.name}`}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
-        </Grid>
+        </Box>
 
-        {/* Comparison Table */}
+        {/* Payment Section */}
+        <Box sx={{ mb: 8, background: '#FFFFFF', borderRadius: 4, p: 4, boxShadow: '0 12px 32px rgba(15,23,42,0.08)' }}>
+          <PaymentSection
+            plan={selectedPlan}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentError={(error) => console.error('Payment error:', error)}
+          />
+        </Box>
+
+        {/* Detailed Comparison Section */}
         <Box sx={{ mb: 8 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-            Detailed Comparison
-          </Typography>
-          <TableContainer>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+              📊 Detailed Feature Comparison
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 800 }}>
+              Compare what you get in each plan. Choose the plan that fits your career goals and job hunting needs.
+            </Typography>
+          </Box>
+
+          <TableContainer sx={{ borderRadius: 2, border: '1px solid #E5E7EB' }}>
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#F1F5F9' }}>
-                  <TableCell sx={{ fontWeight: 600 }}>Feature</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>
-                    Free
+                <TableRow sx={{ backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                  <TableCell sx={{ fontWeight: 700, color: '#FFFFFF', minWidth: 250 }}>
+                    Feature
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>
-                    Basic
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#FFFFFF', minWidth: 120 }}>
+                    Basic Plan
+                    <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.8)' }}>
+                      ₹{SUBSCRIPTION_PLANS[0].price} / {SUBSCRIPTION_PLANS[0].durationLabel}
+                    </Typography>
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>
-                    Premium
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#FFFFFF', minWidth: 120, background: 'rgba(255,255,255,0.1)' }}>
+                    Premium Plan
+                    <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.8)' }}>
+                      ₹{SUBSCRIPTION_PLANS[1].price} / {SUBSCRIPTION_PLANS[1].durationLabel}
+                    </Typography>
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>
-                    Pro
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#FFFFFF', minWidth: 120 }}>
+                    Pro Plan
+                    <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.8)' }}>
+                      ₹{SUBSCRIPTION_PLANS[2].price} / {SUBSCRIPTION_PLANS[2].durationLabel}
+                    </Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {features.map((feature) => (
-                  <TableRow key={feature.name}>
-                    <TableCell>{feature.name}</TableCell>
-                    <TableCell align="center">
-                      {feature.free === true ? (
-                        <CheckCircleIcon sx={{ color: 'success.main' }} />
-                      ) : feature.free === false ? (
-                        '—'
-                      ) : (
-                        <Typography variant="body2">{feature.free}</Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align="center">
-                      {feature.basic === true ? (
-                        <CheckCircleIcon sx={{ color: 'success.main' }} />
-                      ) : feature.basic === false ? (
-                        '—'
-                      ) : (
-                        <Typography variant="body2">{feature.basic}</Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align="center">
-                      {feature.premium === true ? (
-                        <CheckCircleIcon sx={{ color: 'success.main' }} />
-                      ) : feature.premium === false ? (
-                        '—'
-                      ) : (
-                        <Typography variant="body2">{feature.premium}</Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align="center">
-                      {feature.pro === true ? (
-                        <CheckCircleIcon sx={{ color: 'success.main' }} />
-                      ) : feature.pro === false ? (
-                        '—'
-                      ) : (
-                        <Typography variant="body2">{feature.pro}</Typography>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {(() => {
+                  const categories = [...new Set(features.map(f => f.category))];
+                  let rowIndex = 0;
+                  return categories.map((category) => {
+                    const categoryFeatures = features.filter(f => f.category === category);
+                    return [
+                      // Category header row
+                      <TableRow key={`category-${category}`} sx={{ backgroundColor: '#F8F9FA' }}>
+                        <TableCell colSpan={4} sx={{ fontWeight: 700, color: '#1F2937', fontSize: '0.95rem', py: 1.5 }}>
+                          {category}
+                        </TableCell>
+                      </TableRow>,
+                      // Feature rows
+                      ...categoryFeatures.map((feature) => (
+                        <TableRow
+                          key={feature.name}
+                          sx={{
+                            '&:hover': { backgroundColor: '#FAFBFC' },
+                            borderBottom: '1px solid #E5E7EB',
+                          }}
+                        >
+                          <TableCell sx={{ color: '#1F2937', fontWeight: 500 }}>
+                            {feature.name}
+                          </TableCell>
+                          <TableCell align="center">
+                            {feature.basic === true ? (
+                              <CheckCircleIcon sx={{ color: '#10B981', fontSize: 24 }} />
+                            ) : feature.basic === false ? (
+                              <Typography sx={{ color: '#9CA3AF', fontWeight: 600 }}>—</Typography>
+                            ) : (
+                              <Chip
+                                label={feature.basic}
+                                size="small"
+                                sx={{
+                                  background: '#DBEAFE',
+                                  color: '#1E40AF',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              backgroundColor: 'rgba(102, 126, 234, 0.04)',
+                            }}
+                          >
+                            {feature.premium === true ? (
+                              <CheckCircleIcon sx={{ color: '#10B981', fontSize: 24 }} />
+                            ) : feature.premium === false ? (
+                              <Typography sx={{ color: '#9CA3AF', fontWeight: 600 }}>—</Typography>
+                            ) : (
+                              <Chip
+                                label={feature.premium}
+                                size="small"
+                                sx={{
+                                  background: '#DCFCE7',
+                                  color: '#15803D',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            {feature.pro === true ? (
+                              <CheckCircleIcon sx={{ color: '#10B981', fontSize: 24 }} />
+                            ) : feature.pro === false ? (
+                              <Typography sx={{ color: '#9CA3AF', fontWeight: 600 }}>—</Typography>
+                            ) : (
+                              <Chip
+                                label={feature.pro}
+                                size="small"
+                                sx={{
+                                  background: '#FEE2E2',
+                                  color: '#991B1B',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )),
+                    ];
+                  });
+                })()}
               </TableBody>
             </Table>
           </TableContainer>
+
+          {/* Pricing Summary */}
+          <Box sx={{ mt: 4, p: 3, background: 'linear-gradient(135deg, #F0F4FF 0%, #F5F3FF 100%)', borderRadius: 2, border: '1px solid #DBEAFE' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                    Basic Plan
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: '#667eea', fontWeight: 800, mb: 0.5 }}>
+                    ₹149
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                    1 Month Access
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', color: '#10B981', fontWeight: 600, mt: 1 }}>
+                    ✓ Best for Starting Out
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: '#FFFFFF',
+                    borderRadius: 2,
+                    position: 'relative',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -12,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: '#FFFFFF',
+                      color: '#667eea',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: '16px',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    MOST POPULAR
+                  </Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, mt: 1 }}>
+                    Premium Plan
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+                    ₹269
+                  </Typography>
+                  <Typography variant="caption">
+                    2 Months Access
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 600, mt: 1 }}>
+                    ✓ Best Overall Value
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                    Pro Plan
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: '#667eea', fontWeight: 800, mb: 0.5 }}>
+                    ₹399
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                    3 Months Access
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', color: '#10B981', fontWeight: 600, mt: 1 }}>
+                    ✓ Full Career Support
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Chip
+                    label="✨ Premium Features"
+                    sx={{
+                      background: '#DCFCE7',
+                      color: '#15803D',
+                      fontWeight: 700,
+                      height: 'auto',
+                      p: 1,
+                      mb: 1,
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ display: 'block', color: '#6B7280', mt: 1 }}>
+                    What You Get:
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', color: '#1F2937', fontWeight: 600, mt: 0.5 }}>
+                    • Premium Dashboard
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', color: '#1F2937', fontWeight: 600 }}>
+                    • Career Tools
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', color: '#1F2937', fontWeight: 600 }}>
+                    • 1-on-1 Coaching
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
         </Box>
 
         {/* FAQ */}
@@ -374,6 +507,14 @@ export const Pricing: React.FC = () => {
           </Typography>
         </Box>
       </Container>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        open={showPaymentModal}
+        plan={selectedPlan}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+      />
     </Layout>
   );
 };

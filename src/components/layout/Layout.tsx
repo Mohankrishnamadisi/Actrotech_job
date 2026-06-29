@@ -20,8 +20,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, footer = true }) => {
       }}
     >
       <Navbar />
-      <Toolbar sx={{ minHeight: { xs: 72, sm: 76 } }} />
-      <Box component="main" sx={{ flex: 1, pt: { xs: 1, md: 2 }, pb: { xs: 2, md: 4 }, position: 'relative', zIndex: 1 }}>
+      <Toolbar sx={{ minHeight: { xs: 64, sm: 68 } }} />
+      <Box component="main" sx={{ flex: 1, pt: 0, pb: { xs: 2, md: 4 }, position: 'relative', zIndex: 1 }}>
         {children}
       </Box>
       {footer && <Footer />}

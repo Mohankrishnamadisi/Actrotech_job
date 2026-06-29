@@ -20,14 +20,18 @@ import {
   Settings as SettingsIcon,
   ExitToApp as ExitToAppIcon,
   HeadsetMic as HeadsetMicIcon,
-  ArrowBackIosNew as ArrowBackIosNewIcon,
+  ArrowBackRounded as ArrowBackRoundedIcon,
   Menu as MenuIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  Apartment as ApartmentIcon,
+  TravelExplore as TravelExploreIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
-import Swal from 'sweetalert2';
+import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { ROUTES, USER_ROLES } from '@constants/index';
@@ -43,7 +47,7 @@ const MotionBox = motion(Box);
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
-  const { themeMode, setThemeMode } = useThemeMode();
+  const { setThemeMode } = useThemeMode();
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,6 +62,7 @@ export const Navbar: React.FC = () => {
   const canGoBack = location.pathname !== ROUTES.HOME && location.pathname !== '/';
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
+  const [exploreAnchor, setExploreAnchor] = useState<null | HTMLElement>(null);
   const [supportOpen, setSupportOpen] = useState(false);
   const [ticketNotifCount, setTicketNotifCount] = useState(0);
 
@@ -85,11 +90,54 @@ export const Navbar: React.FC = () => {
     setMobileAnchor(null);
   };
 
+  const handleExploreMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setExploreAnchor(event.currentTarget);
+  };
+
+  const handleExploreMenuClose = () => {
+    setExploreAnchor(null);
+  };
+
   const mobileNavItems = [
     { label: 'Home', to: ROUTES.HOME },
     { label: 'Jobs', to: ROUTES.JOBS },
-    { label: 'Pricing', to: ROUTES.PRICING },
   ];
+
+  const desktopNavItems = [
+    { label: 'Home', to: ROUTES.HOME },
+    { label: 'Jobs', to: ROUTES.JOBS },
+  ];
+
+  const featuredCompanies = [
+    { label: 'TCS Jobs', to: `${ROUTES.JOBS}?keyword=TCS` },
+    { label: 'Infosys Jobs', to: `${ROUTES.JOBS}?keyword=Infosys` },
+    { label: 'Wipro Jobs', to: `${ROUTES.JOBS}?keyword=Wipro` },
+    { label: 'Cognizant Jobs', to: `${ROUTES.JOBS}?keyword=Cognizant` },
+    { label: 'Accenture Jobs', to: `${ROUTES.JOBS}?keyword=Accenture` },
+    { label: 'Capgemini Jobs', to: `${ROUTES.JOBS}?keyword=Capgemini` },
+  ];
+
+  const jobCollections = [
+    { label: 'Remote Roles', to: `${ROUTES.JOBS}?workMode=Remote` },
+    { label: 'Hybrid Jobs', to: `${ROUTES.JOBS}?workMode=Hybrid` },
+    { label: 'Internships', to: `${ROUTES.JOBS}?jobType=Internship` },
+    { label: 'Fresher Openings', to: `${ROUTES.JOBS}?experience=0-1 years` },
+    { label: 'Last 7 Days', to: `${ROUTES.JOBS}?freshness=7d` },
+  ];
+
+  const featureTools = [
+    { label: 'Recommended Jobs', to: '/dashboard/recommended-jobs' },
+    { label: 'Remote Dashboard', to: '/dashboard/remote-jobs' },
+    { label: 'Mock Interviews', to: '/dashboard/mock-interviews' },
+    { label: 'Resume Review', to: '/dashboard/resume-review' },
+    { label: 'Priority Apply', to: '/dashboard/priority-apply' },
+  ];
+
+  const goToFeature = (to: string) => {
+    handleExploreMenuClose();
+    handleMobileMenuClose();
+    navigate(to);
+  };
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -141,25 +189,25 @@ export const Navbar: React.FC = () => {
       position="fixed"
       elevation={0}
       sx={{
-        background: isDarkMode ? 'rgba(2, 6, 23, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-        borderBottom: isDarkMode ? '1px solid rgba(71, 85, 105, 0.55)' : '1px solid rgba(226,232,240,0.9)',
+        background: isDarkMode ? 'rgba(10, 15, 30, 0.86)' : 'rgba(255, 255, 255, 0.9)',
+        borderBottom: isDarkMode ? '1px solid rgba(71, 85, 105, 0.5)' : '1px solid rgba(226, 232, 240, 0.92)',
         top: 0,
         width: '100%',
         zIndex: 1200,
-        backdropFilter: 'blur(14px)',
+        backdropFilter: 'blur(10px)',
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Toolbar
           disableGutters
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
+            flexDirection: 'row',
             justifyContent: 'space-between',
-            alignItems: { xs: 'center', sm: 'center' },
-            gap: { xs: 1.25, sm: 1 },
-            py: { xs: 1.25, sm: 0.75 },
-            px: { xs: 0, sm: 1 },
+            alignItems: 'center',
+            gap: { xs: 0.9, md: 1.2 },
+            py: { xs: 0.95, sm: 0.9 },
+            px: { xs: 0.3, sm: 0.8 },
           }}
         >
           <Box
@@ -167,9 +215,7 @@ export const Navbar: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              width: { xs: '100%', sm: 'auto' },
-              justifyContent: { xs: 'space-between', sm: 'flex-start' },
-              ml: { xs: -1.5, sm: 0 },
+              flexShrink: 0,
             }}
           >
             {canGoBack && (
@@ -177,14 +223,22 @@ export const Navbar: React.FC = () => {
                 onClick={() => navigate(-1)}
                 size="small"
                 sx={{
-                  bgcolor: 'background.paper',
-                  border: '1px solid rgba(15,23,42,0.08)',
-                  boxShadow: 1,
-                  color: 'text.primary',
-                  ml: { xs: 1, sm: 0 },
+                  width: 34,
+                  height: 34,
+                  bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.78)' : 'rgba(248, 250, 252, 0.98)',
+                  border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.5)' : '1px solid rgba(148, 163, 184, 0.38)',
+                  boxShadow: isDarkMode ? 'none' : '0 8px 16px rgba(15, 23, 42, 0.08)',
+                  color: isDarkMode ? '#E2E8F0' : '#0F172A',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'translateX(-1px)',
+                    bgcolor: isDarkMode ? 'rgba(51, 65, 85, 0.85)' : 'rgba(241, 245, 249, 1)',
+                    borderColor: isDarkMode ? 'rgba(148, 163, 184, 0.7)' : 'rgba(100, 116, 139, 0.45)',
+                  },
                 }}
+                aria-label="Go back"
               >
-                <ArrowBackIosNewIcon fontSize="small" />
+                <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
               </IconButton>
             )}
             <Logo size="medium" />
@@ -192,17 +246,122 @@ export const Navbar: React.FC = () => {
 
           <Box
             sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
+              display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              justifyContent: { xs: 'center', sm: 'flex-end' },
-              width: { xs: '100%', sm: 'auto' },
+              gap: 0.5,
+            }}
+          >
+            {desktopNavItems.map((item) => {
+              const isActive = location.pathname === item.to;
+
+              return (
+                <Button
+                  key={item.label}
+                  component={RouterLink}
+                  to={item.to}
+                  sx={{
+                    textTransform: 'none',
+                    px: 1.4,
+                    py: 0.5,
+                    borderRadius: 2,
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    color: isActive ? 'primary.main' : 'text.primary',
+                    bgcolor: isActive ? 'rgba(37, 99, 235, 0.1)' : 'transparent',
+                    '&:hover': {
+                      bgcolor: isActive ? 'rgba(37, 99, 235, 0.14)' : 'rgba(148, 163, 184, 0.14)',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              );
+            })}
+
+            <Button
+              onClick={handleExploreMenuOpen}
+              endIcon={<KeyboardArrowDownIcon />}
+              sx={{
+                textTransform: 'none',
+                px: 1.4,
+                py: 0.5,
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                color: location.pathname === ROUTES.JOBS ? 'primary.main' : 'text.primary',
+                bgcolor: location.pathname === ROUTES.JOBS ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
+                '&:hover': {
+                  bgcolor: 'rgba(148, 163, 184, 0.14)',
+                },
+              }}
+            >
+              Explore
+            </Button>
+            <Menu
+              anchorEl={exploreAnchor}
+              open={Boolean(exploreAnchor)}
+              onClose={handleExploreMenuClose}
+              anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+              transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  minWidth: 320,
+                  borderRadius: 2.5,
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 18px 36px rgba(15, 23, 42, 0.12)',
+                  py: 0.6,
+                },
+              }}
+            >
+              <MenuItem disabled sx={{ opacity: 1, fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: 0.8 }}>
+                <ApartmentIcon sx={{ mr: 1, fontSize: 18 }} /> Posted Companies
+              </MenuItem>
+              {featuredCompanies.map((item) => (
+                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
+                  {item.label}
+                </MenuItem>
+              ))}
+              <Divider sx={{ my: 0.5 }} />
+              <MenuItem disabled sx={{ opacity: 1, fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: 0.8 }}>
+                <TravelExploreIcon sx={{ mr: 1, fontSize: 18 }} /> Job Collections
+              </MenuItem>
+              {jobCollections.map((item) => (
+                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
+                  {item.label}
+                </MenuItem>
+              ))}
+              <Divider sx={{ my: 0.5 }} />
+              <MenuItem disabled sx={{ opacity: 1, fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: 0.8 }}>
+                <AutoAwesomeIcon sx={{ mr: 1, fontSize: 18 }} /> Career Tools
+              </MenuItem>
+              {featureTools.map((item) => (
+                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 0.85,
+              alignItems: 'center',
+              justifyContent: 'flex-end',
             }}
           >
             <IconButton
               onClick={handleMobileMenuOpen}
-              sx={{ display: { xs: 'inline-flex', sm: 'none' }, color: 'text.primary' }}
+              sx={{
+                display: { xs: 'inline-flex', md: 'none' },
+                color: isDarkMode ? '#E2E8F0' : '#0F172A',
+                bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.65)' : 'rgba(248, 250, 252, 0.96)',
+                border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.45)' : '1px solid rgba(148, 163, 184, 0.35)',
+                '&:hover': {
+                  bgcolor: isDarkMode ? 'rgba(51, 65, 85, 0.78)' : 'rgba(241, 245, 249, 1)',
+                },
+              }}
             >
               <MenuIcon />
             </IconButton>
@@ -236,6 +395,29 @@ export const Navbar: React.FC = () => {
                   to={item.to}
                   onClick={handleMobileMenuClose}
                 >
+                  {item.label}
+                </MenuItem>
+              ))}
+              <Divider />
+              <MenuItem disabled sx={{ opacity: 1, fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: 0.8 }}>
+                Posted Companies
+              </MenuItem>
+              {featuredCompanies.map((item) => (
+                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
+                  {item.label}
+                </MenuItem>
+              ))}
+              <Divider />
+              <MenuItem disabled sx={{ opacity: 1, fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: 0.8 }}>
+                Collections & Tools
+              </MenuItem>
+              {jobCollections.map((item) => (
+                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
+                  {item.label}
+                </MenuItem>
+              ))}
+              {featureTools.map((item) => (
+                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
                   {item.label}
                 </MenuItem>
               ))}
@@ -281,7 +463,7 @@ export const Navbar: React.FC = () => {
 
             <Box
               sx={{
-                display: { xs: 'none', sm: 'flex' },
+                display: { xs: 'none', md: 'flex' },
                 width: { xs: '100%', sm: 'auto' },
                 justifyContent: { xs: 'center', sm: 'flex-end' },
               }}
@@ -297,28 +479,30 @@ export const Navbar: React.FC = () => {
                   size="small"
                   startIcon={<WorkIcon sx={{ fontSize: 18 }} />}
                   sx={{
-                    display: { xs: 'none', sm: 'flex' },
-                    borderColor: 'divider',
-                    color: 'primary.dark',
-                    px: 1.25,
-                    py: 0.65,
-                    minWidth: 120,
-                    fontSize: '0.85rem',
+                    display: { xs: 'none', md: 'flex' },
+                    borderColor: 'rgba(37, 99, 235, 0.32)',
+                    color: '#1d4ed8',
+                    px: 1.5,
+                    py: 0.72,
+                    minWidth: 132,
+                    fontSize: '0.86rem',
+                    fontWeight: 700,
                     textTransform: 'none',
-                    borderRadius: 2,
+                    borderRadius: 999,
+                    bgcolor: 'rgba(37, 99, 235, 0.05)',
                     '&:hover': {
-                      borderColor: 'primary.main',
-                      background: 'rgba(59, 130, 246, 0.12)',
+                      borderColor: '#2563EB',
+                      background: 'rgba(59, 130, 246, 0.14)',
                     },
                   }}
                 >
-                  Hire Talent ⭐
+                  Hire Talent
                 </Button>
               </MotionBox>
             )}
 
             {!user ? (
-              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
                 <Button
                   component={RouterLink}
                   to={ROUTES.LOGIN}
@@ -326,12 +510,15 @@ export const Navbar: React.FC = () => {
                   sx={{
                     color: 'text.primary',
                     textTransform: 'none',
-                    px: 1.4,
-                    py: 0.65,
+                    px: 1.6,
+                    py: 0.74,
                     fontSize: '0.9rem',
+                    fontWeight: 700,
                     borderRadius: 999,
+                    border: '1px solid rgba(148, 163, 184, 0.28)',
+                    bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.58)' : 'rgba(248, 250, 252, 0.92)',
                     '&:hover': {
-                      bgcolor: 'action.hover',
+                      bgcolor: isDarkMode ? 'rgba(51, 65, 85, 0.74)' : 'rgba(241, 245, 249, 1)',
                     },
                   }}
                 >
@@ -344,14 +531,15 @@ export const Navbar: React.FC = () => {
                     variant="contained"
                     sx={{
                       textTransform: 'none',
-                      px: 1.8,
-                      py: 0.75,
+                      px: 2,
+                      py: 0.82,
                       fontSize: '0.9rem',
+                      fontWeight: 700,
                       borderRadius: '999px',
-                      background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                      boxShadow: '0 10px 18px rgba(37, 99, 235, 0.18)',
+                      background: 'linear-gradient(90deg, #0284c7, #2563eb)',
+                      boxShadow: '0 10px 20px rgba(37, 99, 235, 0.24)',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+                        background: 'linear-gradient(90deg, #0369a1, #1d4ed8)',
                       },
                     }}
                   >
@@ -375,39 +563,21 @@ export const Navbar: React.FC = () => {
                         width: 20,
                         height: 20,
                         display: 'block',
-                        animation: 'crownGlow 3s ease-in-out infinite',
                       }}
                     />
                   }
                   sx={{
                     textTransform: 'none',
-                    px: 1.5,
-                    py: 0.7,
+                    px: 1.7,
+                    py: 0.78,
                     minWidth: 140,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                    borderRadius: 999,
+                    background: 'linear-gradient(90deg, #0f766e, #0ea5a0)',
                     color: '#ffffff',
-                    boxShadow: '0 12px 24px rgba(245, 158, 11, 0.18)',
+                    boxShadow: '0 10px 22px rgba(15, 118, 110, 0.24)',
+                    fontWeight: 700,
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
-                    },
-                    '@keyframes crownGlow': {
-                      '0%, 100%': {
-                        transform: 'rotate(0deg)',
-                        boxShadow: '0 0 0 rgba(255, 215, 0, 0)',
-                      },
-                      '25%': {
-                        transform: 'rotate(6deg)',
-                        boxShadow: '0 0 10px rgba(245, 158, 11, 0.45)',
-                      },
-                      '50%': {
-                        transform: 'rotate(0deg)',
-                        boxShadow: '0 0 0 rgba(255, 215, 0, 0)',
-                      },
-                      '75%': {
-                        transform: 'rotate(-6deg)',
-                        boxShadow: '0 0 10px rgba(245, 158, 11, 0.45)',
-                      },
+                      background: 'linear-gradient(90deg, #0d6a63, #08928d)',
                     },
                   }}
                 >
@@ -418,7 +588,7 @@ export const Navbar: React.FC = () => {
                     variant="body2"
                     sx={{
                       fontWeight: 700,
-                      display: { xs: 'none', sm: 'block' },
+                      display: { xs: 'none', md: 'block' },
                       color: subscription ? '#B45309' : 'text.primary',
                     }}
                   >
@@ -448,22 +618,11 @@ export const Navbar: React.FC = () => {
                   <Avatar
                     src={user.avatar}
                     sx={{
-                      width: 40,
-                      height: 40,
-                      background: isRecruiter
-                        ? 'radial-gradient(circle at top left, #FDE68A, #F59E0B 55%, #C2410C)'
-                        : subscription
-                        ? '#FFFBEB'
-                        : '#1D4ED8',
-                      border: isRecruiter
-                        ? '2px solid #FBBF24'
-                        : subscription
-                        ? '2px solid #FFD700'
-                        : '2px solid #DBEAFE',
-                      color: isRecruiter ? '#92400E' : subscription ? '#B45309' : '#FFFFFF',
-                      boxShadow: isRecruiter
-                        ? '0 0 0 6px rgba(245, 158, 11, 0.16)'
-                        : 'none',
+                      width: 38,
+                      height: 38,
+                      background: '#1D4ED8',
+                      border: '2px solid #DBEAFE',
+                      color: '#FFFFFF',
                     }}
                   >
                     {generateInitials(user.name)}
