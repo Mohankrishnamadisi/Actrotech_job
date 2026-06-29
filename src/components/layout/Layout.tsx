@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Toolbar } from '@mui/material';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 
@@ -20,7 +20,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, footer = true }) => {
       }}
     >
       <Navbar />
-      <Box component="main" sx={{ flex: 1, py: { xs: 2, md: 4 }, position: 'relative', zIndex: 1 }}>
+      <Toolbar sx={{ minHeight: { xs: 72, sm: 76 } }} />
+      <Box component="main" sx={{ flex: 1, pt: { xs: 1, md: 2 }, pb: { xs: 2, md: 4 }, position: 'relative', zIndex: 1 }}>
         {children}
       </Box>
       {footer && <Footer />}

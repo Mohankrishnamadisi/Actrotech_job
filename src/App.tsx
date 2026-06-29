@@ -1,7 +1,7 @@
 ﻿import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
+import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence } from 'framer-motion';
@@ -57,10 +57,12 @@ import AnalyticsPage from './admin/pages/Analytics';
 import BulkImport from './admin/pages/BulkImport';
 import DataIntegrity from './admin/pages/DataIntegrity';
 import SystemHealthPage from './admin/pages/SystemHealth';
-import SettingsPage from './admin/pages/Settings';import { RecruiterSubscriptionPage } from '@pages/recruiter/RecruiterSubscriptionPage';
+import SettingsPage from './admin/pages/Settings';
+import AdminControlCenter from './admin/pages/AdminControlCenter';
+import { RecruiterSubscriptionPage } from '@pages/recruiter/RecruiterSubscriptionPage';
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
-  const { subscription } = useSubscription(user?.id || null);
+  const { subscription, loading: subscriptionLoading } = useSubscription(user?.id || null);
 
   if (user?.role === USER_ROLES.ADMIN) {
     return <Navigate to={ROUTES.ADMIN_DASHBOARD} replace />;
@@ -68,6 +70,14 @@ const RoleDashboard: React.FC = () => {
 
   if (user?.role === USER_ROLES.RECRUITER) {
     return <Navigate to={ROUTES.RECRUITER_DASHBOARD} replace />;
+  }
+
+  if (subscriptionLoading || typeof subscription === 'undefined') {
+    return (
+      <Box sx={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
   }
 
   if (subscription) {
@@ -214,17 +224,20 @@ const AnimatedRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         >
-          <Route path={ROUTES.ADMIN_DASHBOARD} element={<DashboardOverview />} />
-          <Route path={ROUTES.ADMIN_USERS} element={<UsersPage />} />
-          <Route path={ROUTES.ADMIN_RECRUITERS} element={<RecruitersPage />} />
-          <Route path={ROUTES.ADMIN_CANDIDATES} element={<CandidatesPage />} />
-          <Route path={ROUTES.ADMIN_JOBS} element={<JobsPage />} />
-          <Route path={ROUTES.ADMIN_APPLICATIONS} element={<AdminApplicationsPage />} />
-          <Route path={ROUTES.ADMIN_ANALYTICS} element={<AnalyticsPage />} />
-          <Route path={ROUTES.ADMIN_BULK_IMPORT} element={<BulkImport />} />
-          <Route path={ROUTES.ADMIN_DATA_INTEGRITY} element={<DataIntegrity />} />
-          <Route path={ROUTES.ADMIN_SYSTEM_HEALTH} element={<SystemHealthPage />} />
-          <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
+          <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_USERS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_RECRUITERS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_CANDIDATES} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_JOBS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_APPLICATIONS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_CUSTOMER_CARE} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_SUBSCRIPTIONS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_PAYMENTS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_ANALYTICS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_BULK_IMPORT} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_DATA_INTEGRITY} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_SYSTEM_HEALTH} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_SETTINGS} element={<AdminControlCenter />} />
         </Route>
         <Route
           path={ROUTES.MESSAGING}

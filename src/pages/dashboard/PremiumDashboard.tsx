@@ -1,43 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Avatar,
+  Badge,
   Box,
-  Container,
-  Grid,
+  Button,
   Card,
   CardContent,
-  Typography,
-  Button,
-  CircularProgress,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
-  Badge,
+  CircularProgress,
+  Divider,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Typography,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
-  Work as WorkIcon,
-  Favorite as FavoriteIcon,
-  TrendingUp as TrendingUpIcon,
+  Chat as ChatIcon,
+  Description as DescriptionIcon,
+  Notifications as NotificationsIcon,
   Star as StarIcon,
+  TrendingUp as TrendingUpIcon,
   Videocam as VideocamIcon,
   Visibility as VisibilityIcon,
-  Description as DescriptionIcon,
-  Chat as ChatIcon,
-  Notifications as NotificationsIcon,
+  Work as WorkIcon,
+  Favorite as FavoriteIcon,
+  Logout as LogoutIcon,
+  Settings as SettingsIcon,
   Public as PublicIcon,
-  AccountCircle as AccountIcon,
+  AccountCircle as AccountCircleIcon,
+  FlightTakeoff as FlightTakeoffIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
+
 import { Layout } from '@components/layout/Layout';
+import SupportWidget from '@components/common/SupportWidget';
 import { useThemeMode } from '@hooks/index';
 import { useAuthStore } from '@store/index';
+import { authService } from '@services/supabase';
+import { supportService } from '@services/support';
 import { userService, applicationService, savedService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import {
@@ -47,7 +58,7 @@ import {
   getCandidateResumeUnlockRecruiters,
 } from '@utils/resumeUnlocks';
 import { ROUTES } from '@constants/index';
-import { useTheme } from '@mui/material/styles';
+import { formatDate } from '@utils/index';
 
 const getJobList = (response: any): any[] => {
   if (Array.isArray(response)) return response;
@@ -55,11 +66,30 @@ const getJobList = (response: any): any[] => {
   return [];
 };
 
+const MotionCard = motion(Card);
+
+type RecentApplication = {
+  id: string;
+  status: string;
+  applied_at?: string;
+  jobs?: {
+    id?: string;
+    title?: string;
+    company_name?: string;
+    location?: string;
+  };
+};
+
 export const PremiumDashboard: React.FC = () => {
-  const { user } = useAuthStore();
-  const { themeMode, setThemeMode } = useThemeMode();
+  const { user, logout } = useAuthStore();
+  const { themeMode } = useThemeMode();
   const theme = useTheme();
   const navigate = useNavigate();
+  const isDarkMode = theme.palette.mode === 'dark';
+  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [ticketNotifCount, setTicketNotifCount] = useState(0);
+
   const [applicationCount, setApplicationCount] = useState(0);
   const [savedJobsCount, setSavedJobsCount] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
@@ -70,79 +100,97 @@ export const PremiumDashboard: React.FC = () => {
   const [profileViewCount, setProfileViewCount] = useState<number>(0);
   const [interactionModalOpen, setInteractionModalOpen] = useState(false);
   const [interactionModalTitle, setInteractionModalTitle] = useState('');
+  const [interactionType, setInteractionType] = useState<'downloads' | 'views'>('downloads');
   const [interactionLoading, setInteractionLoading] = useState(false);
   const [interactionItems, setInteractionItems] = useState<any[]>([]);
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
-  const MotionCard = motion(Card);
+  const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
+
+  const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileMenuAnchorEl(event.currentTarget);
+  };
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => {});
+  }, [user?.id]);
+
+  const closeProfileMenu = () => {
+    setProfileMenuAnchorEl(null);
+  };
+
+  const handleSignout = async () => {
+    closeProfileMenu();
+    try {
+      await authService.signOut();
+    } catch {
+      // noop
+    } finally {
+      logout();
+      navigate(ROUTES.LOGIN, { replace: true });
+    }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
       if (!user?.id) return;
+
       try {
         setLoading(true);
         const profile = await userService.getProfile(user.id);
+
         if (profile) {
-          setUserSkills(profile.skills || []);
+          const skills = Array.isArray(profile.skills) ? profile.skills : [];
+          setUserSkills(skills);
+
           const strength = Math.min(
             100,
             (
-              (profile.skills?.length || 0) * 10 +
-              (profile.resumeUrl ? 20 : 0) +
-              (profile.experience ? 15 : 0) +
-              (profile.phone ? 10 : 0) +
-              (profile.bio ? 10 : 0) +
-              (profile.workExperience?.length || 0) * 10 +
-              (profile.education?.length || 0) * 10
-            ) / 10
+              (skills.length * 10)
+              + (profile.resumeUrl || profile.resume_url ? 20 : 0)
+              + (profile.experience ? 15 : 0)
+              + (profile.phone ? 10 : 0)
+              + (profile.bio ? 10 : 0)
+              + ((profile.workExperience || profile.work_experience || []).length * 10)
+              + ((profile.education || profile.education_details || []).length * 10)
+            ) / 10,
           );
+
           setProfileStrength(Math.round(strength));
+
+          if (skills.length > 0) {
+            const recRes = await jobService.getJobsBySkills(skills, 1, 6);
+            setRecommendedJobs(getJobList(recRes));
+          } else {
+            setRecommendedJobs([]);
+          }
         }
 
-        const applications = await applicationService.getUserApplications(user.id);
+        const [applications, saved, unreadNotifications, conversations] = await Promise.all([
+          applicationService.getUserApplications(user.id),
+          savedService.getUserSavedJobs(user.id),
+          notificationService.getUnreadNotifications(user.id),
+          messagingService.getConversations(user.id),
+        ]);
+
+        setRecentApplications(applications || []);
         setApplicationCount(applications?.length || 0);
-
-        const saved = await savedService.getUserSavedJobs(user.id);
         setSavedJobsCount(saved?.length || 0);
-
-        const unreadNotifications = await notificationService.getUnreadNotifications(user.id);
         setNotificationsCount((unreadNotifications || []).length);
-
-        const conversations = await messagingService.getConversations(user.id);
         setUnreadMessagesCount(
-          (((conversations as any[]) || [])
-            .reduce((count, conv) => count + (conv.unreadCount || 0), 0))
+          (((conversations as any[]) || []).reduce((count, conv) => count + (conv.unreadCount || 0), 0)),
         );
 
-        try {
-          const [downloadCount, viewCount] = await Promise.all([
-            getCandidateResumeUnlockCount(user.id),
-            getCandidateProfileViewCount(user.id),
-          ]);
-          setResumeDownloadCount(downloadCount);
-          setProfileViewCount(viewCount);
-        } catch (err) {
-          console.error('Failed to load recruiter interaction counts:', err);
-        }
+        const [downloadCount, viewCount] = await Promise.all([
+          getCandidateResumeUnlockCount(user.id),
+          getCandidateProfileViewCount(user.id),
+        ]);
 
-        const loadInteractionList = async () => {
-          setInteractionItems([]);
-          setInteractionModalOpen(false);
-        };
-        await loadInteractionList();
-
-          // load recommended jobs for premium users
-          try {
-            const skillList = (profile?.skills && Array.isArray(profile.skills) && profile.skills.length) ? profile.skills : (profile?.skills || []);
-            if (skillList && skillList.length > 0) {
-              const res = await jobService.getJobsBySkills(skillList, 1, 6);
-              setRecommendedJobs(getJobList(res));
-            }
-          } catch (err) {
-            console.error('Failed to load recommended jobs for premium dashboard:', err);
-          }
+        setResumeDownloadCount(downloadCount);
+        setProfileViewCount(viewCount);
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('Error fetching premium dashboard stats:', error);
       } finally {
         setLoading(false);
       }
@@ -151,229 +199,350 @@ export const PremiumDashboard: React.FC = () => {
     fetchStats();
   }, [user?.id]);
 
+  const openInteractionModal = async (type: 'downloads' | 'views') => {
+    if (!user?.id) return;
+
+    setInteractionLoading(true);
+    setInteractionModalOpen(true);
+    setInteractionItems([]);
+
+    try {
+      if (type === 'downloads') {
+        setInteractionType('downloads');
+        setInteractionModalTitle('Recruiters who downloaded your resume');
+        const items = await getCandidateResumeUnlockRecruiters(user.id);
+        setInteractionItems(items);
+      } else {
+        setInteractionType('views');
+        setInteractionModalTitle('Recruiters who viewed your profile');
+        const items = await getCandidateProfileViewRecruiters(user.id);
+        setInteractionItems(items);
+      }
+    } finally {
+      setInteractionLoading(false);
+    }
+  };
+
+  const stats = useMemo(
+    () => [
+      {
+        label: 'Applications',
+        value: applicationCount,
+        subtext: 'Track hiring movement',
+        icon: WorkIcon,
+        color: theme.palette.primary.main,
+        lightBg: 'linear-gradient(140deg, #DBEAFE 0%, #EEF4FF 55%, #FFFFFF 100%)',
+        darkBg: 'linear-gradient(145deg, rgba(30,58,138,0.42), rgba(15,23,42,0.95))',
+        action: () => navigate(ROUTES.DASHBOARD_APPLICATIONS),
+      },
+      {
+        label: 'Saved Jobs',
+        value: savedJobsCount,
+        subtext: 'Your shortlisted roles',
+        icon: FavoriteIcon,
+        color: theme.palette.error.main,
+        lightBg: 'linear-gradient(140deg, #FFE4E6 0%, #FFF1F2 55%, #FFFFFF 100%)',
+        darkBg: 'linear-gradient(145deg, rgba(131,24,67,0.4), rgba(15,23,42,0.95))',
+        action: () => navigate(ROUTES.DASHBOARD_SAVED_JOBS),
+      },
+      {
+        label: 'Resume Downloads',
+        value: resumeDownloadCount,
+        subtext: 'Recruiter resume opens',
+        icon: VideocamIcon,
+        color: theme.palette.success.main,
+        lightBg: 'linear-gradient(140deg, #DCFCE7 0%, #F0FDF4 55%, #FFFFFF 100%)',
+        darkBg: 'linear-gradient(145deg, rgba(20,83,45,0.4), rgba(15,23,42,0.95))',
+        action: () => openInteractionModal('downloads'),
+      },
+      {
+        label: 'Profile Views',
+        value: profileViewCount,
+        subtext: 'Interest from employers',
+        icon: VisibilityIcon,
+        color: theme.palette.secondary.main,
+        lightBg: 'linear-gradient(140deg, #F3E8FF 0%, #FAF5FF 55%, #FFFFFF 100%)',
+        darkBg: 'linear-gradient(145deg, rgba(76,29,149,0.4), rgba(15,23,42,0.95))',
+        action: () => openInteractionModal('views'),
+      },
+    ],
+    [applicationCount, navigate, profileViewCount, resumeDownloadCount, savedJobsCount, theme.palette.error.main, theme.palette.primary.main, theme.palette.secondary.main, theme.palette.success.main],
+  );
+
   if (loading) {
     return (
       <Layout>
-        <Container maxWidth="lg" sx={{ py: 8, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Box sx={{ py: 8, display: 'flex', justifyContent: 'center' }}>
           <CircularProgress />
-        </Container>
+        </Box>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Header Section */}
-        <Box sx={{ background: theme.palette.mode === 'dark' ? 'rgba(56, 189, 248, 0.08)' : theme.palette.secondary.light, border: `2px solid ${theme.palette.mode === 'dark' ? 'rgba(58, 123, 213, 0.2)' : theme.palette.secondary.main}`, borderRadius: 3, p: 4, mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-            <Box>
-              <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                Premium Hub ✨
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                Welcome back, <span style={{ fontWeight: 700, color: theme.palette.warning.main }}>{user?.name}</span>
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Chip icon={<StarIcon />} label="Premium Member" sx={{ fontWeight: 700, background: theme.palette.mode === 'dark' ? 'rgba(245, 158, 11, 0.2)' : theme.palette.warning.light, color: theme.palette.warning.contrastText }} />
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <IconButton
-                onClick={() => navigate(ROUTES.MESSAGING)}
-                sx={{ background: theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.16)' : 'rgba(79,70,229,0.08)' }}
-              >
-                <Badge badgeContent={unreadMessagesCount} color="primary">
-                  <ChatIcon />
-                </Badge>
-              </IconButton>
-              <IconButton
-                onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
-                sx={{ background: theme.palette.mode === 'dark' ? 'rgba(245, 158, 11, 0.16)' : 'rgba(245,158,11,0.08)' }}
-              >
-                <Badge badgeContent={notificationsCount} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-            </Box>
-            <FormControl size="small">
-              <InputLabel>Theme</InputLabel>
-              <Select value={themeMode} label="Theme" onChange={(e) => setThemeMode(e.target.value as any)} sx={{ minWidth: 140 }}>
-                <MenuItem value="light">Light</MenuItem>
-                <MenuItem value="dark">Dark</MenuItem>
-                <MenuItem value="professional">Professional</MenuItem>
-                <MenuItem value="modern">Modern</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
-        </Box>
+      <Box
+        sx={{
+          px: { xs: 2, md: 4 },
+          py: { xs: 3, md: 4 },
+          maxWidth: 1440,
+          mx: 'auto',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            width: 280,
+            height: 280,
+            borderRadius: '50%',
+            top: { xs: 10, md: 20 },
+            right: { xs: -120, md: -80 },
+            background: isDarkMode
+              ? 'radial-gradient(circle, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0) 72%)'
+              : 'radial-gradient(circle, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0) 72%)',
+            pointerEvents: 'none',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            width: 260,
+            height: 260,
+            borderRadius: '50%',
+            bottom: 70,
+            left: { xs: -120, md: -90 },
+            background: isDarkMode
+              ? 'radial-gradient(circle, rgba(168,85,247,0.2) 0%, rgba(168,85,247,0) 72%)'
+              : 'radial-gradient(circle, rgba(251,146,60,0.18) 0%, rgba(251,146,60,0) 72%)',
+            pointerEvents: 'none',
+          },
+        }}
+      >
+        <Card
+          sx={{
+            mb: 3,
+            borderRadius: 6,
+            position: 'relative',
+            overflow: 'hidden',
+            border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.36)' : '1px solid rgba(160, 110, 20, 0.5)',
+            background: isDarkMode
+              ? 'radial-gradient(circle at 12% 18%, rgba(14,165,233,0.18) 0%, rgba(14,165,233,0) 36%), radial-gradient(circle at 88% 0%, rgba(217,70,239,0.16) 0%, rgba(217,70,239,0) 38%), linear-gradient(138deg, #020617 0%, #0F172A 46%, #1E293B 100%)'
+              : 'radial-gradient(circle at 12% 16%, rgba(255,233,167,0.44) 0%, rgba(255,233,167,0) 34%), radial-gradient(circle at 88% 4%, rgba(255,176,78,0.36) 0%, rgba(255,176,78,0) 36%), linear-gradient(135deg, #3A2008 0%, #7D4D11 44%, #D29A2B 100%)',
+            color: isDarkMode ? '#E2E8F0' : '#FFF7E6',
+            boxShadow: isDarkMode
+              ? '0 24px 54px rgba(2, 6, 23, 0.62), inset 0 1px 0 rgba(148,163,184,0.16)'
+              : '0 24px 54px rgba(92, 56, 9, 0.36), inset 0 1px 0 rgba(255, 246, 210, 0.5)',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              background: isDarkMode
+                ? 'linear-gradient(120deg, rgba(148,163,184,0.08) 0%, rgba(148,163,184,0) 36%), radial-gradient(circle at 78% 18%, rgba(125,211,252,0.2), transparent 48%)'
+                : 'linear-gradient(120deg, rgba(255,250,235,0.24) 0%, rgba(255,250,235,0) 34%), radial-gradient(circle at 78% 18%, rgba(253,224,71,0.28), transparent 48%)',
+              pointerEvents: 'none',
+            },
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: { xs: 220, md: 320 },
+              height: { xs: 220, md: 320 },
+              right: { xs: -90, md: -110 },
+              bottom: { xs: -130, md: -150 },
+              background: isDarkMode
+                ? 'conic-gradient(from 45deg, rgba(56,189,248,0.34), rgba(59,130,246,0.12), rgba(14,165,233,0.34))'
+                : 'conic-gradient(from 45deg, rgba(255,224,138,0.46), rgba(252,186,59,0.16), rgba(245,158,11,0.42))',
+              filter: 'blur(20px)',
+              opacity: 0.72,
+              pointerEvents: 'none',
+            },
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} md={8}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  <Chip icon={<StarIcon />} label="Premium Candidate" sx={{ fontWeight: 700, bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6' }} />
+                  <Chip icon={<TrendingUpIcon />} label={`Profile strength ${profileStrength}%`} sx={{ fontWeight: 700, bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6' }} />
+                </Box>
 
-        {/* Stats Dashboard (dynamic) */}
-        {/** use animated cards and a mapped stats array for maintainability **/}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {([
-            { label: 'Applications', value: applicationCount, icon: WorkIcon, color: theme.palette.primary.main, to: ROUTES.DASHBOARD_APPLICATIONS },
-            { label: 'Saved Jobs', value: savedJobsCount, icon: FavoriteIcon, color: theme.palette.error.main, to: ROUTES.DASHBOARD_SAVED_JOBS },
-            { label: 'Resume Downloads', value: resumeDownloadCount, icon: VideocamIcon, color: theme.palette.success.main, action: async () => {
-              if (!user?.id) return;
-              setInteractionModalTitle('Recruiters who downloaded your resume');
-              setInteractionLoading(true);
-              setInteractionModalOpen(true);
-              const items = await getCandidateResumeUnlockRecruiters(user.id);
-              setInteractionItems(items);
-              setInteractionLoading(false);
-            } },
-            { label: 'Profile Views', value: profileViewCount, icon: VisibilityIcon, color: theme.palette.secondary.main, action: async () => {
-              if (!user?.id) return;
-              setInteractionModalTitle('Recruiters who viewed your profile');
-              setInteractionLoading(true);
-              setInteractionModalOpen(true);
-              const items = await getCandidateProfileViewRecruiters(user.id);
-              setInteractionItems(items);
-              setInteractionLoading(false);
-            } },
-          ] as const).map((stat, idx) => (
-            <Grid item xs={12} sm={6} md={3} key={String(stat.label)} onClick={() => { if ((stat as any).action) (stat as any).action(); else if ((stat as any).to) navigate((stat as any).to); }}>
-              <MotionCard sx={{ cursor: 'pointer', transition: 'all 0.32s', '&:hover': { transform: 'translateY(-8px)', boxShadow: theme.palette.mode === 'dark' ? '0 20px 36px rgba(0,0,0,0.35)' : '0 12px 32px rgba(0,0,0,0.08)' } }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }}>
-                <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                  <stat.icon sx={{ fontSize: 36, mb: 1, color: stat.color }} />
-                  <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{stat.value}</Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>{stat.label}</Typography>
+                <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.08, mb: 1.2 }}>
+                  Premium command deck
+                </Typography>
+                <Typography variant="h6" sx={{ color: isDarkMode ? 'rgba(226,232,240,0.92)' : 'rgba(255, 243, 221, 0.92)', mb: 2.4, maxWidth: 760 }}>
+                  Hello {user?.name || 'Candidate'}, this space is built for high-intent job hunting with exclusive insights, remote pipelines, and premium tools.
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2 }}>
+                  <Button variant="contained" onClick={() => navigate('/dashboard/recommended-jobs?minMatch=50')} startIcon={<AutoAwesomeIcon />} sx={{ bgcolor: isDarkMode ? '#334155' : '#EDE9D5', color: isDarkMode ? '#F8FAFC' : '#12392D', fontWeight: 800, '&:hover': { bgcolor: isDarkMode ? '#475569' : '#DFD8B9' } }}>
+                    AI Matched Jobs
+                  </Button>
+                  <Button variant="outlined" onClick={() => navigate('/dashboard/remote-jobs')} sx={{ borderColor: isDarkMode ? 'rgba(148,163,184,0.62)' : 'rgba(255, 241, 214, 0.7)', bgcolor: isDarkMode ? 'rgba(148,163,184,0.12)' : 'rgba(255, 248, 232, 0.14)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6', fontWeight: 700, '&:hover': { borderColor: isDarkMode ? '#CBD5E1' : '#FFE5B3', bgcolor: isDarkMode ? 'rgba(148,163,184,0.2)' : 'rgba(255, 248, 232, 0.22)' } }}>
+                    Remote Hub
+                  </Button>
+                  <Button variant="outlined" onClick={() => navigate('/dashboard/mock-interviews')} sx={{ borderColor: isDarkMode ? 'rgba(148,163,184,0.62)' : 'rgba(255, 241, 214, 0.7)', bgcolor: isDarkMode ? 'rgba(148,163,184,0.12)' : 'rgba(255, 248, 232, 0.14)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6', fontWeight: 700, '&:hover': { borderColor: isDarkMode ? '#CBD5E1' : '#FFE5B3', bgcolor: isDarkMode ? 'rgba(148,163,184,0.2)' : 'rgba(255, 248, 232, 0.22)' } }}>
+                    Mock Interview
+                  </Button>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Card
+                  sx={{
+                    borderRadius: 3,
+                    background: isDarkMode
+                      ? 'linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94))'
+                      : 'linear-gradient(145deg, rgba(255, 249, 236, 0.98), rgba(255, 236, 195, 0.95))',
+                    border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.34)' : '1px solid rgba(190, 140, 40, 0.4)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: isDarkMode ? '#E2E8F0' : '#5E3E0A', mb: 2 }}>
+                      Premium communication
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
+                      <Typography sx={{ color: isDarkMode ? '#CBD5E1' : '#7A5310', fontWeight: 600 }}>Unread messages</Typography>
+                      <Typography sx={{ color: isDarkMode ? '#F8FAFC' : '#5E3E0A', fontWeight: 800 }}>{unreadMessagesCount}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2.2 }}>
+                      <Typography sx={{ color: isDarkMode ? '#CBD5E1' : '#7A5310', fontWeight: 600 }}>Notifications</Typography>
+                      <Typography sx={{ color: isDarkMode ? '#F8FAFC' : '#5E3E0A', fontWeight: 800 }}>{notificationsCount}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton onClick={() => navigate(ROUTES.MESSAGING)} sx={{ bgcolor: isDarkMode ? 'rgba(148,163,184,0.16)' : 'rgba(190, 140, 40, 0.14)', '&:hover': { bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(190, 140, 40, 0.22)' } }}>
+                        <Badge badgeContent={unreadMessagesCount} color="warning">
+                          <ChatIcon sx={{ color: isDarkMode ? '#E2E8F0' : '#5E3E0A' }} />
+                        </Badge>
+                      </IconButton>
+                      <IconButton onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)} sx={{ bgcolor: isDarkMode ? 'rgba(148,163,184,0.16)' : 'rgba(190, 140, 40, 0.14)', '&:hover': { bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(190, 140, 40, 0.22)' } }}>
+                        <Badge badgeContent={notificationsCount} color="error">
+                          <NotificationsIcon sx={{ color: isDarkMode ? '#E2E8F0' : '#5E3E0A' }} />
+                        </Badge>
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Card>
+
+                <Menu
+                  anchorEl={profileMenuAnchorEl}
+                  open={Boolean(profileMenuAnchorEl)}
+                  onClose={closeProfileMenu}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                  <MenuItem
+                    onClick={() => {
+                      closeProfileMenu();
+                      navigate(ROUTES.DASHBOARD_PROFILE);
+                    }}
+                  >
+                    Profile
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      closeProfileMenu();
+                      navigate(ROUTES.DASHBOARD_SETTINGS);
+                    }}
+                  >
+                    <SettingsIcon sx={{ mr: 1, fontSize: 18 }} />
+                    Settings
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      closeProfileMenu();
+                      setSupportOpen(true);
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AccountCircleIcon sx={{ fontSize: 18 }} />
+                      Customer Care
+                      {ticketNotifCount > 0 ? (
+                        <Box component="span" sx={{ bgcolor: 'error.main', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, ml: 0.5 }}>{ticketNotifCount}</Box>
+                      ) : null}
+                    </Box>
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleSignout} sx={{ color: 'error.main' }}>
+                    <LogoutIcon sx={{ mr: 1, fontSize: 18 }} />
+                    Sign out
+                  </MenuItem>
+                </Menu>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        <Grid container spacing={2.2} sx={{ mb: 3 }}>
+          {stats.map((stat, idx) => (
+            <Grid item xs={12} sm={6} md={3} key={stat.label}>
+              <MotionCard
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                onClick={stat.action}
+                sx={{
+                  cursor: 'pointer',
+                  borderRadius: 4,
+                  border: isDarkMode ? '1px solid rgba(148,163,184,0.26)' : `1px solid ${theme.palette.divider}`,
+                  background: isDarkMode ? stat.darkBg : stat.lightBg,
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: isDarkMode ? '0 12px 28px rgba(2, 6, 23, 0.44)' : '0 12px 28px rgba(15, 23, 42, 0.12)',
+                  },
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: isDarkMode ? '#CBD5E1' : '#334155' }}>
+                      {stat.label}
+                    </Typography>
+                    <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: `${stat.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <stat.icon sx={{ color: stat.color }} />
+                    </Box>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#0F172A' }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: isDarkMode ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
+                    {stat.subtext}
+                  </Typography>
                 </CardContent>
               </MotionCard>
             </Grid>
           ))}
         </Grid>
 
-        {/* Quick Actions (dynamic) */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>Quick Actions</Typography>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, mb: 2.2 }}>
+            Quick Actions
+          </Typography>
           <Grid container spacing={2}>
-            {([
-              { label: 'Browse Jobs', to: ROUTES.JOBS, color: 'primary', icon: WorkIcon },
-              { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, color: 'secondary', icon: AccountIcon },
-              { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', color: 'warning', icon: TrendingUpIcon },
-            ] as const).map((action, idx) => (
-              <Grid item xs={6} sm={4} md={3} key={action.label}>
+            {[
+              { label: 'Browse Jobs', to: ROUTES.JOBS, icon: WorkIcon, color: 'primary' as const },
+              { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, icon: AccountCircleIcon, color: 'secondary' as const },
+              { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', icon: TrendingUpIcon, color: 'warning' as const },
+            ].map((action, idx) => (
+              <Grid item xs={12} sm={6} md={4} key={action.label}>
                 <MotionCard
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  sx={{ cursor: 'pointer', borderRadius: 2, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={() => navigate(action.to)}
-                >
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <action.icon sx={{ fontSize: 36, color: (theme.palette as any)[action.color]?.main || theme.palette.primary.main, mb: 1 }} />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{action.label}</Typography>
-                  </CardContent>
-                </MotionCard>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        {/* Remote Job Hub */}
-        <Box sx={{ mb: 4, p: 3, borderRadius: 3, background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(14, 165, 233, 0.12))', border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(56, 189, 248, 0.24)' : 'rgba(16, 185, 129, 0.24)'}` }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Remote Job Hub</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 660 }}>
-                Premium remote job options in one place. Explore new remote roles, review your remote applications, and open the latest priority matches with a polished gradient experience.
-              </Typography>
-            </Box>
-            <Chip label="Remote Focus" color="success" sx={{ fontWeight: 700, px: 2, py: 1 }} />
-          </Box>
-
-          <Grid container spacing={2}>
-            {([
-              {
-                title: 'Explore Remote Jobs',
-                description: 'Browse remote roles tailored to your skills.',
-                action: () => navigate('/dashboard/remote-jobs'),
-                gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-              },
-              {
-                title: 'Remote Applications',
-                description: 'See status of remote jobs you already applied to.',
-                action: () => navigate(`${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`),
-                gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-              },
-              {
-                title: 'Priority Remote Matches',
-                description: 'Open the newest high-match remote roles.',
-                action: () => navigate('/dashboard/remote-jobs'),
-                gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-              },
-            ] as const).map((item, idx) => (
-              <Grid item xs={12} sm={6} md={4} key={item.title}>
-                <MotionCard
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
+                  transition={{ delay: idx * 0.05 }}
                   sx={{
-                    borderRadius: 3,
-                    minHeight: 180,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    background: theme.palette.mode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.96)',
-                    border: `1px solid ${theme.palette.divider}`,
-                    boxShadow: theme.palette.mode === 'dark' ? '0 24px 60px rgba(0,0,0,0.18)' : '0 12px 30px rgba(16, 185, 129, 0.12)',
+                    borderRadius: 4,
+                    border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
+                    background: isDarkMode
+                      ? 'linear-gradient(150deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9))'
+                      : 'linear-gradient(150deg, #ffffff, #f8fafc)',
                   }}
                 >
                   <CardContent>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>{item.title}</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>{item.description}</Typography>
-                  </CardContent>
-                  <Box sx={{ px: 3, pb: 3 }}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={item.action}
-                      sx={{
-                        background: item.gradient,
-                        fontWeight: 700,
-                        textTransform: 'none',
-                      }}
-                    >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
+                      <action.icon color={action.color} />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                        {action.label}
+                      </Typography>
+                    </Box>
+                    <Button variant="contained" fullWidth onClick={() => navigate(action.to)} sx={{ background: isDarkMode ? 'linear-gradient(135deg, #334155, #1E293B)' : 'linear-gradient(135deg, #111827, #334155)', color: '#F8FAFC', '&:hover': { background: isDarkMode ? 'linear-gradient(135deg, #1E293B, #0F172A)' : 'linear-gradient(135deg, #0F172A, #1F2937)' } }}>
                       Open
                     </Button>
-                  </Box>
-                </MotionCard>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        {/* Exclusive Tools (config-driven) */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>🎯 Exclusive Premium Tools</Typography>
-          <Grid container spacing={3}>
-            {( [
-                { key: 'mock_interviews', icon: VideocamIcon, title: 'Mock Interviews', to: '/dashboard/mock-interviews', color: 'primary' },
-                { key: 'resume_review', icon: DescriptionIcon, title: 'Resume Review', to: '/dashboard/resume-review', color: 'secondary' },
-                { key: 'interview_prep', icon: ChatIcon, title: 'Interview Preparation', to: 'https://www.ambitionbox.com/interviews?campaign=desktop_nav', external: true, color: 'primary' },
-            ] as const ).map((tool, idx) => (
-              <Grid item xs={12} sm={6} md={4} key={tool.key}>
-                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }} sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}` }}>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <tool.icon sx={{ fontSize: 48, mb: 2, color: (theme.palette as any)[tool.color]?.main || theme.palette.primary.main }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>{tool.title}</Typography>
-                    <Button
-                      variant="contained"
-                      color={tool.color as any}
-                      fullWidth
-                      onClick={() => {
-                        if ((tool as any).external || String(tool.to).startsWith('http')) {
-                          window.open(String(tool.to), '_blank', 'noopener');
-                        } else {
-                          navigate(String(tool.to));
-                        }
-                      }}
-                      sx={{ fontWeight: 700 }}
-                    >
-                      {tool.key === 'interview_prep' ? 'Open Interview Prep' : tool.title.includes('Mock') ? 'Start Practice' : 'Get Review'}
-                    </Button>
                   </CardContent>
                 </MotionCard>
               </Grid>
@@ -381,68 +550,511 @@ export const PremiumDashboard: React.FC = () => {
           </Grid>
         </Box>
 
-        {/* Recommended & Remote Jobs */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Recommended Jobs for You</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-                  {userSkills.length > 0 ? `Matched with ${userSkills.slice(0, 3).join(', ')}...` : 'Add skills to profile'}
+        <Card
+          sx={{
+            mb: 3,
+            borderRadius: 4,
+            border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
+            background: isDarkMode
+              ? 'linear-gradient(135deg, rgba(15,23,42,0.94), rgba(30,41,59,0.95))'
+              : 'linear-gradient(135deg, rgba(255, 246, 221, 0.95), rgba(255, 239, 197, 0.9))',
+          }}
+        >
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2.6 }}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.6 }}>
+                  Remote Job Hub
                 </Typography>
-                <Box sx={{ display: 'grid', gap: 1 }}>
-                  {recommendedJobs.length > 0 ? (
-                    recommendedJobs.map((job) => (
-                      <Button key={job.id} variant="outlined" fullWidth sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(`/jobs/${job.id}`)}>
-                        {job.title} • {job.company_name}
+                <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 660 }}>
+                  Premium remote opportunities in one place. Explore remote roles, track remote applications, and jump to high-match options.
+                </Typography>
+              </Box>
+              <Chip label="Remote Focus" color="success" sx={{ fontWeight: 700 }} />
+            </Box>
+
+            <Grid container spacing={2}>
+              {[
+                {
+                  title: 'Explore Remote Jobs',
+                  description: 'Browse remote roles tailored to your profile.',
+                  action: () => navigate('/dashboard/remote-jobs'),
+                  icon: PublicIcon,
+                },
+                {
+                  title: 'Remote Applications',
+                  description: 'Track remote jobs you already applied to.',
+                  action: () => navigate(`${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`),
+                  icon: FlightTakeoffIcon,
+                },
+                {
+                  title: 'Priority Remote Matches',
+                  description: 'Open newly matched premium remote opportunities.',
+                  action: () => navigate('/dashboard/remote-jobs'),
+                  icon: AutoAwesomeIcon,
+                },
+              ].map((item) => (
+                <Grid item xs={12} md={4} key={item.title}>
+                  <Card sx={{ borderRadius: 3, height: '100%', border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, background: isDarkMode ? 'linear-gradient(180deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9))' : '#FFFFFF' }}>
+                    <CardContent>
+                      <item.icon color="success" sx={{ mb: 1 }} />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.8 }}>
+                        {item.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                        {item.description}
+                      </Typography>
+                      <Button variant="contained" fullWidth onClick={item.action} sx={{ bgcolor: '#A8711E', color: '#FFF8E8', fontWeight: 700, '&:hover': { bgcolor: '#8C5D14' } }}>
+                        Open
                       </Button>
-                    ))
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+
+        <Card
+          sx={{
+            borderRadius: 4,
+            border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : `1px solid ${theme.palette.divider}`,
+            background: isDarkMode
+              ? 'linear-gradient(145deg, rgba(2,6,23,0.96), rgba(15,23,42,0.95))'
+              : 'linear-gradient(145deg, #FFFDF7, #FFFFFF)',
+            mb: 0.6,
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 2.4 } }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={3.2}>
+                <Box sx={{ display: 'grid', gap: 1.2, position: { md: 'sticky' }, top: { md: 92 } }}>
+                  {[
+                    { id: '01', title: 'Exclusive Premium Tools', sub: 'Action studio' },
+                    { id: '02', title: 'Recommended Jobs For You', sub: 'AI match feed' },
+                    { id: '03', title: 'Quick Preferences', sub: 'Personal controls' },
+                  ].map((tab, index) => (
+                    <Box
+                      key={tab.id}
+                      sx={{
+                        p: 1.3,
+                        borderRadius: 2,
+                        border: isDarkMode ? '1px solid rgba(148,163,184,0.3)' : '1px solid rgba(148,163,184,0.28)',
+                        background: index === 0
+                          ? (isDarkMode ? 'linear-gradient(135deg, rgba(51,65,85,0.85), rgba(15,23,42,0.85))' : 'linear-gradient(135deg, #FFF1CC, #FFE6B3)')
+                          : (isDarkMode ? 'rgba(15,23,42,0.56)' : 'rgba(248,250,252,0.94)'),
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.08em', color: 'text.secondary' }}>
+                        {tab.id}
+                      </Typography>
+                      <Typography variant="subtitle2" sx={{ mt: 0.4, fontWeight: 800 }}>
+                        {tab.title}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {tab.sub}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} md={8.8}>
+                <Box sx={{ display: 'grid', gap: 1.5 }}>
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'rgba(15,23,42,0.72)' : '#FFFFFF' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.4 }}>
+                        Exclusive Premium Tools
+                      </Typography>
+                      <Grid container spacing={1.2}>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="contained" startIcon={<VideocamIcon />} sx={{ justifyContent: 'flex-start', bgcolor: '#A8711E', color: '#FFF8E8', '&:hover': { bgcolor: '#8C5D14' } }} onClick={() => navigate('/dashboard/mock-interviews')}>
+                            Mock Interviews
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<DescriptionIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate('/dashboard/resume-review')}>
+                            Resume Review
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate('/dashboard/priority-apply')}>
+                            Priority Apply
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<ChatIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => window.open('https://www.ambitionbox.com/interviews?campaign=desktop_nav', '_blank', 'noopener')}>
+                            Interview Preparation
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'rgba(15,23,42,0.72)' : '#FFFFFF' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1.4 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                          Recommended Jobs For You
+                        </Typography>
+                        <Button size="small" sx={{ fontWeight: 700 }} onClick={() => navigate('/dashboard/recommended-jobs?minMatch=50')}>
+                          View all matches
+                        </Button>
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.4 }}>
+                        {userSkills.length > 0 ? `Matched with ${userSkills.slice(0, 4).join(', ')}` : 'Add skills in profile to get recommendations'}
+                      </Typography>
+
+                      <List sx={{ p: 0, display: 'grid', gap: 0.9 }}>
+                        {recommendedJobs.length > 0 ? (
+                          recommendedJobs.slice(0, 4).map((job) => (
+                            <ListItem key={job.id} sx={{ px: 1.2, py: 0.8, borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.22)' : '1px solid rgba(203,213,225,0.8)', bgcolor: isDarkMode ? 'rgba(2,6,23,0.46)' : 'rgba(248,250,252,0.9)' }}>
+                              <ListItemText
+                                primary={job.title || 'Role'}
+                                secondary={`${job.company_name || 'Company'}${job.location ? ` • ${job.location}` : ''}`}
+                                primaryTypographyProps={{ fontWeight: 700 }}
+                              />
+                              <Button size="small" sx={{ fontWeight: 700 }} onClick={() => navigate(`/jobs/${job.id}`)}>
+                                View
+                              </Button>
+                            </ListItem>
+                          ))
+                        ) : (
+                          <ListItem sx={{ px: 1.2, py: 1, borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.22)' : '1px solid rgba(203,213,225,0.8)', bgcolor: isDarkMode ? 'rgba(2,6,23,0.46)' : 'rgba(248,250,252,0.9)' }}>
+                            <ListItemText primary="No recommendations yet" secondary="Complete your profile to unlock matches." />
+                          </ListItem>
+                        )}
+                      </List>
+                    </CardContent>
+                  </Card>
+
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'rgba(15,23,42,0.72)' : '#FFFFFF' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.2 }}>
+                        Quick Preferences
+                      </Typography>
+                      <Grid container spacing={1.2} alignItems="center">
+                        <Grid item xs={12} sm={8}>
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Theme toggle is available in the navbar for premium candidates.
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Chip
+                            label={themeMode === 'dark' ? 'Dark mode active' : 'Light mode active'}
+                            color={themeMode === 'dark' ? 'secondary' : 'primary'}
+                            variant="outlined"
+                            sx={{ fontWeight: 700 }}
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Button fullWidth variant="outlined" sx={{ fontWeight: 700 }} onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}>
+                            Update profile
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        <Card
+          sx={{
+            mt: 3,
+            borderRadius: 4,
+            border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.24)',
+            background: isDarkMode
+              ? 'linear-gradient(160deg, rgba(15,23,42,0.96), rgba(30,41,59,0.94))'
+              : 'linear-gradient(160deg, #FFFDF7 0%, #FFF4DE 100%)',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              background: isDarkMode
+                ? 'radial-gradient(circle at 90% 12%, rgba(56,189,248,0.12), transparent 35%)'
+                : 'radial-gradient(circle at 90% 12%, rgba(245,158,11,0.16), transparent 35%)',
+              pointerEvents: 'none',
+            },
+          }}
+        >
+          <CardContent>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2,
+                pb: 1.6,
+                borderBottom: isDarkMode ? '1px dashed rgba(148,163,184,0.32)' : '1px dashed rgba(180, 122, 20, 0.35)',
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 800, color: isDarkMode ? '#E2E8F0' : '#6B3E05' }}>
+                Recent Applications
+              </Typography>
+              <Button
+                onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)}
+                sx={{
+                  color: isDarkMode ? '#F8FAFC' : '#7C4A0A',
+                  fontWeight: 700,
+                  bgcolor: isDarkMode ? 'rgba(148,163,184,0.14)' : 'rgba(245, 158, 11, 0.12)',
+                  '&:hover': {
+                    bgcolor: isDarkMode ? 'rgba(148,163,184,0.22)' : 'rgba(245, 158, 11, 0.2)',
+                  },
+                }}
+              >
+                View all ({recentApplications.length})
+              </Button>
+            </Box>
+
+            <List sx={{ p: 0, display: 'grid', gap: 1.2 }}>
+              {recentApplications.length === 0 ? (
+                <ListItem
+                  sx={{
+                    px: 2,
+                    py: 2,
+                    borderRadius: 2.5,
+                    border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.25)',
+                    background: isDarkMode
+                      ? 'linear-gradient(140deg, rgba(30,41,59,0.75), rgba(15,23,42,0.76))'
+                      : 'linear-gradient(140deg, rgba(255,255,255,0.9), rgba(255,248,232,0.95))',
+                  }}
+                >
+                  <ListItemText primary="No applications yet" secondary="Apply to jobs to track your application history." />
+                </ListItem>
+              ) : (
+                recentApplications.slice(0, 3).map((application) => (
+                  <ListItem
+                    key={application.id}
+                    sx={{
+                      px: 2,
+                      py: 1.6,
+                      borderRadius: 2.5,
+                      border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(180, 122, 20, 0.24)',
+                      background: isDarkMode
+                        ? 'linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.84))'
+                        : 'linear-gradient(145deg, rgba(255,255,255,0.96), rgba(255,247,228,0.95))',
+                      alignItems: 'flex-start',
+                      gap: 1.4,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        mt: 1,
+                        bgcolor:
+                          application.status === 'shortlisted'
+                            ? '#22C55E'
+                            : application.status === 'under_review'
+                            ? '#F59E0B'
+                            : application.status === 'rejected'
+                            ? '#EF4444'
+                            : application.status === 'accepted'
+                            ? '#3B82F6'
+                            : isDarkMode
+                            ? '#94A3B8'
+                            : '#B7791F',
+                        boxShadow: '0 0 0 4px rgba(148,163,184,0.12)',
+                        flexShrink: 0,
+                      }}
+                    />
+
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#3F2604', lineHeight: 1.2 }}>
+                        {application.jobs?.title || 'Unknown role'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: isDarkMode ? '#CBD5E1' : '#7A5310', fontWeight: 600, mt: 0.35 }}>
+                        {application.jobs?.company_name || 'Unknown company'}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#94A3B8' : '#9A6A18', mt: 0.55 }}>
+                        {application.jobs?.location || 'Location not specified'}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ textAlign: 'right', minWidth: 128 }}>
+                      <Chip
+                        label={(application.status || 'applied').replace('_', ' ').toUpperCase()}
+                        size="small"
+                        color={
+                          application.status === 'shortlisted'
+                            ? 'success'
+                            : application.status === 'under_review'
+                            ? 'warning'
+                            : application.status === 'rejected'
+                            ? 'error'
+                            : application.status === 'accepted'
+                            ? 'primary'
+                            : 'default'
+                        }
+                        sx={{ fontWeight: 700 }}
+                      />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          color: isDarkMode ? '#94A3B8' : '#7A5310',
+                          mt: 0.75,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
+                      </Typography>
+                    </Box>
+                  </ListItem>
+                ))
+              )}
+            </List>
+          </CardContent>
+        </Card>
+
+        <SupportWidget
+          audience="candidate"
+          showFab={false}
+          open={supportOpen}
+          onClose={() => setSupportOpen(false)}
+        />
+
+        <Dialog
+          open={interactionModalOpen}
+          onClose={() => setInteractionModalOpen(false)}
+          fullWidth
+          maxWidth="sm"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180,122,20,0.25)',
+              overflow: 'hidden',
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              pb: 1.4,
+              borderBottom: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(180,122,20,0.2)',
+              background: isDarkMode
+                ? 'linear-gradient(140deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95))'
+                : 'linear-gradient(140deg, #FFF9EA, #FFEDC7)',
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1.2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.1 }}>
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 1.8,
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: interactionType === 'downloads'
+                      ? (isDarkMode ? 'rgba(34,197,94,0.18)' : 'rgba(22,163,74,0.14)')
+                      : (isDarkMode ? 'rgba(59,130,246,0.2)' : 'rgba(37,99,235,0.14)'),
+                  }}
+                >
+                  {interactionType === 'downloads' ? (
+                    <VideocamIcon sx={{ fontSize: 20, color: interactionType === 'downloads' ? '#16A34A' : '#2563EB' }} />
                   ) : (
-                    <Button variant="contained" color="warning" fullWidth onClick={() => navigate('/dashboard/recommended-jobs')} sx={{ fontWeight: 700 }}>
-                      View All
-                    </Button>
+                    <VisibilityIcon sx={{ fontSize: 20, color: '#2563EB' }} />
                   )}
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-        </Grid>
-
-        <Dialog open={interactionModalOpen} onClose={() => setInteractionModalOpen(false)} fullWidth maxWidth="sm">
-          <DialogTitle>{interactionModalTitle}</DialogTitle>
-          <DialogContent dividers>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+                    {interactionModalTitle}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                    {interactionType === 'downloads' ? 'Resume engagement analytics' : 'Profile visibility analytics'}
+                  </Typography>
+                </Box>
+              </Box>
+              <Chip
+                size="small"
+                label={`${interactionItems.length} recruiters`}
+                sx={{
+                  fontWeight: 700,
+                  bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255,255,255,0.72)',
+                }}
+              />
+            </Box>
+          </DialogTitle>
+          <DialogContent
+            dividers
+            sx={{
+              background: isDarkMode
+                ? 'linear-gradient(160deg, rgba(15,23,42,0.98), rgba(2,6,23,0.98))'
+                : 'linear-gradient(160deg, #FFFCF4, #FFF7E7)',
+              borderTop: 'none',
+            }}
+          >
             {interactionLoading ? (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Loading recruiters...</Typography>
-            ) : interactionItems.length === 0 ? (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                No recruiter interactions found yet.
+              <Typography variant="body2" sx={{ color: 'text.secondary', py: 1 }}>
+                Loading recruiters...
               </Typography>
+            ) : interactionItems.length === 0 ? (
+              <Box
+                sx={{
+                  borderRadius: 2,
+                  border: isDarkMode ? '1px solid rgba(148,163,184,0.22)' : '1px solid rgba(180,122,20,0.2)',
+                  p: 2,
+                  background: isDarkMode ? 'rgba(30,41,59,0.56)' : 'rgba(255,255,255,0.8)',
+                }}
+              >
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  No recruiter interactions found yet.
+                </Typography>
+              </Box>
             ) : (
-              <Box sx={{ display: 'grid', gap: 2 }}>
+              <Box sx={{ display: 'grid', gap: 1.2 }}>
                 {interactionItems.map((item, index) => (
-                  <Card key={item.recruiter_id || index} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                      {item.recruiter_name}
-                    </Typography>
-                    {item.company_name && (
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {item.company_name}
-                      </Typography>
-                    )}
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      {item.total_unlocks != null ? `${item.total_unlocks} downloads` : `${item.total_views} views`} • {item.last_unlocked_at || item.last_viewed_at || 'Recent'}
+                  <Card
+                    key={item.recruiter_id || index}
+                    sx={{
+                      p: 1.6,
+                      borderRadius: 2,
+                      border: isDarkMode ? '1px solid rgba(148,163,184,0.22)' : '1px solid rgba(180,122,20,0.22)',
+                      background: isDarkMode
+                        ? 'linear-gradient(150deg, rgba(30,41,59,0.88), rgba(15,23,42,0.86))'
+                        : 'linear-gradient(150deg, rgba(255,255,255,0.94), rgba(255,248,232,0.96))',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+                          {item.recruiter_name || 'Recruiter'}
+                        </Typography>
+                        {item.company_name ? (
+                          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.2 }}>
+                            {item.company_name}
+                          </Typography>
+                        ) : null}
+                      </Box>
+                      <Chip
+                        size="small"
+                        label={item.total_unlocks != null ? `${item.total_unlocks} downloads` : `${item.total_views || 0} views`}
+                        color={interactionType === 'downloads' ? 'success' : 'primary'}
+                        sx={{ fontWeight: 700 }}
+                      />
+                    </Box>
+
+                    <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1, display: 'block', fontWeight: 600 }}>
+                      Last activity: {item.last_unlocked_at || item.last_viewed_at ? formatDate(item.last_unlocked_at || item.last_viewed_at) : 'Recent'}
                     </Typography>
                   </Card>
                 ))}
               </Box>
             )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setInteractionModalOpen(false)}>Close</Button>
+          <DialogActions sx={{ px: 2.2, py: 1.5, borderTop: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(180,122,20,0.2)' }}>
+            <Button onClick={() => setInteractionModalOpen(false)} sx={{ fontWeight: 700 }}>
+              Close
+            </Button>
           </DialogActions>
         </Dialog>
-      </Container>
+      </Box>
     </Layout>
   );
 };

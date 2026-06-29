@@ -23,6 +23,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
+  Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
   Lock as LockIcon,
   Search as SearchIcon,
@@ -42,6 +43,7 @@ import { candidateService, savedService } from '@services/api';
 import { AddToPoolButton } from './talentPool/AddToPoolButton';
 import { ResumeUnlockContact } from './ResumeUnlockContact';
 import { getResumeUnlockMap } from '@utils/resumeUnlocks';
+import { recruiterSettingsService } from '@services/recruiterSettings';
 import toast from 'react-hot-toast';
 
 interface CandidateSearchProps {
@@ -94,6 +96,8 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [savedCandidates, setSavedCandidates] = useState<Set<string>>(new Set());
   const [unlockedCandidates, setUnlockedCandidates] = useState<Record<string, boolean>>({});
+  const [blockedCandidateIds, setBlockedCandidateIds] = useState<Set<string>>(new Set());
+  const [blockedCandidateEmails, setBlockedCandidateEmails] = useState<Set<string>>(new Set());
 
   const [filters, setFilters] = useState({
     title: '',
@@ -101,6 +105,11 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
     skills: '',
     experience: '',
   });
+
+  React.useEffect(() => {
+    setBlockedCandidateIds(recruiterSettingsService.getBlockedCandidateIds(recruiterId));
+    setBlockedCandidateEmails(recruiterSettingsService.getBlockedCandidateEmails(recruiterId));
+  }, [recruiterId]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +132,12 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
       }
 
       const result = await candidateService.searchCandidates(searchFilters);
-      const candidates = (result.data || []) as any as Candidate[];
+      const candidates = ((result.data || []) as any as Candidate[]).filter(
+        (candidate) => {
+          const email = String(candidate.email || '').trim().toLowerCase();
+          return !blockedCandidateIds.has(candidate.id) && (!email || !blockedCandidateEmails.has(email));
+        }
+      );
       setSearchResults(candidates);
       const unlockMap = await getResumeUnlockMap(recruiterId, candidates.map((candidate) => candidate.id));
       setUnlockedCandidates(unlockMap);
@@ -169,6 +183,35 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
       console.error('Error saving candidate:', err);
       toast.error('Failed to save candidate');
     }
+  };
+
+  const handleBlockCandidate = (candidate: Candidate) => {
+    recruiterSettingsService.upsertBlockedCandidate(recruiterId, {
+      candidateId: candidate.id,
+      name: candidate.name || 'Candidate',
+      email: candidate.email || null,
+      headline: candidate.headline || null,
+      reason: 'Blocked from candidate search',
+    });
+
+    setBlockedCandidateIds((current) => {
+      const next = new Set(current);
+      next.add(candidate.id);
+      return next;
+    });
+    setBlockedCandidateEmails((current) => {
+      const email = String(candidate.email || '').trim().toLowerCase();
+      if (!email) return current;
+      const next = new Set(current);
+      next.add(email);
+      return next;
+    });
+    setSearchResults((current) => current.filter((entry) => entry.id !== candidate.id));
+    if (selectedCandidate?.id === candidate.id) {
+      setViewDialogOpen(false);
+      setSelectedCandidate(null);
+    }
+    toast.success('Candidate blocked');
   };
 
   return (
@@ -294,6 +337,11 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                         >
                           <MessageIcon />
                         </IconButton>
+                        <Tooltip title="Block candidate">
+                          <IconButton edge="end" onClick={() => handleBlockCandidate(candidate)}>
+                            <BlockIcon />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
                     }
                   >

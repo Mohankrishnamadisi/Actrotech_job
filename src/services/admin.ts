@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { supportService } from './support';
 
 export const adminService = {
   async getDashboardStats() {
@@ -61,6 +62,149 @@ export const adminService = {
       .order('applied_at', { ascending: false });
     if (error) throw error;
     return data || [];
+  },
+
+  async updateApplication(applicationId: string, updates: Record<string, any>) {
+    const { data, error } = await supabase
+      .from('job_applications')
+      .update(updates)
+      .eq('id', applicationId)
+      .select();
+    if (error) throw error;
+    return data?.[0];
+  },
+
+  async bulkUpdateUsers(userIds: string[], updates: Record<string, any>) {
+    if (!Array.isArray(userIds) || userIds.length === 0) return { updated: 0 };
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .in('id', userIds)
+      .select('id');
+    if (error) throw error;
+    return { updated: data?.length || 0 };
+  },
+
+  async bulkUpdateJobs(jobIds: string[], updates: Record<string, any>) {
+    if (!Array.isArray(jobIds) || jobIds.length === 0) return { updated: 0 };
+    const { data, error } = await supabase
+      .from('jobs')
+      .update(updates)
+      .in('id', jobIds)
+      .select('id');
+    if (error) throw error;
+    return { updated: data?.length || 0 };
+  },
+
+  async bulkUpdateApplications(applicationIds: string[], updates: Record<string, any>) {
+    if (!Array.isArray(applicationIds) || applicationIds.length === 0) return { updated: 0 };
+    const { data, error } = await supabase
+      .from('job_applications')
+      .update(updates)
+      .in('id', applicationIds)
+      .select('id');
+    if (error) throw error;
+    return { updated: data?.length || 0 };
+  },
+
+  async getSubscribers(limit = 300) {
+    const tryWithJoin = await supabase
+      .from('payments')
+      .select('id, user_id, amount, status, plan, created_at, profiles(name, email)')
+      .limit(limit)
+      .order('created_at', { ascending: false });
+
+    if (!tryWithJoin.error && Array.isArray(tryWithJoin.data)) {
+      return tryWithJoin.data;
+    }
+
+    const fallback = await supabase
+      .from('payments')
+      .select('*')
+      .limit(limit)
+      .order('created_at', { ascending: false });
+
+    if (fallback.error) throw fallback.error;
+    return fallback.data || [];
+  },
+
+  async getPayments(limit = 500) {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .limit(limit)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getSupportTickets(limit = 200) {
+    const tickets = await supportService.getTickets(undefined, 'admin');
+    return (tickets || []).slice(0, limit);
+  },
+
+  async updateSupportTicket(ticketId: string, updates: Record<string, any>) {
+    const updated = await supportService.updateTicket(ticketId, updates);
+    if (!updated) {
+      throw new Error('Ticket not found');
+    }
+    return updated;
+  },
+
+  async getAdminNotifications(limit = 12) {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getUnreadNotificationsCount() {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('read', false);
+    if (error) throw error;
+    return count || 0;
+  },
+
+  async markNotificationRead(notificationId: string) {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notificationId);
+    if (error) throw error;
+  },
+
+  async markAllNotificationsRead() {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('read', false);
+    if (error) throw error;
+  },
+
+  async updateSubscriber(paymentId: string, updates: Record<string, any>) {
+    const { data, error } = await supabase
+      .from('payments')
+      .update(updates)
+      .eq('id', paymentId)
+      .select();
+    if (error) throw error;
+    return data?.[0];
+  },
+
+  async bulkUpdateSubscribers(paymentIds: string[], updates: Record<string, any>) {
+    if (!Array.isArray(paymentIds) || paymentIds.length === 0) return { updated: 0 };
+    const { data, error } = await supabase
+      .from('payments')
+      .update(updates)
+      .in('id', paymentIds)
+      .select('id');
+    if (error) throw error;
+    return { updated: data?.length || 0 };
   },
 
   async getAnalytics() {

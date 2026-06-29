@@ -66,28 +66,45 @@ export const useAsync = (asyncFunction: () => Promise<unknown>, immediate = true
 };
 
 export const useSubscription = (userId: string | null) => {
-  const [subscription, setSubscription] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [subscription, setSubscription] = useState<any | null | undefined>(undefined);
+  const [loading, setLoading] = useState(Boolean(userId));
 
   // Only job seekers should have subscription records. Avoid fetching for other roles.
   const { user } = useAuthStore();
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setSubscription(null);
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
 
     const fetchSubscription = async () => {
       setLoading(true);
       try {
         const data = await subscriptionService.getUserSubscription(userId);
-        setSubscription(data);
+        if (mounted) {
+          setSubscription(data);
+        }
       } catch (error) {
         console.error('Failed to fetch subscription:', error);
+        if (mounted) {
+          setSubscription(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchSubscription();
+
+    return () => {
+      mounted = false;
+    };
   }, [userId]);
 
   return { subscription, loading };

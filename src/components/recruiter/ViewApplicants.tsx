@@ -28,6 +28,7 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  Block as BlockIcon,
   GetApp as DownloadIcon,
   Lock as LockIcon,
   Message as MessageIcon,
@@ -60,6 +61,7 @@ import {
   getJobApplicantsPaginated,
   type BulkApplicant,
 } from './bulkActionsApi';
+import { recruiterSettingsService } from '@services/recruiterSettings';
 
 interface ViewApplicantsProps {
   recruiterId: string;
@@ -122,10 +124,14 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [unlockedApplicants, setUnlockedApplicants] = useState<Record<string, boolean>>({});
   const [recruiterTags, setRecruiterTags] = useState<CandidateTag[]>([]);
   const [tagAssignmentsByCandidate, setTagAssignmentsByCandidate] = useState<Record<string, CandidateTag[]>>({});
+  const [blockedCandidateIds, setBlockedCandidateIds] = useState<Set<string>>(new Set());
+  const [blockedCandidateEmails, setBlockedCandidateEmails] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchJobs();
     fetchTags();
+    setBlockedCandidateIds(recruiterSettingsService.getBlockedCandidateIds(recruiterId));
+    setBlockedCandidateEmails(recruiterSettingsService.getBlockedCandidateEmails(recruiterId));
   }, [recruiterId]);
 
   useEffect(() => {
@@ -213,9 +219,18 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
 
   const isPriorityApplicant = (applicant: BulkApplicant) => Boolean(applicant.priority_application ?? applicant.priorityApplication);
 
+  const activeApplicants = useMemo(
+    () =>
+      applicants.filter((applicant) => {
+        const email = String(applicant.profiles?.email || '').trim().toLowerCase();
+        return !blockedCandidateIds.has(applicant.user_id) && (!email || !blockedCandidateEmails.has(email));
+      }),
+    [applicants, blockedCandidateIds, blockedCandidateEmails]
+  );
+
   const enrichedApplicants = useMemo(
-    () => applicants.map((applicant) => ({ ...applicant, match_score: getApplicantMatchScore(applicant).score })),
-    [applicants, selectedJob]
+    () => activeApplicants.map((applicant) => ({ ...applicant, match_score: getApplicantMatchScore(applicant).score })),
+    [activeApplicants, selectedJob]
   );
 
   const visibleApplicants = useMemo(() => {
@@ -252,11 +267,11 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id));
 
   const statusCounts = {
-    applied: applicants.filter((a) => a.status === 'applied').length,
-    under_review: applicants.filter((a) => a.status === 'under_review').length,
-    shortlisted: applicants.filter((a) => a.status === 'shortlisted').length,
-    rejected: applicants.filter((a) => a.status === 'rejected').length,
-    accepted: applicants.filter((a) => a.status === 'accepted').length,
+    applied: activeApplicants.filter((a) => a.status === 'applied').length,
+    under_review: activeApplicants.filter((a) => a.status === 'under_review').length,
+    shortlisted: activeApplicants.filter((a) => a.status === 'shortlisted').length,
+    rejected: activeApplicants.filter((a) => a.status === 'rejected').length,
+    accepted: activeApplicants.filter((a) => a.status === 'accepted').length,
   };
 
   const availableTags = useMemo(
@@ -389,6 +404,35 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
 
   const handleStatusChanged = () => {
     void fetchApplicants();
+  };
+
+  const handleBlockCandidate = (applicant: BulkApplicant) => {
+    recruiterSettingsService.upsertBlockedCandidate(recruiterId, {
+      candidateId: applicant.user_id,
+      name: applicant.profiles?.name || applicant.profiles?.full_name || 'Candidate',
+      email: applicant.profiles?.email || null,
+      headline: applicant.profiles?.headline ? String(applicant.profiles?.headline) : null,
+      reason: 'Blocked from applicants',
+    });
+
+    setBlockedCandidateIds((current) => {
+      const next = new Set(current);
+      next.add(applicant.user_id);
+      return next;
+    });
+    setBlockedCandidateEmails((current) => {
+      const email = String(applicant.profiles?.email || '').trim().toLowerCase();
+      if (!email) return current;
+      const next = new Set(current);
+      next.add(email);
+      return next;
+    });
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      next.delete(applicant.id);
+      return next;
+    });
+    toast.success('Candidate blocked from recruiter view');
   };
 
   if (jobs.length === 0) {
@@ -570,7 +614,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
               </Box>
 
               <Tabs value={statusFilter} onChange={(_, value) => setStatusFilter(value)} sx={{ mb: 0, borderBottom: '1px solid #e0e0e0' }} variant="scrollable">
-                <Tab label={`All (${applicants.length})`} value="all" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                <Tab label={`All (${activeApplicants.length})`} value="all" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
                 <Tab label={`Applied (${statusCounts.applied})`} value="applied" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
                 <Tab label={`Under Review (${statusCounts.under_review})`} value="under_review" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
                 <Tab label={`Shortlisted (${statusCounts.shortlisted})`} value="shortlisted" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
@@ -785,6 +829,11 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                                 </span>
                               </Tooltip>
                             )}
+                            <Tooltip title="Block candidate">
+                              <IconButton size="small" onClick={() => handleBlockCandidate(applicant)} title="Block candidate">
+                                <BlockIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                             <IconButton size="small" onClick={() => onChatClick?.(applicant.user_id, profile?.name || 'Candidate')} title="Send message"><MessageIcon fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>

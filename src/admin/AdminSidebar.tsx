@@ -1,61 +1,87 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Layout, Menu, Typography } from 'antd';
+import {
+  AppstoreOutlined,
+  BarChartOutlined,
+  BugOutlined,
+  CustomerServiceOutlined,
+  DashboardOutlined,
+  DatabaseOutlined,
+  FileSearchOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  ToolOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { ROUTES } from '../constants';
 
+const { Sider } = Layout;
+
 const items = [
-  { label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD },
-  { label: 'Users', to: ROUTES.ADMIN_USERS },
-  { label: 'Recruiters', to: ROUTES.ADMIN_RECRUITERS },
-  { label: 'Candidates', to: ROUTES.ADMIN_CANDIDATES },
-  { label: 'Jobs', to: ROUTES.ADMIN_JOBS },
-  { label: 'Applications', to: ROUTES.ADMIN_APPLICATIONS },
-  { label: 'Analytics', to: ROUTES.ADMIN_ANALYTICS },
-  { label: 'Bulk Import', to: ROUTES.ADMIN_BULK_IMPORT },
-  { label: 'Data Integrity', to: ROUTES.ADMIN_DATA_INTEGRITY },
-  { label: 'System Health', to: ROUTES.ADMIN_SYSTEM_HEALTH },
-  { label: 'Settings', to: ROUTES.ADMIN_SETTINGS },
+  { label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD, icon: <DashboardOutlined /> },
+  { label: 'Users', to: ROUTES.ADMIN_USERS, icon: <UserOutlined /> },
+  { label: 'Recruiters', to: ROUTES.ADMIN_RECRUITERS, icon: <TeamOutlined /> },
+  { label: 'Candidates', to: ROUTES.ADMIN_CANDIDATES, icon: <TeamOutlined /> },
+  { label: 'Jobs', to: ROUTES.ADMIN_JOBS, icon: <ToolOutlined /> },
+  { label: 'Applications', to: ROUTES.ADMIN_APPLICATIONS, icon: <FileSearchOutlined /> },
+  { label: 'Customer Care', to: ROUTES.ADMIN_CUSTOMER_CARE, icon: <CustomerServiceOutlined /> },
+  { label: 'Subscribers', to: ROUTES.ADMIN_SUBSCRIPTIONS, icon: <DatabaseOutlined /> },
+  { label: 'Analytics', to: ROUTES.ADMIN_ANALYTICS, icon: <BarChartOutlined /> },
+  { label: 'Bulk Activities', to: ROUTES.ADMIN_BULK_IMPORT, icon: <AppstoreOutlined /> },
+  { label: 'Data Integrity', to: ROUTES.ADMIN_DATA_INTEGRITY, icon: <BugOutlined /> },
+  { label: 'System Health', to: ROUTES.ADMIN_SYSTEM_HEALTH, icon: <BarChartOutlined /> },
+  { label: 'Settings', to: ROUTES.ADMIN_SETTINGS, icon: <SettingOutlined /> },
 ];
 
-const AdminSidebar: React.FC<{ drawerWidth?: number }> = ({ drawerWidth = 260 }) => {
+type AdminSidebarProps = {
+  drawerWidth?: number;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+};
+
+const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  drawerWidth = 268,
+  collapsed = false,
+  onCollapsedChange,
+}) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const selected = React.useMemo(() => {
+    const match = items.find((item) => location.pathname.startsWith(item.to));
+    return match ? [match.to] : [ROUTES.ADMIN_DASHBOARD];
+  }, [location.pathname]);
+
+  const menuItems = items.map((it) => ({ key: it.to, icon: it.icon, label: it.label }));
+
   return (
-    <aside style={{
-      width: drawerWidth,
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      paddingTop: 72,
-      background: '#f8fafc',
-      borderRight: '1px solid rgba(148, 163, 184, 0.2)',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
-      <div style={{ padding: 20, fontWeight: 700, color: '#0f172a', letterSpacing: 1, borderBottom: '1px solid rgba(148, 163, 184, 0.12)' }}>
-        Admin Menu
+    <Sider
+      width={drawerWidth}
+      collapsed={collapsed}
+      collapsible
+      onCollapse={(value) => onCollapsedChange?.(value)}
+      breakpoint="lg"
+      theme="light"
+      style={{
+        borderRight: '1px solid rgba(148, 163, 184, 0.18)',
+        boxShadow: '2px 0 20px rgba(15, 23, 42, 0.05)',
+      }}
+    >
+      <div style={{ height: 70, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? 0 : '0 18px', borderBottom: '1px solid rgba(148, 163, 184, 0.14)' }}>
+        <Typography.Title level={5} style={{ margin: 0, color: '#0f172a' }}>
+          {collapsed ? 'AD' : 'Admin Desk'}
+        </Typography.Title>
       </div>
-      <nav aria-label="Admin navigation" style={{ flex: 1, overflowY: 'auto' }}>
-        <ul style={{ listStyle: 'none', padding: '16px 0', margin: 0 }}>
-          {items.map((it) => (
-            <li key={it.to} style={{ margin: 0 }}>
-              <NavLink
-                to={it.to}
-                style={({ isActive }) => ({
-                  display: 'block',
-                  padding: '12px 20px',
-                  textDecoration: 'none',
-                  color: isActive ? '#1d4ed8' : '#334155',
-                  background: isActive ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
-                  borderLeft: isActive ? '4px solid #2563eb' : '4px solid transparent',
-                  transition: 'background 0.2s ease, color 0.2s ease',
-                })}
-              >
-                {it.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
+
+      <Menu
+        mode="inline"
+        selectedKeys={selected}
+        items={menuItems}
+        style={{ borderInlineEnd: 'none', paddingTop: 10 }}
+        onClick={({ key }) => navigate(String(key))}
+      />
+    </Sider>
   );
 };
 

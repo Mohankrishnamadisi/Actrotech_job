@@ -22,6 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  Block as BlockIcon,
   LocationOn as LocationIcon,
   Message as MessageIcon,
   PersonSearch as PersonSearchIcon,
@@ -44,6 +45,7 @@ import type {
   RecommendedCandidate,
   RecommendedCandidateFilters,
 } from '@types';
+import { recruiterSettingsService } from '@services/recruiterSettings';
 
 interface RecommendedCandidatesProps {
   recruiterId: string;
@@ -68,6 +70,8 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<RecommendedCandidate | null>(null);
   const [page, setPage] = useState(1);
+  const [blockedCandidateIds, setBlockedCandidateIds] = useState<string[]>([]);
+  const [blockedCandidateEmails, setBlockedCandidateEmails] = useState<string[]>([]);
   const [filters, setFilters] = useState<RecommendedCandidateFilters>({
     minMatchScore: 70,
     skills: '',
@@ -76,6 +80,13 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
   });
 
   const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
+  const blockedIdsKey = useMemo(() => blockedCandidateIds.slice().sort().join(','), [blockedCandidateIds]);
+  const blockedEmailsKey = useMemo(() => blockedCandidateEmails.slice().sort().join(','), [blockedCandidateEmails]);
+
+  useEffect(() => {
+    setBlockedCandidateIds(Array.from(recruiterSettingsService.getBlockedCandidateIds(recruiterId)));
+    setBlockedCandidateEmails(Array.from(recruiterSettingsService.getBlockedCandidateEmails(recruiterId)));
+  }, [recruiterId]);
 
   useEffect(() => {
     setPage(1);
@@ -87,7 +98,14 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
     const loadCandidates = async () => {
       setLoading(true);
       try {
-        const data = await getRecommendedCandidates(jobId, filters, page, PAGE_SIZE);
+        const data = await getRecommendedCandidates(
+          jobId,
+          filters,
+          page,
+          PAGE_SIZE,
+          blockedCandidateIds,
+          blockedCandidateEmails
+        );
         if (active) setResult(data);
       } catch (err) {
         console.error('Failed to load recommended candidates:', err);
@@ -101,7 +119,37 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
     return () => {
       active = false;
     };
-  }, [jobId, filterKey, page]);
+  }, [jobId, filterKey, page, blockedIdsKey, blockedEmailsKey]);
+
+  const handleBlockCandidate = (item: RecommendedCandidate) => {
+    recruiterSettingsService.upsertBlockedCandidate(recruiterId, {
+      candidateId: item.candidate.id,
+      name: item.candidate.name || 'Candidate',
+      email: item.candidate.email || null,
+      headline: item.candidate.bio || null,
+      reason: 'Blocked from recommendations',
+    });
+
+    setBlockedCandidateIds((current) => (current.includes(item.candidate.id) ? current : [item.candidate.id, ...current]));
+    setBlockedCandidateEmails((current) => {
+      const email = String(item.candidate.email || '').trim().toLowerCase();
+      if (!email || current.includes(email)) return current;
+      return [email, ...current];
+    });
+    setSelectedCandidate((current) => (current?.candidate.id === item.candidate.id ? null : current));
+    setResult((current) => {
+      if (!current) return current;
+      const nextData = current.data.filter((entry) => entry.candidate.id !== item.candidate.id);
+      const nextTotal = Math.max(0, current.total - 1);
+      return {
+        ...current,
+        data: nextData,
+        total: nextTotal,
+        totalPages: Math.max(1, Math.ceil(nextTotal / current.pageSize)),
+      };
+    });
+    toast.success('Candidate blocked');
+  };
 
   const handleInvite = async (item: RecommendedCandidate) => {
     if (onMessageClick) {
@@ -237,6 +285,7 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
                   onView={() => setSelectedCandidate(item)}
                   onMessage={() => onMessageClick?.(item.candidate.id, item.candidate.name || 'Candidate')}
                   onInvite={() => handleInvite(item)}
+                  onBlock={() => handleBlockCandidate(item)}
                 />
               </Grid>
             ))}
@@ -264,6 +313,7 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
         onClose={() => setSelectedCandidate(null)}
         onMessage={onMessageClick}
         onInvite={handleInvite}
+        onBlock={handleBlockCandidate}
       />
     </Box>
   );
@@ -277,6 +327,7 @@ function RecommendedCandidateCard({
   onView,
   onMessage,
   onInvite,
+  onBlock,
 }: {
   item: RecommendedCandidate;
   recruiterId: string;
@@ -285,6 +336,7 @@ function RecommendedCandidateCard({
   onView: () => void;
   onMessage: () => void;
   onInvite: () => void;
+  onBlock: () => void;
 }) {
   const candidate = item.candidate;
   const name = candidate.name || 'Candidate';
@@ -387,6 +439,11 @@ function RecommendedCandidateCard({
               </span>
             </Tooltip>
             <AddToPoolButton recruiterId={recruiterId} candidateId={candidate.id} />
+            <Tooltip title="Block Candidate">
+              <IconButton size="small" onClick={onBlock}>
+                <BlockIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
           <Button
             size="small"
@@ -441,6 +498,7 @@ function RecommendedCandidateDialog({
   onClose,
   onMessage,
   onInvite,
+  onBlock,
 }: {
   item: RecommendedCandidate | null;
   open: boolean;
@@ -449,6 +507,7 @@ function RecommendedCandidateDialog({
   onClose: () => void;
   onMessage?: (candidateId: string, candidateName: string) => void;
   onInvite: (item: RecommendedCandidate) => void;
+  onBlock: (item: RecommendedCandidate) => void;
 }) {
   if (!item) return null;
 
@@ -522,6 +581,17 @@ function RecommendedCandidateDialog({
       </DialogContent>
       <DialogActions sx={{ gap: 1, flexWrap: 'wrap' }}>
         <Button onClick={onClose}>Close</Button>
+        <Button
+          variant="outlined"
+          color="warning"
+          startIcon={<BlockIcon />}
+          onClick={() => {
+            onBlock(item);
+            onClose();
+          }}
+        >
+          Block Candidate
+        </Button>
         <AddToPoolButton recruiterId={recruiterId} candidateId={candidate.id} size="medium" />
         {onMessage && (
           <Button

@@ -45,14 +45,29 @@ export async function getRecommendedCandidates(
   jobId: string,
   filters: RecommendedCandidateFilters = {},
   page = 1,
-  pageSize = 10
+  pageSize = 10,
+  extraExcludedCandidateIds: string[] = [],
+  extraExcludedCandidateEmails: string[] = []
 ): Promise<PaginatedResult<RecommendedCandidate>> {
-  const cacheKey = JSON.stringify({ jobId, filters, page, pageSize });
+  const cacheKey = JSON.stringify({
+    jobId,
+    filters,
+    page,
+    pageSize,
+    excluded: extraExcludedCandidateIds.slice().sort(),
+    excludedEmails: extraExcludedCandidateEmails.slice().map((email) => email.toLowerCase()).sort(),
+  });
   const cached = recommendationCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.value;
 
   const job = await jobService.getJobById(jobId);
   const excludedCandidateIds = await getExcludedCandidateIds(jobId);
+  const excludedCandidateEmails = new Set(
+    extraExcludedCandidateEmails.map((email) => String(email || '').trim().toLowerCase()).filter(Boolean)
+  );
+  extraExcludedCandidateIds.forEach((candidateId) => {
+    if (candidateId) excludedCandidateIds.add(candidateId);
+  });
 
   let query = supabase
     .from('profiles')
@@ -77,7 +92,10 @@ export async function getRecommendedCandidates(
   if (error) throw error;
 
   const candidates = ((data || []) as RecommendedCandidateProfile[])
-    .filter((candidate) => candidate.id && !excludedCandidateIds.has(candidate.id))
+    .filter((candidate) => {
+      const email = String(candidate.email || '').trim().toLowerCase();
+      return candidate.id && !excludedCandidateIds.has(candidate.id) && (!email || !excludedCandidateEmails.has(email));
+    })
     .map((candidate) => ({
       candidate,
       job,

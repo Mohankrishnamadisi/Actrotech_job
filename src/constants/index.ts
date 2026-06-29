@@ -507,6 +507,7 @@ export const ROUTES = {
   ADMIN_CANDIDATES: '/admin/candidates',
   ADMIN_JOBS: '/admin/jobs',
   ADMIN_APPLICATIONS: '/admin/applications',
+  ADMIN_CUSTOMER_CARE: '/admin/customer-care',
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
   ADMIN_PAYMENTS: '/admin/payments',
   ADMIN_ANALYTICS: '/admin/analytics',

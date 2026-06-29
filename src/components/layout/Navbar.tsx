@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -19,10 +19,14 @@ import {
   WorkOutline as WorkIcon,
   Settings as SettingsIcon,
   ExitToApp as ExitToAppIcon,
+  HeadsetMic as HeadsetMicIcon,
   ArrowBackIosNew as ArrowBackIosNewIcon,
   Menu as MenuIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { useTheme } from '@mui/material/styles';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
@@ -30,19 +34,40 @@ import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
 import InstallApp from '@components/InstallApp/InstallApp';
-import { useSubscription } from '@hooks/index';
+import { useSubscription, useThemeMode } from '@hooks/index';
+import SupportWidget from '@components/common/SupportWidget';
+import { supportService } from '@services/support';
 
 const MotionBox = motion(Box);
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
+  const { themeMode, setThemeMode } = useThemeMode();
+  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const isRecruiter = user?.role === USER_ROLES.RECRUITER;
+  const isDarkMode = theme.palette.mode === 'dark';
+  const showPremiumThemeToggle = Boolean(
+    user
+      && !isRecruiter
+      && subscription
+      && location.pathname === ROUTES.DASHBOARD,
+  );
   const canGoBack = location.pathname !== ROUTES.HOME && location.pathname !== '/';
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [ticketNotifCount, setTicketNotifCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setTicketNotifCount(0);
+      return;
+    }
+    supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => setTicketNotifCount(0));
+  }, [user?.id, supportOpen]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -113,11 +138,15 @@ export const Navbar: React.FC = () => {
 
   return (
     <AppBar
-      position="sticky"
+      position="fixed"
       elevation={0}
       sx={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        borderBottom: '1px solid rgba(226,232,240,0.9)',
+        background: isDarkMode ? 'rgba(2, 6, 23, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+        borderBottom: isDarkMode ? '1px solid rgba(71, 85, 105, 0.55)' : '1px solid rgba(226,232,240,0.9)',
+        top: 0,
+        width: '100%',
+        zIndex: 1200,
+        backdropFilter: 'blur(14px)',
       }}
     >
       <Container maxWidth="lg">
@@ -177,6 +206,22 @@ export const Navbar: React.FC = () => {
             >
               <MenuIcon />
             </IconButton>
+            {showPremiumThemeToggle ? (
+              <IconButton
+                onClick={() => setThemeMode(isDarkMode ? 'light' : 'dark')}
+                sx={{
+                  bgcolor: isDarkMode ? 'rgba(250, 204, 21, 0.2)' : 'rgba(15, 23, 42, 0.08)',
+                  color: isDarkMode ? '#FACC15' : '#0F172A',
+                  border: `1px solid ${isDarkMode ? 'rgba(250, 204, 21, 0.35)' : 'rgba(15,23,42,0.16)'}`,
+                  '&:hover': {
+                    bgcolor: isDarkMode ? 'rgba(250, 204, 21, 0.28)' : 'rgba(15, 23, 42, 0.14)',
+                  },
+                }}
+                aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDarkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+              </IconButton>
+            ) : null}
             <Menu
               anchorEl={mobileAnchor}
               open={Boolean(mobileAnchor)}
@@ -467,16 +512,37 @@ export const Navbar: React.FC = () => {
                   </MenuItem>
                   <MenuItem
                     component={RouterLink}
-                    to={ROUTES.DASHBOARD_SETTINGS}
+                    to={isRecruiter ? ROUTES.RECRUITER_DASHBOARD : ROUTES.DASHBOARD_SETTINGS}
                     onClick={handleMenuClose}
                   >
                     <SettingsIcon sx={{ mr: 1.5, fontSize: 20 }} /> Settings
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose();
+                      setSupportOpen(true);
+                    }}
+                  >
+                    <HeadsetMicIcon sx={{ mr: 1.5, fontSize: 20 }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      Customer Care
+                      {ticketNotifCount > 0 ? (
+                        <Box component="span" sx={{ bgcolor: 'error.main', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{ticketNotifCount}</Box>
+                      ) : null}
+                    </Box>
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
                     <ExitToAppIcon sx={{ mr: 1.5, fontSize: 20 }} /> Logout
                   </MenuItem>
                 </Menu>
+
+                <SupportWidget
+                  audience={isRecruiter ? 'recruiter' : 'candidate'}
+                  showFab={false}
+                  open={supportOpen}
+                  onClose={() => setSupportOpen(false)}
+                />
               </Box>
             )}
           </Box>
