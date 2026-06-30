@@ -86,6 +86,8 @@ const getJobList = (response: any): any[] => {
 };
 
 const MotionCard = motion(Card);
+const candidateHeroGradient = 'linear-gradient(310deg, rgba(15,23,42,0.95) 0%, rgba(30,64,175,0.93) 45%, rgba(14,116,144,0.92) 100%)';
+
 type RecentApplication = {
   status: string;
   applied_at?: string;
@@ -770,9 +772,17 @@ export const PremiumDashboard: React.FC = () => {
                         {action.label}
                       </Typography>
                     </Box>
-                    <button className="cta" onClick={() => navigate(action.to)}>
-                      <span>Open&nbsp;</span>
-                      <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true">
+                    <button
+                      className="cta"
+                      onClick={() => navigate(action.to)}
+                      style={{
+                        background: candidateHeroGradient,
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        boxShadow: '0 10px 22px rgba(2,6,23,0.16)',
+                      }}
+                    >
+                      <span style={{ color: '#FFFFFF' }}>Open&nbsp;</span>
+                      <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true" style={{ stroke: '#FFFFFF' }}>
                         <path d="M1,5 L11,5"></path>
                         <polyline points="8 1 12 5 8 9"></polyline>
                       </svg>
@@ -1015,9 +1025,18 @@ export const PremiumDashboard: React.FC = () => {
                       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                         {item.description}
                       </Typography>
-                      <button className="cta" onClick={item.action} type="button">
-                        <span>Open&nbsp;</span>
-                        <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true">
+                      <button
+                        className="cta"
+                        onClick={item.action}
+                        type="button"
+                        style={{
+                          background: candidateHeroGradient,
+                          borderColor: 'rgba(255,255,255,0.2)',
+                          boxShadow: '0 10px 22px rgba(2,6,23,0.16)',
+                        }}
+                      >
+                        <span style={{ color: '#FFFFFF' }}>Open&nbsp;</span>
+                        <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true" style={{ stroke: '#FFFFFF' }}>
                           <path d="M1,5 L11,5"></path>
                           <polyline points="8 1 12 5 8 9"></polyline>
                         </svg>

@@ -347,15 +347,6 @@ export const Navbar: React.FC = () => {
                   {item.label}
                 </MenuItem>
               ))}
-              <Divider sx={{ my: 0.5 }} />
-              <MenuItem disabled sx={{ opacity: 1, fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: 0.8 }}>
-                <AutoAwesomeIcon sx={{ mr: 1, fontSize: 18 }} /> Career Tools
-              </MenuItem>
-              {featureTools.map((item) => (
-                <MenuItem key={item.label} onClick={() => goToFeature(item.to)}>
-                  {item.label}
-                </MenuItem>
-              ))}
             </Menu>
           </Box>
 

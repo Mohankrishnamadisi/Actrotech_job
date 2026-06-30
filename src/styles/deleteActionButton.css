@@ -1,8 +1,8 @@
 /* From Uiverse.io by aaronross1 - adapted as reusable delete action button */
 
 .delete-action-button {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background-color: rgb(20, 20, 20);
   border: none;
@@ -10,12 +10,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+  box-shadow: none;
   cursor: pointer;
   transition-duration: 0.3s;
   overflow: hidden;
   position: relative;
   padding: 0;
+  margin: 0;
+  vertical-align: middle;
 }
 
 .delete-action-svgIcon {
@@ -36,7 +38,7 @@
 }
 
 .delete-action-button:hover .delete-action-svgIcon {
-  width: 18px;
+  width: 16px;
   transition-duration: 0.3s;
   transform: rotate(360deg);
 }

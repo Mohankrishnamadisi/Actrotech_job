@@ -2,7 +2,7 @@
 
 .install-app-button {
   height: 40px;
-  width: 145px;
+  width: 120px;
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -15,7 +15,7 @@
 .install-app-type1::after {
   content: 'Install App';
   height: 40px;
-  width: 145px;
+  width: 120px;
   background-color: #1d4ed8;
   color: #fff;
   position: absolute;
@@ -33,7 +33,7 @@
 .install-app-type1::before {
   content: 'Install App';
   height: 40px;
-  width: 145px;
+  width: 120px;
   background-color: #ffffff;
   color: #1d4ed8;
   border: 1px solid #1d4ed8;

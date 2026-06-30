@@ -23,6 +23,8 @@ const getJobList = (response: any): any[] => {
   return [];
 };
 
+const remoteHubButtonGradient = 'linear-gradient(310deg, rgba(15,23,42,0.95) 0%, rgba(30,64,175,0.93) 45%, rgba(14,116,144,0.92) 100%)';
+
 export const RemoteJobs: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -185,8 +187,15 @@ export const RemoteJobs: React.FC = () => {
                       fullWidth
                       onClick={() => navigate(ROUTES.JOB_DETAILS.replace(':id', String(job.id)))}
                       sx={{
-                        background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
+                        background: remoteHubButtonGradient,
+                        color: '#FFFFFF',
                         fontWeight: 700,
+                        border: '1px solid rgba(255,255,255,0.22)',
+                        boxShadow: '0 10px 22px rgba(2,6,23,0.16)',
+                        '&:hover': {
+                          background: remoteHubButtonGradient,
+                          filter: 'brightness(1.04)',
+                        },
                       }}
                     >
                       View Job Details
