@@ -31,7 +31,6 @@ import {
 import { motion } from 'framer-motion';
 import {
   Edit as EditIcon,
-  Delete as DeleteIcon,
   CloudUpload as CloudUploadIcon,
   Check as CheckIcon,
   LinkedIn as LinkedInIcon,
@@ -45,6 +44,7 @@ import { EXPERIENCE_LEVELS, GENDER_OPTIONS, INDIAN_STATES } from '@constants/ind
 import { calculateProfileCompletion, getProfileCompletionGradient } from '../../utils/index';
 import { generatePreferredJobTitleSuggestions } from '../../utils/titleSuggestions';
 import { formatExperienceString, getTotalExperienceMonths, parseExperienceStringParts } from '../../utils/experience';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 import toast from 'react-hot-toast';
 import type { Certification, Project, Education, WorkExperience } from '../../types';
 
@@ -537,7 +537,7 @@ export const ProfilePage: React.FC = () => {
                         </Box>
                         <Box>
                           <IconButton size="small" onClick={() => { setNewEducation(edu); setEditingEducationId(edu.id); setEducationDialogOpen(true); }}><EditIcon fontSize="small" /></IconButton>
-                          <IconButton size="small" onClick={() => setFormData((p) => ({ ...p, education: p.education.filter((e) => e.id !== edu.id) }))}><DeleteIcon fontSize="small" /></IconButton>
+                          <DeleteActionButton onClick={() => setFormData((p) => ({ ...p, education: p.education.filter((e) => e.id !== edu.id) }))} ariaLabel="Delete education" />
                         </Box>
                       </Box>
                     </MotionPaper>
@@ -558,7 +558,7 @@ export const ProfilePage: React.FC = () => {
                         </Box>
                         <Box>
                           <IconButton size="small" onClick={() => { setNewWorkExp({ company: exp.company, position: exp.position, duration: exp.duration, description: exp.description || '' }); setEditingWorkExpId(exp.id); setWorkExpDialogOpen(true); }}><EditIcon fontSize="small" /></IconButton>
-                          <IconButton size="small" onClick={() => setFormData((p) => ({ ...p, workExperience: p.workExperience.filter((e) => e.id !== exp.id) }))}><DeleteIcon fontSize="small" /></IconButton>
+                          <DeleteActionButton onClick={() => setFormData((p) => ({ ...p, workExperience: p.workExperience.filter((e) => e.id !== exp.id) }))} ariaLabel="Delete work experience" />
                         </Box>
                       </Box>
                     </MotionPaper>
@@ -657,7 +657,7 @@ export const ProfilePage: React.FC = () => {
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{cert.name}</Typography>
                           <Typography variant="body2" color="text.secondary">{cert.issuer} · {cert.year}</Typography>
                         </Box>
-                        <IconButton size="small" onClick={() => setFormData((p) => ({ ...p, certifications: p.certifications.filter((c) => c.id !== cert.id) }))}><DeleteIcon fontSize="small" /></IconButton>
+                        <DeleteActionButton onClick={() => setFormData((p) => ({ ...p, certifications: p.certifications.filter((c) => c.id !== cert.id) }))} ariaLabel="Delete certification" />
                       </Box>
                     </MotionPaper>
                   ))}
@@ -674,7 +674,7 @@ export const ProfilePage: React.FC = () => {
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{proj.title}</Typography>
                           <Typography variant="body2" color="text.secondary">{proj.description}</Typography>
                         </Box>
-                        <IconButton size="small" onClick={() => setFormData((p) => ({ ...p, projects: p.projects.filter((pr) => pr.id !== proj.id) }))}><DeleteIcon fontSize="small" /></IconButton>
+                        <DeleteActionButton onClick={() => setFormData((p) => ({ ...p, projects: p.projects.filter((pr) => pr.id !== proj.id) }))} ariaLabel="Delete project" />
                       </Box>
                     </MotionPaper>
                   ))}

@@ -14,11 +14,11 @@ import {
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   FolderSpecial as PoolIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import type { TalentPool } from '@types';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface PoolListProps {
   pools: TalentPool[];
@@ -133,17 +133,13 @@ export const PoolList: React.FC<PoolListProps> = ({
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete pool">
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            color="error"
+                          <DeleteActionButton
                             onClick={(e) => {
                               e.stopPropagation();
                               onDeletePool(pool);
                             }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+                            ariaLabel="Delete pool"
+                          />
                         </Tooltip>
                       </Box>
                     }

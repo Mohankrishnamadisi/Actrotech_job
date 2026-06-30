@@ -20,7 +20,6 @@ import {
   Settings as SettingsIcon,
   ExitToApp as ExitToAppIcon,
   HeadsetMic as HeadsetMicIcon,
-  ArrowBackRounded as ArrowBackRoundedIcon,
   Menu as MenuIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
@@ -41,6 +40,8 @@ import InstallApp from '@components/InstallApp/InstallApp';
 import { useSubscription, useThemeMode } from '@hooks/index';
 import SupportWidget from '@components/common/SupportWidget';
 import { supportService } from '@services/support';
+import { AnimatedBackButton } from '@components/common/AnimatedBackButton';
+import '../../styles/navbarPremiumButton.css';
 
 const MotionBox = motion(Box);
 
@@ -184,6 +185,31 @@ export const Navbar: React.FC = () => {
       ? ROUTES.RECRUITER_DASHBOARD
       : ROUTES.DASHBOARD;
 
+  const getCurrentHashRoute = () => {
+    const hash = window.location.hash || '';
+    const route = hash.startsWith('#') ? hash.slice(1) : hash;
+    return route || '/';
+  };
+
+  const handleBackNavigation = () => {
+    const fallbackRoute = user ? dashboardRoute : ROUTES.HOME;
+
+    if (window.history.length > 1) {
+      const beforeRoute = getCurrentHashRoute();
+      window.history.back();
+
+      window.setTimeout(() => {
+        const afterRoute = getCurrentHashRoute();
+        if (afterRoute === beforeRoute) {
+          navigate(fallbackRoute, { replace: true });
+        }
+      }, 180);
+      return;
+    }
+
+    navigate(fallbackRoute, { replace: true });
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -219,27 +245,17 @@ export const Navbar: React.FC = () => {
             }}
           >
             {canGoBack && (
-              <IconButton
-                onClick={() => navigate(-1)}
-                size="small"
+              <Box
+                onClick={handleBackNavigation}
                 sx={{
-                  width: 34,
-                  height: 34,
-                  bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.78)' : 'rgba(248, 250, 252, 0.98)',
-                  border: isDarkMode ? '1px solid rgba(100, 116, 139, 0.5)' : '1px solid rgba(148, 163, 184, 0.38)',
-                  boxShadow: isDarkMode ? 'none' : '0 8px 16px rgba(15, 23, 42, 0.08)',
-                  color: isDarkMode ? '#E2E8F0' : '#0F172A',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateX(-1px)',
-                    bgcolor: isDarkMode ? 'rgba(51, 65, 85, 0.85)' : 'rgba(241, 245, 249, 1)',
-                    borderColor: isDarkMode ? 'rgba(148, 163, 184, 0.7)' : 'rgba(100, 116, 139, 0.45)',
-                  },
+                  transform: 'scale(0.62)',
+                  transformOrigin: 'left center',
+                  ml: -1,
+                  cursor: 'pointer',
                 }}
-                aria-label="Go back"
               >
-                <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
-              </IconButton>
+                <AnimatedBackButton onClick={handleBackNavigation} ariaLabel="Go back" />
+              </Box>
             )}
             <Logo size="medium" />
           </Box>
@@ -537,9 +553,11 @@ export const Navbar: React.FC = () => {
                       fontWeight: 700,
                       borderRadius: '999px',
                       background: 'linear-gradient(90deg, #0284c7, #2563eb)',
+                      color: '#ffffff',
                       boxShadow: '0 10px 20px rgba(37, 99, 235, 0.24)',
                       '&:hover': {
                         background: 'linear-gradient(90deg, #0369a1, #1d4ed8)',
+                        color: '#ffffff',
                       },
                     }}
                   >
@@ -549,40 +567,16 @@ export const Navbar: React.FC = () => {
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <Button
-                  component={RouterLink}
-                  to={user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_SUBSCRIPTION : ROUTES.PRICING}
-                  variant="contained"
-                  size="small"
-                  startIcon={
-                    <Box
-                      component="img"
-                      src="/crown.png"
-                      alt="Crown icon"
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        display: 'block',
-                      }}
-                    />
-                  }
-                  sx={{
-                    textTransform: 'none',
-                    px: 1.7,
-                    py: 0.78,
-                    minWidth: 140,
-                    borderRadius: 999,
-                    background: 'linear-gradient(90deg, #0f766e, #0ea5a0)',
-                    color: '#ffffff',
-                    boxShadow: '0 10px 22px rgba(15, 118, 110, 0.24)',
-                    fontWeight: 700,
-                    '&:hover': {
-                      background: 'linear-gradient(90deg, #0d6a63, #08928d)',
-                    },
-                  }}
+                <button
+                  className="navbar-premium-btn"
+                  onClick={() => navigate(user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_SUBSCRIPTION : ROUTES.PRICING)}
+                  type="button"
                 >
-                  {subscription ? 'Subscribed' : 'Subscribe'}
-                </Button>
+                  <svg viewBox="0 0 576 512" height="1em" className="navbar-premium-logoIcon" aria-hidden="true">
+                    <path d="M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6H426.6c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z" />
+                  </svg>
+                  GO PREMIUM
+                </button>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography
                     variant="body2"

@@ -1,0 +1,172 @@
+/* From Uiverse.io by csozidev - adapted for Login page Google action */
+
+.login-google-button {
+  width: 100%;
+  padding: 10px;
+  font-weight: 700;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  border-radius: 35px;
+  align-items: center;
+  justify-content: center;
+  border: solid black 2px;
+  outline: none;
+  background: #ffffff;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+.login-google-svg {
+  height: 25px;
+  margin-right: 10px;
+  z-index: 6;
+}
+
+.login-google-button .login-google-text {
+  z-index: 10;
+  font-size: 14px;
+}
+
+.login-google-button:hover .login-google-text {
+  animation: login-google-text-fx forwards 0.3s;
+}
+
+@keyframes login-google-text-fx {
+  from {
+    color: black;
+  }
+  to {
+    color: white;
+  }
+}
+
+.login-google-button:hover::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 9%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  opacity: 0;
+  border-radius: 300px;
+  animation: login-google-wave1 2.5s ease-in-out forwards;
+}
+
+.login-google-button:hover::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 9%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  opacity: 0;
+  border-radius: 300px;
+  animation: login-google-wave2 2.5s ease-in-out forwards;
+}
+
+@keyframes login-google-wave1 {
+  0%,
+  1% {
+    z-index: 1;
+    background: #eb4335;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  25% {
+    z-index: 1;
+    background: #eb4335;
+    width: 800px;
+    height: 800px;
+    opacity: 1;
+  }
+  26% {
+    z-index: 3;
+    background: #34a853;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  50%,
+  70%,
+  100% {
+    z-index: 3;
+    background: #34a853;
+    width: 800px;
+    height: 800px;
+    opacity: 1;
+  }
+}
+
+@keyframes login-google-wave2 {
+  0%,
+  11% {
+    z-index: 2;
+    background: #fbbc05;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  35%,
+  39% {
+    z-index: 2;
+    background: #fbbc05;
+    width: 800px;
+    height: 800px;
+    opacity: 1;
+  }
+  40% {
+    z-index: 4;
+    background: #4285f4;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  64%,
+  100% {
+    z-index: 4;
+    background: #4285f4;
+    width: 800px;
+    height: 800px;
+    opacity: 1;
+  }
+}
+
+.login-google-button:hover .login-google-red {
+  animation: login-google-disappear 0.1s forwards;
+  animation-delay: 0.1s;
+}
+
+.login-google-button:hover .login-google-yellow {
+  animation: login-google-disappear 0.1s forwards;
+  animation-delay: 0.3s;
+}
+
+.login-google-button:hover .login-google-green {
+  animation: login-google-disappear 0.1s forwards;
+  animation-delay: 0.7s;
+}
+
+.login-google-button:hover .login-google-blue {
+  animation: login-google-disappear 0.1s forwards;
+  animation-delay: 1.1s;
+}
+
+@keyframes login-google-disappear {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(100);
+  }
+}
+
+.login-google-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

@@ -16,7 +16,6 @@ import {
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Notes as NotesIcon,
   Save as SaveIcon,
   Close as CloseIcon,
@@ -26,6 +25,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import type { CandidateNote } from '@types';
 import { candidateNoteService } from '@services/candidateNotes';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface CandidateNotesPanelProps {
   applicationId: string;
@@ -332,13 +332,7 @@ export const CandidateNotesPanel: React.FC<CandidateNotesPanelProps> = ({
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete note">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => setDeleteTarget(note)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
+                            <DeleteActionButton onClick={() => setDeleteTarget(note)} ariaLabel="Delete note" />
                           </Tooltip>
                         </Box>
                       )}

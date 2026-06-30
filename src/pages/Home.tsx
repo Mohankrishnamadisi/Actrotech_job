@@ -595,7 +595,7 @@ export const Home: React.FC = () => {
 
             <Grid item xs={12} md={6}>
               <MotionBox variants={sectionItemVariants}>
-              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%)', boxShadow: '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)', boxShadow: '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                   Featured Companies Actively Hiring
                 </Typography>

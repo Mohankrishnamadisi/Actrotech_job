@@ -1,0 +1,45 @@
+/* From Uiverse.io by vinodjangid07 - adapted for navbar */
+
+.navbar-premium-btn {
+  width: 170px;
+  height: 40px;
+  border: none;
+  border-radius: 40px;
+  background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: rgb(121, 103, 3);
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition-duration: 0.35s;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.144);
+  background-size: 200% 200%;
+  letter-spacing: 0.03em;
+}
+
+.navbar-premium-logoIcon path {
+  fill: rgb(121, 103, 3);
+}
+
+.navbar-premium-btn:hover {
+  transform: scale(0.95);
+  animation: navbarPremiumGradient 5s ease infinite;
+  background-position: right;
+}
+
+@keyframes navbarPremiumGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

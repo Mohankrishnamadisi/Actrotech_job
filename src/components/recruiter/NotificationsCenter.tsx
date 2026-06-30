@@ -20,7 +20,6 @@ import {
   Info as InfoIcon,
   Check as CheckIcon,
   Warning as WarningIcon,
-  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { notificationService } from '@services/api';

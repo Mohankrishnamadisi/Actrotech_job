@@ -15,8 +15,9 @@ import { useAuthStore } from '@store/index';
 import { applicationService } from '@services/api';
 import { formatDate } from '@utils/index';
 import { ROUTES } from '@constants/index';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import '../../styles/opportunitySignalButton.css';
 
 type UserApplication = {
   id: string;
@@ -31,6 +32,7 @@ type UserApplication = {
 
 export const ApplicationsPage: React.FC = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const [applications, setApplications] = useState<UserApplication[]>([]);
@@ -38,6 +40,29 @@ export const ApplicationsPage: React.FC = () => {
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const filter = search.get('filter');
+
+  const getCurrentHashRoute = () => {
+    const hash = window.location.hash || '';
+    const route = hash.startsWith('#') ? hash.slice(1) : hash;
+    return route || '/';
+  };
+
+  const handleBackNavigation = () => {
+    if (window.history.length > 1) {
+      const beforeRoute = getCurrentHashRoute();
+      window.history.back();
+
+      window.setTimeout(() => {
+        const afterRoute = getCurrentHashRoute();
+        if (afterRoute === beforeRoute) {
+          navigate(ROUTES.DASHBOARD, { replace: true });
+        }
+      }, 180);
+      return;
+    }
+
+    navigate(ROUTES.DASHBOARD, { replace: true });
+  };
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -156,19 +181,18 @@ export const ApplicationsPage: React.FC = () => {
           sx={{
             mb: 2.4,
             borderRadius: 3.2,
-            border: '1px solid rgba(189, 139, 44, 0.42)',
+            border: '1px solid rgba(59, 130, 246, 0.34)',
             background:
-              'radial-gradient(circle at 15% 18%, rgba(255,245,206,0.95) 0%, rgba(255,245,206,0) 42%), radial-gradient(circle at 86% 10%, rgba(253,186,116,0.45) 0%, rgba(253,186,116,0) 36%), linear-gradient(138deg, #FFF7DE 0%, #F7E5B7 50%, #EDD190 100%)',
-            color: '#5D3A06',
+              'radial-gradient(circle at 15% 18%, rgba(219,234,254,0.94) 0%, rgba(219,234,254,0) 42%), radial-gradient(circle at 86% 10%, rgba(96,165,250,0.34) 0%, rgba(96,165,250,0) 36%), linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
+            color: '#0F172A',
             overflow: 'hidden',
             position: 'relative',
-            boxShadow: '0 20px 44px rgba(156, 113, 36, 0.26), inset 0 1px 0 rgba(255, 255, 245, 0.72)',
             '&::before': {
               content: '""',
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(118deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 34%), repeating-linear-gradient(120deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 1px, transparent 1px, transparent 22px)',
+                'linear-gradient(118deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 34%), repeating-linear-gradient(120deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 22px)',
               pointerEvents: 'none',
             },
             '&::after': {
@@ -179,7 +203,7 @@ export const ApplicationsPage: React.FC = () => {
               right: { xs: -100, md: -110 },
               bottom: { xs: -130, md: -145 },
               borderRadius: '50%',
-              background: 'conic-gradient(from 45deg, rgba(255,230,160,0.72), rgba(251,191,36,0.34), rgba(245,158,11,0.46))',
+              background: 'conic-gradient(from 45deg, rgba(191,219,254,0.72), rgba(96,165,250,0.36), rgba(37,99,235,0.46))',
               filter: 'blur(24px)',
               opacity: 0.72,
               pointerEvents: 'none',
@@ -189,19 +213,21 @@ export const ApplicationsPage: React.FC = () => {
           <CardContent sx={{ p: { xs: 2.2, md: 3.2 } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
               <Box>
-                <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.1, mb: 0.6 }}>
+                <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.1, mb: 0.6, color: '#000000' }}>
                   My Applications
                 </Typography>
-                <Typography sx={{ color: 'rgba(106, 65, 8, 0.88)' }}>
+                <Typography sx={{ color: '#000000' }}>
                   Status-driven command screen for every application in your pipeline.
                 </Typography>
                 {filter === 'remote' ? (
-                  <Chip label="Remote Filter Active" size="small" sx={{ mt: 1.2, fontWeight: 700, bgcolor: 'rgba(255, 249, 232, 0.85)', color: '#6B4308', border: '1px solid rgba(188, 140, 43, 0.34)' }} />
+                  <Chip label="Remote Filter Active" size="small" sx={{ mt: 1.2, fontWeight: 700, bgcolor: 'rgba(255, 255, 255, 0.72)', color: '#000000', border: '1px solid rgba(15, 23, 42, 0.2)' }} />
                 ) : null}
               </Box>
-              <Button component={RouterLink} to={ROUTES.JOBS} variant="outlined" sx={{ borderColor: 'rgba(166, 116, 20, 0.5)', bgcolor: 'rgba(255, 251, 238, 0.62)', color: '#6A4208', fontWeight: 700, '&:hover': { borderColor: 'rgba(145, 95, 12, 0.66)', bgcolor: 'rgba(255, 248, 225, 0.92)' } }}>
-                Browse More Jobs
-              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                <Button component={RouterLink} to={ROUTES.JOBS} variant="contained" className="opportunity-signal-btn" sx={{ fontWeight: 700, color: '#FFFFFF !important' }}>
+                  <span className="opportunity-signal-text">Browse More Jobs</span>
+                </Button>
+              </Box>
             </Box>
           </CardContent>
         </Card>

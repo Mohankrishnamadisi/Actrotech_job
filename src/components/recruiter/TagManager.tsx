@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -17,16 +17,16 @@ import {
 import {
   Add as AddIcon,
   Close as CloseIcon,
-  Delete as DeleteIcon,
   Edit as EditIcon,
   LocalOffer as TagIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { CANDIDATE_TAG_COLORS } from '@constants/index';
 import type { CandidateTag } from '@types';
 import { candidateTagService } from '@services/candidateTags';
 import { CandidateTagChip } from './CandidateTagChips';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
+import './TagManagerColorPicker.css';
 
 interface TagManagerProps {
   recruiterId: string;
@@ -40,9 +40,22 @@ interface TagFormState {
   color: string;
 }
 
+const TAG_PICKER_COLORS = [
+  '#e11d48',
+  '#f472b6',
+  '#fb923c',
+  '#facc15',
+  '#84cc16',
+  '#10b981',
+  '#0ea5e9',
+  '#3b82f6',
+  '#8b5cf6',
+  '#a78bfa',
+];
+
 const emptyForm = (): TagFormState => ({
   name: '',
-  color: CANDIDATE_TAG_COLORS[0],
+  color: TAG_PICKER_COLORS[0],
 });
 
 export const TagManager: React.FC<TagManagerProps> = ({ recruiterId, inline = false, onTagsChange }) => {
@@ -53,6 +66,10 @@ export const TagManager: React.FC<TagManagerProps> = ({ recruiterId, inline = fa
   const [form, setForm] = useState<TagFormState>(emptyForm());
   const [editingTag, setEditingTag] = useState<CandidateTag | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<CandidateTag | null>(null);
+  const customColorInputRef = useRef<HTMLInputElement | null>(null);
+
+  const normalizeHex = (value: string) => String(value || '').trim().toLowerCase();
+  const isPresetColor = TAG_PICKER_COLORS.some((color) => normalizeHex(color) === normalizeHex(form.color));
 
   useEffect(() => {
     if (open || inline) {
@@ -171,25 +188,43 @@ export const TagManager: React.FC<TagManagerProps> = ({ recruiterId, inline = fa
             <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
               Color
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-              {CANDIDATE_TAG_COLORS.map((color) => (
-                <Box
-                  key={color}
-                  onClick={() => setForm((f) => ({ ...f, color }))}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    bgcolor: color,
-                    cursor: 'pointer',
-                    border: form.color === color ? '3px solid #1e293b' : '2px solid transparent',
-                    boxShadow: form.color === color ? `0 0 0 2px ${color}55` : 'none',
-                    transition: 'transform 0.15s',
-                    '&:hover': { transform: 'scale(1.1)' },
-                  }}
-                />
-              ))}
-            </Box>
+            <div className="tag-color-container-items">
+              {TAG_PICKER_COLORS.map((color) => {
+                const selected = normalizeHex(form.color) === normalizeHex(color);
+                const colorStyle = { '--color': color } as React.CSSProperties;
+
+                return (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`tag-item-color${selected ? ' tag-item-color-selected' : ''}`}
+                    style={colorStyle}
+                    data-color={color}
+                    aria-label={`Select color ${color}`}
+                    aria-pressed={selected}
+                    onClick={() => setForm((f) => ({ ...f, color }))}
+                  />
+                );
+              })}
+
+              <button
+                type="button"
+                className={`tag-item-color tag-item-color-custom${!isPresetColor ? ' tag-item-color-selected' : ''}`}
+                data-color="Custom"
+                aria-label="Select custom color"
+                aria-pressed={!isPresetColor}
+                onClick={() => customColorInputRef.current?.click()}
+              />
+
+              <input
+                ref={customColorInputRef}
+                type="color"
+                value={form.color}
+                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                className="tag-custom-color-input"
+                aria-label="Pick custom color"
+              />
+            </div>
           </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
@@ -245,9 +280,7 @@ export const TagManager: React.FC<TagManagerProps> = ({ recruiterId, inline = fa
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Delete">
-                  <IconButton size="small" color="error" onClick={() => setDeleteConfirm(tag)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  <DeleteActionButton onClick={() => setDeleteConfirm(tag)} ariaLabel="Delete tag" />
                 </Tooltip>
               </Box>
             </Box>

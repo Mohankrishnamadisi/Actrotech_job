@@ -25,7 +25,6 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Delete as DeleteIcon,
   Edit as EditIcon,
   Phone as PhoneIcon,
   Event as EventIcon,
@@ -36,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import { Layout } from '@components/layout/Layout';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 import { useAuthStore } from '@store/index';
 import { freeNotesService, type FreeNote, type FreeNotePriority, type FreeNoteStatus, type FreeNoteType } from '@services/freeNotes';
 import { formatDate } from '@utils/index';
@@ -401,7 +401,7 @@ export const FreeNotesPage: React.FC = () => {
                       <Stack direction="row" spacing={0.4}>
                         <IconButton size="small" onClick={() => togglePinned(note)}><PinIcon fontSize="small" /></IconButton>
                         <IconButton size="small" onClick={() => openEdit(note)}><EditIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" color="error" onClick={() => removeNote(note.id)}><DeleteIcon fontSize="small" /></IconButton>
+                        <DeleteActionButton onClick={() => removeNote(note.id)} ariaLabel="Delete note" />
                       </Stack>
                     </Box>
 

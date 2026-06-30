@@ -3,8 +3,7 @@ import Swal from '@utils/sweetAlert';
 import { motion } from 'framer-motion';
 import { messagingService, Message, Conversation } from '@services/messaging';
 import ComposeMessage from './ComposeMessage';
-import { IconButton } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface MessageDetailProps {
   conversation: Conversation;
@@ -154,8 +153,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>{msg.content}</div>
                 {msg.senderId === userId && (
-                  <IconButton
-                    size="small"
+                  <DeleteActionButton
                     onClick={async () => {
                       const result = await Swal.fire({
                         title: 'Delete this message?',
@@ -179,11 +177,8 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
                         });
                       }
                     }}
-                    aria-label="delete message"
-                    sx={{ color: msg.senderId === userId ? '#fff' : 'inherit' }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                    ariaLabel="delete message"
+                  />
                 )}
               </div>
               {msg.attachments && msg.attachments.length > 0 && (

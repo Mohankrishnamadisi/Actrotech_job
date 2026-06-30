@@ -1,0 +1,53 @@
+.unlock-pro-btn {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.72em 1.1rem;
+  cursor: pointer;
+  gap: 0.4rem;
+  font-weight: bold;
+  border-radius: 30px;
+  text-shadow: 2px 2px 3px rgb(136 0 136 / 50%);
+  background: linear-gradient(
+      15deg,
+      #880088,
+      #aa2068,
+      #cc3f47,
+      #de6f3d,
+      #f09f33,
+      #de6f3d,
+      #cc3f47,
+      #aa2068,
+      #880088
+    )
+    no-repeat;
+  background-size: 300%;
+  color: #fff !important;
+  border: none !important;
+  background-position: left center;
+  box-shadow: 0 30px 10px -20px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease, background-size 0.3s ease;
+  text-decoration: none;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.unlock-pro-btn:hover {
+  background-size: 320%;
+  background-position: right center;
+}
+
+.unlock-pro-btn .unlock-pro-svg {
+  width: 20px;
+  height: auto;
+  fill: #f09f33;
+  flex-shrink: 0;
+  transition: fill 0.3s ease;
+}
+
+.unlock-pro-btn:hover .unlock-pro-svg {
+  fill: #fff;
+}

@@ -1,0 +1,74 @@
+/* From Uiverse.io by javierBarroso - adapted for footer social section */
+
+.footer-social-parent {
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+
+.footer-social-child {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-style: preserve-3d;
+  transition: all 0.3s cubic-bezier(0.68, 0.85, 0.265, 1.85);
+  border-radius: 8px;
+  margin: 0;
+  box-shadow: inset 1px 1px 2px #fff, 0 0 5px #4442;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.footer-social-child:hover {
+  background-color: white;
+  background-position: -100px 100px, -100px 100px;
+  transform: perspective(180px) rotateX(60deg) translateY(2px);
+}
+
+.footer-social-child-1:hover {
+  box-shadow: 0px 10px 10px #1e90ff;
+}
+
+.footer-social-child-2:hover {
+  box-shadow: 0px 10px 10px #ff00ff;
+}
+
+.footer-social-child-3:hover {
+  box-shadow: 0px 10px 10px #000;
+}
+
+.footer-social-child-4:hover {
+  box-shadow: 0px 10px 10px #4267b2;
+}
+
+.footer-social-button {
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: transparent;
+  font-size: 20px;
+  transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.68, -0.85, 0.265, 1.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.footer-social-child:hover > .footer-social-button {
+  transform: translate3d(0px, 20px, 30px) perspective(80px) rotateX(-60deg)
+    translateY(2px) translateZ(10px);
+}
+
+.footer-social-button svg {
+  width: 0.98em;
+  height: 0.98em;
+}

@@ -1,0 +1,62 @@
+/* From Uiverse.io by Gaurav-WebDev - adapted for Install App action */
+
+.install-app-button {
+  height: 40px;
+  width: 145px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s ease-in-out;
+  background: transparent;
+}
+
+.install-app-type1::after {
+  content: 'Install App';
+  height: 40px;
+  width: 145px;
+  background-color: #1d4ed8;
+  color: #fff;
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  transform: translateY(40px);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s ease-in-out;
+}
+
+.install-app-type1::before {
+  content: 'Install App';
+  height: 40px;
+  width: 145px;
+  background-color: #ffffff;
+  color: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  box-shadow: 0 2px 8px rgba(25, 1, 81, 0.18);
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  transform: translateY(0px) scale(1.06);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s ease-in-out;
+}
+
+.install-app-type1:hover::after {
+  background: linear-gradient(90deg, #0369a1, #1d4ed8);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
+  transform: translateY(0) scale(1.06);
+}
+
+.install-app-type1:hover::before {
+  transform: translateY(-40px) scale(0) rotate(120deg);
+}

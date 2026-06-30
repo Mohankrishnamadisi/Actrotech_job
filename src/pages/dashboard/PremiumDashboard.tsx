@@ -73,6 +73,11 @@ import {
   type DemandWeights,
   type WeeklyGoalTargets,
 } from '@utils/premiumDashboardConfig';
+import './PremiumHeroStars.css';
+import '../../styles/spaceButton.css';
+import '../../styles/sparkleButton.css';
+import '../../styles/ctaButton.css';
+import '../../styles/opportunitySignalButton.css';
 
 const getJobList = (response: any): any[] => {
   if (Array.isArray(response)) return response;
@@ -490,6 +495,7 @@ export const PremiumDashboard: React.FC = () => {
           py: { xs: 3, md: 4 },
           maxWidth: 1440,
           mx: 'auto',
+          backgroundColor: isDarkMode ? 'transparent' : '#FFFFFF',
           position: 'relative',
           '&::before': {
             content: '""',
@@ -501,7 +507,7 @@ export const PremiumDashboard: React.FC = () => {
             right: { xs: -120, md: -80 },
             background: isDarkMode
               ? 'radial-gradient(circle, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0) 72%)'
-              : 'radial-gradient(circle, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0) 72%)',
+              : 'none',
             pointerEvents: 'none',
           },
           '&::after': {
@@ -514,7 +520,7 @@ export const PremiumDashboard: React.FC = () => {
             left: { xs: -120, md: -90 },
             background: isDarkMode
               ? 'radial-gradient(circle, rgba(168,85,247,0.2) 0%, rgba(168,85,247,0) 72%)'
-              : 'radial-gradient(circle, rgba(251,146,60,0.18) 0%, rgba(251,146,60,0) 72%)',
+              : 'none',
             pointerEvents: 'none',
           },
         }}
@@ -525,64 +531,85 @@ export const PremiumDashboard: React.FC = () => {
             borderRadius: 6,
             position: 'relative',
             overflow: 'hidden',
-            border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.36)' : '1px solid rgba(160, 110, 20, 0.5)',
-            background: isDarkMode
-              ? 'radial-gradient(circle at 12% 18%, rgba(14,165,233,0.18) 0%, rgba(14,165,233,0) 36%), radial-gradient(circle at 88% 0%, rgba(217,70,239,0.16) 0%, rgba(217,70,239,0) 38%), linear-gradient(138deg, #020617 0%, #0F172A 46%, #1E293B 100%)'
-              : 'radial-gradient(circle at 12% 16%, rgba(255,233,167,0.44) 0%, rgba(255,233,167,0) 34%), radial-gradient(circle at 88% 4%, rgba(255,176,78,0.36) 0%, rgba(255,176,78,0) 36%), linear-gradient(135deg, #3A2008 0%, #7D4D11 44%, #D29A2B 100%)',
-            color: isDarkMode ? '#E2E8F0' : '#FFF7E6',
-            boxShadow: isDarkMode
-              ? '0 24px 54px rgba(2, 6, 23, 0.62), inset 0 1px 0 rgba(148,163,184,0.16)'
-              : '0 24px 54px rgba(92, 56, 9, 0.36), inset 0 1px 0 rgba(255, 246, 210, 0.5)',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              inset: 0,
-              background: isDarkMode
-                ? 'linear-gradient(120deg, rgba(148,163,184,0.08) 0%, rgba(148,163,184,0) 36%), radial-gradient(circle at 78% 18%, rgba(125,211,252,0.2), transparent 48%)'
-                : 'linear-gradient(120deg, rgba(255,250,235,0.24) 0%, rgba(255,250,235,0) 34%), radial-gradient(circle at 78% 18%, rgba(253,224,71,0.28), transparent 48%)',
-              pointerEvents: 'none',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              width: { xs: 220, md: 320 },
-              height: { xs: 220, md: 320 },
-              right: { xs: -90, md: -110 },
-              bottom: { xs: -130, md: -150 },
-              background: isDarkMode
-                ? 'conic-gradient(from 45deg, rgba(56,189,248,0.34), rgba(59,130,246,0.12), rgba(14,165,233,0.34))'
-                : 'conic-gradient(from 45deg, rgba(255,224,138,0.46), rgba(252,186,59,0.16), rgba(245,158,11,0.42))',
-              filter: 'blur(20px)',
-              opacity: 0.72,
-              pointerEvents: 'none',
-            },
+            border: '1px solid rgba(148, 163, 184, 0.32)',
+            background: 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%)',
+            color: '#E2E8F0',
+            boxShadow: 'none',
           }}
         >
-          <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
+          <Box className="premium-hero-stars-container" aria-hidden>
+            <div className="premium-hero-stars" />
+            <div className="premium-hero-stars2" />
+            <div className="premium-hero-stars3" />
+          </Box>
+
+          <CardContent sx={{ p: { xs: 2.5, md: 4 }, position: 'relative', zIndex: 1 }}>
             <Grid container spacing={3} alignItems="center">
               <Grid item xs={12} md={8}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  <Chip icon={<StarIcon />} label="Premium Candidate" sx={{ fontWeight: 700, bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6' }} />
-                  <Chip icon={<TrendingUpIcon />} label={`Profile strength ${profileStrength}%`} sx={{ fontWeight: 700, bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6' }} />
+                  <Chip
+                    icon={<StarIcon />}
+                    label="Premium Candidate"
+                    sx={{
+                      fontWeight: 700,
+                      bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)',
+                      color: isDarkMode ? '#E2E8F0' : '#FFF7E6',
+                      '& .MuiChip-icon': { color: '#F59E0B' },
+                    }}
+                  />
+                  <Chip
+                    icon={<TrendingUpIcon />}
+                    label={`Profile strength ${profileStrength}%`}
+                    sx={{
+                      fontWeight: 700,
+                      bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)',
+                      color: isDarkMode ? '#E2E8F0' : '#FFF7E6',
+                      '& .MuiChip-icon': { color: '#F59E0B' },
+                    }}
+                  />
                 </Box>
 
                 <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.08, mb: 1.2 }}>
                   Premium command deck
                 </Typography>
-                <Typography variant="h6" sx={{ color: isDarkMode ? 'rgba(226,232,240,0.92)' : 'rgba(255, 243, 221, 0.92)', mb: 2.4, maxWidth: 760 }}>
+                <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 2.4, maxWidth: 760 }}>
                   Hello {user?.name || 'Candidate'}, this space is built for high-intent job hunting with exclusive insights, remote pipelines, and premium tools.
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2 }}>
-                  <Button variant="contained" onClick={() => navigate('/dashboard/recommended-jobs?minMatch=50')} startIcon={<AutoAwesomeIcon />} sx={{ bgcolor: isDarkMode ? '#334155' : '#EDE9D5', color: isDarkMode ? '#F8FAFC' : '#12392D', fontWeight: 800, '&:hover': { bgcolor: isDarkMode ? '#475569' : '#DFD8B9' } }}>
-                    AI Matched Jobs
-                  </Button>
-                  <Button variant="outlined" onClick={() => navigate('/dashboard/remote-jobs')} sx={{ borderColor: isDarkMode ? 'rgba(148,163,184,0.62)' : 'rgba(255, 241, 214, 0.7)', bgcolor: isDarkMode ? 'rgba(148,163,184,0.12)' : 'rgba(255, 248, 232, 0.14)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6', fontWeight: 700, '&:hover': { borderColor: isDarkMode ? '#CBD5E1' : '#FFE5B3', bgcolor: isDarkMode ? 'rgba(148,163,184,0.2)' : 'rgba(255, 248, 232, 0.22)' } }}>
-                    Remote Hub
-                  </Button>
-                  <Button variant="outlined" onClick={() => navigate('/dashboard/mock-interviews')} sx={{ borderColor: isDarkMode ? 'rgba(148,163,184,0.62)' : 'rgba(255, 241, 214, 0.7)', bgcolor: isDarkMode ? 'rgba(148,163,184,0.12)' : 'rgba(255, 248, 232, 0.14)', color: isDarkMode ? '#E2E8F0' : '#FFF7E6', fontWeight: 700, '&:hover': { borderColor: isDarkMode ? '#CBD5E1' : '#FFE5B3', bgcolor: isDarkMode ? 'rgba(148,163,184,0.2)' : 'rgba(255, 248, 232, 0.22)' } }}>
-                    Mock Interview
-                  </Button>
+                  <button className="sparkle-button" style={{ transform: 'scale(0.85)' }} onClick={() => navigate('/dashboard/recommended-jobs?minMatch=50')}>
+                    <div className="dots-border"></div>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="sparkle-icon">
+                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z" />
+                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z" />
+                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z" />
+                    </svg>
+                    <span className="text-button">AI Matched Jobs</span>
+                  </button>
+                  <Box className="space-btn" sx={{ position: 'relative', display: 'inline-block' }}>
+                    <div className="space-container-stars">
+                      <div className="space-stars"></div>
+                      <div className="space-glow">
+                        <div className="space-circle"></div>
+                        <div className="space-circle"></div>
+                      </div>
+                    </div>
+                    <Button variant="contained" onClick={() => navigate('/dashboard/remote-jobs')} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'transparent' } }}>
+                      Remote Hub
+                    </Button>
+                  </Box>
+                  <Box className="space-btn" sx={{ position: 'relative', display: 'inline-block' }}>
+                    <div className="space-container-stars">
+                      <div className="space-stars"></div>
+                      <div className="space-glow">
+                        <div className="space-circle"></div>
+                        <div className="space-circle"></div>
+                      </div>
+                    </div>
+                    <Button variant="contained" onClick={() => navigate('/dashboard/mock-interviews')} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'transparent' } }}>
+                      Mock Interview
+                    </Button>
+                  </Box>
                 </Box>
               </Grid>
 
@@ -590,34 +617,33 @@ export const PremiumDashboard: React.FC = () => {
                 <Card
                   sx={{
                     borderRadius: 3,
-                    background: isDarkMode
-                      ? 'linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94))'
-                      : 'linear-gradient(145deg, rgba(255, 249, 236, 0.98), rgba(255, 236, 195, 0.95))',
-                    border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.34)' : '1px solid rgba(190, 140, 40, 0.4)',
-                    backdropFilter: 'blur(8px)',
+                    background: 'rgba(10, 15, 28, 0.72)',
+                    border: '1px solid rgba(148, 163, 184, 0.22)',
+                    backdropFilter: 'blur(14px)',
+                    boxShadow: 'inset 0 1px 0 rgba(148,163,184,0.1), 0 8px 24px rgba(2,6,23,0.5)',
                   }}
                 >
                   <CardContent>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: isDarkMode ? '#E2E8F0' : '#5E3E0A', mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#E2E8F0', mb: 2 }}>
                       Premium communication
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
-                      <Typography sx={{ color: isDarkMode ? '#CBD5E1' : '#7A5310', fontWeight: 600 }}>Unread messages</Typography>
-                      <Typography sx={{ color: isDarkMode ? '#F8FAFC' : '#5E3E0A', fontWeight: 800 }}>{unreadMessagesCount}</Typography>
+                      <Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>Unread messages</Typography>
+                      <Typography sx={{ color: '#F1F5F9', fontWeight: 800 }}>{unreadMessagesCount}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2.2 }}>
-                      <Typography sx={{ color: isDarkMode ? '#CBD5E1' : '#7A5310', fontWeight: 600 }}>Notifications</Typography>
-                      <Typography sx={{ color: isDarkMode ? '#F8FAFC' : '#5E3E0A', fontWeight: 800 }}>{notificationsCount}</Typography>
+                      <Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>Notifications</Typography>
+                      <Typography sx={{ color: '#F1F5F9', fontWeight: 800 }}>{notificationsCount}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <IconButton onClick={() => navigate(ROUTES.MESSAGING)} sx={{ bgcolor: isDarkMode ? 'rgba(148,163,184,0.16)' : 'rgba(190, 140, 40, 0.14)', '&:hover': { bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(190, 140, 40, 0.22)' } }}>
+                      <IconButton onClick={() => navigate(ROUTES.MESSAGING)} sx={{ bgcolor: 'rgba(148,163,184,0.14)', '&:hover': { bgcolor: 'rgba(148,163,184,0.24)' } }}>
                         <Badge badgeContent={unreadMessagesCount} color="warning">
-                          <ChatIcon sx={{ color: isDarkMode ? '#E2E8F0' : '#5E3E0A' }} />
+                          <ChatIcon sx={{ color: '#CBD5E1' }} />
                         </Badge>
                       </IconButton>
-                      <IconButton onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)} sx={{ bgcolor: isDarkMode ? 'rgba(148,163,184,0.16)' : 'rgba(190, 140, 40, 0.14)', '&:hover': { bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(190, 140, 40, 0.22)' } }}>
+                      <IconButton onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)} sx={{ bgcolor: 'rgba(148,163,184,0.14)', '&:hover': { bgcolor: 'rgba(148,163,184,0.24)' } }}>
                         <Badge badgeContent={notificationsCount} color="error">
-                          <NotificationsIcon sx={{ color: isDarkMode ? '#E2E8F0' : '#5E3E0A' }} />
+                          <NotificationsIcon sx={{ color: '#CBD5E1' }} />
                         </Badge>
                       </IconButton>
                     </Box>
@@ -744,9 +770,13 @@ export const PremiumDashboard: React.FC = () => {
                         {action.label}
                       </Typography>
                     </Box>
-                    <Button variant="contained" fullWidth onClick={() => navigate(action.to)} sx={{ background: isDarkMode ? 'linear-gradient(135deg, #334155, #1E293B)' : 'linear-gradient(135deg, #111827, #334155)', color: '#F8FAFC', '&:hover': { background: isDarkMode ? 'linear-gradient(135deg, #1E293B, #0F172A)' : 'linear-gradient(135deg, #0F172A, #1F2937)' } }}>
-                      Open
-                    </Button>
+                    <button className="cta" onClick={() => navigate(action.to)}>
+                      <span>Open&nbsp;</span>
+                      <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true">
+                        <path d="M1,5 L11,5"></path>
+                        <polyline points="8 1 12 5 8 9"></polyline>
+                      </svg>
+                    </button>
                   </CardContent>
                 </MotionCard>
               </Grid>
@@ -760,8 +790,8 @@ export const PremiumDashboard: React.FC = () => {
             borderRadius: 4,
             border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
             background: isDarkMode
-              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(15,23,42,0.95))'
-              : 'linear-gradient(138deg, #F8FBFF, #EEF6FF)',
+              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
+              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
           }}
         >
           <CardContent>
@@ -901,8 +931,17 @@ export const PremiumDashboard: React.FC = () => {
                             Priority {signal.priorityScore}
                             {signal.observedAt ? ` • Updated ${formatDate(signal.observedAt)}` : ''}
                           </Typography>
-                          <Button size="small" variant="contained" color={signal.tone} onClick={signal.action} sx={{ fontWeight: 700 }}>
-                            {signal.cta}
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color={signal.tone}
+                            onClick={signal.action}
+                            className="opportunity-signal-btn"
+                            sx={{
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span className="opportunity-signal-text">{signal.cta}</span>
                           </Button>
                         </ListItem>
                       )) : (
@@ -928,8 +967,8 @@ export const PremiumDashboard: React.FC = () => {
             borderRadius: 4,
             border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
             background: isDarkMode
-              ? 'linear-gradient(135deg, rgba(15,23,42,0.94), rgba(30,41,59,0.95))'
-              : 'linear-gradient(135deg, rgba(255, 246, 221, 0.95), rgba(255, 239, 197, 0.9))',
+              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
+              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
           }}
         >
           <CardContent>
@@ -976,9 +1015,13 @@ export const PremiumDashboard: React.FC = () => {
                       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                         {item.description}
                       </Typography>
-                      <Button variant="contained" fullWidth onClick={item.action} sx={{ bgcolor: '#A8711E', color: '#FFF8E8', fontWeight: 700, '&:hover': { bgcolor: '#8C5D14' } }}>
-                        Open
-                      </Button>
+                      <button className="cta" onClick={item.action} type="button">
+                        <span>Open&nbsp;</span>
+                        <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true">
+                          <path d="M1,5 L11,5"></path>
+                          <polyline points="8 1 12 5 8 9"></polyline>
+                        </svg>
+                      </button>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -993,7 +1036,7 @@ export const PremiumDashboard: React.FC = () => {
             border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : `1px solid ${theme.palette.divider}`,
             background: isDarkMode
               ? 'linear-gradient(145deg, rgba(2,6,23,0.96), rgba(15,23,42,0.95))'
-              : 'linear-gradient(145deg, #FFFDF7, #FFFFFF)',
+              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
             mb: 0.6,
           }}
         >
@@ -1013,7 +1056,7 @@ export const PremiumDashboard: React.FC = () => {
                         borderRadius: 2,
                         border: isDarkMode ? '1px solid rgba(148,163,184,0.3)' : '1px solid rgba(148,163,184,0.28)',
                         background: index === 0
-                          ? (isDarkMode ? 'linear-gradient(135deg, rgba(51,65,85,0.85), rgba(15,23,42,0.85))' : 'linear-gradient(135deg, #FFF1CC, #FFE6B3)')
+                          ? (isDarkMode ? 'linear-gradient(135deg, rgba(51,65,85,0.85), rgba(15,23,42,0.85))' : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)')
                           : (isDarkMode ? 'rgba(15,23,42,0.56)' : 'rgba(248,250,252,0.94)'),
                       }}
                     >
@@ -1033,14 +1076,14 @@ export const PremiumDashboard: React.FC = () => {
 
               <Grid item xs={12} md={8.8}>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
-                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'rgba(15,23,42,0.72)' : '#FFFFFF' }}>
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'linear-gradient(138deg, rgba(2,6,23,0.9), rgba(30,41,59,0.88))' : '#FFFFFF' }}>
                     <CardContent>
                       <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.4 }}>
                         Exclusive Premium Tools
                       </Typography>
                       <Grid container spacing={1.2}>
                         <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="contained" startIcon={<VideocamIcon />} sx={{ justifyContent: 'flex-start', bgcolor: '#A8711E', color: '#FFF8E8', '&:hover': { bgcolor: '#8C5D14' } }} onClick={() => navigate('/dashboard/mock-interviews')}>
+                          <Button fullWidth variant="outlined" startIcon={<VideocamIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate('/dashboard/mock-interviews')}>
                             Mock Interviews
                           </Button>
                         </Grid>
@@ -1144,8 +1187,8 @@ export const PremiumDashboard: React.FC = () => {
             borderRadius: 4,
             border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.24)',
             background: isDarkMode
-              ? 'linear-gradient(160deg, rgba(15,23,42,0.96), rgba(30,41,59,0.94))'
-              : 'linear-gradient(160deg, #FFFDF7 0%, #FFF4DE 100%)',
+              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
+              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
             position: 'relative',
             overflow: 'hidden',
             '&::before': {
@@ -1170,21 +1213,17 @@ export const PremiumDashboard: React.FC = () => {
                 borderBottom: isDarkMode ? '1px dashed rgba(148,163,184,0.32)' : '1px dashed rgba(180, 122, 20, 0.35)',
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 800, color: isDarkMode ? '#E2E8F0' : '#6B3E05' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: isDarkMode ? '#E2E8F0' : '#000000' }}>
                 Recent Applications
               </Typography>
               <Button
                 onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)}
+                className="opportunity-signal-btn"
                 sx={{
-                  color: isDarkMode ? '#F8FAFC' : '#7C4A0A',
                   fontWeight: 700,
-                  bgcolor: isDarkMode ? 'rgba(148,163,184,0.14)' : 'rgba(245, 158, 11, 0.12)',
-                  '&:hover': {
-                    bgcolor: isDarkMode ? 'rgba(148,163,184,0.22)' : 'rgba(245, 158, 11, 0.2)',
-                  },
                 }}
               >
-                View all ({recentApplications.length})
+                <span className="opportunity-signal-text">View all ({recentApplications.length})</span>
               </Button>
             </Box>
 
@@ -1198,7 +1237,7 @@ export const PremiumDashboard: React.FC = () => {
                     border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.25)',
                     background: isDarkMode
                       ? 'linear-gradient(140deg, rgba(30,41,59,0.75), rgba(15,23,42,0.76))'
-                      : 'linear-gradient(140deg, rgba(255,255,255,0.9), rgba(255,248,232,0.95))',
+                      : '#FFFFFF',
                   }}
                 >
                   <ListItemText primary="No applications yet" secondary="Apply to jobs to track your application history." />
@@ -1214,7 +1253,7 @@ export const PremiumDashboard: React.FC = () => {
                       border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(180, 122, 20, 0.24)',
                       background: isDarkMode
                         ? 'linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.84))'
-                        : 'linear-gradient(145deg, rgba(255,255,255,0.96), rgba(255,247,228,0.95))',
+                        : '#FFFFFF',
                       alignItems: 'flex-start',
                       gap: 1.4,
                     }}
@@ -1243,13 +1282,13 @@ export const PremiumDashboard: React.FC = () => {
                     />
 
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#3F2604', lineHeight: 1.2 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#000000', lineHeight: 1.2 }}>
                         {application.jobs?.title || 'Unknown role'}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#CBD5E1' : '#7A5310', fontWeight: 600, mt: 0.35 }}>
+                      <Typography variant="body2" sx={{ color: isDarkMode ? '#CBD5E1' : '#000000', fontWeight: 600, mt: 0.35 }}>
                         {application.jobs?.company_name || 'Unknown company'}
                       </Typography>
-                      <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#94A3B8' : '#9A6A18', mt: 0.55 }}>
+                      <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#94A3B8' : '#000000', mt: 0.55 }}>
                         {application.jobs?.location || 'Location not specified'}
                       </Typography>
                     </Box>
@@ -1275,7 +1314,7 @@ export const PremiumDashboard: React.FC = () => {
                         variant="caption"
                         sx={{
                           display: 'block',
-                          color: isDarkMode ? '#94A3B8' : '#7A5310',
+                          color: isDarkMode ? '#94A3B8' : '#000000',
                           mt: 0.75,
                           fontWeight: 600,
                         }}

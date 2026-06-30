@@ -27,13 +27,13 @@ import {
 } from '@mui/material';
 import {
   Edit as EditIcon,
-  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import type { Job } from '../../types';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface ManageJobsProps {
   recruiterId: string;
@@ -181,13 +181,10 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton
-                        size="small"
+                      <DeleteActionButton
                         onClick={() => handleDeleteClick(job.id)}
-                        title="Delete job"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                        ariaLabel="Delete job"
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

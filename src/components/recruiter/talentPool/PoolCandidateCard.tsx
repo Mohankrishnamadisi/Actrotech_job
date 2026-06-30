@@ -13,13 +13,13 @@ import {
 import {
   Visibility as ViewIcon,
   Message as MessageIcon,
-  Delete as DeleteIcon,
   DriveFileMove as MoveIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import type { TalentPoolCandidate } from '@types';
 import { normalizeSkills } from '@utils/matchScore';
 import { formatExperienceString } from '@utils/experience';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface PoolCandidateCardProps {
   entry: TalentPoolCandidate;
@@ -192,14 +192,7 @@ export const PoolCandidateCard: React.FC<PoolCandidateCardProps> = ({
               </IconButton>
             </Tooltip>
             <Tooltip title="Remove">
-              <IconButton
-                size="small"
-                color="error"
-                onClick={() => onRemove(entry)}
-                disabled={disabled}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <DeleteActionButton onClick={() => onRemove(entry)} disabled={disabled} ariaLabel="Remove candidate" />
             </Tooltip>
           </Box>
         </Box>

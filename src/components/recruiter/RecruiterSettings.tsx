@@ -17,7 +17,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { DeleteOutline as DeleteIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
@@ -25,6 +24,7 @@ import {
   type RecruiterBlockedCandidate,
   type RecruiterSettings,
 } from '@services/recruiterSettings';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface RecruiterSettingsProps {
   recruiterId: string;
@@ -192,9 +192,7 @@ export const RecruiterSettingsPanel: React.FC<RecruiterSettingsProps> = ({ recru
                   key={candidate.candidateId}
                   secondaryAction={
                     <Tooltip title="Unblock candidate">
-                      <IconButton edge="end" onClick={() => handleUnblock(candidate.candidateId)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      <DeleteActionButton onClick={() => handleUnblock(candidate.candidateId)} ariaLabel="Unblock candidate" />
                     </Tooltip>
                   }
                   sx={{

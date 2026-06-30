@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button, IconButton } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Button } from '@mui/material';
 import Swal from '@utils/sweetAlert';
 import { messagingService, Conversation } from '@services/messaging';
 import { userService } from '@services/api';
+import { DeleteActionButton } from '@components/common/DeleteActionButton';
 
 interface MessageInboxProps {
   userId: string;
@@ -228,17 +228,15 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
                 {conv.unreadCount}
               </div>
             )}
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteConversation(conv.id);
-              }}
-              aria-label="delete conversation"
-              sx={{ marginLeft: 8 }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <div style={{ marginLeft: 8 }}>
+              <DeleteActionButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteConversation(conv.id);
+                }}
+                ariaLabel="delete conversation"
+              />
+            </div>
           </div>
         </motion.div>
       ))}

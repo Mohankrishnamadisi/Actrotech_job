@@ -35,6 +35,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 
 import { Layout } from '@components/layout/Layout';
+import { UnlockProButton } from '@components/common/UnlockProButton';
 import SupportWidget from '@components/common/SupportWidget';
 import { supportService } from '@services/support';
 import { ROUTES } from '@constants/index';
@@ -396,7 +397,13 @@ export const Dashboard: React.FC = () => {
                         ? '🚀 Great progress. Add final missing fields.'
                         : '⭐ Excellent. Recruiter-ready profile.'}
                     </Typography>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" fullWidth sx={{ bgcolor: '#FBBF24', color: '#111827', fontWeight: 800, '&:hover': { bgcolor: '#F59E0B', boxShadow: '0 8px 16px rgba(251, 191, 36, 0.3)' } }}>
+                    <Button
+                      component={RouterLink}
+                      to={ROUTES.DASHBOARD_PROFILE}
+                      variant="contained"
+                      fullWidth
+                      sx={{ bgcolor: '#FBBF24', color: '#111827', fontWeight: 800, '&:hover': { bgcolor: '#F59E0B', boxShadow: '0 8px 16px rgba(251, 191, 36, 0.3)' } }}
+                    >
                       Improve profile
                     </Button>
                   </CardContent>
@@ -671,9 +678,7 @@ export const Dashboard: React.FC = () => {
                       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                         Upgrade for remote jobs, premium recommendations, and advanced career tools.
                       </Typography>
-                      <Button component={RouterLink} to={ROUTES.PRICING} variant="contained" fullWidth>
-                        View pricing plans
-                      </Button>
+                      <UnlockProButton to={ROUTES.PRICING} />
                     </>
                   )}
                 </CardContent>
