@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -21,6 +21,7 @@ import {
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
 import { validateURL } from '@utils/index';
+import { COUNTRIES, COUNTRY_CITIES } from '@constants/index';
 import toast from 'react-hot-toast';
 
 const MotionBox = motion(Box);
@@ -36,6 +37,7 @@ interface JobFormData {
   title: string;
   description: string;
   company_name: string;
+  country: string;
   location: string;
   job_type: 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance';
   work_mode: 'Onsite' | 'Remote' | 'Hybrid';
@@ -62,6 +64,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
     title: '',
     description: '',
     company_name: '',
+    country: 'India',
     location: '',
     job_type: 'Full-Time',
     work_mode: 'Onsite',
@@ -304,14 +307,29 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="e.g., Bangalore, India"
-              />
+              <FormControl fullWidth>
+                <InputLabel>Country</InputLabel>
+                <Select name="country" value={formData.country} onChange={handleChange} label="Country">
+                  {COUNTRIES.map((country) => (
+                    <MenuItem key={country} value={country}>
+                      {country}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Location / City</InputLabel>
+                <Select name="location" value={formData.location} onChange={handleChange} label="Location / City">
+                  {(COUNTRY_CITIES[formData.country] || []).map((city) => (
+                    <MenuItem key={city} value={city}>
+                      {city}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
 
             <Grid item xs={12} sm={6}>

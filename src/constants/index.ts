@@ -123,21 +123,224 @@ export const NOTICE_PERIOD_OPTIONS = [
   'Serving Notice',
 ];
 
-export const INDIAN_CITIES = [
-  'Hyderabad', 'Bengaluru', 'Chennai', 'Mumbai', 'Delhi', 'Pune', 'Kolkata', 'Ahmedabad',
-  'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Surat', 'Vadodara', 'Bhopal', 'Coimbatore',
-  'Visakhapatnam', 'Ludhiana', 'Agra', 'Madurai', 'Thiruvananthapuram', 'Noida', 'Gurgaon',
-  'Faridabad', 'Amritsar', 'Nashik', 'Meerut', 'Rajkot', 'Vijayawada',
+export const COUNTRIES = [
+  'India',
+  'United States',
+  'United Kingdom',
+  'Canada',
+  'Australia',
+  'Germany',
+  'France',
+  'Netherlands',
+  'Singapore',
+  'UAE',
+  'Japan',
+  'South Korea',
+  'Malaysia',
+  'Philippines',
+  'Indonesia',
+  'Thailand',
+  'Vietnam',
+  'Sri Lanka',
+  'Bangladesh',
+  'Pakistan',
+  'Other',
 ];
+
+export const COUNTRY_CITIES: Record<string, string[]> = {
+  India: [
+    'Hyderabad', 'Bengaluru', 'Chennai', 'Mumbai', 'Delhi', 'Pune', 'Kolkata', 'Ahmedabad',
+    'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Surat', 'Vadodara', 'Bhopal', 'Coimbatore',
+    'Visakhapatnam', 'Ludhiana', 'Agra', 'Madurai', 'Thiruvananthapuram', 'Noida', 'Gurgaon',
+    'Faridabad', 'Amritsar', 'Nashik', 'Meerut', 'Rajkot', 'Vijayawada',
+  ],
+  'United States': [
+    'New York', 'San Francisco', 'Los Angeles', 'Chicago', 'Boston', 'Seattle', 'Austin',
+    'Denver', 'Miami', 'Dallas', 'Washington DC', 'Atlanta', 'Phoenix', 'Portland', 'Remote',
+  ],
+  'United Kingdom': [
+    'London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Edinburgh', 'Glasgow', 'Remote',
+  ],
+  Canada: [
+    'Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Remote',
+  ],
+  Australia: [
+    'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Remote',
+  ],
+  Germany: [
+    'Berlin', 'Munich', 'Frankfurt', 'Hamburg', 'Cologne', 'Remote',
+  ],
+  France: [
+    'Paris', 'Lyon', 'Marseille', 'Toulouse', 'Remote',
+  ],
+  Netherlands: [
+    'Amsterdam', 'Rotterdam', 'Utrecht', 'Remote',
+  ],
+  Singapore: [
+    'Singapore', 'Remote',
+  ],
+  UAE: [
+    'Dubai', 'Abu Dhabi', 'Sharjah', 'Remote',
+  ],
+  Japan: [
+    'Tokyo', 'Osaka', 'Kyoto', 'Remote',
+  ],
+  'South Korea': [
+    'Seoul', 'Busan', 'Incheon', 'Remote',
+  ],
+  Malaysia: [
+    'Kuala Lumpur', 'Penang', 'Cyberjaya', 'Remote',
+  ],
+  Philippines: [
+    'Manila', 'Cebu', 'Davao', 'Remote',
+  ],
+  Indonesia: [
+    'Jakarta', 'Bandung', 'Surabaya', 'Remote',
+  ],
+  Thailand: [
+    'Bangkok', 'Phuket', 'Chiang Mai', 'Remote',
+  ],
+  Vietnam: [
+    'Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Remote',
+  ],
+  'Sri Lanka': [
+    'Colombo', 'Kandy', 'Remote',
+  ],
+  Bangladesh: [
+    'Dhaka', 'Chittagong', 'Remote',
+  ],
+  Pakistan: [
+    'Karachi', 'Lahore', 'Islamabad', 'Remote',
+  ],
+  Other: [
+    'Remote', 'Other',
+  ],
+};
+
+export const INDIAN_CITIES = COUNTRY_CITIES.India;
 
 export const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalya', 'Mizoram',
   'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
   'Delhi', 'Jammu and Kashmir', 'Ladakh',
 ];
+
+export const COUNTRY_STATES: Record<string, string[]> = {
+  India: INDIAN_STATES,
+  'United States': [
+    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
+    'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky',
+    'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+    'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico',
+    'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
+    'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+    'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia',
+  ],
+  'United Kingdom': [
+    'England', 'Scotland', 'Wales', 'Northern Ireland',
+  ],
+  Canada: [
+    'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador',
+    'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island',
+    'Quebec', 'Saskatchewan', 'Yukon',
+  ],
+  Australia: [
+    'New South Wales', 'Victoria', 'Queensland', 'South Australia', 'Western Australia',
+    'Tasmania', 'Australian Capital Territory', 'Northern Territory',
+  ],
+  Germany: [
+    'Baden-Württemberg', 'Bavaria', 'Berlin', 'Brandenburg', 'Bremen', 'Hamburg', 'Hesse',
+    'Mecklenburg-Vorpommern', 'Lower Saxony', 'North Rhine-Westphalia', 'Rhineland-Palatinate',
+    'Saarland', 'Saxony', 'Saxony-Anhalt', 'Schleswig-Holstein', 'Thuringia',
+  ],
+  France: [
+    'Île-de-France', 'Provence-Alpes-Côte d\'Azur', 'Auvergne-Rhône-Alpes', 'Hauts-de-France',
+    'New Aquitaine', 'Occitanie', 'Bourgogne-Franche-Comté', 'Normandy', 'Brittany', 'Pays de la Loire',
+  ],
+  Netherlands: [
+    'Drenthe', 'Flevoland', 'Friesland', 'Gelderland', 'Groningen', 'Limburg', 'North Brabant',
+    'North Holland', 'Overijssel', 'South Holland', 'Utrecht', 'Zeeland',
+  ],
+  Singapore: [
+    'Central', 'East', 'North', 'North-East', 'West',
+  ],
+  UAE: [
+    'Abu Dhabi', 'Ajman', 'Dubai', 'Fujairah', 'Ras Al Khaimah', 'Sharjah', 'Umm Al Quwain',
+  ],
+  Japan: [
+    'Aichi', 'Akita', 'Aomori', 'Chiba', 'Ehime', 'Fukui', 'Fukuoka', 'Fukushima', 'Gifu',
+    'Gunma', 'Hiroshima', 'Hokkaido', 'Hyogo', 'Ibaraki', 'Ishikawa', 'Iwate', 'Kagawa',
+    'Kagoshima', 'Kanagawa', 'Kochi', 'Kumamoto', 'Kyoto', 'Mie', 'Miyagi', 'Miyazaki',
+    'Nagano', 'Nagasaki', 'Nara', 'Niigata', 'Okinawa', 'Osaka', 'Saga', 'Saitama',
+    'Shiga', 'Shimane', 'Shizuoka', 'Tochigi', 'Tokushima', 'Tokyo', 'Tottori', 'Toyama',
+    'Wakayama', 'Yamagata', 'Yamaguchi', 'Yamanashi',
+  ],
+  'South Korea': [
+    'Busan', 'Chungcheongbuk-do', 'Chungcheongnam-do', 'Daegu', 'Daejeon', 'Gangwon-do',
+    'Gwangju', 'Gyeonggi-do', 'Gyeongju', 'Gyeongsan', 'Incheon', 'Jeju', 'Jeonbuk-do',
+    'Jeonnam-do', 'Pohang', 'Seongnam', 'Seoul', 'Ulsan',
+  ],
+  Malaysia: [
+    'Johor', 'Kedah', 'Kelantan', 'Kuala Lumpur', 'Labuan', 'Malacca', 'Negeri Sembilan',
+    'Pahang', 'Penang', 'Perak', 'Perlis', 'Putrajaya', 'Sabah', 'Sarawak', 'Selangor',
+    'Terengganu',
+  ],
+  Philippines: [
+    'Calabarzon', 'Cordillera Administrative Region', 'Davao', 'Eastern Visayas', 'Ilocos',
+    'Mimaropa', 'National Capital Region', 'Northern Mindanao', 'Soccsksargen', 'Western Visayas',
+  ],
+  Indonesia: [
+    'Aceh', 'Bali', 'Bangka Belitung', 'Banten', 'Bengkulu', 'Central Java', 'Central Kalimantan',
+    'Central Sulawesi', 'East Java', 'East Kalimantan', 'East Nusa Tenggara', 'Gorontalo',
+    'Jakarta', 'Jambi', 'Lampung', 'Maluku', 'North Kalimantan', 'North Maluku', 'North Sulawesi',
+    'Riau', 'Riau Islands', 'South Kalimantan', 'South Sulawesi', 'South Sumatra', 'Southeast Sulawesi',
+    'West Java', 'West Kalimantan', 'West Nusa Tenggara', 'West Papua', 'West Sulawesi', 'West Sumatra', 'Yogyakarta',
+  ],
+  Thailand: [
+    'Amnat Charoen', 'Ampur', 'Ang Thong', 'Ayutthaya', 'Bangkok', 'Buri Ram', 'Chaiyaphum',
+    'Chakangrao', 'Chanthaburi', 'Chaophya', 'Chiang Mai', 'Chiang Rai', 'Chonburi', 'Chumphon',
+    'Kalasin', 'Kamphaengphet', 'Kanchanaburi', 'Kaset Wisai', 'Khon Kaen', 'Khorat', 'Koh Samui',
+    'Krabi', 'Lampang', 'Lamphun', 'Lopburi', 'Maha Sarakham', 'Mukdahan', 'Nakhon Nayok',
+    'Nakhon Pathom', 'Nakhon Phanom', 'Nakhon Ratchasima', 'Nakhon Sawan', 'Nakhon Si Thammarat',
+    'Nan', 'Narathiwat', 'Nong Bua', 'Nong Khai', 'Pha Khao', 'Phang Nga', 'Phattalung',
+    'Phatthalung', 'Phetchabun', 'Phetchaburi', 'Phichit', 'Phisanulok', 'Phrae', 'Phuket',
+    'Prachuap Khiri Khan', 'Prachuapkhirikhan', 'Pracuapkhirikhun', 'Ranong', 'Ratchaburi',
+    'Rayong', 'Roi Et', 'Sakon Nakhon', 'Samut Prakan', 'Samut Sakhon', 'Samut Songkhram',
+    'Satun', 'Satumalai', 'Satun', 'Satumalai', 'Si Sa Ket', 'Sisaket', 'Songkhla', 'Sukhothai',
+    'Sukhothai', 'Suphanburi', 'Surat Thani', 'Surin', 'Trad', 'Ubon Ratchathani', 'Udon Thani',
+    'Uthai Thani', 'Uttaradit', 'Yasothon',
+  ],
+  Vietnam: [
+    'An Giang', 'Ba Ria Vung Tau', 'Bac Giang', 'Bac Kan', 'Bac Lieu', 'Bac Ninh', 'Ben Tre',
+    'Binh Dinh', 'Binh Duong', 'Binh Phuoc', 'Binh Thuan', 'Ca Mau', 'Can Tho', 'Cao Bang',
+    'Da Nang', 'Dak Lak', 'Dak Nong', 'Dien Bien', 'Dong Nai', 'Dong Thap', 'Gia Lai',
+    'Ha Giang', 'Ha Nam', 'Ha Tay', 'Ha Tinh', 'Hai Duong', 'Hai Phong', 'Hanoi', 'Ho Chi Minh City',
+    'Hoa Binh', 'Hung Yen', 'Kien Giang', 'Kon Tum', 'Lai Chau', 'Lam Dong', 'Lang Son',
+    'Lao Cai', 'Long An', 'Nam Dinh', 'Nghe An', 'Ninh Binh', 'Ninh Thuan', 'Phu Tho',
+    'Phu Yen', 'Quang Binh', 'Quang Nam', 'Quang Ngai', 'Quang Ninh', 'Quang Tri', 'Soc Trang',
+    'Son La', 'Tay Ninh', 'Thai Binh', 'Thai Nguyen', 'Thanh Hoa', 'Thua Thien Hue', 'Tien Giang',
+    'Tra Vinh', 'Tuyen Quang', 'Vinh Long', 'Vinh Phuc', 'Yen Bai',
+  ],
+  'Sri Lanka': [
+    'Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo', 'Galle', 'Gampaha', 'Jaffna',
+    'Kalutara', 'Kandy', 'Kegalle', 'Kilinochchi', 'Kurunegala', 'Madurai', 'Mannar', 'Matara',
+    'Maturai', 'Monaragala', 'Mullaitivu', 'Nuwara Eliya', 'Polonnaruwa', 'Puttalam', 'Ratnapura',
+    'Trincomalee', 'Vavuniya',
+  ],
+  Bangladesh: [
+    'Barisal', 'Chittagong', 'Dhaka', 'Khulna', 'Mymensingh', 'Rajshahi', 'Rangpur', 'Sylhet',
+  ],
+  Pakistan: [
+    'Azad Kashmir', 'Balochistan', 'Federally Administered Tribal Areas', 'Gilgit-Baltistan',
+    'Islamabad', 'Khyber Pakhtunkhwa', 'Punjab', 'Sindh',
+  ],
+  Other: [
+    'Not Specified', 'Remote',
+  ],
+};
 
 export interface InterviewRole {
   title: string;

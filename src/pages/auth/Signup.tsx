@@ -44,6 +44,9 @@ import {
   GENDER_OPTIONS,
   INDIAN_STATES,
   NOTICE_PERIOD_OPTIONS,
+  COUNTRIES,
+  COUNTRY_CITIES,
+  COUNTRY_STATES,
 } from '@constants/index';
 import { formatExperienceString, getTotalExperienceMonths } from '@utils/experience';
 import {
@@ -507,14 +510,14 @@ export const Signup: React.FC = () => {
                     </Grid>
                     <Grid item xs={12} sm={4}>
                       <FormControl fullWidth error={!!errors.state}>
-                        <InputLabel>State *</InputLabel>
+                        <InputLabel>State / Province *</InputLabel>
                         <Select
                           name="state"
                           value={formData.state}
                           onChange={handleChange}
-                          label="State *"
+                          label="State / Province *"
                         >
-                          {INDIAN_STATES.map((s) => (
+                          {(COUNTRY_STATES[formData.country] || []).map((s) => (
                             <MenuItem key={s} value={s}>
                               {s}
                             </MenuItem>
@@ -523,15 +526,26 @@ export const Signup: React.FC = () => {
                       </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={4}>
-                      <TextField
-                        fullWidth
-                        label="Country *"
-                        name="country"
-                        value={formData.country}
-                        onChange={handleChange}
-                        error={!!errors.country}
-                        helperText={errors.country}
-                      />
+                      <FormControl fullWidth error={!!errors.country}>
+                        <InputLabel>Country *</InputLabel>
+                        <Select
+                          name="country"
+                          value={formData.country}
+                          onChange={handleChange}
+                          label="Country *"
+                        >
+                          {COUNTRIES.map((country) => (
+                            <MenuItem key={country} value={country}>
+                              {country}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.country && (
+                          <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                            {errors.country}
+                          </Typography>
+                        )}
+                      </FormControl>
                     </Grid>
                   </Grid>
                 )}

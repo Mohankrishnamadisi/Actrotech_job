@@ -40,7 +40,7 @@ import { Layout } from '@components/layout/Layout';
 import { ProfileSkeleton } from '@components/common/LoadingSkeleton';
 import { useAuthStore } from '@store/index';
 import { userService } from '@services/api';
-import { EXPERIENCE_LEVELS, GENDER_OPTIONS, INDIAN_STATES } from '@constants/index';
+import { EXPERIENCE_LEVELS, GENDER_OPTIONS, INDIAN_STATES, COUNTRIES, COUNTRY_CITIES, COUNTRY_STATES } from '@constants/index';
 import { calculateProfileCompletion, getProfileCompletionGradient } from '../../utils/index';
 import { generatePreferredJobTitleSuggestions } from '../../utils/titleSuggestions';
 import { formatExperienceString, getTotalExperienceMonths, parseExperienceStringParts } from '../../utils/experience';
@@ -435,14 +435,19 @@ export const ProfilePage: React.FC = () => {
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <FormControl fullWidth>
-                      <InputLabel>State</InputLabel>
-                      <Select name="state" value={formData.state} onChange={handleSelectChange} label="State">
-                        {INDIAN_STATES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                      <InputLabel>State / Province</InputLabel>
+                      <Select name="state" value={formData.state} onChange={handleSelectChange} label="State / Province">
+                        {(COUNTRY_STATES[formData.country] || []).map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleInputChange} />
+                    <FormControl fullWidth>
+                      <InputLabel>Country</InputLabel>
+                      <Select name="country" value={formData.country} onChange={handleInputChange} label="Country">
+                        {COUNTRIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Current Designation" name="currentDesignation" value={formData.currentDesignation} onChange={handleInputChange} />
