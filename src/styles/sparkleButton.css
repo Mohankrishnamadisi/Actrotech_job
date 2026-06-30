@@ -72,7 +72,7 @@
 
 .sparkle-button:is(:hover, :focus-visible) {
   --active: 1;
-  transform: scale(1.15) !important;
+  transform: scale(1) !important;
 }
 
 .sparkle-button:active {
