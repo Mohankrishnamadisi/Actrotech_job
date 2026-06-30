@@ -18,44 +18,62 @@ export type SupportTicket = {
   created_at?: string;
 };
 
-const LOCAL_KEY = 'support_tickets_local';
-const SEEN_KEY = 'support_seen_ticket_ids';
+const notifyAdminsForNewTicket = async (ticket: SupportTicket) => {
+  const { data: admins, error: adminError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin');
 
-const getSeenIds = (): string[] => {
-  try {
-    const raw = window.localStorage.getItem(SEEN_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  if (adminError) throw adminError;
+
+  const adminIds = (admins || [])
+    .map((admin: { id?: string | null }) => String(admin.id || '').trim())
+    .filter(Boolean);
+
+  if (adminIds.length === 0) return;
+
+  const roleLabel = String(ticket.role || 'user').replace(/_/g, ' ');
+  const title = `New Support Ticket: ${ticket.subject || 'Untitled'}`;
+  const message = `${ticket.name || 'A user'} (${roleLabel}) raised a ${ticket.priority || 'medium'} priority ticket.`;
+
+  const payload = adminIds.map((adminId) => ({
+    user_id: adminId,
+    type: 'support_ticket_created',
+    title,
+    message,
+    data: {
+      ticket_id: ticket.id,
+      ticket_subject: ticket.subject,
+      ticket_category: ticket.category,
+      ticket_priority: ticket.priority,
+      raised_by_user_id: ticket.user_id || null,
+      raised_by_role: ticket.role || null,
+    },
+    read: false,
+  }));
+
+  const { error: notificationError } = await supabase
+    .from('notifications')
+    .insert(payload);
+
+  if (notificationError) throw notificationError;
 };
 
-export const markTicketsSeen = (ids: string[]) => {
-  try {
-    const existing = getSeenIds();
-    const merged = Array.from(new Set([...existing, ...ids]));
-    window.localStorage.setItem(SEEN_KEY, JSON.stringify(merged));
-  } catch {
-    // noop
-  }
+export const markTicketsSeen = async (ids: string[], userId?: string) => {
+  if (!userId || ids.length === 0) return;
+  const payload = ids.map((ticketId) => ({ ticket_id: ticketId, user_id: userId }));
+  const { error } = await supabase.from('support_ticket_reads').upsert(payload, { onConflict: 'ticket_id,user_id' });
+  if (error) throw error;
 };
 
-const readLocalTickets = (): SupportTicket[] => {
-  try {
-    const raw = window.localStorage.getItem(LOCAL_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
+const getSeenIds = async (userId: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('support_ticket_reads')
+    .select('ticket_id')
+    .eq('user_id', userId);
 
-const writeLocalTickets = (tickets: SupportTicket[]) => {
-  try {
-    window.localStorage.setItem(LOCAL_KEY, JSON.stringify(tickets));
-  } catch {
-    // noop
-  }
+  if (error) throw error;
+  return (data || []).map((row: any) => String(row.ticket_id));
 };
 
 export const supportService = {
@@ -72,18 +90,19 @@ export const supportService = {
       .select()
       .limit(1);
 
-    if (!error && data && data[0]) {
-      return data[0] as SupportTicket;
+    if (error) throw error;
+
+    const createdTicket = (data?.[0] || null) as SupportTicket;
+
+    if (createdTicket?.id) {
+      try {
+        await notifyAdminsForNewTicket(createdTicket);
+      } catch (notificationError) {
+        console.warn('Ticket created, but failed to notify admins:', notificationError);
+      }
     }
 
-    const fallbackTicket: SupportTicket = {
-      ...payload,
-      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    };
-
-    const existing = readLocalTickets();
-    writeLocalTickets([fallbackTicket, ...existing]);
-    return fallbackTicket;
+    return createdTicket;
   },
 
   async getTickets(userId?: string, role?: string) {
@@ -98,13 +117,8 @@ export const supportService = {
     const scopedQuery = isAdmin || !userId ? query : query.eq('user_id', userId);
     const { data, error } = await scopedQuery;
 
-    if (!error && Array.isArray(data)) {
-      return data as SupportTicket[];
-    }
-
-    const local = readLocalTickets();
-    if (isAdmin || !userId) return local;
-    return local.filter((ticket) => ticket.user_id === userId);
+    if (error) throw error;
+    return (data || []) as SupportTicket[];
   },
 
   async updateTicket(ticketId: string, updates: Partial<SupportTicket>) {
@@ -120,27 +134,14 @@ export const supportService = {
       .select()
       .limit(1);
 
-    if (!error && data && data[0]) {
-      return data[0] as SupportTicket;
-    }
-
-    const existing = readLocalTickets();
-    const next = existing.map((ticket) => (
-      ticket.id === ticketId
-        ? {
-          ...ticket,
-          ...payload,
-        }
-        : ticket
-    ));
-    writeLocalTickets(next);
-    return next.find((ticket) => ticket.id === ticketId) || null;
+    if (error) throw error;
+    return (data?.[0] || null) as SupportTicket | null;
   },
 
   async getUnseenAdminResponseCount(userId: string): Promise<number> {
     try {
       const tickets = await this.getTickets(userId, 'user');
-      const seenIds = getSeenIds();
+      const seenIds = await getSeenIds(userId);
       return tickets.filter(
         (t) => t.admin_note && t.admin_note.trim() && !seenIds.includes(t.id),
       ).length;

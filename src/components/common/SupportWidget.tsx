@@ -121,8 +121,9 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
     if (value === 1 && tickets.length > 0) {
       const idsWithNote = tickets.filter((t) => t.admin_note && t.admin_note.trim()).map((t) => t.id);
       if (idsWithNote.length > 0) {
-        markTicketsSeen(idsWithNote);
-        setUnseenCount(0);
+        markTicketsSeen(idsWithNote, user?.id)
+          .then(() => setUnseenCount(0))
+          .catch(() => {});
       }
     }
   };

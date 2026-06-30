@@ -38,6 +38,7 @@ import { AccountSettings } from '@pages/dashboard/settings/AccountSettings';
 import { CommunicationPrivacySettings } from '@pages/dashboard/settings/CommunicationPrivacySettings';
 import { JobPreferencesSettings } from '@pages/dashboard/settings/JobPreferencesSettings';
 import { BlockedCompaniesSettings } from '@pages/dashboard/settings/BlockedCompaniesSettings';
+import PremiumIntelligenceSettings from '@pages/dashboard/settings/PremiumIntelligenceSettings';
 import { useSubscription } from '@hooks/index';
 import { useNotificationAlerts } from '@hooks/useNotificationAlerts';
 import RecommendedJobs from '@pages/dashboard/RecommendedJobs';
@@ -45,6 +46,7 @@ import RemoteJobs from '@pages/dashboard/RemoteJobs';
 import MockInterviews from '@pages/dashboard/tools/MockInterviews';
 import ResumeReview from '@pages/dashboard/tools/ResumeReview';
 import PriorityApply from '@pages/dashboard/tools/PriorityApply';
+import FreeNotesPage from '@pages/dashboard/tools/FreeNotes';
 import MessagingPage from '@pages/Messaging';
 import AdminLayout from './admin/AdminLayout';
 import DashboardOverview from './admin/pages/DashboardOverview';
@@ -159,6 +161,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="privacy" element={<CommunicationPrivacySettings />} />
           <Route path="preferences" element={<JobPreferencesSettings />} />
           <Route path="blocked-companies" element={<BlockedCompaniesSettings />} />
+          <Route path="premium-intelligence" element={<PremiumIntelligenceSettings />} />
         </Route>
         <Route
           path="/dashboard/recommended-jobs"
@@ -197,6 +200,14 @@ const AnimatedRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <PriorityApply />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_FREE_NOTES}
+          element={
+            <ProtectedRoute>
+              <FreeNotesPage />
             </ProtectedRoute>
           }
         />

@@ -29,6 +29,7 @@ import { PoolCandidateCard } from './talentPool/PoolCandidateCard';
 import { PoolFormDialog } from './talentPool/PoolFormDialog';
 import { MoveCandidateDialog } from './talentPool/MoveCandidateDialog';
 import { TalentPoolProfileDialog } from './talentPool/TalentPoolProfileDialog';
+import { trackCandidateProfileView } from '@utils/resumeUnlocks';
 
 interface TalentPoolProps {
   recruiterId: string;
@@ -110,6 +111,15 @@ export const TalentPool: React.FC<TalentPoolProps> = ({ recruiterId, onChatClick
     if (!removeTarget) return;
     await removeCandidate(removeTarget.id);
     setRemoveTarget(null);
+  };
+
+  const handleViewCandidate = async (entry: TalentPoolCandidate) => {
+    await trackCandidateProfileView({
+      recruiterId,
+      candidateId: entry.candidate_id,
+      source: 'talent_pool',
+    });
+    setViewTarget(entry);
   };
 
   return (
@@ -287,7 +297,9 @@ export const TalentPool: React.FC<TalentPoolProps> = ({ recruiterId, onChatClick
                             entry={entry}
                             index={index}
                             matchScore={getMatchScore(entry)}
-                            onView={setViewTarget}
+                            onView={(target) => {
+                              void handleViewCandidate(target);
+                            }}
                             onMessage={onChatClick}
                             onRemove={setRemoveTarget}
                             onMove={setMoveTarget}

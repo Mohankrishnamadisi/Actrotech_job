@@ -15,6 +15,7 @@ import {
   Lock as LockIcon,
   Work as WorkIcon,
   Block as BlockIcon,
+  AutoAwesome as AutoAwesomeIcon,
   ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
@@ -52,6 +53,14 @@ const sections = [
     description: 'Review companies you do not want job suggestions from.',
     color: '#EF4444',
     bgColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  {
+    label: 'Premium Intelligence',
+    path: ROUTES.DASHBOARD_SETTINGS_PREMIUM,
+    icon: <AutoAwesomeIcon sx={{ fontSize: 40 }} />,
+    description: 'Tune demand score formula and weekly sprint targets.',
+    color: '#7C3AED',
+    bgColor: 'rgba(124, 58, 237, 0.1)',
   },
 ];
 

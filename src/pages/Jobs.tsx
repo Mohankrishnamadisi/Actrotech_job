@@ -39,7 +39,7 @@ import { JobCard } from '@components/jobs/JobCard';
 import { JobListSkeleton } from '@components/common/LoadingSkeleton';
 import { Error } from '@components/common/Error';
 import { jobService } from '@services/api';
-import { JOB_CATEGORIES, EMPLOYMENT_TYPES, WORK_MODES, EXPERIENCE_LEVELS, EDUCATION_OPTIONS, FRESHNESS_OPTIONS, INDIAN_CITIES } from '@constants/index';
+import { JOB_CATEGORIES, EMPLOYMENT_TYPES, WORK_MODES, EDUCATION_OPTIONS, FRESHNESS_OPTIONS, INDIAN_CITIES } from '@constants/index';
 import type { Job } from '../types';
 
 const MotionPaper = motion(Paper);
@@ -465,19 +465,27 @@ export const Jobs: React.FC = () => {
 
                 <Collapse in={openSections.profile}>
                   <Box sx={{ pt: 1.8 }}>
-                    <FormControl fullWidth sx={{ mb: 2.5 }}>
-                      <InputLabel>Experience</InputLabel>
-                      <Select
-                        value={filters.experience}
-                        onChange={(e) => handleFilterChange('experience', e.target.value)}
-                        label="Experience"
-                      >
-                        <MenuItem value="">All Levels</MenuItem>
-                        {EXPERIENCE_LEVELS.map((level) => (
-                          <MenuItem key={level} value={level}>{level}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <TextField
+                      fullWidth
+                      placeholder="Experience"
+                      value={filters.experience}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^\d*$/.test(value)) {
+                          handleFilterChange('experience', value);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (['.', ',', 'e', 'E', '+', '-'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      inputProps={{
+                        inputMode: 'numeric',
+                        pattern: '[0-9]*',
+                      }}
+                      sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { height: 54, fontSize: '0.97rem' } }}
+                    />
 
                     <FormControl fullWidth sx={{ mb: 2.5 }}>
                       <InputLabel>Education</InputLabel>

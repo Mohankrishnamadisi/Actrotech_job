@@ -118,6 +118,30 @@ export async function getCandidateProfileViewCount(candidateId: string): Promise
   }
 }
 
+export async function trackCandidateProfileView(payload: {
+  recruiterId: string;
+  candidateId: string;
+  jobId?: string | null;
+  source?: string | null;
+}): Promise<void> {
+  const { recruiterId, candidateId, jobId, source } = payload;
+  if (!recruiterId || !candidateId) return;
+
+  const { error } = await supabase
+    .from('profile_views')
+    .insert({
+      recruiter_id: recruiterId,
+      candidate_id: candidateId,
+      job_id: jobId || null,
+      source: source || null,
+      viewed_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    console.error('Failed to track candidate profile view:', error);
+  }
+}
+
 export async function getCandidateResumeUnlockRecruiters(candidateId: string) {
   try {
     const { data, error } = await supabase
@@ -356,6 +380,7 @@ export const resumeUnlockService = {
   getResumeUnlockMap,
   getResumeUnlockContext,
   unlockCandidateContact,
+  trackCandidateProfileView,
   getResumeUnlockAnalytics,
   getActiveRecruiterSubscription,
   normalizePlanLabel,

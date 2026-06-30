@@ -45,7 +45,7 @@ import type { Job, CandidateTag } from '@types';
 import { calculateMatchScore, getMatchScoreHex, type MatchScoreResult } from '@utils/matchScore';
 import { downloadApplicantsCsv } from '@utils/applicantCsv';
 import { ApplicantDetailsModal } from './ApplicantDetailsModal';
-import { getResumeUnlockMap } from '@utils/resumeUnlocks';
+import { getResumeUnlockMap, trackCandidateProfileView } from '@utils/resumeUnlocks';
 import { BulkActionsToolbar, type BulkToolbarAction } from './BulkActionsToolbar';
 import { BulkConfirmationDialog } from './BulkConfirmationDialog';
 import { BulkMessageDialog } from './BulkMessageDialog';
@@ -397,7 +397,13 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     });
   };
 
-  const handleViewApplicant = (applicant: BulkApplicant) => {
+  const handleViewApplicant = async (applicant: BulkApplicant) => {
+    await trackCandidateProfileView({
+      recruiterId,
+      candidateId: applicant.user_id,
+      jobId: selectedJobId || null,
+      source: 'view_applicants',
+    });
     setSelectedApplicant(applicant);
     setViewDialogOpen(true);
   };
@@ -804,7 +810,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           <TableCell><Chip label={labelize(applicant.status)} size="small" color={getStatusColor(applicant.status)} variant="filled" /></TableCell>
                           <TableCell><Typography variant="body2" sx={{ fontSize: 12 }} noWrap>{applicant.applied_at ? format(new Date(applicant.applied_at), 'dd MMM yyyy') : 'Unknown'}</Typography></TableCell>
                           <TableCell align="right">
-                            <IconButton size="small" onClick={() => handleViewApplicant(applicant)} title="View details"><ViewIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => { void handleViewApplicant(applicant); }} title="View details"><ViewIcon fontSize="small" /></IconButton>
                             {applicant.resume_url && isUnlocked && (
                               <Tooltip title={isUnlocked ? 'View resume' : 'Unlock candidate to download resume.'}>
                                 <span>

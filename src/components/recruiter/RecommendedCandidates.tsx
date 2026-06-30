@@ -38,6 +38,7 @@ import {
   getRecommendedCandidates,
   inviteCandidateToApply,
 } from '@utils/recommendations';
+import { trackCandidateProfileView } from '@utils/resumeUnlocks';
 import { getMatchScoreHex, normalizeSkills } from '@utils/matchScore';
 import type {
   Job,
@@ -174,6 +175,16 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
     }
   };
 
+  const handleViewRecommendedCandidate = async (item: RecommendedCandidate) => {
+    await trackCandidateProfileView({
+      recruiterId,
+      candidateId: item.candidate.id,
+      jobId,
+      source: 'recommended_candidates',
+    });
+    setSelectedCandidate(item);
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, mb: 2 }}>
@@ -282,7 +293,9 @@ export const RecommendedCandidates: React.FC<RecommendedCandidatesProps> = ({
                   recruiterId={recruiterId}
                   index={index}
                   inviting={invitingId === item.candidate.id}
-                  onView={() => setSelectedCandidate(item)}
+                  onView={() => {
+                    void handleViewRecommendedCandidate(item);
+                  }}
                   onMessage={() => onMessageClick?.(item.candidate.id, item.candidate.name || 'Candidate')}
                   onInvite={() => handleInvite(item)}
                   onBlock={() => handleBlockCandidate(item)}

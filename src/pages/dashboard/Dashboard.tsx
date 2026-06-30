@@ -126,6 +126,33 @@ export const Dashboard: React.FC = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return undefined;
+
+    let mounted = true;
+    const refreshUnreadNotifications = async () => {
+      try {
+        const unread = await notificationService.getUnreadNotifications(user.id);
+        if (!mounted) return;
+        setNotificationsCount((unread || []).length);
+      } catch {
+        // noop
+      }
+    };
+
+    refreshUnreadNotifications();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadNotifications();
+      }
+    }, 30000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
     const loadProfile = async () => {
       if (!user?.id) return;
 

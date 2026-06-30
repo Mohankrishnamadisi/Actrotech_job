@@ -151,37 +151,41 @@ export const adminService = {
     return updated;
   },
 
-  async getAdminNotifications(limit = 12) {
+  async getAdminNotifications(adminUserId: string, limit = 12) {
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
+      .eq('user_id', adminUserId)
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) throw error;
     return data || [];
   },
 
-  async getUnreadNotificationsCount() {
+  async getUnreadNotificationsCount(adminUserId: string) {
     const { count, error } = await supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
+      .eq('user_id', adminUserId)
       .eq('read', false);
     if (error) throw error;
     return count || 0;
   },
 
-  async markNotificationRead(notificationId: string) {
+  async markNotificationRead(adminUserId: string, notificationId: string) {
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
+      .eq('user_id', adminUserId)
       .eq('id', notificationId);
     if (error) throw error;
   },
 
-  async markAllNotificationsRead() {
+  async markAllNotificationsRead(adminUserId: string) {
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
+      .eq('user_id', adminUserId)
       .eq('read', false);
     if (error) throw error;
   },

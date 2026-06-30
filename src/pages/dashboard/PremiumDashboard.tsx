@@ -15,6 +15,7 @@ import {
   DialogTitle,
   Grid,
   IconButton,
+  LinearProgress,
   List,
   ListItem,
   ListItemText,
@@ -39,6 +40,11 @@ import {
   AccountCircle as AccountCircleIcon,
   FlightTakeoff as FlightTakeoffIcon,
   AutoAwesome as AutoAwesomeIcon,
+  Insights as InsightsIcon,
+  Bolt as BoltIcon,
+  TrackChanges as TrackChangesIcon,
+  Tune as TuneIcon,
+  StickyNote2 as StickyNote2Icon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -59,6 +65,14 @@ import {
 } from '@utils/resumeUnlocks';
 import { ROUTES } from '@constants/index';
 import { formatDate } from '@utils/index';
+import {
+  getWeightsForRole,
+  mergePremiumDashboardConfig,
+  readLocalPreferencesRole,
+  readLocalPremiumConfig,
+  type DemandWeights,
+  type WeeklyGoalTargets,
+} from '@utils/premiumDashboardConfig';
 
 const getJobList = (response: any): any[] => {
   if (Array.isArray(response)) return response;
@@ -67,9 +81,7 @@ const getJobList = (response: any): any[] => {
 };
 
 const MotionCard = motion(Card);
-
 type RecentApplication = {
-  id: string;
   status: string;
   applied_at?: string;
   jobs?: {
@@ -78,6 +90,16 @@ type RecentApplication = {
     company_name?: string;
     location?: string;
   };
+};
+
+type OpportunitySignal = {
+  title: string;
+  description: string;
+  cta: string;
+  action: () => void;
+  tone: 'success' | 'warning' | 'primary';
+  observedAt?: string;
+  priorityScore: number;
 };
 
 export const PremiumDashboard: React.FC = () => {
@@ -106,6 +128,9 @@ export const PremiumDashboard: React.FC = () => {
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
+  const [selectedRoleModel, setSelectedRoleModel] = useState('General');
+  const [roleWeightMap, setRoleWeightMap] = useState<Record<string, DemandWeights>>({});
+  const [weeklyTargets, setWeeklyTargets] = useState<WeeklyGoalTargets>({ applications: 6, interactions: 10, pipeline: 4 });
 
   const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
     setProfileMenuAnchorEl(event.currentTarget);
@@ -114,6 +139,33 @@ export const PremiumDashboard: React.FC = () => {
   useEffect(() => {
     if (!user?.id) return;
     supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => {});
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    let mounted = true;
+    const refreshUnreadNotifications = async () => {
+      try {
+        const unread = await notificationService.getUnreadNotifications(user.id);
+        if (!mounted) return;
+        setNotificationsCount((unread || []).length);
+      } catch {
+        // noop
+      }
+    };
+
+    refreshUnreadNotifications();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadNotifications();
+      }
+    }, 30000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
   }, [user?.id]);
 
   const closeProfileMenu = () => {
@@ -143,6 +195,20 @@ export const PremiumDashboard: React.FC = () => {
         if (profile) {
           const skills = Array.isArray(profile.skills) ? profile.skills : [];
           setUserSkills(skills);
+
+          const apiConfig = (profile.dashboard_preferences || profile.premium_dashboard_config || profile.dashboard_config || {}) as Record<string, any>;
+          const localConfig = readLocalPremiumConfig();
+          const roleFromPreferences = readLocalPreferencesRole();
+
+          const mergedConfig = mergePremiumDashboardConfig(
+            apiConfig,
+            localConfig,
+            roleFromPreferences || (Array.isArray(profile.preferred_job_titles) ? profile.preferred_job_titles[0] : 'General'),
+          );
+
+          setSelectedRoleModel(mergedConfig.selectedRole);
+          setRoleWeightMap(mergedConfig.roleWeights);
+          setWeeklyTargets(mergedConfig.weeklyTargets);
 
           const strength = Math.min(
             100,
@@ -268,6 +334,143 @@ export const PremiumDashboard: React.FC = () => {
     ],
     [applicationCount, navigate, profileViewCount, resumeDownloadCount, savedJobsCount, theme.palette.error.main, theme.palette.primary.main, theme.palette.secondary.main, theme.palette.success.main],
   );
+
+  const premiumInsights = useMemo(() => {
+    const views = Number(profileViewCount || 0);
+    const downloads = Number(resumeDownloadCount || 0);
+    const interactions = views + downloads;
+    const activeWeights = getWeightsForRole(selectedRoleModel, roleWeightMap);
+
+    const demandScore = Math.min(
+      100,
+      Math.round(
+        (profileStrength * activeWeights.profileStrength)
+        + (Math.min(applicationCount, 30) * activeWeights.applications)
+        + (Math.min(interactions, 50) * activeWeights.interactions)
+        + (Math.min(userSkills.length, 12) * activeWeights.skills),
+      ),
+    );
+
+    const recentApplications7d = recentApplications.filter((item) => {
+      if (!item.applied_at) return false;
+      const applied = new Date(item.applied_at).getTime();
+      if (Number.isNaN(applied)) return false;
+      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      return applied >= sevenDaysAgo;
+    }).length;
+
+    const interviewPipelineCount = recentApplications.filter(
+      (item) => item.status === 'shortlisted' || item.status === 'under_review' || item.status === 'accepted',
+    ).length;
+
+    const weeklyGoals = [
+      {
+        label: 'Weekly applications',
+        current: recentApplications7d,
+        target: weeklyTargets.applications,
+      },
+      {
+        label: 'Recruiter interactions',
+        current: interactions,
+        target: weeklyTargets.interactions,
+      },
+      {
+        label: 'Pipeline interviews',
+        current: interviewPipelineCount,
+        target: weeklyTargets.pipeline,
+      },
+    ];
+
+    const strengths = [
+      profileStrength >= 80 ? 'Profile is highly optimized' : null,
+      userSkills.length >= 5 ? 'Skill stack is strong for matching' : null,
+      downloads > 0 ? 'Resume already attracting recruiters' : null,
+    ].filter(Boolean) as string[];
+
+    return {
+      demandScore,
+      recentApplications7d,
+      interviewPipelineCount,
+      weeklyGoals,
+      strengths,
+      activeWeights,
+    };
+  }, [applicationCount, profileStrength, profileViewCount, recentApplications, resumeDownloadCount, roleWeightMap, selectedRoleModel, userSkills.length, weeklyTargets.applications, weeklyTargets.interactions, weeklyTargets.pipeline]);
+
+  const opportunitySignals = useMemo<OpportunitySignal[]>(() => {
+    const now = Date.now();
+    const latestAppliedAt = recentApplications
+      .map((item) => item.applied_at)
+      .filter(Boolean)
+      .sort((a, b) => new Date(String(b)).getTime() - new Date(String(a)).getTime())[0];
+
+    const computePriority = (base: number, observedAt?: string) => {
+      if (!observedAt) return base;
+      const observedMs = new Date(observedAt).getTime();
+      if (Number.isNaN(observedMs)) return base;
+      const hoursSince = Math.max(0, (now - observedMs) / (1000 * 60 * 60));
+      const timeBoost = Math.max(0, 72 - hoursSince);
+      return Math.round(base + (timeBoost * 0.4));
+    };
+
+    const signals: OpportunitySignal[] = [];
+
+    if (profileStrength < 75) {
+      signals.push({
+        title: 'Boost profile completion',
+        description: 'Profiles above 75% generally receive more recruiter callbacks.',
+        cta: 'Improve profile',
+        action: () => navigate(ROUTES.DASHBOARD_PROFILE),
+        tone: 'warning',
+        observedAt: latestAppliedAt,
+        priorityScore: computePriority(70, latestAppliedAt),
+      });
+    }
+
+    if (recommendedJobs.length > 0) {
+      const topMatchObservedAt = String(recommendedJobs[0]?.created_at || recommendedJobs[0]?.createdAt || new Date().toISOString());
+      signals.push({
+        title: `${recommendedJobs.length} fresh AI matches available`,
+        description: 'High-match roles are ready. Apply early to improve shortlist chances.',
+        cta: 'Open matches',
+        action: () => navigate('/dashboard/recommended-jobs?minMatch=60'),
+        tone: 'success',
+        observedAt: topMatchObservedAt,
+        priorityScore: computePriority(86, topMatchObservedAt),
+      });
+    }
+
+    if ((unreadMessagesCount || 0) > 0 || (notificationsCount || 0) > 0) {
+      signals.push({
+        title: 'Recruiter conversations need response',
+        description: 'Unread activity detected. Faster replies can improve interview conversion.',
+        cta: 'Check inbox',
+        action: () => navigate(ROUTES.MESSAGING),
+        tone: 'primary',
+        observedAt: new Date().toISOString(),
+        priorityScore: computePriority(93, new Date().toISOString()),
+      });
+    }
+
+    if (recentApplications.length === 0) {
+      const observedAt = new Date(now - (2 * 24 * 60 * 60 * 1000)).toISOString();
+      signals.push({
+        title: 'Application cadence is low this week',
+        description: 'Start this week with at least 2 targeted applications for better momentum.',
+        cta: 'Browse jobs',
+        action: () => navigate(ROUTES.JOBS),
+        tone: 'warning',
+        observedAt,
+        priorityScore: computePriority(78, observedAt),
+      });
+    }
+
+    return signals
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 3);
+  }, [navigate, notificationsCount, profileStrength, recentApplications, recommendedJobs, unreadMessagesCount]);
+
+  const activeRoleWeights = useMemo(() => getWeightsForRole(selectedRoleModel, roleWeightMap), [roleWeightMap, selectedRoleModel]);
 
   if (loading) {
     return (
@@ -519,8 +722,9 @@ export const PremiumDashboard: React.FC = () => {
               { label: 'Browse Jobs', to: ROUTES.JOBS, icon: WorkIcon, color: 'primary' as const },
               { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, icon: AccountCircleIcon, color: 'secondary' as const },
               { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', icon: TrendingUpIcon, color: 'warning' as const },
+              { label: 'Free Notes', to: ROUTES.DASHBOARD_FREE_NOTES, icon: StickyNote2Icon, color: 'success' as const },
             ].map((action, idx) => (
-              <Grid item xs={12} sm={6} md={4} key={action.label}>
+              <Grid item xs={12} sm={6} md={3} key={action.label}>
                 <MotionCard
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -549,6 +753,174 @@ export const PremiumDashboard: React.FC = () => {
             ))}
           </Grid>
         </Box>
+
+        <Card
+          sx={{
+            mb: 3,
+            borderRadius: 4,
+            border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
+            background: isDarkMode
+              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(15,23,42,0.95))'
+              : 'linear-gradient(138deg, #F8FBFF, #EEF6FF)',
+          }}
+        >
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.2, mb: 2.2 }}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                  Premium Intelligence Center
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.4 }}>
+                  Live signals based on your activity, recruiter interactions, and match momentum.
+                </Typography>
+              </Box>
+              <Chip icon={<InsightsIcon />} label={`Demand score ${premiumInsights.demandScore}/100`} color={premiumInsights.demandScore >= 70 ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
+            </Box>
+
+            <Grid container spacing={2} sx={{ mb: 2.2 }}>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.1 }}>
+                      <BoltIcon color="warning" />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                        Weekly velocity
+                      </Typography>
+                    </Box>
+                    <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
+                      {premiumInsights.recentApplications7d}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                      applications in last 7 days
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.1 }}>
+                      <TrackChangesIcon color="primary" />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                        Interview pipeline
+                      </Typography>
+                    </Box>
+                    <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
+                      {premiumInsights.interviewPipelineCount}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                      active under review or shortlisted
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.1 }}>
+                      Strategic strengths
+                    </Typography>
+                    <List sx={{ p: 0, display: 'grid', gap: 0.6 }}>
+                      {(premiumInsights.strengths.length > 0 ? premiumInsights.strengths : ['Add skills and update profile to unlock stronger signals.']).map((point) => (
+                        <ListItem key={point} sx={{ px: 0, py: 0.1 }}>
+                          <ListItemText
+                            primary={point}
+                            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}` }}>
+                  <CardContent>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.2 }}>
+                      Weekly Sprint Tracker
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontWeight: 700, mb: 1.1 }}>
+                      Active model: {selectedRoleModel} ({activeRoleWeights.profileStrength.toFixed(2)} / {activeRoleWeights.applications.toFixed(2)} / {activeRoleWeights.interactions.toFixed(2)} / {activeRoleWeights.skills.toFixed(2)})
+                    </Typography>
+                    <Box sx={{ display: 'grid', gap: 1.1 }}>
+                      {premiumInsights.weeklyGoals.map((goal) => {
+                        const progress = Math.min(100, Math.round((goal.current / goal.target) * 100));
+                        return (
+                          <Box key={goal.label}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.45 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                {goal.label}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                                {goal.current}/{goal.target}
+                              </Typography>
+                            </Box>
+                            <LinearProgress
+                              variant="determinate"
+                              value={progress}
+                              sx={{
+                                height: 8,
+                                borderRadius: 8,
+                                bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(148,163,184,0.2)',
+                                '& .MuiLinearProgress-bar': {
+                                  borderRadius: 8,
+                                },
+                              }}
+                            />
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                    <Box sx={{ mt: 1.4, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button size="small" variant="outlined" startIcon={<TuneIcon />} onClick={() => navigate(ROUTES.DASHBOARD_SETTINGS_PREMIUM)} sx={{ fontWeight: 700 }}>
+                        Customize Intelligence
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}` }}>
+                  <CardContent>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.2 }}>
+                      Opportunity Signals
+                    </Typography>
+                    <List sx={{ p: 0, display: 'grid', gap: 1 }}>
+                      {opportunitySignals.length > 0 ? opportunitySignals.map((signal) => (
+                        <ListItem key={signal.title} sx={{ borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`, bgcolor: isDarkMode ? 'rgba(15,23,42,0.7)' : '#FFFFFF', px: 1.4, py: 1.1, display: 'block' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.35 }}>
+                            {signal.title}
+                          </Typography>
+                          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1 }}>
+                            {signal.description}
+                          </Typography>
+                          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1, fontWeight: 600 }}>
+                            Priority {signal.priorityScore}
+                            {signal.observedAt ? ` • Updated ${formatDate(signal.observedAt)}` : ''}
+                          </Typography>
+                          <Button size="small" variant="contained" color={signal.tone} onClick={signal.action} sx={{ fontWeight: 700 }}>
+                            {signal.cta}
+                          </Button>
+                        </ListItem>
+                      )) : (
+                        <ListItem sx={{ borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`, bgcolor: isDarkMode ? 'rgba(15,23,42,0.7)' : '#FFFFFF', px: 1.4, py: 1.1 }}>
+                          <ListItemText
+                            primary="No urgent signals"
+                            secondary="Your dashboard is stable. Keep applying consistently this week."
+                            primaryTypographyProps={{ fontWeight: 700 }}
+                          />
+                        </ListItem>
+                      )}
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
         <Card
           sx={{
@@ -685,6 +1057,11 @@ export const PremiumDashboard: React.FC = () => {
                         <Grid item xs={12} sm={6}>
                           <Button fullWidth variant="outlined" startIcon={<ChatIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => window.open('https://www.ambitionbox.com/interviews?campaign=desktop_nav', '_blank', 'noopener')}>
                             Interview Preparation
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<StickyNote2Icon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_FREE_NOTES)}>
+                            Free Notes
                           </Button>
                         </Grid>
                       </Grid>

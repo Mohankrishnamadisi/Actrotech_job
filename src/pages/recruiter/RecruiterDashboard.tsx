@@ -93,6 +93,33 @@ export const RecruiterDashboard: React.FC = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return undefined;
+
+    let mounted = true;
+    const refreshUnreadNotifications = async () => {
+      try {
+        const unreadNotif = await notificationService.getUnreadNotifications(user.id);
+        if (!mounted) return;
+        setNotificationsCount(unreadNotif?.length || 0);
+      } catch {
+        // noop
+      }
+    };
+
+    refreshUnreadNotifications();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadNotifications();
+      }
+    }, 30000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
     if (!recommendedJobId && jobs.length > 0) {
       setRecommendedJobId(jobs[0].id);
     }

@@ -42,7 +42,7 @@ import { motion } from 'framer-motion';
 import { candidateService, savedService } from '@services/api';
 import { AddToPoolButton } from './talentPool/AddToPoolButton';
 import { ResumeUnlockContact } from './ResumeUnlockContact';
-import { getResumeUnlockMap } from '@utils/resumeUnlocks';
+import { getResumeUnlockMap, trackCandidateProfileView } from '@utils/resumeUnlocks';
 import { recruiterSettingsService } from '@services/recruiterSettings';
 import toast from 'react-hot-toast';
 
@@ -160,6 +160,11 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const handleViewCandidate = async (candidate: Candidate) => {
     try {
       const profile = await candidateService.getCandidateProfile(candidate.id);
+      await trackCandidateProfileView({
+        recruiterId,
+        candidateId: candidate.id,
+        source: 'candidate_search',
+      });
       setSelectedCandidate(profile as Candidate);
       setViewDialogOpen(true);
     } catch (err) {

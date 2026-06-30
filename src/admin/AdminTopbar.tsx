@@ -37,6 +37,7 @@ const AdminTopbar: React.FC<AdminTopbarProps> = ({
   const [notifications, setNotifications] = React.useState<any[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [loadingNotifications, setLoadingNotifications] = React.useState(false);
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
 
   const pageLabel = React.useMemo(() => {
     const chunk = location.pathname.split('/').filter(Boolean).pop() || 'dashboard';
@@ -44,11 +45,17 @@ const AdminTopbar: React.FC<AdminTopbarProps> = ({
   }, [location.pathname]);
 
   const loadNotifications = React.useCallback(async () => {
+    if (!user?.id) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
     setLoadingNotifications(true);
     try {
       const [list, unread] = await Promise.all([
-        adminService.getAdminNotifications(10),
-        adminService.getUnreadNotificationsCount(),
+        adminService.getAdminNotifications(user.id, 10),
+        adminService.getUnreadNotificationsCount(user.id),
       ]);
       setNotifications(list || []);
       setUnreadCount(unread || 0);
@@ -58,15 +65,34 @@ const AdminTopbar: React.FC<AdminTopbarProps> = ({
     } finally {
       setLoadingNotifications(false);
     }
-  }, []);
+  }, [user?.id]);
 
   React.useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
 
+  React.useEffect(() => {
+    if (!user?.id) return undefined;
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadNotifications();
+      }
+    }, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [loadNotifications, user?.id]);
+
+  React.useEffect(() => {
+    if (notificationsOpen) {
+      loadNotifications();
+    }
+  }, [notificationsOpen, loadNotifications]);
+
   const markAllRead = async () => {
+    if (!user?.id) return;
     try {
-      await adminService.markAllNotificationsRead();
+      await adminService.markAllNotificationsRead(user.id);
       message.success('All notifications marked as read');
       await loadNotifications();
     } catch {
@@ -75,8 +101,9 @@ const AdminTopbar: React.FC<AdminTopbarProps> = ({
   };
 
   const markSingleRead = async (id: string) => {
+    if (!user?.id) return;
     try {
-      await adminService.markNotificationRead(id);
+      await adminService.markNotificationRead(user.id, id);
       await loadNotifications();
     } catch {
       // noop
@@ -214,7 +241,13 @@ const AdminTopbar: React.FC<AdminTopbarProps> = ({
       <Space size={10}>
         <Input prefix={<SearchOutlined />} placeholder="Search admin tools" style={{ width: 240 }} />
         <Button icon={<HomeOutlined />} onClick={() => navigate(ROUTES.HOME)} />
-        <Popover trigger="click" placement="bottomRight" content={notificationContent}>
+        <Popover
+          trigger="click"
+          placement="bottomRight"
+          content={notificationContent}
+          onOpenChange={setNotificationsOpen}
+          open={notificationsOpen}
+        >
           <Badge count={unreadCount} size="small" overflowCount={99}>
             <Button icon={<BellOutlined />} />
           </Badge>
