@@ -82,8 +82,8 @@ export default function PipelineBoard({ jobId }: Props) {
     const toStage = destination.droppableId as PipelineStage;
     if (fromStage === toStage) return;
 
-    const originalSource = columns[fromStage];
-    const originalDest = columns[toStage];
+    const originalSource = sortedColumns[fromStage];
+    const originalDest = sortedColumns[toStage];
     const sourceList = Array.from(originalSource);
     const destList = Array.from(originalDest);
     const [moved] = sourceList.splice(source.index, 1);

@@ -354,12 +354,12 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     }
 
     if (action.type === 'add_pool') {
-      void runBulkAction(`Added ${count} candidates to talent pool`, () => bulkSetTalentPools(selectedApplicants, action.values, 'add'));
+      void runBulkAction(`Added ${count} candidates to talent pool`, () => bulkSetTalentPools(recruiterId, selectedApplicants, action.values, 'add'));
       return;
     }
 
     if (action.type === 'remove_pool') {
-      void runBulkAction(`Removed ${count} candidates from talent pool`, () => bulkSetTalentPools(selectedApplicants, action.values, 'remove'));
+      void runBulkAction(`Removed ${count} candidates from talent pool`, () => bulkSetTalentPools(recruiterId, selectedApplicants, action.values, 'remove'));
       return;
     }
 
@@ -687,7 +687,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   width: '100%',
                   maxWidth: '100%',
                   maxHeight: 'calc(100vh - 280px)',
-                  overflowX: 'auto',
+                  overflowX: 'hidden',
                   overflowY: 'auto',
                   scrollbarWidth: 'thin',
                   '&::-webkit-scrollbar': { height: 10, width: 10 },
@@ -699,7 +699,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   stickyHeader
                   size="small"
                   sx={{
-                    minWidth: 980,
+                    width: '100%',
                     tableLayout: 'fixed',
                     '& .MuiTableCell-root': {
                       px: 0.75,
@@ -737,15 +737,15 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                           />
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 150, pl: 3 }}>Name</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 168 }}>Email</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 118 }}>Tags</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 130 }}>Talent Pool</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 112 }}>ATS Stage</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 112 }}>Match Score</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 96 }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 102 }}>Applied</TableCell>
-                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: 86 }} align="right">Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '13%', pl: 2 }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '15%' }}>Email</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '11%' }}>Tags</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '11%' }}>Talent Pool</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '10%' }}>ATS Stage</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '9%' }}>Match Score</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '7%' }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '7%' }}>Applied</TableCell>
+                      <TableCell sx={{ fontWeight: 900, bgcolor: '#f8fafc', width: '9%' }} align="right">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -762,7 +762,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                               <Checkbox checked={checked} onChange={() => toggleApplicant(applicant.id)} inputProps={{ 'aria-label': `Select ${profile?.name || 'candidate'}` }} sx={{ width: 32, height: 32 }} />
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ pl: 3 }}>
+                          <TableCell sx={{ pl: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Typography sx={{ fontWeight: 800, color: '#020617', fontSize: 12 }} noWrap>{profile?.name || profile?.full_name || 'Unknown'}</Typography>
                               {isPriorityApplicant(applicant) && (

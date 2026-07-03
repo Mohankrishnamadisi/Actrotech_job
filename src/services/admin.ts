@@ -328,24 +328,25 @@ export const adminService = {
 
   async runIntegrityChecks() {
     const results: Record<string, any> = {};
-    // users without profiles
-    const { data: authUsers } = await supabase.from('users').select('id');
-    const { data: profiles } = await supabase.from('profiles').select('id');
-    const authIds = (authUsers || []).map((u) => u.id);
-    const profileIds = (profiles || []).map((p) => p.id);
-    const missingProfiles = authIds.filter((id) => !profileIds.includes(id));
-    results.missingProfiles = missingProfiles.slice(0, 50);
 
-    // jobs without recruiters
+    // Recruiters who posted jobs but don't have a recruiters record
+    const { data: profiles } = await supabase.from('profiles').select('id');
+    const profileIds = (profiles || []).map((p: any) => String(p.id));
+
+    // jobs without matching recruiter profiles
     const { data: jobs } = await supabase.from('jobs').select('id, posted_by');
-    const recruiterIds = (await supabase.from('recruiters').select('id')).data?.map((r) => r.id) || [];
-    const jobsWithoutRecruiters = (jobs || []).filter((j) => j.posted_by && !recruiterIds.includes(j.posted_by)).slice(0, 50);
+    const recruiterIds = (await supabase.from('recruiters').select('id')).data?.map((r: any) => String(r.id)) || [];
+    const jobsWithoutRecruiters = (jobs || []).filter((j: any) => j.posted_by && !recruiterIds.includes(String(j.posted_by))).slice(0, 50);
     results.jobsWithoutRecruiters = jobsWithoutRecruiters;
 
-    // applications with invalid candidates
+    // applications referencing users not in profiles
     const { data: applications } = await supabase.from('job_applications').select('id, user_id');
-    const invalidApplications = (applications || []).filter((a) => a.user_id && !authIds.includes(a.user_id)).slice(0, 50);
+    const invalidApplications = (applications || []).filter((a: any) => a.user_id && !profileIds.includes(String(a.user_id))).slice(0, 50);
     results.invalidApplications = invalidApplications;
+
+    // profiles that are job_seekers but have no applications
+    const profilesWithNoApps = profileIds.filter((id) => !(applications || []).some((a: any) => String(a.user_id) === id));
+    results.jobSeekerProfilesWithNoApplications = profilesWithNoApps.length;
 
     return results;
   },

@@ -37,6 +37,7 @@ import { CandidateTagAssigner } from './CandidateTagAssigner';
 import { CandidateNotesPanel } from './CandidateNotesPanel';
 import { ResumeUnlockContact } from './ResumeUnlockContact';
 import { calculateMatchScore, getMatchScoreHex } from '@utils/matchScore';
+import { getApplicantStage, getApplicantTags, getApplicantTalentPools } from './bulkActionsApi';
 
 interface ApplicantDetailsModalProps {
   open: boolean;
@@ -108,6 +109,9 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   const formatAppliedDate = appliedDate ? appliedDate.toLocaleString() : 'Unknown';
 
   const resumeUrl = profile?.resume_url || applicant?.resume_url || '';
+  const atsStage = applicant ? getApplicantStage(applicant) : 'Applied';
+  const applicantTags = applicant ? getApplicantTags(applicant) : [];
+  const applicantPools = applicant ? getApplicantTalentPools(applicant) : [];
   const matchScore = applicant
     ? calculateMatchScore(
         {
@@ -458,6 +462,40 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                       <Typography variant="body2">
                         {formatAppliedDate}
                       </Typography>
+                    </Box>
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                        ATS Stage
+                      </Typography>
+                      <Chip label={atsStage} size="small" color="info" variant="outlined" />
+                    </Box>
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                        Talent Pools
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                        {applicantPools.length > 0 ? (
+                          applicantPools.map((pool) => (
+                            <Chip key={pool} label={pool} size="small" color="primary" variant="outlined" />
+                          ))
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">No pool assigned</Typography>
+                        )}
+                      </Box>
+                    </Box>
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                        Candidate Tags
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                        {applicantTags.length > 0 ? (
+                          applicantTags.map((tag) => (
+                            <Chip key={tag} label={tag} size="small" variant="outlined" />
+                          ))
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">No tags added</Typography>
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                 </CardContent>

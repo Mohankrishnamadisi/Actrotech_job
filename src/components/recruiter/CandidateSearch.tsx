@@ -36,6 +36,7 @@ import {
   Phone as PhoneIcon,
   Work as WorkIcon,
   Close as CloseIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 import { formatExperienceString } from '@utils/experience';
 import { motion } from 'framer-motion';
@@ -218,6 +219,14 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
     }
     toast.success('Candidate blocked');
   };
+
+  const profileAvatarUrl =
+    selectedCandidate?.avatar_url ||
+    selectedCandidate?.profile_image_url ||
+    selectedCandidate?.avatar ||
+    '';
+  const resumeUrl = selectedCandidate?.resume_url || '';
+  const isProfileUnlocked = Boolean(selectedCandidate && unlockedCandidates[selectedCandidate.id]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -483,266 +492,228 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
 
         <DialogContent sx={{ p: 3, bgcolor: '#fafafa' }}>
           {selectedCandidate && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* Key Info Section */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
-                {((selectedCandidate.experience_years != null && selectedCandidate.experience_years >= 0) || selectedCandidate.experience) && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <WorkIcon sx={{ fontSize: 20, color: '#667eea' }} />
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        EXPERIENCE
-                      </Typography>
+            <Grid container spacing={2.5}>
+              <Grid item xs={12} lg={6}>
+                <Box sx={{ display: 'grid', gap: 2 }}>
+                  <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                      <Avatar src={profileAvatarUrl || undefined} sx={{ width: 58, height: 58 }}>
+                        {selectedCandidate.name?.charAt(0)?.toUpperCase() || 'C'}
+                      </Avatar>
+                      <Box>
+                        <Typography sx={{ fontWeight: 800 }}>{selectedCandidate.name}</Typography>
+                        <Typography variant="body2" color="text.secondary">{selectedCandidate.headline || 'Profile headline not provided'}</Typography>
+                      </Box>
                     </Box>
-                    <Typography sx={{ fontWeight: 600 }}>
-                      {formatExperienceString(selectedCandidate.experience_years, selectedCandidate.experience_months) || selectedCandidate.experience || 'Not specified'}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
 
-              {/* Contact Section - Resume Unlock */}
-              <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LockIcon sx={{ fontSize: 20, color: '#667eea' }} />
-                  Contact Information
-                </Typography>
-                {unlockedCandidates[selectedCandidate.id] ? (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {selectedCandidate.email && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <EmailIcon sx={{ color: '#667eea', fontSize: 20 }} />
-                        <Typography sx={{ wordBreak: 'break-all' }}>
-                          {selectedCandidate.email}
+                    {((selectedCandidate.experience_years != null && selectedCandidate.experience_years >= 0) || selectedCandidate.experience) && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <WorkIcon sx={{ fontSize: 18, color: '#667eea' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {formatExperienceString(selectedCandidate.experience_years, selectedCandidate.experience_months) || selectedCandidate.experience || 'Not specified'}
                         </Typography>
                       </Box>
                     )}
-                    {selectedCandidate.phone && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <PhoneIcon sx={{ color: '#667eea', fontSize: 20 }} />
-                        <Typography>{selectedCandidate.phone}</Typography>
-                      </Box>
-                    )}
-                    {selectedCandidate.resume_url && (
-                      <Button
-                        href={selectedCandidate.resume_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        startIcon={<DownloadIcon />}
-                        sx={{ mt: 1, textTransform: 'none' }}
-                      >
-                        View Resume
-                      </Button>
-                    )}
-                  </Box>
-                ) : (
-                  <ResumeUnlockContact
-                    recruiterId={recruiterId}
-                    candidateId={selectedCandidate.id}
-                    onUnlocked={(contact) => {
-                      setUnlockedCandidates((current) => ({ ...current, [selectedCandidate.id]: true }));
-                      setSelectedCandidate((current) =>
-                        current
-                          ? {
-                              ...current,
-                              email: contact.email || current.email,
-                              phone: contact.phone || current.phone,
-                            }
-                          : current
-                      );
-                    }}
-                  />
-                )}
-              </Box>
 
-              {/* Profile Details Section */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 2 }}>
-                {selectedCandidate.current_designation && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      CURRENT DESIGNATION
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_designation}</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 1 }}>
+                      {selectedCandidate.current_designation && <Chip label={`Role: ${selectedCandidate.current_designation}`} size="small" variant="outlined" />}
+                      {selectedCandidate.current_company && <Chip label={`Company: ${selectedCandidate.current_company}`} size="small" variant="outlined" />}
+                      {selectedCandidate.notice_period && <Chip label={`Notice: ${selectedCandidate.notice_period}`} size="small" variant="outlined" />}
+                      {selectedCandidate.location && <Chip label={selectedCandidate.location} size="small" variant="outlined" />}
+                    </Box>
                   </Box>
-                )}
-                {selectedCandidate.current_designation && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      CURRENT DESIGNATION
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_designation}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.current_company && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      CURRENT COMPANY
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_company}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.current_ctc && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      CURRENT CTC
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.current_ctc}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.expected_ctc && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      EXPECTED CTC
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.expected_ctc}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.date_of_birth && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      DATE OF BIRTH
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{new Date(selectedCandidate.date_of_birth).toLocaleDateString()}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.gender && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      GENDER
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.gender}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.notice_period && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      NOTICE PERIOD
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.notice_period}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.education && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      EDUCATION
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.education}</Typography>
-                  </Box>
-                )}
-                {selectedCandidate.experience && !selectedCandidate.experience_years && (
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1, display: 'block' }}>
-                      EXPERIENCE
-                    </Typography>
-                    <Typography sx={{ fontWeight: 600 }}>{selectedCandidate.experience}</Typography>
-                  </Box>
-                )}
-              </Box>
 
-              {/* Address Section */}
-              {(selectedCandidate.address || selectedCandidate.city || selectedCandidate.state || selectedCandidate.country) && (
-                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                    Location
-                  </Typography>
-                  <Typography sx={{ color: 'text.secondary', mb: 1 }}>
-                    {selectedCandidate.address || ''}
-                  </Typography>
-                  <Typography sx={{ color: 'text.secondary' }}>
-                    {[selectedCandidate.city, selectedCandidate.state, selectedCandidate.country]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Education Timeline */}
-              {Array.isArray(selectedCandidate.education_details) && selectedCandidate.education_details.length > 0 && (
-                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                    Education Details
-                  </Typography>
-                  <Box sx={{ display: 'grid', gap: 2 }}>
-                    {selectedCandidate.education_details.map((item, index) => (
-                      <Box key={index} sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
-                        <Typography sx={{ fontWeight: 700 }}>{item.degree || item.qualification || item.field || 'Education'}</Typography>
-                        <Typography sx={{ color: 'text.secondary', mb: 0.5 }}>
-                          {item.institution || item.school || item.college || ''}
-                        </Typography>
-                        <Typography sx={{ color: 'text.secondary' }}>
-                          {[item.year, item.grade].filter(Boolean).join(' • ')}
-                        </Typography>
-                        {item.description && (
-                          <Typography sx={{ color: 'text.secondary', mt: 1 }}>{item.description}</Typography>
+                  <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LockIcon sx={{ fontSize: 20, color: '#667eea' }} />
+                      Contact Information
+                    </Typography>
+                    {isProfileUnlocked ? (
+                      <Box sx={{ display: 'grid', gap: 1 }}>
+                        {selectedCandidate.email && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <EmailIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                            <Typography sx={{ wordBreak: 'break-all' }}>{selectedCandidate.email}</Typography>
+                          </Box>
+                        )}
+                        {selectedCandidate.phone && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <PhoneIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                            <Typography>{selectedCandidate.phone}</Typography>
+                          </Box>
                         )}
                       </Box>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
-              {/* Work Experience Timeline */}
-              {Array.isArray(selectedCandidate.work_experience) && selectedCandidate.work_experience.length > 0 && (
-                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                    Work Experience
-                  </Typography>
-                  <Box sx={{ display: 'grid', gap: 2 }}>
-                    {selectedCandidate.work_experience.map((item, index) => (
-                      <Box key={index} sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
-                        <Typography sx={{ fontWeight: 700 }}>{item.title || item.role || item.position || 'Role'}</Typography>
-                        <Typography sx={{ color: 'text.secondary', mb: 0.5 }}>
-                          {item.company || item.organization || ''}
-                        </Typography>
-                        <Typography sx={{ color: 'text.secondary' }}>
-                          {[item.start_date, item.end_date].filter(Boolean).join(' - ')}
-                        </Typography>
-                        {item.description && (
-                          <Typography sx={{ color: 'text.secondary', mt: 1 }}>{item.description}</Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
-              {/* Skills Section */}
-              {selectedCandidate.skills && selectedCandidate.skills.length > 0 && (
-                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon sx={{ fontSize: 20, color: '#667eea' }} />
-                    Skills & Expertise
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {selectedCandidate.skills.map((skill) => (
-                      <Chip
-                        key={skill}
-                        label={skill}
-                        sx={{
-                          bgcolor: '#f0f4ff',
-                          color: '#667eea',
-                          fontWeight: 600,
-                          border: '1px solid #e0e7ff',
-                          '&:hover': { bgcolor: '#e0e7ff' },
+                    ) : (
+                      <ResumeUnlockContact
+                        recruiterId={recruiterId}
+                        candidateId={selectedCandidate.id}
+                        onUnlocked={(contact) => {
+                          setUnlockedCandidates((current) => ({ ...current, [selectedCandidate.id]: true }));
+                          setSelectedCandidate((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  email: contact.email || current.email,
+                                  phone: contact.phone || current.phone,
+                                }
+                              : current
+                          );
                         }}
                       />
-                    ))}
+                    )}
                   </Box>
-                </Box>
-              )}
 
-              {/* Additional Info */}
-              {selectedCandidate.bio && (
-                <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                    About
-                  </Typography>
-                  <Typography sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                    {selectedCandidate.bio}
-                  </Typography>
+                  <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Profile Details</Typography>
+                    <Grid container spacing={1.2}>
+                      {selectedCandidate.current_ctc && (
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">CURRENT CTC</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedCandidate.current_ctc}</Typography>
+                        </Grid>
+                      )}
+                      {selectedCandidate.expected_ctc && (
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">EXPECTED CTC</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedCandidate.expected_ctc}</Typography>
+                        </Grid>
+                      )}
+                      {selectedCandidate.gender && (
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">GENDER</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedCandidate.gender}</Typography>
+                        </Grid>
+                      )}
+                      {selectedCandidate.date_of_birth && (
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">DATE OF BIRTH</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{new Date(selectedCandidate.date_of_birth).toLocaleDateString()}</Typography>
+                        </Grid>
+                      )}
+                      {(selectedCandidate.address || selectedCandidate.city || selectedCandidate.state || selectedCandidate.country) && (
+                        <Grid item xs={12}>
+                          <Typography variant="caption" color="text.secondary">ADDRESS</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {[selectedCandidate.address, selectedCandidate.city, selectedCandidate.state, selectedCandidate.country]
+                              .filter(Boolean)
+                              .join(', ')}
+                          </Typography>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Box>
+
+                  {selectedCandidate.skills && selectedCandidate.skills.length > 0 && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Skills</Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {selectedCandidate.skills.map((skill) => (
+                          <Chip key={skill} label={skill} size="small" variant="outlined" />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {selectedCandidate.bio && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>About</Typography>
+                      <Typography sx={{ color: 'text.secondary', lineHeight: 1.65 }}>{selectedCandidate.bio}</Typography>
+                    </Box>
+                  )}
                 </Box>
-              )}
-            </Box>
+              </Grid>
+
+              <Grid item xs={12} lg={6}>
+                <Box sx={{ display: 'grid', gap: 2 }}>
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
+                      Resume Preview
+                    </Typography>
+                    {resumeUrl ? (
+                      isProfileUnlocked ? (
+                        <>
+                          <Box
+                            sx={{
+                              width: '100%',
+                              height: { xs: 320, md: 520 },
+                              borderRadius: 1.5,
+                              border: '1px solid #e2e8f0',
+                              overflow: 'hidden',
+                              bgcolor: '#fff',
+                            }}
+                          >
+                            <iframe
+                              title="Candidate Resume"
+                              src={resumeUrl}
+                              style={{ width: '100%', height: '100%', border: 'none' }}
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+                            <Button href={resumeUrl} target="_blank" rel="noopener noreferrer" startIcon={<OpenInNewIcon />}>
+                              Open Full Resume
+                            </Button>
+                            <Button href={resumeUrl} target="_blank" rel="noopener noreferrer" startIcon={<DownloadIcon />}>
+                              Download
+                            </Button>
+                          </Box>
+                        </>
+                      ) : (
+                        <Box
+                          sx={{
+                            height: { xs: 260, md: 360 },
+                            borderRadius: 1.5,
+                            border: '1px dashed #cbd5e1',
+                            display: 'grid',
+                            placeItems: 'center',
+                            textAlign: 'center',
+                            px: 2,
+                            bgcolor: 'rgba(148, 163, 184, 0.08)',
+                          }}
+                        >
+                          <Box>
+                            <LockIcon sx={{ fontSize: 32, color: '#64748b', mb: 1 }} />
+                            <Typography sx={{ fontWeight: 700, mb: 0.5 }}>Resume Locked</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Unlock contact details to view and download this resume.
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">Resume not uploaded by candidate.</Typography>
+                    )}
+                  </Box>
+
+                  {Array.isArray(selectedCandidate.work_experience) && selectedCandidate.work_experience.length > 0 && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Work Experience</Typography>
+                      <Box sx={{ display: 'grid', gap: 1.25 }}>
+                        {selectedCandidate.work_experience.map((item, index) => (
+                          <Box key={index} sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 1.5 }}>
+                            <Typography sx={{ fontWeight: 700 }}>{item.title || item.role || item.position || 'Role'}</Typography>
+                            <Typography variant="body2" color="text.secondary">{item.company || item.organization || ''}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {Array.isArray(selectedCandidate.education_details) && selectedCandidate.education_details.length > 0 && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Education</Typography>
+                      <Box sx={{ display: 'grid', gap: 1.25 }}>
+                        {selectedCandidate.education_details.map((item, index) => (
+                          <Box key={index} sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 1.5 }}>
+                            <Typography sx={{ fontWeight: 700 }}>{item.degree || item.qualification || item.field || 'Education'}</Typography>
+                            <Typography variant="body2" color="text.secondary">{item.institution || item.school || item.college || ''}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
 

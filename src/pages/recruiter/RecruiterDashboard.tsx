@@ -85,6 +85,7 @@ export const RecruiterDashboard: React.FC = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [recommendedJobId, setRecommendedJobId] = useState('');
+  const [pipelineJobId, setPipelineJobId] = useState('');
 
   useEffect(() => {
     if (user?.id) {
@@ -124,6 +125,12 @@ export const RecruiterDashboard: React.FC = () => {
       setRecommendedJobId(jobs[0].id);
     }
   }, [jobs, recommendedJobId]);
+
+  useEffect(() => {
+    if (!pipelineJobId && jobs.length > 0) {
+      setPipelineJobId(jobs[0].id);
+    }
+  }, [jobs, pipelineJobId]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -507,7 +514,28 @@ export const RecruiterDashboard: React.FC = () => {
             >
               ATS Pipeline
             </Typography>
-            <PipelineBoard />
+            {jobs.length > 0 && (
+              <Card sx={{ mb: 2, borderRadius: '12px', border: `1px solid ${themeColors.border}` }}>
+                <CardContent>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="pipeline-job-label">Pipeline for job</InputLabel>
+                    <Select
+                      labelId="pipeline-job-label"
+                      value={pipelineJobId}
+                      label="Pipeline for job"
+                      onChange={(event) => setPipelineJobId(event.target.value)}
+                    >
+                      {jobs.map((job) => (
+                        <MenuItem key={job.id} value={job.id}>
+                          {job.title} - {job.location}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </CardContent>
+              </Card>
+            )}
+            <PipelineBoard jobId={pipelineJobId || undefined} />
           </MotionBox>
         );
 

@@ -52,11 +52,16 @@ const notifyAdminsForNewTicket = async (ticket: SupportTicket) => {
     read: false,
   }));
 
+  // Notifications table valid_notification_type constraint only allows:
+  // 'job_match','application_status','new_job','subscription'
+  // Admin ticket alerts are best-effort — silently ignore constraint violations.
   const { error: notificationError } = await supabase
     .from('notifications')
     .insert(payload);
 
-  if (notificationError) throw notificationError;
+  if (notificationError) {
+    console.warn('Admin ticket notification skipped:', notificationError.message);
+  }
 };
 
 export const markTicketsSeen = async (ids: string[], userId?: string) => {

@@ -726,10 +726,12 @@ export const applicationService = {
         }
 
         if (jobDetails?.posted_by) {
+          // Use 'application_status' — the closest valid type per DB check constraint
+          // (valid types: 'job_match', 'application_status', 'new_job', 'subscription')
           await notificationService.createNotification(
             jobDetails.posted_by,
-            'new_application',
-            'New applicant submitted',
+            'application_status',
+            'New Applicant',
             `A candidate has applied for ${jobDetails.title || 'your job posting'} at ${jobDetails.company_name || 'your company'}.`,
             { jobId, applicationId: application.id }
           );
