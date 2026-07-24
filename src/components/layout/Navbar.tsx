@@ -569,16 +569,6 @@ export const Navbar: React.FC = () => {
                   GO PREMIUM
                 </button>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 700,
-                      display: { xs: 'none', md: 'block' },
-                      color: subscription ? '#B45309' : 'text.primary',
-                    }}
-                  >
-                    {user.name}
-                  </Typography>
                   <IconButton
                   onClick={handleMenuOpen}
                   size="small"

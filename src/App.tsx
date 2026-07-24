@@ -311,7 +311,7 @@ const AppContent: React.FC = () => {
               email: session.user.email || '',
               name: profile?.name || session.user.user_metadata?.name || 'User',
               role: finalRole,
-              avatar: session.user.user_metadata?.avatar_url,
+              avatar: profile?.avatar || profile?.profile_image_url || session.user.user_metadata?.avatar_url,
               createdAt: profile?.created_at || session.user.created_at || new Date().toISOString(),
               updatedAt: profile?.updated_at || session.user.updated_at || new Date().toISOString(),
             });
@@ -351,7 +351,7 @@ const AppContent: React.FC = () => {
             email: s.user.email || '',
             name: profile?.name || s.user.user_metadata?.name || 'User',
             role: finalRole,
-            avatar: s.user.user_metadata?.avatar_url,
+            avatar: profile?.avatar || profile?.profile_image_url || s.user.user_metadata?.avatar_url,
             createdAt: profile?.created_at || s.user.created_at || new Date().toISOString(),
             updatedAt: profile?.updated_at || s.user.updated_at || new Date().toISOString(),
           });

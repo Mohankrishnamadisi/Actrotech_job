@@ -41,7 +41,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
         flexDirection: 'column',
         position: 'relative',
         overflow: 'hidden',
-        minHeight: 398,
+        minHeight: 540,
+        maxHeight: 540,
         borderRadius: 4,
         border: '1px solid',
         borderColor: 'divider',
@@ -88,8 +89,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
           </Typography>
         </Box>
       )}
-      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.25, height: '100%', py: 2.3, px: 2.3, position: 'relative', zIndex: 1 }}>
-        <Box sx={{ minHeight: 76 }}>
+      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.25, py: 2.3, px: 2.3, position: 'relative', zIndex: 1, overflow: 'hidden', minHeight: 0 }}>
+        <Box sx={{ flex: '0 0 auto', pr: 5 }}>
           <Typography
             variant="h6"
             sx={{
@@ -128,7 +129,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap', flex: '0 0 auto', alignItems: 'flex-start' }}>
           <Chip
             label={jobType}
             size="small"
@@ -152,7 +153,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
           ) : null}
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85, flex: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85, flex: '0 0 auto' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.9 }}>
             <LocationOnIcon sx={{ fontSize: 18, color: 'primary.main' }} />
             <Typography
@@ -204,7 +205,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, minHeight: 30 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, flex: '0 0 auto' }}>
           {skills.slice(0, 3).map((skill) => (
             <Chip
               key={skill}
@@ -228,8 +229,9 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
             WebkitLineClamp: 2,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            minHeight: 44,
             lineHeight: 1.55,
+            flex: '1 1 auto',
+            minHeight: 0,
           }}
         >
           {job.description}

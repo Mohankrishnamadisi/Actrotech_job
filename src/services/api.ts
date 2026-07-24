@@ -139,9 +139,16 @@ export const userService = {
   },
 
   async updateProfile(userId: string, updates: Record<string, unknown>) {
+    const payload: Record<string, unknown> = { ...updates, updated_at: new Date().toISOString() };
+    
+    // If profile_image_url is being updated, also set it as avatar
+    if (updates.profile_image_url && !updates.avatar) {
+      payload.avatar = updates.profile_image_url;
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(payload)
       .eq('id', userId)
       .select();
     if (error) throw error;
@@ -655,6 +662,32 @@ export const jobService = {
 
     if (error) throw error;
     return { data: (data || []).map(normalizeJob), total: count || 0 };
+  },
+
+  async getCategories() {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('category')
+        .eq('status', 'published')
+        .not('category', 'is', null);
+
+      if (error) throw error;
+
+      // Extract unique categories and sort them
+      const uniqueCategories = Array.from(
+        new Set(
+          (data || [])
+            .map((job: Record<string, any>) => String(job.category || '').trim())
+            .filter(Boolean)
+        )
+      ).sort();
+
+      return uniqueCategories;
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      return [];
+    }
   },
 };
 

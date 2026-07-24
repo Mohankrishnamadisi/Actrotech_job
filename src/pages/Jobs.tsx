@@ -54,6 +54,8 @@ export const Jobs: React.FC = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [openSections, setOpenSections] = useState({
     search: true,
     profile: true,
@@ -73,6 +75,24 @@ export const Jobs: React.FC = () => {
     category: [] as string[],
   });
   const [debouncedKeyword, setDebouncedKeyword] = useState(searchParams.get('keyword') || '');
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const fetchedCategories = await jobService.getCategories();
+        setCategories(fetchedCategories);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const debounceTimer = window.setTimeout(() => {
@@ -657,38 +677,48 @@ export const Jobs: React.FC = () => {
                           gap: 1.1,
                         }}
                       >
-                        {JOB_CATEGORIES.map((category) => (
-                          <FormControlLabel
-                            key={category}
-                            control={
-                              <Checkbox
-                                sx={{ p: 0.5, mr: 0.75 }}
-                                checked={filters.category.includes(category)}
-                                onChange={(e) => {
-                                  const nextValues = e.target.checked
-                                    ? [...filters.category, category]
-                                    : filters.category.filter((item) => item !== category);
-                                  handleFilterChange('category', nextValues);
-                                }}
-                              />
-                            }
-                            label={category}
-                            sx={{
-                              m: 0,
-                              width: '100%',
-                              alignItems: 'center',
-                                minHeight: 40,
-                              '& .MuiFormControlLabel-label': {
-                                flex: 1,
-                                minWidth: 0,
-                                  fontSize: '0.98rem',
-                                whiteSpace: 'normal',
-                                overflowWrap: 'anywhere',
-                                lineHeight: 1.4,
-                              },
-                            }}
-                          />
-                        ))}
+                        {categoriesLoading ? (
+                          <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
+                            Loading categories...
+                          </Typography>
+                        ) : categories.length === 0 ? (
+                          <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
+                            No categories available
+                          </Typography>
+                        ) : (
+                          categories.map((category) => (
+                            <FormControlLabel
+                              key={category}
+                              control={
+                                <Checkbox
+                                  sx={{ p: 0.5, mr: 0.75 }}
+                                  checked={filters.category.includes(category)}
+                                  onChange={(e) => {
+                                    const nextValues = e.target.checked
+                                      ? [...filters.category, category]
+                                      : filters.category.filter((item) => item !== category);
+                                    handleFilterChange('category', nextValues);
+                                  }}
+                                />
+                              }
+                              label={category}
+                              sx={{
+                                m: 0,
+                                width: '100%',
+                                alignItems: 'center',
+                                  minHeight: 40,
+                                '& .MuiFormControlLabel-label': {
+                                  flex: 1,
+                                  minWidth: 0,
+                                    fontSize: '0.98rem',
+                                  whiteSpace: 'normal',
+                                  overflowWrap: 'anywhere',
+                                  lineHeight: 1.4,
+                                },
+                              }}
+                            />
+                          ))
+                        )}
                       </FormGroup>
                     </Box>
                   </FormControl>
