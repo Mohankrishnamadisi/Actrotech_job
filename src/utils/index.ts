@@ -141,6 +141,8 @@ export const truncateText = (text: string, length: number) => {
   return text.length > length ? `${text.substring(0, length)}...` : text;
 };
 
+export { truncateAtWord } from './truncateAtWord';
+
 export const generateInitials = (name: string) => {
   return name
     .split(' ')
@@ -164,3 +166,5 @@ export const cn = (...classes: (string | false | undefined | null)[]) => {
 };
 
 export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export { diversifyJobsByCompany, diversifyWithPagination } from './diversifyJobsByCompany';

@@ -2,24 +2,52 @@ import React from 'react';
 import { Box, Grid, Skeleton, Card, CardContent } from '@mui/material';
 
 export const JobCardSkeleton: React.FC = () => (
-  <Card sx={{ height: '100%' }}>
-    <CardContent>
-      <Skeleton variant="text" width="80%" height={28} sx={{ mb: 1 }} />
-      <Skeleton variant="text" width="50%" height={20} sx={{ mb: 2 }} />
-      <Skeleton variant="text" width="60%" height={18} sx={{ mb: 1 }} />
-      <Skeleton variant="text" width="40%" height={18} sx={{ mb: 2 }} />
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: '6px' }} />
-        <Skeleton variant="rectangular" width={70} height={24} sx={{ borderRadius: '6px' }} />
-        <Skeleton variant="rectangular" width={55} height={24} sx={{ borderRadius: '6px' }} />
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 2,
+      p: 2,
+      minHeight: 140,
+      borderRadius: 2,
+      border: '1px solid',
+      borderColor: 'divider',
+      bgcolor: '#ffffff',
+    }}
+  >
+    {/* Avatar */}
+    <Skeleton variant="circular" width={56} height={56} sx={{ flexShrink: 0 }} />
+
+    {/* Content */}
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Skeleton variant="text" width="60%" height={24} sx={{ mb: 0.5 }} />
+      <Skeleton variant="text" width="40%" height={16} sx={{ mb: 1 }} />
+
+      <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+        <Skeleton variant="rectangular" width={80} height={20} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" width={70} height={20} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" width={90} height={20} sx={{ borderRadius: 1 }} />
       </Box>
-      <Skeleton variant="text" width="100%" height={16} />
-      <Skeleton variant="text" width="90%" height={16} />
-    </CardContent>
-    <Box sx={{ p: 2, borderTop: '1px solid rgba(148, 163, 184, 0.1)' }}>
-      <Skeleton variant="rectangular" width="100%" height={36} sx={{ borderRadius: '6px' }} />
+
+      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+        <Skeleton variant="text" width="25%" height={14} />
+        <Skeleton variant="text" width="25%" height={14} />
+        <Skeleton variant="text" width="20%" height={14} />
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Skeleton variant="rectangular" width={60} height={20} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" width={65} height={20} sx={{ borderRadius: 1 }} />
+        <Skeleton variant="rectangular" width={70} height={20} sx={{ borderRadius: 1 }} />
+      </Box>
     </Box>
-  </Card>
+
+    {/* Buttons */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+      <Skeleton variant="rectangular" width={90} height={36} sx={{ borderRadius: 1.5 }} />
+      <Skeleton variant="rectangular" width={40} height={36} sx={{ borderRadius: 1 }} />
+    </Box>
+  </Box>
 );
 
 interface JobListSkeletonProps {
@@ -27,13 +55,11 @@ interface JobListSkeletonProps {
 }
 
 export const JobListSkeleton: React.FC<JobListSkeletonProps> = ({ count = 6 }) => (
-  <Grid container spacing={3}>
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
     {Array.from({ length: count }).map((_, i) => (
-      <Grid item xs={12} sm={6} lg={4} key={i}>
-        <JobCardSkeleton />
-      </Grid>
+      <JobCardSkeleton key={i} />
     ))}
-  </Grid>
+  </Box>
 );
 
 export const ProfileSkeleton: React.FC = () => (

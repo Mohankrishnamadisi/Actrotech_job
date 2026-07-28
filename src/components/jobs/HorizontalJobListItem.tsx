@@ -1,0 +1,402 @@
+import React from 'react';
+import {
+  Box,
+  Typography,
+  Chip,
+  Button,
+  Avatar,
+  Badge,
+  Link,
+} from '@mui/material';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import {
+  LocationOnOutlined as LocationOnOutlinedIcon,
+  WorkOutlineOutlined as WorkOutlineOutlinedIcon,
+  TrendingUpOutlined as TrendingUpOutlinedIcon,
+  BoltOutlined as BoltOutlinedIcon,
+  OpenInNew as OpenInNewIcon,
+} from '@mui/icons-material';
+import { getTimeAgo, formatJobSalary, truncateAtWord } from '@utils/index';
+import type { Job } from '../../types';
+
+interface HorizontalJobListItemProps {
+  job: Job;
+  isPremiumUser?: boolean;
+}
+
+export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
+  job,
+  isPremiumUser = false,
+}) => {
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const workMode = job.workMode || job.work_mode;
+  const showRemotePremium = workMode === 'Remote' && !isPremiumUser;
+  const postedDate = getTimeAgo(job.createdAt || job.created_at || new Date().toISOString());
+  const skills = Array.isArray(job.skills) ? job.skills.slice(0, 3) : [];
+  const skillsCount = Array.isArray(job.skills) ? job.skills.length : 0;
+  const jobType = job.jobType || job.job_type || 'Type unavailable';
+  const companyInitials = job.company_name
+    ?.split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'N/A';
+
+  const handleApplyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/jobs/${job.id}`);
+  };
+
+  const handleViewDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/jobs/${job.id}`);
+  };
+
+  const salary = job.salaryMin || job.salary_min || job.salaryMax || job.salary_max
+    ? formatJobSalary(job.salaryMin || job.salary_min, job.salaryMax || job.salary_max)
+    : null;
+
+  const description = truncateAtWord(job.description, 180);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Box
+        onClick={handleApplyClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: { xs: 1.5, sm: 2.5 },
+          p: { xs: 1.5, sm: 2.5 },
+          bgcolor: isHovered ? 'rgba(241, 248, 255, 0.98)' : undefined,
+          background: isHovered
+            ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241, 248, 255, 0.96))'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241, 248, 255, 0.96))',
+          border: '1px solid',
+          borderColor: isHovered ? 'rgba(59, 130, 246, 0.35)' : '#e5e7eb',
+          borderRadius: 2,
+          transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          position: 'relative',
+          cursor: 'pointer',
+          boxShadow: isHovered ? '0 12px 32px rgba(59, 130, 246, 0.13)' : 'none',
+          transform: isHovered ? 'translateY(-3px)' : 'translateY(0)',
+        }}
+      >
+        {/* LEFT: Company Logo */}
+        <Box
+          sx={{
+            flex: '0 0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Badge
+            overlap="circular"
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            badgeContent={
+              job.featured ? (
+                <Box
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    bgcolor: '#FCD34D',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid white',
+                  }}
+                >
+                  <BoltOutlinedIcon sx={{ fontSize: 14, color: '#92400E' }} />
+                </Box>
+              ) : null
+            }
+          >
+            <Avatar
+              sx={{
+                width: { xs: 48, sm: 56 },
+                height: { xs: 48, sm: 56 },
+                bgcolor: 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%)',
+                fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {companyInitials}
+            </Avatar>
+          </Badge>
+        </Box>
+
+        {/* CENTER: Job Details */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            gap: { xs: 0.5, sm: 0.75 },
+          }}
+        >
+          {/* Job Title */}
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 900,
+              fontSize: { xs: '1.05rem', sm: '1.2rem' },
+              lineHeight: 1.25,
+              color: '#0f172a',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: 'vertical',
+              letterSpacing: '-0.3px',
+            }}
+          >
+            {job.title}
+          </Typography>
+
+          {/* Company Name */}
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#2563eb',
+              fontWeight: 700,
+              fontSize: '0.95rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.6,
+              mt: 0.1,
+            }}
+          >
+            <Box
+              sx={{
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                bgcolor: '#3b82f6',
+              }}
+            />
+            {showRemotePremium ? 'Upgrade to view company' : job.company_name}
+          </Typography>
+
+          {/* Location + Work Mode Row */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              flexWrap: 'wrap',
+              mt: 0.25,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#4b5563' }}>
+              <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
+              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#374151' }}>
+                {job.location}
+              </Typography>
+            </Box>
+
+            {workMode && (
+              <Chip
+                icon={<WorkOutlineOutlinedIcon />}
+                label={workMode}
+                size="small"
+                sx={{
+                  height: 26,
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  bgcolor: '#d1fae5',
+                  color: '#065f46',
+                  border: '1px solid #a7f3d0',
+                  '& .MuiChip-icon': {
+                    fontSize: 16,
+                    marginLeft: '6px !important',
+                    color: '#059669',
+                  },
+                }}
+              />
+            )}
+          </Box>
+
+          {/* Salary */}
+          {salary && (
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                color: '#059669',
+                mt: 0.25,
+                letterSpacing: '-0.2px',
+              }}
+            >
+              💰 {salary}
+            </Typography>
+          )}
+
+          {/* Posted Time + Experience */}
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', mt: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#6b7280' }}>
+              <TrendingUpOutlinedIcon sx={{ fontSize: 16, color: '#3b82f6' }} />
+              <Typography variant="caption" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#4b5563' }}>
+                {job.experience || 'Not specified'} exp.
+              </Typography>
+            </Box>
+
+            {jobType && jobType !== 'Type unavailable' && (
+              <Typography variant="caption" sx={{ fontSize: '0.8rem', color: '#4b5563', fontWeight: 600 }}>
+                · {jobType}
+              </Typography>
+            )}
+
+            <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.8rem', fontWeight: 500 }}>
+              · Added {postedDate}
+            </Typography>
+          </Box>
+
+          {/* Skills Row */}
+          {skills.length > 0 && (
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center', mt: 0.25 }}>
+              {skills.map((skill, idx) => (
+                <Chip
+                  key={idx}
+                  label={skill}
+                  size="small"
+                  sx={{
+                    height: 26,
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    bgcolor: '#dbeafe',
+                    color: '#1e40af',
+                    border: '1.5px solid #60a5fa',
+                    borderRadius: 1,
+                  }}
+                />
+              ))}
+              {skillsCount > 3 && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#1e40af',
+                    fontSize: '0.78rem',
+                    px: 0.75,
+                    py: 0.3,
+                    borderRadius: 1,
+                    bgcolor: '#dbeafe',
+                    border: '1.5px solid #60a5fa',
+                  }}
+                >
+                  +{skillsCount - 3} more
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          {/* Hover-revealed description */}
+          <Box
+            sx={{
+              overflow: 'hidden',
+              maxHeight: isHovered ? 60 : 0,
+              opacity: isHovered ? 1 : 0,
+              transition: 'max-height 0.35s ease, opacity 0.3s ease',
+              mt: isHovered ? 0.75 : 0,
+            }}
+          >
+            {description && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#1f2937',
+                  fontSize: '0.88rem',
+                  lineHeight: 1.5,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  fontWeight: 500,
+                }}
+              >
+                {description}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
+        {/* RIGHT: Action Buttons */}
+        <Box
+          sx={{
+            flex: '0 0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            alignItems: { xs: 'flex-start', sm: 'flex-end' },
+            justifyContent: 'flex-start',
+            pointerEvents: 'auto',
+            minWidth: { xs: 'auto', sm: 120 },
+          }}
+        >
+          {/* Apply Button */}
+          <Button
+            onClick={handleApplyClick}
+            variant="contained"
+            endIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: 1,
+              fontSize: '0.95rem',
+              px: 2.5,
+              py: 0.75,
+              bgcolor: '#3b82f6',
+              color: '#ffffff',
+              cursor: 'pointer',
+              boxShadow: 'none',
+              transition: 'all 0.25s ease',
+              '&:hover': {
+                bgcolor: '#2563eb',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 20px rgba(59, 130, 246, 0.4)',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
+              },
+            }}
+          >
+            Apply
+          </Button>
+
+          {/* Details Link */}
+          <Link
+            onClick={handleViewDetailsClick}
+            sx={{
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              color: '#3b82f6',
+              textDecoration: 'none',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                textDecoration: 'underline',
+                color: '#2563eb',
+              },
+            }}
+          >
+            Details
+          </Link>
+        </Box>
+      </Box>
+    </motion.div>
+  );
+};

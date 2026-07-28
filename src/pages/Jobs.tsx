@@ -35,7 +35,7 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { JobCard } from '@components/jobs/JobCard';
+import { HorizontalJobListItem } from '@components/jobs/HorizontalJobListItem';
 import { JobListSkeleton } from '@components/common/LoadingSkeleton';
 import { Error } from '@components/common/Error';
 import { jobService } from '@services/api';
@@ -818,19 +818,15 @@ export const Jobs: React.FC = () => {
               </Box>
             ) : (
               <>
-                <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 4 }}>
                   {jobs.map((job, index) => (
-                    <Grid item xs={12} sm={6} lg={4} key={job.id}>
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <JobCard job={job} isPremiumUser={!!subscription} />
-                      </motion.div>
-                    </Grid>
+                    <HorizontalJobListItem
+                      key={job.id}
+                      job={job}
+                      isPremiumUser={!!subscription}
+                    />
                   ))}
-                </Grid>
+                </Box>
 
                 {totalPages > 1 && (
                   <Box sx={{ display: 'flex', justifyContent: 'center' }}>

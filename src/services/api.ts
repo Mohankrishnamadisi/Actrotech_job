@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import type { JobSeeker, Recruiter, Job } from '../types';
-import { getFreshnessDate } from '@utils/index';
+import { getFreshnessDate, diversifyJobsByCompany } from '@utils/index';
 
 const normalizeJob = (job: Record<string, any>): Job => ({
   ...job,
@@ -377,12 +377,21 @@ export const jobService = {
     const needsInMemoryFiltering = Boolean(keywordInput) || numericExperienceYears !== null;
 
     if (!needsInMemoryFiltering) {
+      // Fetch a larger window for diversification (2.5x the requested limit)
+      // This ensures better company distribution across all pages
+      const windowSize = Math.max(limit * 3, 50);
       const { data, error, count } = await query
         .order('created_at', { ascending: false })
-        .range((page - 1) * limit, page * limit - 1);
+        .range((page - 1) * windowSize, (page - 1) * windowSize + windowSize - 1);
 
       if (error) throw error;
-      return { data: (data || []).map(normalizeJob), total: count || 0 };
+
+      // Diversify the fetched window and return only requested page size
+      const normalizedJobs = (data || []).map(normalizeJob);
+      const diversified = diversifyJobsByCompany(normalizedJobs);
+      const pageJobs = diversified.slice(0, limit);
+
+      return { data: pageJobs, total: count || 0 };
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -410,10 +419,13 @@ export const jobService = {
       );
     }) : normalizedJobs;
 
-    const startIndex = (page - 1) * limit;
-    const paginatedJobs = filteredJobs.slice(startIndex, startIndex + limit);
+    // Diversify before pagination for consistent UX across pages
+    const diversified = diversifyJobsByCompany(filteredJobs);
 
-    return { data: paginatedJobs, total: filteredJobs.length };
+    const startIndex = (page - 1) * limit;
+    const paginatedJobs = diversified.slice(startIndex, startIndex + limit);
+
+    return { data: paginatedJobs, total: diversified.length };
   },
 
   async getJobById(id: string) {
@@ -652,16 +664,24 @@ export const jobService = {
       })
       .join(',');
 
+    // Fetch a larger window for diversification (2.5x the requested limit)
+    const windowSize = Math.max(limit * 3, 50);
     const { data, error, count } = await supabase
       .from('jobs')
       .select('*', { count: 'exact' })
       .eq('status', 'published')
       .or(skillQueries)
       .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+      .range((page - 1) * windowSize, (page - 1) * windowSize + windowSize - 1);
 
     if (error) throw error;
-    return { data: (data || []).map(normalizeJob), total: count || 0 };
+
+    // Diversify the fetched window and return only requested page size
+    const normalizedJobs = (data || []).map(normalizeJob);
+    const diversified = diversifyJobsByCompany(normalizedJobs);
+    const pageJobs = diversified.slice(0, limit);
+
+    return { data: pageJobs, total: count || 0 };
   },
 
   async getCategories() {
