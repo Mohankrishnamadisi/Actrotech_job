@@ -126,10 +126,11 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
             sx={{
               fontWeight: 700,
               borderColor: 'rgba(241,245,249,0.62)',
-              color: '#F8FAFC',
+              color: '#020202',
               '&:hover': {
                 borderColor: '#F8FAFC',
                 bgcolor: 'rgba(241,245,249,0.12)',
+                color: '#F8FAFC'
               },
             }}
           >
