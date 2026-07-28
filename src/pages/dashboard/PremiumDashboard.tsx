@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Badge,
@@ -48,8 +48,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
+import toast from 'react-hot-toast';
 
 import { Layout } from '@components/layout/Layout';
+import RecruiterActivityCenter, { type RecruiterActivityQuickAction } from '@components/dashboard/RecruiterActivityCenter';
 import SupportWidget from '@components/common/SupportWidget';
 import { useThemeMode } from '@hooks/index';
 import { useAuthStore } from '@store/index';
@@ -73,6 +75,9 @@ import {
   type DemandWeights,
   type WeeklyGoalTargets,
 } from '@utils/premiumDashboardConfig';
+import type { AiMatchCandidateContext } from '@services/aiMatchCenter';
+import type { BriefActionKey, DailyCareerBriefContext } from '@services/aiDailyCareerBrief';
+import type { RecruiterActivityContext } from '@services/recruiterActivity';
 import './PremiumHeroStars.css';
 import '../../styles/spaceButton.css';
 import '../../styles/sparkleButton.css';
@@ -87,6 +92,8 @@ const getJobList = (response: any): any[] => {
 
 const MotionCard = motion(Card);
 const candidateHeroGradient = 'linear-gradient(310deg, rgba(15,23,42,0.95) 0%, rgba(30,64,175,0.93) 45%, rgba(14,116,144,0.92) 100%)';
+const AiDailyCareerBrief = React.lazy(() => import('@components/dashboard/AiDailyCareerBrief'));
+const AiMatchCenter = React.lazy(() => import('@components/dashboard/AiMatchCenter'));
 
 type RecentApplication = {
   status: string;
@@ -124,6 +131,7 @@ export const PremiumDashboard: React.FC = () => {
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [candidateProfile, setCandidateProfile] = useState<any>(null);
   const [profileStrength, setProfileStrength] = useState(0);
   const [resumeDownloadCount, setResumeDownloadCount] = useState<number>(0);
   const [profileViewCount, setProfileViewCount] = useState<number>(0);
@@ -200,6 +208,7 @@ export const PremiumDashboard: React.FC = () => {
         const profile = await userService.getProfile(user.id);
 
         if (profile) {
+          setCandidateProfile(profile);
           const skills = Array.isArray(profile.skills) ? profile.skills : [];
           setUserSkills(skills);
 
@@ -404,6 +413,141 @@ export const PremiumDashboard: React.FC = () => {
     };
   }, [applicationCount, profileStrength, profileViewCount, recentApplications, resumeDownloadCount, roleWeightMap, selectedRoleModel, userSkills.length, weeklyTargets.applications, weeklyTargets.interactions, weeklyTargets.pipeline]);
 
+  const aiDailyBriefContext = useMemo<DailyCareerBriefContext>(() => ({
+    userId: user?.id || '',
+    userName: user?.name,
+    profileStrength,
+    applicationsCount: applicationCount,
+    recentApplications7d: premiumInsights.recentApplications7d,
+    recommendedJobsCount: recommendedJobs.length,
+    recruiterViews: profileViewCount,
+    resumeDownloads: resumeDownloadCount,
+    userSkills,
+    weeklyApplicationGoal: weeklyTargets.applications,
+  }), [applicationCount, premiumInsights.recentApplications7d, profileStrength, profileViewCount, recommendedJobs.length, resumeDownloadCount, user?.id, user?.name, userSkills, weeklyTargets.applications]);
+
+  const handleAiDailyBriefAction = (actionKey: BriefActionKey) => {
+    switch (actionKey) {
+      case 'improve_resume':
+      case 'resume_review':
+        navigate('/dashboard/resume-review');
+        return;
+      case 'find_better_jobs':
+        navigate('/dashboard/recommended-jobs?minMatch=60');
+        return;
+      case 'ai_career_coach':
+        navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
+        return;
+      case 'mock_interview':
+        navigate('/dashboard/mock-interviews');
+        return;
+      case 'complete_assessment':
+        navigate(ROUTES.DASHBOARD_ASSESSMENTS);
+        return;
+      case 'update_profile':
+        navigate(ROUTES.DASHBOARD_PROFILE);
+        return;
+      case 'apply_jobs':
+        navigate(ROUTES.JOBS);
+        return;
+      case 'open_notifications':
+        navigate(ROUTES.DASHBOARD_NOTIFICATIONS);
+        return;
+      case 'improve_skills':
+        navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
+        return;
+      default:
+        navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
+    }
+  };
+
+  const handleAiMatchApplyNow = (jobId: string) => {
+    navigate(`/jobs/${jobId}`);
+  };
+
+  const handleAiMatchSaveJob = async (jobId: string) => {
+    if (!user?.id) return;
+    try {
+      await savedService.saveJob(user.id, jobId);
+      toast.success('Job saved');
+      const saved = await savedService.getUserSavedJobs(user.id);
+      setSavedJobsCount(saved?.length || 0);
+    } catch {
+      toast.error('Unable to save job');
+    }
+  };
+
+  const handleAiMatchImproveMatch = () => {
+    navigate(ROUTES.DASHBOARD_PROFILE);
+  };
+
+  const handleRecruiterActivityQuickAction = (action: RecruiterActivityQuickAction) => {
+    switch (action) {
+      case 'improve-profile':
+        navigate(ROUTES.DASHBOARD_PROFILE);
+        break;
+      case 'update-resume':
+        navigate('/dashboard/resume-review');
+        break;
+      case 'take-assessment':
+        navigate(ROUTES.DASHBOARD_ASSESSMENTS);
+        break;
+      case 'browse-jobs':
+        navigate(ROUTES.JOBS);
+        break;
+      case 'ai-career-hub':
+        navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
+        break;
+      case 'messages':
+        navigate(ROUTES.MESSAGING);
+        break;
+      case 'applications':
+        navigate(ROUTES.DASHBOARD_APPLICATIONS);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const aiMatchContext = useMemo<AiMatchCandidateContext>(() => {
+    const profileEducation = ((Array.isArray(candidateProfile?.education) ? candidateProfile.education : []) as any[])
+      .map((item) => String(item?.degree || item?.qualification || item || '').trim())
+      .filter(Boolean);
+    const profileLocations = [
+      String(candidateProfile?.location || '').trim(),
+      String(candidateProfile?.city || '').trim(),
+      String(candidateProfile?.preferred_location || '').trim(),
+    ].filter(Boolean);
+
+    const parseMoney = (value: unknown): number | undefined => {
+      const raw = String(value || '').replace(/[^\d.]/g, '');
+      const numeric = Number(raw);
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : undefined;
+    };
+
+    const parseExperienceYears = (value: unknown): number => {
+      const str = String(value || '').trim();
+      const nums = str.match(/\d+/g);
+      if (!nums || nums.length === 0) return 0;
+      return Number(nums[0]) || 0;
+    };
+
+    return {
+      userId: user?.id || '',
+      skills: userSkills,
+      experienceYears: parseExperienceYears(candidateProfile?.experience || candidateProfile?.experienceYears),
+      education: profileEducation,
+      preferredLocations: profileLocations,
+      preferredSalaryMin: parseMoney(candidateProfile?.expected_ctc || candidateProfile?.expectedCtc),
+      preferredSalaryMax: parseMoney(candidateProfile?.expected_ctc || candidateProfile?.expectedCtc),
+      preferredWorkMode: String(candidateProfile?.preferred_work_mode || '').trim() as 'Remote' | 'Hybrid' | 'Onsite' | '',
+      resumeScore: Math.min(100, Math.max(35, profileStrength + 4)),
+      assessmentScore: Math.min(100, Math.max(40, 58 + Math.round((applicationCount + resumeDownloadCount) * 1.8))),
+      profileCompletion: profileStrength,
+      communicationScore: Math.min(100, Math.max(45, 55 + Math.round(profileViewCount * 1.2))),
+    };
+  }, [applicationCount, candidateProfile, profileStrength, profileViewCount, resumeDownloadCount, user?.id, userSkills]);
+
   const opportunitySignals = useMemo<OpportunitySignal[]>(() => {
     const now = Date.now();
     const latestAppliedAt = recentApplications
@@ -476,6 +620,34 @@ export const PremiumDashboard: React.FC = () => {
       .sort((a, b) => b.priorityScore - a.priorityScore)
       .slice(0, 3);
   }, [navigate, notificationsCount, profileStrength, recentApplications, recommendedJobs, unreadMessagesCount]);
+
+  const recruiterActivityContext = useMemo<RecruiterActivityContext>(() => {
+    const assessmentsCompleted = Array.isArray(candidateProfile?.assessments)
+      ? candidateProfile.assessments.length
+      : Array.isArray(candidateProfile?.assessment_history)
+      ? candidateProfile.assessment_history.length
+      : 0;
+
+    return {
+      userId: user?.id || '',
+      isPremium: true,
+      profileCompletion: profileStrength,
+      resumeDownloads: resumeDownloadCount || 0,
+      profileViews: profileViewCount || 0,
+      recruiterMessages: unreadMessagesCount,
+      savedJobs: savedJobsCount,
+      skillsCount: userSkills.length,
+      assessmentsCompleted,
+      hasResume: Boolean(candidateProfile?.resume_url || candidateProfile?.resumeUrl),
+      recentApplications: recentApplications.map((item, index) => ({
+        id: item.jobs?.id || `premium-app-${index}`,
+        status: item.status,
+        appliedAt: item.applied_at,
+        title: item.jobs?.title,
+        companyName: item.jobs?.company_name,
+      })),
+    };
+  }, [candidateProfile, profileStrength, profileViewCount, recentApplications, resumeDownloadCount, savedJobsCount, unreadMessagesCount, user?.id, userSkills.length]);
 
   const activeRoleWeights = useMemo(() => getWeightsForRole(selectedRoleModel, roleWeightMap), [roleWeightMap, selectedRoleModel]);
 
@@ -701,6 +873,19 @@ export const PremiumDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
+        <Suspense
+          fallback={(
+            <Card sx={{ borderRadius: 4, mb: 3 }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">Generating AI Daily Career Brief...</Typography>
+                <LinearProgress sx={{ mt: 1.2 }} />
+              </CardContent>
+            </Card>
+          )}
+        >
+          <AiDailyCareerBrief context={aiDailyBriefContext} onAction={handleAiDailyBriefAction} />
+        </Suspense>
+
         <Grid container spacing={2.2} sx={{ mb: 3 }}>
           {stats.map((stat, idx) => (
             <Grid item xs={12} sm={6} md={3} key={stat.label}>
@@ -749,8 +934,12 @@ export const PremiumDashboard: React.FC = () => {
             {[
               { label: 'Browse Jobs', to: ROUTES.JOBS, icon: WorkIcon, color: 'primary' as const },
               { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, icon: AccountCircleIcon, color: 'secondary' as const },
+              { label: 'Assessments', to: ROUTES.DASHBOARD_ASSESSMENTS, icon: TrackChangesIcon, color: 'success' as const },
+              { label: 'Community', to: ROUTES.DASHBOARD_COMMUNITY, icon: PublicIcon, color: 'info' as const },
+              { label: 'Referrals', to: ROUTES.DASHBOARD_REFERRALS, icon: BoltIcon, color: 'secondary' as const },
               { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', icon: TrendingUpIcon, color: 'warning' as const },
               { label: 'Free Notes', to: ROUTES.DASHBOARD_FREE_NOTES, icon: StickyNote2Icon, color: 'success' as const },
+              { label: 'AI Career Hub', to: ROUTES.DASHBOARD_AI_CAREER_HUB, icon: AutoAwesomeIcon, color: 'info' as const },
             ].map((action, idx) => (
               <Grid item xs={12} sm={6} md={3} key={action.label}>
                 <MotionCard
@@ -1049,6 +1238,28 @@ export const PremiumDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
+        <Suspense
+          fallback={(
+            <Card sx={{ borderRadius: 4, mb: 3 }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">Loading AI Match Center...</Typography>
+                <LinearProgress sx={{ mt: 1.2 }} />
+              </CardContent>
+            </Card>
+          )}
+        >
+          <AiMatchCenter
+            jobs={recommendedJobs}
+            context={aiMatchContext}
+            onApplyNow={handleAiMatchApplyNow}
+            onSaveJob={handleAiMatchSaveJob}
+            onImproveMatch={handleAiMatchImproveMatch}
+            onResumeOptimizer={() => navigate('/dashboard/resume-review')}
+            onMockInterview={() => navigate('/dashboard/mock-interviews')}
+            onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
+          />
+        </Suspense>
+
         <Card
           sx={{
             borderRadius: 4,
@@ -1126,6 +1337,26 @@ export const PremiumDashboard: React.FC = () => {
                             Free Notes
                           </Button>
                         </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<TrackChangesIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_ASSESSMENTS)}>
+                            Assessments
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<PublicIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_COMMUNITY)}>
+                            Community
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<BoltIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_REFERRALS)}>
+                            Referrals
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Button fullWidth variant="outlined" startIcon={<AutoAwesomeIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_AI_CAREER_HUB)}>
+                            AI Career Hub
+                          </Button>
+                        </Grid>
                       </Grid>
                     </CardContent>
                   </Card>
@@ -1199,6 +1430,11 @@ export const PremiumDashboard: React.FC = () => {
             </Grid>
           </CardContent>
         </Card>
+
+        <RecruiterActivityCenter
+          context={recruiterActivityContext}
+          onQuickAction={handleRecruiterActivityQuickAction}
+        />
 
         <Card
           sx={{

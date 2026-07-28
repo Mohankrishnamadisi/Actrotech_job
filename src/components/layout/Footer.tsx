@@ -1,28 +1,36 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Box, Container, Grid, Typography, Link, Divider, Button, Paper } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import {
-  GetApp as InstallIcon,
   ArrowForward as ArrowForwardIcon,
   TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { useAuthStore } from '@store/index';
-import usePWA from '@hooks/usePWA';
-import InstallPromptDialog from '@components/InstallApp/InstallPromptDialog';
+import usePWAInstall from '@hooks/usePWAInstall';
+import PWAInstallBanner from '@components/InstallApp/PWAInstallBanner';
 import '../../styles/footerSocialIcons.css';
+
+const PWAInstallModal = React.lazy(() => import('@components/InstallApp/PWAInstallModal'));
 
 export const Footer: React.FC = () => {
   const { user } = useAuthStore();
-  const { deferredPrompt, isInstalled, promptInstall } = usePWA();
-  const [openDialog, setOpenDialog] = React.useState(false);
+  const {
+    isInstalled,
+    shouldShowBanner,
+    isUnsupported,
+    unsupportedTip,
+    promptInstall,
+    platform,
+    iosModalOpen,
+    closeIosInstructions,
+    hideInstallBanner,
+    remindMeLater,
+    neverShowAgain,
+  } = usePWAInstall();
   const currentYear = new Date().getFullYear();
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      setOpenDialog(true);
-      return;
-    }
     await promptInstall();
   };
 
@@ -152,6 +160,21 @@ export const Footer: React.FC = () => {
           </Grid>
         </Paper>
 
+        {shouldShowBanner && !isInstalled ? (
+          <Box sx={{ mb: 3.2, position: 'relative', zIndex: 1 }}>
+            <PWAInstallBanner
+              appName="Actro Jobs"
+              description="Install for faster load, offline access, and instant recruiter updates."
+              isUnsupported={isUnsupported}
+              unsupportedTip={unsupportedTip}
+              onInstallNow={handleInstallClick}
+              onRemindLater={() => remindMeLater(24)}
+              onHide={hideInstallBanner}
+              onNeverShowAgain={neverShowAgain}
+            />
+          </Box>
+        ) : null}
+
         <Grid container spacing={4} sx={{ mb: 2, position: 'relative', zIndex: 1 }}>
           <Grid item xs={12} sm={6} md={4}>
             <Typography variant="h6" sx={{ fontWeight: 750, mb: 1.5, color: '#FFFFFF' }}>
@@ -253,40 +276,6 @@ export const Footer: React.FC = () => {
               </Box>
             </Grid>
           )}
-
-          {/* Install App Section */}
-          {!isInstalled && (
-            <Grid item xs={12} sm={6} md={2.8}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.8, color: '#F8FAFC' }}>
-                Mobile App
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(203, 213, 225, 0.92)', mb: 2, fontSize: '0.875rem', lineHeight: 1.7 }}>
-                Install our app on your mobile device for the best experience. Access jobs and manage your profile on the go.
-              </Typography>
-              <Button
-                onClick={handleInstallClick}
-                variant="contained"
-                size="small"
-                startIcon={<InstallIcon />}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  background: 'linear-gradient(90deg, #0ea5e9, #2563eb)',
-                  color: '#ffffff',
-                  fontSize: '0.86rem',
-                  py: 0.78,
-                  px: 1.3,
-                  boxShadow: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(90deg, #0284c7, #1d4ed8)',
-                    boxShadow: 'none',
-                  },
-                }}
-              >
-                Install App
-              </Button>
-            </Grid>
-          )}
         </Grid>
 
         <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.28)', my: 3, position: 'relative', zIndex: 1 }} />
@@ -312,15 +301,13 @@ export const Footer: React.FC = () => {
         </Box>
       </Container>
 
-      {/* Install Dialog */}
-      {!isInstalled && (
-        <InstallPromptDialog
-          open={openDialog}
-          onClose={() => setOpenDialog(false)}
-          onInstall={handleInstallClick}
-          fallbackMessage={!deferredPrompt ? 'If installation does not appear, use your browser menu → Add to Home screen.' : undefined}
+      <Suspense fallback={null}>
+        <PWAInstallModal
+          open={iosModalOpen}
+          platform={platform}
+          onClose={closeIosInstructions}
         />
-      )}
+      </Suspense>
     </Box>
   );
 };

@@ -64,6 +64,8 @@ export const RecruiterLayout: React.FC<RecruiterLayoutProps> = ({
             currentTab={currentTab}
             companyName={companyName}
             companyLogo={companyLogo}
+            credits={credits}
+            planName={planName}
           />
         </Box>
       )}
@@ -99,6 +101,8 @@ export const RecruiterLayout: React.FC<RecruiterLayoutProps> = ({
               currentTab={currentTab}
               companyName={companyName}
               companyLogo={companyLogo}
+              credits={credits}
+              planName={planName}
             />
           </Box>
         )}

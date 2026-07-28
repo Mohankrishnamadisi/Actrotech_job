@@ -23,12 +23,9 @@ import { useAuthStore } from '@store/index';
 import { ROUTES } from '@constants/index';
 import { recruiterService, statsService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
+import { billingSubscriptionService } from '@services/billingSubscription';
 import toast from 'react-hot-toast';
-import type { Job, RecruiterCredits, Subscription } from '@types';
-import {
-  ensureRecruiterCredits,
-  getActiveRecruiterSubscription,
-} from '@utils/resumeUnlocks';
+import type { Job } from '@types';
 import { themeColors } from '@styles/recruiterTheme';
 import { RecruiterLayout } from '@components/recruiter/RecruiterLayout';
 import { DashboardOverview } from '@components/recruiter/DashboardOverview';
@@ -40,13 +37,60 @@ import { CandidateSearch } from '@components/recruiter/CandidateSearch';
 import { TagManager } from '@components/recruiter/TagManager';
 import { TalentPool } from '@components/recruiter/TalentPool';
 import { RecruiterSettingsPanel } from '@components/recruiter/RecruiterSettings';
+import { InterviewManagement } from '@components/recruiter/InterviewManagement';
+import { RecruiterMessagingCenter, type PendingRecruiterChatTarget } from '@components/recruiter/RecruiterMessagingCenter';
+import { RecruiterAnalyticsInsights } from '@components/recruiter/RecruiterAnalyticsInsights';
+import { RecruiterAutomationCenter } from '@components/recruiter/RecruiterAutomationCenter';
+import { EmployerBrandingCenter } from '@components/recruiter/EmployerBrandingCenter';
+import { RecruiterAiHiringAssistant } from '@components/recruiter/RecruiterAiHiringAssistant';
+import { RecruiterTeamManagement } from '@components/recruiter/RecruiterTeamManagement';
+import { RecruiterIntegrationsHub } from '@components/recruiter/RecruiterIntegrationsHub';
+import { RecruiterBillingSubscription } from '@components/recruiter/RecruiterBillingSubscription';
+import { RecruiterMarketIntelligence } from '@components/recruiter/RecruiterMarketIntelligence';
+import { RecruiterSecurityCenter } from '@components/recruiter/RecruiterSecurityCenter';
+import { RecruiterOrganizationCenter } from '@components/recruiter/RecruiterOrganizationCenter';
+import { RecruiterMobilePwaCenter } from '@components/recruiter/RecruiterMobilePwaCenter';
+import { RecruiterAssessmentsCenter } from '@components/recruiter/RecruiterAssessmentsCenter';
+import { RecruiterCommunityReferralsCenter } from '@components/recruiter/RecruiterCommunityReferralsCenter';
+import { RecruiterDeveloperApiCenter } from '@components/recruiter/RecruiterDeveloperApiCenter';
+import { RecruiterExecutiveIntelligenceCenter } from '@components/recruiter/RecruiterExecutiveIntelligenceCenter';
+import { RecruiterGlobalEnterpriseCenter } from '@components/recruiter/RecruiterGlobalEnterpriseCenter';
 import PipelineBoard from '../../features/ats/PipelineBoard';
 
 
 type DashboardTab =
   | 'overview'
   | 'jobs'
+  | 'ai-hiring-assistant'
+  | 'team-management'
+  | 'integrations'
+  | 'billing-subscription'
+  | 'market-intelligence'
+  | 'security-center'
+  | 'organization'
+  | 'assessments'
+  | 'employee-referrals'
+  | 'talent-community'
+  | 'mobile-pwa'
+  | 'developer-portal'
+  | 'api-management'
+  | 'marketplace'
+  | 'webhooks'
+  | 'executive-intelligence'
+  | 'business-intelligence'
+  | 'data-warehouse'
+  | 'ai-insights'
+  | 'forecasting'
+  | 'global-settings'
+  | 'localization'
+  | 'compliance'
+  | 'regional-management'
+  | 'analytics'
+  | 'automation-center'
+  | 'messages'
+  | 'interview-management'
   | 'company-profile'
+  | 'employer-branding'
   | 'applicants'
   | 'recommended'
   | 'find-candidates'
@@ -81,11 +125,12 @@ export const RecruiterDashboard: React.FC = () => {
   const [recruiterProfile, setRecruiterProfile] = useState<any>(null);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [credits, setCredits] = useState<RecruiterCredits | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [layoutCredits, setLayoutCredits] = useState(0);
+  const [layoutPlanName, setLayoutPlanName] = useState('Free');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [recommendedJobId, setRecommendedJobId] = useState('');
   const [pipelineJobId, setPipelineJobId] = useState('');
+  const [pendingChatTarget, setPendingChatTarget] = useState<PendingRecruiterChatTarget | null>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -135,15 +180,17 @@ export const RecruiterDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, creditsData, subscriptionData] =
+      const recruiterId = user?.id || '';
+      billingSubscriptionService.initialize(recruiterId, recruiterId);
+
+      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, billingOverview] =
         await Promise.all([
-          statsService.getRecruiterStats(user?.id || ''),
-          recruiterService.getRecruiterProfile(user?.id || ''),
-          notificationService.getUnreadNotifications(user?.id || ''),
-          messagingService.getConversations(user?.id || ''),
-          jobService.getRecruiterJobs(user?.id || ''),
-          ensureRecruiterCredits(user?.id || ''),
-          getActiveRecruiterSubscription(user?.id || ''),
+          statsService.getRecruiterStats(recruiterId),
+          recruiterService.getRecruiterProfile(recruiterId),
+          notificationService.getUnreadNotifications(recruiterId),
+          messagingService.getConversations(recruiterId),
+          jobService.getRecruiterJobs(recruiterId),
+          billingSubscriptionService.getBillingOverview(recruiterId, recruiterId),
         ]);
 
       setStats((previous) => ({
@@ -154,9 +201,11 @@ export const RecruiterDashboard: React.FC = () => {
       setRecruiterProfile(profileData);
       setJobs(recruiterJobs || []);
       setNotificationsCount(unreadNotif?.length || 0);
-      setUnreadMessagesCount(conversations?.filter((c: any) => c.unread)?.length || 0);
-      setCredits(creditsData);
-      setSubscription(subscriptionData);
+      setUnreadMessagesCount(
+        (conversations || []).reduce((count: number, item: any) => count + Number(item?.unreadCount || 0), 0)
+      );
+      setLayoutCredits(Number(billingOverview?.creditsRemaining || 0));
+      setLayoutPlanName(String(billingOverview?.currentPlan || 'Free'));
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -165,8 +214,19 @@ export const RecruiterDashboard: React.FC = () => {
     }
   };
 
-  const handleChatClick = () => {
-    navigate(ROUTES.MESSAGING);
+  const handleChatClick = (
+    candidateId: string,
+    candidateName: string,
+    source: PendingRecruiterChatTarget['source'] = 'manual',
+    action: PendingRecruiterChatTarget['action'] = 'message'
+  ) => {
+    setPendingChatTarget({
+      candidateId,
+      candidateName,
+      source,
+      action,
+    });
+    setCurrentTab('messages');
   };
 
   if (loading) {
@@ -341,6 +401,370 @@ export const RecruiterDashboard: React.FC = () => {
           </MotionBox>
         );
 
+      case 'analytics':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && <RecruiterAnalyticsInsights recruiterId={user.id} />}
+          </MotionBox>
+        );
+
+      case 'ai-hiring-assistant':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && <RecruiterAiHiringAssistant recruiterId={user.id} />}
+          </MotionBox>
+        );
+
+      case 'team-management':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterTeamManagement
+                ownerId={user.id}
+                currentUserId={user.id}
+                ownerName={recruiterProfile?.company_name || recruiterProfile?.companyName || recruiterProfile?.hr_name || 'Company Owner'}
+                ownerEmail={recruiterProfile?.company_email || recruiterProfile?.companyEmail || ''}
+                jobs={jobs}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'integrations':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterIntegrationsHub
+                ownerId={user.id}
+                currentUserId={user.id}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'billing-subscription':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterBillingSubscription
+                ownerId={user.id}
+                currentUserId={user.id}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'market-intelligence':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterMarketIntelligence
+                ownerId={user.id}
+                currentUserId={user.id}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'security-center':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterSecurityCenter
+                ownerId={user.id}
+                currentUserId={user.id}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'organization':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterOrganizationCenter
+                ownerId={user.id}
+                currentUserId={user.id}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'assessments':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && <RecruiterAssessmentsCenter recruiterId={user.id} />}
+          </MotionBox>
+        );
+
+      case 'employee-referrals':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && <RecruiterCommunityReferralsCenter recruiterId={user.id} mode="employee-referrals" />}
+          </MotionBox>
+        );
+
+      case 'talent-community':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && <RecruiterCommunityReferralsCenter recruiterId={user.id} mode="talent-community" />}
+          </MotionBox>
+        );
+
+      case 'mobile-pwa':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterMobilePwaCenter />
+          </MotionBox>
+        );
+
+      case 'developer-portal':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterDeveloperApiCenter mode="developer-portal" />
+          </MotionBox>
+        );
+
+      case 'api-management':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterDeveloperApiCenter mode="api-management" />
+          </MotionBox>
+        );
+
+      case 'marketplace':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterDeveloperApiCenter mode="marketplace" />
+          </MotionBox>
+        );
+
+      case 'webhooks':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterDeveloperApiCenter mode="webhooks" />
+          </MotionBox>
+        );
+
+      case 'executive-intelligence':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterExecutiveIntelligenceCenter mode="executive-intelligence" />
+          </MotionBox>
+        );
+
+      case 'business-intelligence':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterExecutiveIntelligenceCenter mode="business-intelligence" />
+          </MotionBox>
+        );
+
+      case 'data-warehouse':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterExecutiveIntelligenceCenter mode="data-warehouse" />
+          </MotionBox>
+        );
+
+      case 'ai-insights':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterExecutiveIntelligenceCenter mode="ai-insights" />
+          </MotionBox>
+        );
+
+      case 'forecasting':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterExecutiveIntelligenceCenter mode="forecasting" />
+          </MotionBox>
+        );
+
+      case 'global-settings':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterGlobalEnterpriseCenter mode="global-settings" />
+          </MotionBox>
+        );
+
+      case 'localization':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterGlobalEnterpriseCenter mode="localization" />
+          </MotionBox>
+        );
+
+      case 'compliance':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterGlobalEnterpriseCenter mode="compliance" />
+          </MotionBox>
+        );
+
+      case 'regional-management':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <RecruiterGlobalEnterpriseCenter mode="regional-management" />
+          </MotionBox>
+        );
+
+      case 'automation-center':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterAutomationCenter
+                recruiterId={user.id}
+                recruiterName={recruiterProfile?.hr_name || recruiterProfile?.company_name || 'Recruiter'}
+                jobs={jobs.map((job) => ({ id: String(job.id), title: String(job.title || 'Untitled Job') }))}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'messages':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <RecruiterMessagingCenter
+                recruiterId={user.id}
+                pendingTarget={pendingChatTarget}
+                onPendingTargetHandled={() => setPendingChatTarget(null)}
+                onOpenInterviewManagement={(payload) => {
+                  setPendingChatTarget({
+                    candidateId: payload.candidateId,
+                    candidateName: payload.candidateName,
+                    source: 'interview-management',
+                    action: 'invite_interview',
+                    jobId: payload.jobId,
+                    jobTitle: payload.jobTitle,
+                  });
+                  setCurrentTab('interview-management');
+                }}
+              />
+            )}
+          </MotionBox>
+        );
+
+      case 'interview-management':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && <InterviewManagement recruiterId={user.id} />}
+          </MotionBox>
+        );
+
       case 'applicants':
         return (
           <MotionBox
@@ -358,7 +782,7 @@ export const RecruiterDashboard: React.FC = () => {
             >
               Applicants
             </Typography>
-            {user?.id && <ViewApplicants recruiterId={user.id} onChatClick={handleChatClick} />}
+            {user?.id && <ViewApplicants recruiterId={user.id} onChatClick={(candidateId, candidateName) => handleChatClick(candidateId, candidateName, 'applicants', 'message')} />}
           </MotionBox>
         );
 
@@ -425,7 +849,7 @@ export const RecruiterDashboard: React.FC = () => {
                     <RecommendedCandidates
                       recruiterId={user.id}
                       jobId={recommendedJobId}
-                      onMessageClick={handleChatClick}
+                      onMessageClick={(candidateId, candidateName) => handleChatClick(candidateId, candidateName, 'recommended', 'message')}
                     />
                   </Suspense>
                 )}
@@ -451,7 +875,7 @@ export const RecruiterDashboard: React.FC = () => {
             >
               Find Candidates
             </Typography>
-            {user?.id && <CandidateSearch recruiterId={user.id} onChatClick={handleChatClick} />}
+            {user?.id && <CandidateSearch recruiterId={user.id} onChatClick={(candidateId, candidateName) => handleChatClick(candidateId, candidateName, 'find-candidates', 'message')} />}
           </MotionBox>
         );
 
@@ -472,7 +896,7 @@ export const RecruiterDashboard: React.FC = () => {
             >
               Talent Pool
             </Typography>
-            {user?.id && <TalentPool recruiterId={user.id} onChatClick={handleChatClick} />}
+            {user?.id && <TalentPool recruiterId={user.id} onChatClick={(candidateId, candidateName) => handleChatClick(candidateId, candidateName, 'talent-pool', 'message')} />}
           </MotionBox>
         );
 
@@ -550,6 +974,25 @@ export const RecruiterDashboard: React.FC = () => {
           </MotionBox>
         );
 
+      case 'employer-branding':
+        return (
+          <MotionBox
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {user?.id && (
+              <EmployerBrandingCenter
+                recruiterId={user.id}
+                recruiterName={recruiterProfile?.company_name || recruiterProfile?.companyName || 'Company'}
+                recruiterEmail={recruiterProfile?.company_email || recruiterProfile?.companyEmail || ''}
+                recruiterProfile={recruiterProfile}
+                jobs={jobs as Array<Record<string, unknown>>}
+              />
+            )}
+          </MotionBox>
+        );
+
       case 'settings':
         return (
           <MotionBox
@@ -591,10 +1034,10 @@ export const RecruiterDashboard: React.FC = () => {
       companyLogo={recruiterProfile?.logo_url}
       notificationCount={notificationsCount}
       unreadMessagesCount={unreadMessagesCount}
-      credits={credits?.available_credits || 0}
-      planName={subscription?.plan || 'Free'}
+      credits={layoutCredits}
+      planName={layoutPlanName}
       onNotificationsClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
-      onMessagesClick={() => navigate(ROUTES.MESSAGING)}
+      onMessagesClick={() => setCurrentTab('messages')}
       onProfileClick={() => setCurrentTab('company-profile')}
       onSettingsClick={() => setCurrentTab('settings')}
     >

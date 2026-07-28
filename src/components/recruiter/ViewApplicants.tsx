@@ -840,7 +840,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                                 <BlockIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                            <IconButton size="small" onClick={() => onChatClick?.(applicant.user_id, profile?.name || 'Candidate')} title="Send message"><MessageIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => onChatClick?.(applicant.user_id, profile?.name || profile?.full_name || 'Candidate')} title="Send message"><MessageIcon fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
                       );

@@ -12,6 +12,8 @@ import {
   SettingOutlined,
   TeamOutlined,
   ToolOutlined,
+  ExperimentOutlined,
+  GlobalOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { ROUTES } from '../constants';
@@ -19,19 +21,25 @@ import { ROUTES } from '../constants';
 const { Sider } = Layout;
 
 const items = [
-  { label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD, icon: <DashboardOutlined /> },
-  { label: 'Users', to: ROUTES.ADMIN_USERS, icon: <UserOutlined /> },
+  { label: 'Super Admin Dashboard', to: ROUTES.ADMIN_DASHBOARD, icon: <DashboardOutlined /> },
+  { label: 'Organizations', to: ROUTES.ADMIN_USERS, icon: <UserOutlined /> },
   { label: 'Recruiters', to: ROUTES.ADMIN_RECRUITERS, icon: <TeamOutlined /> },
   { label: 'Candidates', to: ROUTES.ADMIN_CANDIDATES, icon: <TeamOutlined /> },
   { label: 'Jobs', to: ROUTES.ADMIN_JOBS, icon: <ToolOutlined /> },
   { label: 'Applications', to: ROUTES.ADMIN_APPLICATIONS, icon: <FileSearchOutlined /> },
-  { label: 'Customer Care', to: ROUTES.ADMIN_CUSTOMER_CARE, icon: <CustomerServiceOutlined /> },
-  { label: 'Subscribers', to: ROUTES.ADMIN_SUBSCRIPTIONS, icon: <DatabaseOutlined /> },
-  { label: 'Analytics', to: ROUTES.ADMIN_ANALYTICS, icon: <BarChartOutlined /> },
-  { label: 'Bulk Activities', to: ROUTES.ADMIN_BULK_IMPORT, icon: <AppstoreOutlined /> },
-  { label: 'Data Integrity', to: ROUTES.ADMIN_DATA_INTEGRITY, icon: <BugOutlined /> },
-  { label: 'System Health', to: ROUTES.ADMIN_SYSTEM_HEALTH, icon: <BarChartOutlined /> },
-  { label: 'Settings', to: ROUTES.ADMIN_SETTINGS, icon: <SettingOutlined /> },
+  { label: 'Support Center', to: ROUTES.ADMIN_CUSTOMER_CARE, icon: <CustomerServiceOutlined /> },
+  { label: 'Communities', to: ROUTES.ADMIN_COMMUNITIES, icon: <GlobalOutlined /> },
+  { label: 'Subscriptions', to: ROUTES.ADMIN_SUBSCRIPTIONS, icon: <DatabaseOutlined /> },
+  { label: 'Platform Analytics', to: ROUTES.ADMIN_ANALYTICS, icon: <BarChartOutlined /> },
+  { label: 'Assessment Library', to: ROUTES.ADMIN_ASSESSMENT_LIBRARY, icon: <ExperimentOutlined /> },
+  { label: 'Global Settings', to: ROUTES.ADMIN_GLOBAL_SETTINGS, icon: <GlobalOutlined /> },
+  { label: 'Localization', to: ROUTES.ADMIN_LOCALIZATION, icon: <GlobalOutlined /> },
+  { label: 'Compliance', to: ROUTES.ADMIN_COMPLIANCE, icon: <SettingOutlined /> },
+  { label: 'Regional Management', to: ROUTES.ADMIN_REGIONAL_MANAGEMENT, icon: <TeamOutlined /> },
+  { label: 'Data Export', to: ROUTES.ADMIN_BULK_IMPORT, icon: <AppstoreOutlined /> },
+  { label: 'Moderation', to: ROUTES.ADMIN_DATA_INTEGRITY, icon: <BugOutlined /> },
+  { label: 'System Monitoring', to: ROUTES.ADMIN_SYSTEM_HEALTH, icon: <BarChartOutlined /> },
+  { label: 'Platform Settings', to: ROUTES.ADMIN_SETTINGS, icon: <SettingOutlined /> },
 ];
 
 type AdminSidebarProps = {
@@ -70,7 +78,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     >
       <div style={{ height: 70, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? 0 : '0 18px', borderBottom: '1px solid rgba(148, 163, 184, 0.14)' }}>
         <Typography.Title level={5} style={{ margin: 0, color: '#0f172a' }}>
-          {collapsed ? 'AD' : 'Admin Desk'}
+          {collapsed ? 'SA' : 'Super Admin'}
         </Typography.Title>
       </div>
 

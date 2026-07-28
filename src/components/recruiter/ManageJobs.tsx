@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import {
   Edit as EditIcon,
+  SettingsSuggest as SettingsSuggestIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
@@ -34,6 +35,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import type { Job } from '../../types';
 import { DeleteActionButton } from '@components/common/DeleteActionButton';
+import { JobAutomationPanel } from '@components/recruiter/RecruiterAutomationCenter';
 
 interface ManageJobsProps {
   recruiterId: string;
@@ -48,6 +50,8 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [editFormData, setEditFormData] = useState<Partial<Job>>({});
+  const [automationDialogOpen, setAutomationDialogOpen] = useState(false);
+  const [automationJob, setAutomationJob] = useState<Job | null>(null);
 
   useEffect(() => {
     fetchJobs();
@@ -75,6 +79,11 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
   const handleDeleteClick = (jobId: string) => {
     setSelectedJobId(jobId);
     setDeleteConfirmOpen(true);
+  };
+
+  const handleAutomationClick = (job: Job) => {
+    setAutomationJob(job);
+    setAutomationDialogOpen(true);
   };
 
   const handleEditSave = async () => {
@@ -181,6 +190,13 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleAutomationClick(job)}
+                        title="Job automations"
+                      >
+                        <SettingsSuggestIcon fontSize="small" />
+                      </IconButton>
                       <DeleteActionButton
                         onClick={() => handleDeleteClick(job.id)}
                         ariaLabel="Delete job"
@@ -268,6 +284,22 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
           <Button color="error" variant="contained" onClick={handleDeleteConfirm}>
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={automationDialogOpen} onClose={() => setAutomationDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Job Automation</DialogTitle>
+        <DialogContent dividers>
+          {automationJob && (
+            <JobAutomationPanel
+              recruiterId={recruiterId}
+              jobId={String(automationJob.id)}
+              jobTitle={String(automationJob.title || 'Untitled Job')}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAutomationDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </motion.div>

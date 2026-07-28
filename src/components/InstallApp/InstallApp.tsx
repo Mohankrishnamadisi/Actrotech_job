@@ -1,43 +1,42 @@
-import React, { useState } from 'react';
-import usePWA from '../../hooks/usePWA';
-import InstallPromptDialog from './InstallPromptDialog';
+import React, { Suspense } from 'react';
+import usePWAInstall from '@hooks/usePWAInstall';
 import '../../styles/installAppButton.css';
 
-export const InstallApp: React.FC = () => {
-  const { deferredPrompt, isInstalled, promptInstall } = usePWA();
-  const [openDialog, setOpenDialog] = useState(false);
+const PWAInstallModal = React.lazy(() => import('./PWAInstallModal'));
 
-  const handleOpen = () => {
-    setOpenDialog(true);
-  };
+export const InstallApp: React.FC = () => {
+  const {
+    isInstalled,
+    promptInstall,
+    availability,
+    platform,
+    iosModalOpen,
+    closeIosInstructions,
+  } = usePWAInstall();
 
   const handleInstall = async () => {
-    if (!deferredPrompt) {
-      setOpenDialog(true);
-      return;
-    }
-
-    setOpenDialog(false);
     await promptInstall();
   };
 
-  if (isInstalled) return null;
+  if (isInstalled || availability === 'already_installed' || availability === 'unsupported') return null;
 
   return (
     <>
       <button
-        onClick={handleOpen}
+        onClick={handleInstall}
         type="button"
         className="install-app-button install-app-type1"
-        aria-label="Install App"
+        aria-label="Install app"
+        title="Install app"
       >
       </button>
-      <InstallPromptDialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        onInstall={handleInstall}
-        fallbackMessage={!deferredPrompt ? 'If installation does not appear, use Chrome menu → Add to Home screen.' : undefined}
-      />
+      <Suspense fallback={null}>
+        <PWAInstallModal
+          open={iosModalOpen}
+          platform={platform}
+          onClose={closeIosInstructions}
+        />
+      </Suspense>
     </>
   );
 };

@@ -127,6 +127,12 @@ export const Navbar: React.FC = () => {
   ];
 
   const featureTools = [
+    { label: 'Community', to: ROUTES.DASHBOARD_COMMUNITY },
+    { label: 'Referrals', to: ROUTES.DASHBOARD_REFERRALS },
+    { label: 'Mentorship', to: ROUTES.DASHBOARD_MENTORSHIP },
+    { label: 'Events', to: ROUTES.DASHBOARD_EVENTS },
+    { label: 'Assessments', to: ROUTES.DASHBOARD_ASSESSMENTS },
+    { label: 'AI Career Hub', to: ROUTES.DASHBOARD_AI_CAREER_HUB },
     { label: 'Recommended Jobs', to: '/dashboard/recommended-jobs' },
     { label: 'Remote Dashboard', to: '/dashboard/remote-jobs' },
     { label: 'Mock Interviews', to: '/dashboard/mock-interviews' },
@@ -470,9 +476,12 @@ export const Navbar: React.FC = () => {
 
             <Box
               sx={{
-                display: { xs: 'none', md: 'flex' },
+                display: 'flex',
                 width: { xs: '100%', sm: 'auto' },
                 justifyContent: { xs: 'center', sm: 'flex-end' },
+                transform: { xs: 'scale(0.78)', sm: 'scale(0.9)', md: 'scale(1)' },
+                transformOrigin: 'right center',
+                mr: { xs: -1.4, sm: -0.3, md: 0 },
               }}
             >
               <InstallApp />

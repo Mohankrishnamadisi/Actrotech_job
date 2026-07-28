@@ -143,3 +143,4 @@ export { useThemeMode } from '../context/ThemeContext';
 export { useMobileDetect } from './useMobileDetect';
 export { useNotificationAlerts } from './useNotificationAlerts';
 export { useTalentPool } from './useTalentPool';
+export { usePWA, usePWAInstall } from './usePWA';

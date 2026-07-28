@@ -35,7 +35,7 @@ export const TalentPoolProfileDialog: React.FC<TalentPoolProfileDialogProps> = (
 }) => {
   const profile = entry?.profiles;
   const skills = normalizeSkills(profile?.skills);
-  const name = profile?.name || 'Candidate';
+  const name = profile?.name || profile?.full_name || 'Candidate';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

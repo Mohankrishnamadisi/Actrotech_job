@@ -18,22 +18,47 @@ import {
   Home as HomeIcon,
   Dashboard as DashboardIcon,
   Work as WorkIcon,
+  Event as EventIcon,
+  Mail as MailIcon,
+  QueryStats as QueryStatsIcon,
+  SmartToy as SmartToyIcon,
+  SettingsSuggest as SettingsSuggestIcon,
   People as PeopleIcon,
   AutoAwesome as AutoAwesomeIcon,
   Search as SearchIcon,
   AccountTree as AccountTreeIcon,
   BusinessCenter as BusinessCenterIcon,
+  BrandingWatermark as BrandingWatermarkIcon,
   FolderSpecial as PoolIcon,
   LocalOffer as TagIcon,
-  Settings as SettingsIcon,
-  CreditScore as CreditScoreIcon,
-  Logout as LogoutIcon,
+  Group as GroupIcon,
+  IntegrationInstructions as IntegrationInstructionsIcon,
+  Receipt as ReceiptIcon,
+  TravelExplore as MarketIntelligenceIcon,
+  Security as SecurityCenterIcon,
+  Apartment as OrganizationIcon,
+  PhonelinkSetup as MobilePwaIcon,
+  AssignmentTurnedIn as AssessmentsIcon,
+  Diversity3 as TalentCommunityIcon,
+  Handshake as EmployeeReferralsIcon,
+  DeveloperMode as DeveloperPortalIcon,
+  Api as ApiManagementIcon,
+  Storefront as MarketplaceIcon,
+  Webhook as WebhooksIcon,
+  Insights as ExecutiveIntelligenceIcon,
+  Assessment as BusinessIntelligenceIcon,
+  Storage as DataWarehouseIcon,
+  Psychology as AiInsightsIcon,
+  ShowChart as ForecastingIcon,
+  Public as GlobalSettingsIcon,
+  Translate as LocalizationMenuIcon,
+  Gavel as ComplianceMenuIcon,
+  Language as RegionalManagementIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuthStore } from '@store/index';
 import { themeColors } from '@styles/recruiterTheme';
 
 interface RecruiterSidebarProps {
@@ -41,6 +66,8 @@ interface RecruiterSidebarProps {
   currentTab?: string;
   companyName?: string;
   companyLogo?: string;
+  credits?: number;
+  planName?: string;
 }
 
 const MotionBox = motion(Box);
@@ -50,26 +77,54 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
   currentTab = 'overview',
   companyName = 'Your Company',
   companyLogo,
+  credits = 0,
+  planName = 'Free',
 }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { logout } = useAuthStore();
 
   const menuItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, color: '#6366F1', external: true },
     { id: 'overview', label: 'Dashboard', icon: DashboardIcon, color: '#0066FF' },
     { id: 'jobs', label: 'Jobs', icon: WorkIcon, color: '#7C3AED' },
+    { id: 'analytics', label: 'Analytics', icon: QueryStatsIcon, color: '#2563EB' },
+    { id: 'ai-hiring-assistant', label: 'AI Hiring Assistant', icon: SmartToyIcon, color: '#7C2D12' },
+    { id: 'team-management', label: 'Team Management', icon: GroupIcon, color: '#1D4ED8' },
+    { id: 'integrations', label: 'Integrations', icon: IntegrationInstructionsIcon, color: '#0C4A6E' },
+    { id: 'market-intelligence', label: 'Market Intelligence', icon: MarketIntelligenceIcon, color: '#0E7490' },
+    { id: 'security-center', label: 'Security Center', icon: SecurityCenterIcon, color: '#DC2626' },
+    { id: 'organization', label: 'Organization', icon: OrganizationIcon, color: '#0F766E' },
+    { id: 'assessments', label: 'Assessments', icon: AssessmentsIcon, color: '#2563EB' },
+    { id: 'employee-referrals', label: 'Employee Referrals', icon: EmployeeReferralsIcon, color: '#0E7490' },
+    { id: 'talent-community', label: 'Talent Community', icon: TalentCommunityIcon, color: '#1D4ED8' },
+    { id: 'mobile-pwa', label: 'Mobile & PWA', icon: MobilePwaIcon, color: '#0284C7' },
+    { id: 'developer-portal', label: 'Developer Portal', icon: DeveloperPortalIcon, color: '#1D4ED8' },
+    { id: 'api-management', label: 'API Management', icon: ApiManagementIcon, color: '#0891B2' },
+    { id: 'marketplace', label: 'Marketplace', icon: MarketplaceIcon, color: '#0F766E' },
+    { id: 'webhooks', label: 'Webhooks', icon: WebhooksIcon, color: '#B45309' },
+    { id: 'executive-intelligence', label: 'Executive Intelligence', icon: ExecutiveIntelligenceIcon, color: '#1E3A8A' },
+    { id: 'business-intelligence', label: 'Business Intelligence', icon: BusinessIntelligenceIcon, color: '#0F766E' },
+    { id: 'data-warehouse', label: 'Data Warehouse', icon: DataWarehouseIcon, color: '#334155' },
+    { id: 'ai-insights', label: 'AI Insights', icon: AiInsightsIcon, color: '#0C4A6E' },
+    { id: 'forecasting', label: 'Forecasting', icon: ForecastingIcon, color: '#0E7490' },
+    { id: 'global-settings', label: 'Global Settings', icon: GlobalSettingsIcon, color: '#1E3A8A' },
+    { id: 'localization', label: 'Localization', icon: LocalizationMenuIcon, color: '#0C4A6E' },
+    { id: 'compliance', label: 'Compliance', icon: ComplianceMenuIcon, color: '#166534' },
+    { id: 'regional-management', label: 'Regional Management', icon: RegionalManagementIcon, color: '#0F766E' },
+    { id: 'automation-center', label: 'Automation Center', icon: SettingsSuggestIcon, color: '#0F766E' },
+    { id: 'messages', label: 'Messages', icon: MailIcon, color: '#10B981' },
+    { id: 'interview-management', label: 'Interview Management', icon: EventIcon, color: '#0EA5E9' },
     { id: 'company-profile', label: 'Company Profile', icon: BusinessCenterIcon, color: '#0EA5E9' },
+    { id: 'employer-branding', label: 'Employer Branding', icon: BrandingWatermarkIcon, color: '#C2410C' },
     { id: 'applicants', label: 'Applicants', icon: PeopleIcon, color: '#10B981' },
     { id: 'recommended', label: 'Recommended', icon: AutoAwesomeIcon, color: '#F59E0B' },
     { id: 'find-candidates', label: 'Find Candidates', icon: SearchIcon, color: '#14B8A6' },
     { id: 'talent-pool', label: 'Talent Pool', icon: PoolIcon, color: '#06B6D4' },
     { id: 'tags', label: 'Tags', icon: TagIcon, color: '#EC4899' },
     { id: 'ats-pipeline', label: 'ATS Pipeline', icon: AccountTreeIcon, color: '#F97316' },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon, color: '#4F46E5' },
-    { id: 'credits', label: 'Credits', icon: CreditScoreIcon, color: '#8B5CF6' },
+    { id: 'billing-subscription', label: 'Billing & Subscription', icon: ReceiptIcon, color: '#8B5CF6' },
   ];
 
   const handleMenuClick = (itemId: string) => {
@@ -81,11 +136,6 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
     setMobileOpen(false);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   const sidebarContent = (
     <MotionBox
       initial={{ opacity: 0 }}
@@ -95,6 +145,8 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
         backgroundColor: '#FFFFFF',
         borderRight: `1px solid ${themeColors.border}`,
       }}
@@ -139,7 +191,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
       </Box>
 
       {/* Navigation Items */}
-      <List sx={{ flex: 1, py: 1 }}>
+      <List sx={{ flex: 1, minHeight: 0, py: 1, overflowY: 'auto' }}>
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id && !item.external;
@@ -175,9 +227,15 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
+                    secondary={item.id === 'billing-subscription' ? `${credits} Credits • ${planName}` : undefined}
                     primaryTypographyProps={{
                       fontSize: '0.875rem',
                       fontWeight: isActive ? 600 : 500,
+                    }}
+                    secondaryTypographyProps={{
+                      fontSize: '0.72rem',
+                      color: isActive ? item.color : themeColors.text.tertiary,
+                      sx: { mt: 0.1, lineHeight: 1.2 },
                     }}
                   />
                 </ListItemButton>
@@ -187,58 +245,6 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         })}
       </List>
 
-      <Divider sx={{ borderColor: themeColors.border }} />
-
-      {/* Bottom Actions */}
-      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={() => handleMenuClick('settings')}
-            sx={{
-              borderRadius: '8px',
-              color: themeColors.text.secondary,
-              '&:hover': {
-                backgroundColor: themeColors.hover,
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 36 }}>
-              <SettingsIcon sx={{ fontSize: '1.25rem' }} />
-            </ListItemIcon>
-            <ListItemText
-              primary="Settings"
-              primaryTypographyProps={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={handleLogout}
-            sx={{
-              borderRadius: '8px',
-              color: themeColors.text.secondary,
-              '&:hover': {
-                backgroundColor: '#FEE2E2',
-                color: themeColors.danger,
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 36 }}>
-              <LogoutIcon sx={{ fontSize: '1.25rem' }} />
-            </ListItemIcon>
-            <ListItemText
-              primary="Logout"
-              primaryTypographyProps={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-      </Box>
     </MotionBox>
   );
 

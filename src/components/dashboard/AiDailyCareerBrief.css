@@ -1,0 +1,65 @@
+.ai-daily-brief {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-daily-brief::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(37, 99, 235, 0.13), rgba(14, 116, 144, 0.11), rgba(15, 23, 42, 0.1));
+  pointer-events: none;
+}
+
+.ai-daily-brief::after {
+  content: '';
+  position: absolute;
+  top: -110px;
+  right: -140px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0) 72%);
+  pointer-events: none;
+}
+
+.ai-brief-glass {
+  backdrop-filter: blur(12px);
+}
+
+.ai-brief-summary-card,
+.ai-brief-action-card,
+.ai-brief-alert-card,
+.ai-brief-momentum-card,
+.ai-brief-motivation-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.ai-brief-summary-card:hover,
+.ai-brief-action-card:hover,
+.ai-brief-alert-card:hover,
+.ai-brief-momentum-card:hover,
+.ai-brief-motivation-card:hover {
+  transform: translateY(-3px);
+}
+
+.ai-priority-high {
+  border-left: 4px solid #dc2626;
+}
+
+.ai-priority-medium {
+  border-left: 4px solid #d97706;
+}
+
+.ai-priority-low {
+  border-left: 4px solid #16a34a;
+}
+
+@media (max-width: 900px) {
+  .ai-daily-brief::after {
+    width: 220px;
+    height: 220px;
+    top: -90px;
+    right: -100px;
+  }
+}

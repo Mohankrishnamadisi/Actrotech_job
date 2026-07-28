@@ -47,7 +47,11 @@ import MockInterviews from '@pages/dashboard/tools/MockInterviews';
 import ResumeReview from '@pages/dashboard/tools/ResumeReview';
 import PriorityApply from '@pages/dashboard/tools/PriorityApply';
 import FreeNotesPage from '@pages/dashboard/tools/FreeNotes';
+import AiCareerHub from '@pages/dashboard/AiCareerHub';
+import AssessmentsPage from '@pages/dashboard/Assessments';
+import CommunityNetworkingHub from '@pages/dashboard/CommunityNetworkingHub';
 import MessagingPage from '@pages/Messaging';
+import { CompanyCareerPage } from '@pages/CompanyCareerPage';
 import AdminLayout from './admin/AdminLayout';
 import DashboardOverview from './admin/pages/DashboardOverview';
 import UsersPage from './admin/pages/UsersPage';
@@ -61,6 +65,9 @@ import DataIntegrity from './admin/pages/DataIntegrity';
 import SystemHealthPage from './admin/pages/SystemHealth';
 import SettingsPage from './admin/pages/Settings';
 import AdminControlCenter from './admin/pages/AdminControlCenter';
+import AssessmentLibrary from './admin/pages/AssessmentLibrary';
+import PlatformCommunities from './admin/pages/PlatformCommunities';
+import GlobalEnterprisePlatform from './admin/pages/GlobalEnterprisePlatform';
 import { RecruiterSubscriptionPage } from '@pages/recruiter/RecruiterSubscriptionPage';
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -98,6 +105,7 @@ const AnimatedRoutes: React.FC = () => {
         <Route path={ROUTES.HOME} element={<Home />} />
         <Route path={ROUTES.JOBS} element={<Jobs />} />
         <Route path={ROUTES.JOB_DETAILS} element={<JobDetails />} />
+          <Route path={ROUTES.COMPANY_CAREER_PAGE} element={<CompanyCareerPage />} />
         <Route path={ROUTES.PRICING} element={<Pricing />} />
         <Route path={ROUTES.PRIVACY_POLICY} element={<PrivacyPolicy />} />
         <Route path={ROUTES.TERMS_CONDITIONS} element={<TermsConditions />} />
@@ -204,6 +212,54 @@ const AnimatedRoutes: React.FC = () => {
           }
         />
         <Route
+          path={ROUTES.DASHBOARD_ASSESSMENTS}
+          element={
+            <ProtectedRoute>
+              <AssessmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_COMMUNITY}
+          element={
+            <ProtectedRoute>
+              <CommunityNetworkingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_REFERRALS}
+          element={
+            <ProtectedRoute>
+              <CommunityNetworkingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_MENTORSHIP}
+          element={
+            <ProtectedRoute>
+              <CommunityNetworkingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_EVENTS}
+          element={
+            <ProtectedRoute>
+              <CommunityNetworkingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_AI_CAREER_HUB}
+          element={
+            <ProtectedRoute>
+              <AiCareerHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path={ROUTES.DASHBOARD_FREE_NOTES}
           element={
             <ProtectedRoute>
@@ -249,6 +305,12 @@ const AnimatedRoutes: React.FC = () => {
           <Route path={ROUTES.ADMIN_DATA_INTEGRITY} element={<AdminControlCenter />} />
           <Route path={ROUTES.ADMIN_SYSTEM_HEALTH} element={<AdminControlCenter />} />
           <Route path={ROUTES.ADMIN_SETTINGS} element={<AdminControlCenter />} />
+          <Route path={ROUTES.ADMIN_ASSESSMENT_LIBRARY} element={<AssessmentLibrary />} />
+          <Route path={ROUTES.ADMIN_COMMUNITIES} element={<PlatformCommunities />} />
+          <Route path={ROUTES.ADMIN_GLOBAL_SETTINGS} element={<GlobalEnterprisePlatform mode="global-settings" />} />
+          <Route path={ROUTES.ADMIN_LOCALIZATION} element={<GlobalEnterprisePlatform mode="localization" />} />
+          <Route path={ROUTES.ADMIN_COMPLIANCE} element={<GlobalEnterprisePlatform mode="compliance" />} />
+          <Route path={ROUTES.ADMIN_REGIONAL_MANAGEMENT} element={<GlobalEnterprisePlatform mode="regional-management" />} />
         </Route>
         <Route
           path={ROUTES.MESSAGING}

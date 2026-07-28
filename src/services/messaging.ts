@@ -22,7 +22,49 @@ export interface Conversation {
   isInitiatedByRecruiter: boolean;
 }
 
+const isGenericDisplayName = (value: unknown): boolean => {
+  const text = String(value || '').trim().toLowerCase();
+  return !text || text === 'candidate' || text === 'unknown' || text === 'recruiter';
+};
+
+const resolveCanonicalUserId = async (rawId: string): Promise<string> => {
+  const trimmed = String(rawId || '').trim();
+  if (!trimmed) return '';
+
+  try {
+    const { data: byId } = await supabase
+      .from('profiles')
+      .select('id, user_id')
+      .eq('id', trimmed)
+      .maybeSingle();
+
+    if (byId) {
+      const resolved = String((byId as any).user_id || (byId as any).id || '').trim();
+      if (resolved) return resolved;
+    }
+
+    const { data: byUserId } = await supabase
+      .from('profiles')
+      .select('id, user_id')
+      .eq('user_id', trimmed)
+      .maybeSingle();
+
+    if (byUserId) {
+      const resolved = String((byUserId as any).user_id || (byUserId as any).id || '').trim();
+      if (resolved) return resolved;
+    }
+  } catch {
+    // If profiles lookup fails, continue with raw id.
+  }
+
+  return trimmed;
+};
+
 export const messagingService = {
+  async resolveUserId(rawId: string) {
+    return resolveCanonicalUserId(rawId);
+  },
+
   // Send message (only recruiter can initiate, candidate can only reply)
   async sendMessage(
     senderId: string,
@@ -32,15 +74,18 @@ export const messagingService = {
     userRole?: 'recruiter' | 'candidate'
   ) {
     try {
-      let conversation = await this.getConversation(senderId, receiverId);
+      const canonicalSenderId = String(senderId || '').trim();
+      const canonicalReceiverId = await resolveCanonicalUserId(receiverId);
+
+      let conversation = await this.getConversation(canonicalSenderId, canonicalReceiverId);
 
       if (!conversation) {
         if (userRole !== 'recruiter') {
           throw new Error('Only recruiters can initiate conversations');
         }
 
-        const recruiterId = senderId;
-        const candidateId = receiverId;
+        const recruiterId = canonicalSenderId;
+        const candidateId = canonicalReceiverId;
         console.log('No conversation found. Creating new conversation', {
           recruiterId,
           candidateId,
@@ -62,7 +107,7 @@ export const messagingService = {
           const sqlError = error as any;
           if (sqlError?.code === '23505' || sqlError?.details?.includes('duplicate key value')) {
             console.warn('Conversation already exists after insert race, refetching existing conversation');
-            conversation = await this.getConversation(senderId, receiverId);
+            conversation = await this.getConversation(canonicalSenderId, canonicalReceiverId);
           } else {
             throw error;
           }
@@ -84,8 +129,8 @@ export const messagingService = {
         .insert([
           {
             conversation_id: conversation.id,
-            sender_id: senderId,
-            receiver_id: receiverId,
+            sender_id: canonicalSenderId,
+            receiver_id: canonicalReceiverId,
             content,
             attachments: attachments || [],
             is_read: false,
@@ -105,11 +150,13 @@ export const messagingService = {
   // Get conversation between two users
   async getConversation(userId1: string, userId2: string) {
     try {
+      const id1 = await resolveCanonicalUserId(userId1);
+      const id2 = await resolveCanonicalUserId(userId2);
       const { data, error } = await supabase
         .from('conversations')
         .select('id')
         .or(
-          `and(recruiter_id.eq.${userId1},candidate_id.eq.${userId2}),and(recruiter_id.eq.${userId2},candidate_id.eq.${userId1})`
+          `and(recruiter_id.eq.${id1},candidate_id.eq.${id2}),and(recruiter_id.eq.${id2},candidate_id.eq.${id1})`
         )
         .single();
 
@@ -119,6 +166,37 @@ export const messagingService = {
       console.error('Get conversation error:', error);
       return null;
     }
+  },
+
+  async ensureConversation(recruiterId: string, candidateId: string) {
+    const canonicalRecruiterId = String(recruiterId || '').trim();
+    const canonicalCandidateId = await resolveCanonicalUserId(candidateId);
+    if (!canonicalRecruiterId || !canonicalCandidateId) return null;
+
+    const existing = await this.getConversation(canonicalRecruiterId, canonicalCandidateId);
+    if (existing?.id) return existing;
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert([
+        {
+          recruiter_id: canonicalRecruiterId,
+          candidate_id: canonicalCandidateId,
+          initiated_by_recruiter: true,
+        },
+      ])
+      .select('id')
+      .single();
+
+    if (error) {
+      const sqlError = error as any;
+      if (sqlError?.code === '23505' || sqlError?.details?.includes('duplicate key value')) {
+        return this.getConversation(canonicalRecruiterId, canonicalCandidateId);
+      }
+      throw error;
+    }
+
+    return data;
   },
 
   // Get all conversations for user
@@ -161,6 +239,28 @@ export const messagingService = {
 
             participantName = (participantData && (participantData.name || participantData.full_name)) || 'Candidate';
             participantAvatar = participantData?.avatar_url;
+
+            // Fallback: fetch candidate profile through job applications linkage.
+            if (isGenericDisplayName(participantName) || !participantAvatar) {
+              const { data: linkedApplication } = await supabase
+                .from('job_applications')
+                .select('profiles(name, full_name, avatar_url)')
+                .eq('user_id', participantId)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              const linkedProfile = (linkedApplication as any)?.profiles;
+              const linkedName = String(linkedProfile?.name || linkedProfile?.full_name || '').trim();
+              const linkedAvatar = String(linkedProfile?.avatar_url || '').trim();
+
+              if (linkedName) participantName = linkedName;
+              if (!participantAvatar && linkedAvatar) participantAvatar = linkedAvatar;
+            }
+
+            if (isGenericDisplayName(participantName)) {
+              participantName = `Candidate ${String(participantId || '').slice(0, 6).toUpperCase()}`;
+            }
           } else {
             // Prefer matching by recruiters.id (which should equal auth.user.id). If not found, fall back to user_id.
             let recruiterData: any = null;

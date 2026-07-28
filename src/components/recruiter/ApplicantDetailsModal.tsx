@@ -38,6 +38,7 @@ import { CandidateNotesPanel } from './CandidateNotesPanel';
 import { ResumeUnlockContact } from './ResumeUnlockContact';
 import { calculateMatchScore, getMatchScoreHex } from '@utils/matchScore';
 import { getApplicantStage, getApplicantTags, getApplicantTalentPools } from './bulkActionsApi';
+import { automationCenterService } from '@services/automationCenter';
 
 interface ApplicantDetailsModalProps {
   open: boolean;
@@ -72,6 +73,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   const [status, setStatus] = useState('applied');
   const [saving, setSaving] = useState(false);
   const [contactUnlocked, setContactUnlocked] = useState(false);
+  const [automationTimeline, setAutomationTimeline] = useState<Array<{ id: string; title: string; note: string; at: string }>>([]);
 
   useEffect(() => {
     if (open && applicantId) {
@@ -87,6 +89,10 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
       setApplicant(application);
       setProfile(application.profiles || null);
       setStatus(application.status || 'applied');
+      if (recruiterId && candidateId) {
+        const timeline = automationCenterService.getCandidateTimelineEvents(recruiterId, candidateId, applicantId);
+        setAutomationTimeline(timeline);
+      }
     } catch (err) {
       console.error('Error fetching applicant details:', err);
       toast.error('Failed to load applicant details');
@@ -132,6 +138,32 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
       if (updatedApplication.profiles) {
         setProfile(updatedApplication.profiles);
       }
+
+      if (recruiterId && candidateId) {
+        const trigger = status === 'shortlisted'
+          ? 'candidate_shortlisted'
+          : status === 'rejected'
+          ? 'candidate_rejected'
+          : 'candidate_moved_stage';
+
+        try {
+          await automationCenterService.processEvent({
+            recruiterId,
+            trigger,
+            candidateId,
+            applicationId: applicant.id,
+            jobId,
+            candidateName: profile?.name || profile?.full_name || 'Candidate',
+            matchScore: matchScore?.score,
+            atsStage: status,
+          });
+          const timeline = automationCenterService.getCandidateTimelineEvents(recruiterId, candidateId, applicant.id);
+          setAutomationTimeline(timeline);
+        } catch (error) {
+          console.warn('Automation processing skipped:', error);
+        }
+      }
+
       toast.success(`Status updated to ${status}`);
       onStatusChange?.();
       onClose();
@@ -567,6 +599,27 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                       candidateId={candidateId}
                       recruiterId={recruiterId}
                     />
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
+
+            {automationTimeline.length > 0 && (
+              <Grid item xs={12}>
+                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>
+                      Automation Timeline
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {automationTimeline.slice(0, 12).map((event) => (
+                        <Box key={event.id} sx={{ p: 1.2, borderRadius: 1.5, border: '1px solid rgba(148,163,184,0.24)', bgcolor: 'rgba(248,250,252,0.7)' }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{event.title}</Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{event.note || '-'}</Typography>
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{new Date(event.at).toLocaleString()}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
                   </CardContent>
                 </MotionCard>
               </Grid>

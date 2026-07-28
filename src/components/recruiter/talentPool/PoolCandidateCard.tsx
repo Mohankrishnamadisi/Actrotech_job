@@ -52,7 +52,7 @@ export const PoolCandidateCard: React.FC<PoolCandidateCardProps> = ({
   disabled = false,
 }) => {
   const profile = entry.profiles;
-  const name = profile?.name || 'Candidate';
+  const name = profile?.name || profile?.full_name || 'Candidate';
   const skills = normalizeSkills(profile?.skills);
   const experience =
     profile?.experience_years != null || profile?.experience_months != null

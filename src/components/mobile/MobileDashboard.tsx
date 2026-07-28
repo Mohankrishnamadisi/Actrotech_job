@@ -246,6 +246,46 @@ export const MobileDashboard: React.FC = () => {
               </Button>
               <Button
                 component={RouterLink}
+                to={ROUTES.DASHBOARD_ASSESSMENTS}
+                variant="outlined"
+                fullWidth
+                size="small"
+                sx={{ py: 1, textTransform: 'none' }}
+              >
+                Assessments
+              </Button>
+              <Button
+                component={RouterLink}
+                to={ROUTES.DASHBOARD_COMMUNITY}
+                variant="outlined"
+                fullWidth
+                size="small"
+                sx={{ py: 1, textTransform: 'none' }}
+              >
+                Community
+              </Button>
+              <Button
+                component={RouterLink}
+                to={ROUTES.DASHBOARD_REFERRALS}
+                variant="outlined"
+                fullWidth
+                size="small"
+                sx={{ py: 1, textTransform: 'none' }}
+              >
+                Referrals
+              </Button>
+              <Button
+                component={RouterLink}
+                to={ROUTES.DASHBOARD_AI_CAREER_HUB}
+                variant="outlined"
+                fullWidth
+                size="small"
+                sx={{ py: 1, textTransform: 'none' }}
+              >
+                AI Career Hub
+              </Button>
+              <Button
+                component={RouterLink}
                 to={ROUTES.DASHBOARD_PROFILE}
                 variant="outlined"
                 fullWidth

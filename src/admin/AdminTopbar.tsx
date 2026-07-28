@@ -230,10 +230,10 @@ const AdminTopbar: React.FC<AdminTopbarProps> = ({
         <Button icon={<LeftOutlined />} onClick={() => navigate(-1)} />
         <div>
           <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', lineHeight: 1.1 }}>
-            Admin / {pageLabel}
+            Super Admin / {pageLabel}
           </Typography.Text>
           <Typography.Title level={5} style={{ margin: 0, lineHeight: 1.25, color: '#0f172a' }}>
-            Admin Portal
+            Platform Super Admin Portal
           </Typography.Title>
         </div>
       </Space>

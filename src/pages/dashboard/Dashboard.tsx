@@ -27,6 +27,7 @@ import {
   Notifications as NotificationsIcon,
   Person as PersonIcon,
   Settings as SettingsIcon,
+  AutoAwesome as AiCareerHubIcon,
   Visibility as VisibilityIcon,
   Work as WorkIcon,
 } from '@mui/icons-material';
@@ -36,6 +37,7 @@ import { useTheme } from '@mui/material/styles';
 
 import { Layout } from '@components/layout/Layout';
 import { UnlockProButton } from '@components/common/UnlockProButton';
+import RecruiterActivityCenter, { type RecruiterActivityQuickAction } from '@components/dashboard/RecruiterActivityCenter';
 import SupportWidget from '@components/common/SupportWidget';
 import { supportService } from '@services/support';
 import { ROUTES } from '@constants/index';
@@ -51,6 +53,7 @@ import {
   getCandidateResumeUnlockCount,
   getCandidateResumeUnlockRecruiters,
 } from '@utils/resumeUnlocks';
+import type { RecruiterActivityContext } from '@services/recruiterActivity';
 
 type RecentApplication = {
   id: string;
@@ -308,6 +311,63 @@ export const Dashboard: React.FC = () => {
     [profileViewCount, recentApplications.length, resumeDownloadCount, savedCount],
   );
 
+  const recruiterActivityContext = useMemo<RecruiterActivityContext>(() => {
+    const skillsCount = Array.isArray(profile?.skills) ? profile.skills.length : 0;
+    const assessmentsCompleted = Array.isArray(profile?.assessments)
+      ? profile.assessments.length
+      : Array.isArray(profile?.assessment_history)
+      ? profile.assessment_history.length
+      : 0;
+
+    return {
+      userId: user?.id || '',
+      isPremium: Boolean(subscription),
+      profileCompletion,
+      resumeDownloads: resumeDownloadCount || 0,
+      profileViews: profileViewCount || 0,
+      recruiterMessages: unreadMessagesCount,
+      savedJobs: savedCount,
+      skillsCount,
+      assessmentsCompleted,
+      hasResume: Boolean(profile?.resume_url || profile?.resumeUrl),
+      recentApplications: recentApplications.map((item, index) => ({
+        id: item.id || `app-${index}`,
+        status: item.status,
+        appliedAt: item.applied_at,
+        title: item.jobs?.title,
+        companyName: item.jobs?.company_name,
+      })),
+    };
+  }, [profile, profileCompletion, profileViewCount, recentApplications, resumeDownloadCount, savedCount, subscription, unreadMessagesCount, user?.id]);
+
+  const handleRecruiterActivityQuickAction = (action: RecruiterActivityQuickAction) => {
+    switch (action) {
+      case 'improve-profile':
+        navigate(ROUTES.DASHBOARD_PROFILE);
+        break;
+      case 'update-resume':
+        navigate('/dashboard/resume-review');
+        break;
+      case 'take-assessment':
+        navigate(ROUTES.DASHBOARD_ASSESSMENTS);
+        break;
+      case 'browse-jobs':
+        navigate(ROUTES.JOBS);
+        break;
+      case 'ai-career-hub':
+        navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
+        break;
+      case 'messages':
+        navigate(ROUTES.MESSAGING);
+        break;
+      case 'applications':
+        navigate(ROUTES.DASHBOARD_APPLICATIONS);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <Layout>
       <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
@@ -423,6 +483,15 @@ export const Dashboard: React.FC = () => {
                     }}
                   >
                     Profile
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      closeProfileMenu();
+                      navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
+                    }}
+                  >
+                    <AiCareerHubIcon sx={{ mr: 1, fontSize: 18 }} />
+                    AI Career Hub
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
@@ -643,6 +712,18 @@ export const Dashboard: React.FC = () => {
                     <Button component={RouterLink} to={ROUTES.DASHBOARD_APPLICATIONS} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
                       My applications
                     </Button>
+                    <Button component={RouterLink} to={ROUTES.DASHBOARD_ASSESSMENTS} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
+                      Assessments
+                    </Button>
+                    <Button component={RouterLink} to={ROUTES.DASHBOARD_COMMUNITY} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
+                      Community
+                    </Button>
+                    <Button component={RouterLink} to={ROUTES.DASHBOARD_REFERRALS} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
+                      Referrals
+                    </Button>
+                    <Button component={RouterLink} to={ROUTES.DASHBOARD_AI_CAREER_HUB} variant="outlined" startIcon={<AiCareerHubIcon />} sx={{ justifyContent: 'flex-start' }}>
+                      AI Career Hub
+                    </Button>
                     <Button component={RouterLink} to={ROUTES.DASHBOARD_NOTIFICATIONS} variant="outlined" startIcon={<NotificationsIcon />} sx={{ justifyContent: 'flex-start' }}>
                       Notifications
                     </Button>
@@ -719,11 +800,16 @@ export const Dashboard: React.FC = () => {
           </Grid>
         </Grid>
 
+        <RecruiterActivityCenter
+          context={recruiterActivityContext}
+          onQuickAction={handleRecruiterActivityQuickAction}
+        />
+
         <Card sx={{ mt: 3, borderRadius: 4, bgcolor: theme.palette.background.paper }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Latest application activity
+                Recent Applications
               </Typography>
               <Button component={RouterLink} to={ROUTES.DASHBOARD_APPLICATIONS}>
                 View all ({recentApplications.length})
