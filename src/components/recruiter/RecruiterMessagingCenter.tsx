@@ -1501,18 +1501,57 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
         }, {
           title: 'Offer Messages', value: summary.offerMessages, icon: <OutlinedFlagIcon />, color: themeColors.primary,
         }].map((card) => (
-          <Grid item xs={12} sm={6} md={4} lg={2} key={card.title}>
-            <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Grid item xs={12} sm={6} md={4} lg={2} key={card.title} sx={{ display: 'flex' }}>
+            <Card
+              sx={{
+                borderRadius: 2.5,
+                border: `1px solid ${themeColors.border}`,
+                minHeight: 148,
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                overflow: 'hidden',
+                boxShadow: '0 10px 20px rgba(15, 23, 42, 0.05)',
+              }}
+            >
+              <CardContent sx={{ p: 1.75, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                   <Box>
-                    <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>{card.title}</Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800 }}>{card.value}</Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: themeColors.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.14em',
+                        fontWeight: 700,
+                        mb: 0.5,
+                      }}
+                    >
+                      {card.title}
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.04em' }}>
+                      {card.value}
+                    </Typography>
                   </Box>
-                  <Box sx={{ width: 40, height: 40, borderRadius: 1.5, bgcolor: `${card.color}1a`, color: card.color, display: 'grid', placeItems: 'center' }}>
+                  <Box
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 2,
+                      bgcolor: `${card.color}1A`,
+                      color: card.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
                     {card.icon}
                   </Box>
                 </Box>
+                <Typography variant="caption" sx={{ color: themeColors.text.tertiary, pt: 0.5 }}>
+                  Updated now
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
