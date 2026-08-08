@@ -420,30 +420,93 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                   <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                     Professional Info
                   </Typography>
-                  <Box sx={{ space: 2 }}>
-                    {profile?.skills && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
-                          Skills
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          {(Array.isArray(profile.skills) ? profile.skills : profile.skills.split(',')).map(
-                            (skill: string, idx: number) => (
-                              <Chip key={idx} label={skill.trim()} size="small" variant="outlined" />
-                            )
-                          )}
-                        </Box>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {(profile?.current_designation || profile?.current_company) && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>Current Role</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{profile.current_designation}</Typography>
+                        {profile.current_company && <Typography variant="body2" color="text.secondary">at {profile.current_company}</Typography>}
                       </Box>
                     )}
                     {profile?.experience && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                          Experience
-                        </Typography>
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>Experience</Typography>
                         <Typography variant="body2">{profile.experience}</Typography>
                       </Box>
                     )}
-                    {profile?.education && (
+                    {(profile?.current_ctc || profile?.expected_ctc) && (
+                      <Box sx={{ display: 'flex', gap: 3 }}>
+                        {profile.current_ctc && (
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.75rem' }}>Current CTC</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>₹ {profile.current_ctc}</Typography>
+                          </Box>
+                        )}
+                        {profile.expected_ctc && (
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.75rem' }}>Expected CTC</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>₹ {profile.expected_ctc}</Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+                    {profile?.notice_period && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>Notice Period</Typography>
+                        <Chip label={profile.notice_period} size="small" variant="outlined" />
+                      </Box>
+                    )}
+                    {profile?.skills && profile.skills.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>Key Skills</Typography>
+                        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                          {(Array.isArray(profile.skills) ? profile.skills : profile.skills.split(',')).map((s: string, i: number) => (
+                            <Chip key={i} label={s.trim()} size="small" variant="outlined" />
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                    {Array.isArray(profile?.it_skills) && profile.it_skills.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>IT Skills</Typography>
+                        {profile.it_skills.map((s: any, i: number) => (
+                          <Box key={i} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'center' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 120 }}>{s.skill}</Typography>
+                            {s.version && <Chip label={s.version} size="small" sx={{ fontSize: '0.7rem' }} />}
+                            {s.experience && <Typography variant="caption" color="text.secondary">{s.experience}</Typography>}
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                    {Array.isArray(profile?.preferred_job_titles) && profile.preferred_job_titles.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>Preferred Roles</Typography>
+                        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                          {profile.preferred_job_titles.map((t: string) => (
+                            <Chip key={t} label={t} size="small" color="primary" variant="outlined" />
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                    {profile?.bio && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>Profile Summary</Typography>
+                        <Typography variant="body2" sx={{ lineHeight: 1.7, color: 'text.secondary' }}>{profile.bio}</Typography>
+                      </Box>
+                    )}
+                    {/* Social links */}
+                    {(profile?.linkedin_url || profile?.github_url || profile?.portfolio_url) && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>Online Profiles</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          {profile.linkedin_url && <Typography component="a" href={profile.linkedin_url} target="_blank" variant="body2" sx={{ color: '#0077b5' }}>LinkedIn ↗</Typography>}
+                          {profile.github_url && <Typography component="a" href={profile.github_url} target="_blank" variant="body2" sx={{ color: '#333' }}>GitHub ↗</Typography>}
+                          {profile.portfolio_url && <Typography component="a" href={profile.portfolio_url} target="_blank" variant="body2" sx={{ color: '#6366f1' }}>Portfolio ↗</Typography>}
+                        </Box>
+                      </Box>
+                    )}
+                    {/* Education (text fallback) */}
+                    {profile?.education && !Array.isArray(profile?.education_details?.length) && (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <SchoolIcon sx={{ fontSize: 18 }} />
                         <Typography variant="body2">{profile.education}</Typography>
@@ -533,6 +596,76 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                 </CardContent>
               </MotionCard>
             </Grid>
+
+            {/* Work Experience */}
+            {Array.isArray(profile?.work_experience) && profile.work_experience.length > 0 && (
+              <Grid item xs={12}>
+                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Employment</Typography>
+                    {profile.work_experience.map((exp: any, i: number) => (
+                      <Box key={i} sx={{ mb: i < profile.work_experience.length - 1 ? 2 : 0, pb: i < profile.work_experience.length - 1 ? 2 : 0, borderBottom: i < profile.work_experience.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                        <Typography sx={{ fontWeight: 700 }}>{exp.position || exp.title || exp.role}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>{exp.company || exp.organization}</Typography>
+                        {exp.duration && <Typography variant="caption" color="text.secondary">{exp.duration}</Typography>}
+                        {exp.description && <Typography variant="body2" sx={{ mt: 0.5, color: '#475569', lineHeight: 1.65 }}>{exp.description}</Typography>}
+                      </Box>
+                    ))}
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
+
+            {/* Education */}
+            {Array.isArray(profile?.education_details) && profile.education_details.length > 0 && (
+              <Grid item xs={12} sm={6}>
+                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Education</Typography>
+                    {profile.education_details.map((edu: any, i: number) => (
+                      <Box key={i} sx={{ mb: 1.5 }}>
+                        <Typography sx={{ fontWeight: 700 }}>{edu.degree}{edu.field ? ` – ${edu.field}` : ''}</Typography>
+                        <Typography variant="body2" color="text.secondary">{edu.school}</Typography>
+                        {edu.year && <Typography variant="caption" color="text.secondary">{edu.year}</Typography>}
+                      </Box>
+                    ))}
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
+
+            {/* Certifications & Projects */}
+            {(Array.isArray(profile?.certifications) && profile.certifications.length > 0 ||
+              Array.isArray(profile?.projects) && profile.projects.length > 0) && (
+              <Grid item xs={12} sm={6}>
+                <MotionCard initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <CardContent>
+                    {Array.isArray(profile?.certifications) && profile.certifications.length > 0 && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Certifications</Typography>
+                        {profile.certifications.map((cert: any, i: number) => (
+                          <Box key={i} sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{cert.name}</Typography>
+                            <Typography variant="caption" color="text.secondary">{cert.issuer}{cert.year ? ` · ${cert.year}` : ''}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                    {Array.isArray(profile?.projects) && profile.projects.length > 0 && (
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Projects</Typography>
+                        {profile.projects.map((proj: any, i: number) => (
+                          <Box key={i} sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{proj.title}</Typography>
+                            {proj.description && <Typography variant="caption" color="text.secondary">{proj.description}</Typography>}
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            )}
 
             {/* Resume */}
             {resumeUrl && (

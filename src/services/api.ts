@@ -140,10 +140,10 @@ export const userService = {
 
   async updateProfile(userId: string, updates: Record<string, unknown>) {
     const payload: Record<string, unknown> = { ...updates, updated_at: new Date().toISOString() };
-    
-    // If profile_image_url is being updated, also set it as avatar
-    if (updates.profile_image_url && !updates.avatar) {
-      payload.avatar = updates.profile_image_url;
+
+    // Keep avatar_url in sync with profile_image_url
+    if (updates.profile_image_url && !updates.avatar_url) {
+      payload.avatar_url = updates.profile_image_url;
     }
     
     const { data, error } = await supabase

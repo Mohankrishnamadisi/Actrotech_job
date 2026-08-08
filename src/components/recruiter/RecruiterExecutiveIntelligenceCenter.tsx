@@ -157,7 +157,7 @@ export const RecruiterExecutiveIntelligenceCenter: React.FC<RecruiterExecutiveIn
       </Card>
 
       <Paper sx={{ border: '1px solid #e2e8f0', borderRadius: 2, mb: 2 }}>
-        <Tabs value={tab} onChange={(_, value: IntelligenceTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'fullWidth'} scrollButtons="auto">
+        <Tabs value={tab} onChange={(_, value: IntelligenceTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'scrollable'} scrollButtons="auto" allowScrollButtonsMobile sx={{ minHeight: 54, px: 0.5, '& .MuiTabs-scroller': { overflowX: 'auto !important' }, '& .MuiTabs-scrollButtons': { width: 34, borderRadius: 1, mx: 0.5 }, '& .MuiTab-root': { textTransform: 'none', whiteSpace: 'nowrap', minHeight: 54, minWidth: 'max-content', px: 1.8, fontWeight: 700, fontSize: '0.82rem' } }}>
           <Tab value="executive-dashboard" label="Executive Intelligence" icon={<AnalyticsIcon />} iconPosition="start" />
           <Tab value="business-intelligence" label="Business Intelligence" icon={<BusinessIcon />} iconPosition="start" />
           <Tab value="data-warehouse" label="Data Warehouse" icon={<WarehouseIcon />} iconPosition="start" />

@@ -54,6 +54,7 @@ import {
   Translate as LocalizationMenuIcon,
   Gavel as ComplianceMenuIcon,
   Language as RegionalManagementIcon,
+  ManageAccounts as ManageAccountsIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
@@ -116,7 +117,6 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
     { id: 'automation-center', label: 'Automation Center', icon: SettingsSuggestIcon, color: '#0F766E' },
     { id: 'messages', label: 'Messages', icon: MailIcon, color: '#10B981' },
     { id: 'interview-management', label: 'Interview Management', icon: EventIcon, color: '#0EA5E9' },
-    { id: 'company-profile', label: 'Company Profile', icon: BusinessCenterIcon, color: '#0EA5E9' },
     { id: 'employer-branding', label: 'Employer Branding', icon: BrandingWatermarkIcon, color: '#C2410C' },
     { id: 'applicants', label: 'Applicants', icon: PeopleIcon, color: '#10B981' },
     { id: 'recommended', label: 'Recommended', icon: AutoAwesomeIcon, color: '#F59E0B' },
@@ -125,6 +125,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
     { id: 'tags', label: 'Tags', icon: TagIcon, color: '#EC4899' },
     { id: 'ats-pipeline', label: 'ATS Pipeline', icon: AccountTreeIcon, color: '#F97316' },
     { id: 'billing-subscription', label: 'Billing & Subscription', icon: ReceiptIcon, color: '#8B5CF6' },
+    { id: 'my-details', label: 'My Details', icon: ManageAccountsIcon, color: '#0F766E' },
   ];
 
   const handleMenuClick = (itemId: string) => {

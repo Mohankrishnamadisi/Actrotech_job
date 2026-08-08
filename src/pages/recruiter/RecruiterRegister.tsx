@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Building2, User, Lock, Upload, Eye, EyeOff, ChevronDown, Search, X, Check, AlertCircle
+} from 'lucide-react';
 import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
@@ -16,144 +19,197 @@ import {
 } from '@utils/index';
 import toast from 'react-hot-toast';
 
-// ── Icons (inline SVG, no extra deps) ─────────────────────────────────────────
-const BuildingIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-  </svg>
-);
-const UserIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-);
-const LockIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-);
-const UploadIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-  </svg>
-);
-const CheckIcon = () => (
-  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-  </svg>
-);
-const XIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-const EyeIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-  </svg>
-);
-const EyeOffIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-  </svg>
-);
+// ── Country codes ──────────────────────────────────────────────────────────────
+const CountryCodes = [
+  { code: '+91', name: 'India' },
+  { code: '+1', name: 'USA/Canada' },
+  { code: '+44', name: 'UK' },
+  { code: '+61', name: 'Australia' },
+  { code: '+33', name: 'France' },
+  { code: '+49', name: 'Germany' },
+  { code: '+39', name: 'Italy' },
+  { code: '+34', name: 'Spain' },
+  { code: '+31', name: 'Netherlands' },
+  { code: '+46', name: 'Sweden' },
+  { code: '+47', name: 'Norway' },
+  { code: '+41', name: 'Switzerland' },
+  { code: '+43', name: 'Austria' },
+  { code: '+60', name: 'Malaysia' },
+  { code: '+65', name: 'Singapore' },
+  { code: '+66', name: 'Thailand' },
+  { code: '+81', name: 'Japan' },
+  { code: '+86', name: 'China' },
+  { code: '+55', name: 'Brazil' },
+  { code: '+27', name: 'South Africa' },
+];
 
-// ── Reusable field components ──────────────────────────────────────────────────
-interface FieldProps {
+// ── Floating Label Input ────────────────────────────────────────────────────────
+interface FloatingInputProps {
   label: string;
   name: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   type?: string;
   placeholder?: string;
   prefix?: string;
   required?: boolean;
-  rows?: number;
   showToggle?: boolean;
   onToggle?: () => void;
   showPassword?: boolean;
 }
 
-const Field: React.FC<FieldProps> = ({
-  label, name, value, onChange, error, type = 'text', placeholder, prefix,
-  required, rows, showToggle, onToggle, showPassword,
+const FloatingInput: React.FC<FloatingInputProps> = ({
+  label, name, value, onChange, error, type = 'text', placeholder, prefix, required,
+  showToggle, onToggle, showPassword,
 }) => {
-  const base =
-    'w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50';
-  const errorClass = error ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-200 hover:border-gray-300';
-
-  if (rows) {
-    return (
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-          {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-        </label>
-        <textarea
-          name={name}
-          value={value}
-          onChange={onChange as React.ChangeEventHandler<HTMLTextAreaElement>}
-          placeholder={placeholder}
-          rows={rows}
-          className={`${base} ${errorClass} resize-none`}
-        />
-        {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
-      </div>
-    );
-  }
-
   const inputType = showToggle ? (showPassword ? 'text' : 'password') : type;
-
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+    <div className="relative">
+      <input
+        type={inputType}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder=" "
+        required={required}
+        aria-required={required}
+        className={`
+          w-full px-3 py-2.5 pt-5 rounded-lg border transition-all duration-200
+          bg-white text-gray-900 placeholder-transparent text-sm font-medium
+          peer focus:outline-none focus:ring-0
+          ${error
+          ? 'border-red-300 focus:border-red-500'
+          : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
+        }
+        `}
+        style={{ paddingLeft: prefix ? '3.5rem' : '0.75rem' }}
+      />
+      <label
+        className={`
+          absolute left-3 top-1 text-xs font-semibold transition-all duration-200 pointer-events-none
+          peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:font-medium peer-placeholder-shown:text-gray-400
+          peer-focus:top-1 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold
+        ${error ? 'text-red-600' : 'peer-focus:text-blue-600'}
+        `}
+      >
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
-      <div className="relative">
-        {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500 select-none">
-            {prefix}
-          </span>
-        )}
-        <input
-          type={inputType}
-          name={name}
-          value={value}
-          onChange={onChange as React.ChangeEventHandler<HTMLInputElement>}
-          placeholder={placeholder}
-          className={`${base} ${errorClass} ${prefix ? 'pl-12' : ''} ${showToggle ? 'pr-10' : ''}`}
-        />
-        {showToggle && (
-          <button type="button" onClick={onToggle}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-          </button>
-        )}
-      </div>
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+
+      {prefix && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
+          {prefix}
+        </span>
+      )}
+
+      {showToggle && (
+        <div
+          onClick={onToggle}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') onToggle?.();
+          }}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors cursor-pointer p-1"
+        >
+          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+        </div>
+      )}
+
+      {error && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+          className="absolute -bottom-5 left-3 text-xs text-red-500 font-medium flex items-center gap-1">
+          <AlertCircle size={12} />
+          {error}
+        </motion.div>
+      )}
     </div>
   );
 };
 
-const ChevronIcon = ({ open }: { open: boolean }) => (
-  <svg
-    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
-);
+// ── Floating Textarea ──────────────────────────────────────────────────────────
+interface FloatingTextareaProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  error?: string;
+  placeholder?: string;
+  required?: boolean;
+  rows?: number;
+}
 
-const SelectField: React.FC<{
-  label: string; name: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: string[]; error?: string; required?: boolean;
-}> = ({ label, name, value, onChange, options, error, required }) => {
-  const [open, setOpen] = React.useState(false);
+const FloatingTextarea: React.FC<FloatingTextareaProps> = ({
+  label, name, value, onChange, error, placeholder, required, rows = 3,
+}) => {
+  return (
+    <div className="relative">
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder=" "
+        required={required}
+        rows={rows}
+        aria-required={required}
+        className={`
+          w-full px-3 py-2.5 pt-5 rounded-lg border transition-all duration-200
+          bg-white text-gray-900 placeholder-transparent text-sm font-medium
+          peer focus:outline-none focus:ring-0 resize-none
+          ${error
+          ? 'border-red-300 focus:border-red-500'
+          : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
+        }
+        `}
+      />
+      <label
+        className={`
+          absolute left-3 top-1 text-xs font-semibold transition-all duration-200 pointer-events-none
+          peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-base peer-placeholder-shown:font-medium peer-placeholder-shown:text-gray-400
+          peer-focus:top-1 peer-focus:text-xs peer-focus:font-semibold
+        ${error ? 'text-red-600' : 'peer-focus:text-blue-600'}
+        `}
+      >
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+
+      {error && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+          className="absolute -bottom-5 left-4 text-xs text-red-500 font-medium flex items-center gap-1">
+          <AlertCircle size={14} />
+          {error}
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
+// ── Searchable Multiselect ─────────────────────────────────────────────────────
+interface MultiSelectProps {
+  label: string;
+  name: string;
+  value: string[];
+  onChange: (values: string[]) => void;
+  options: string[];
+  error?: string;
+  required?: boolean;
+}
+
+const SearchableMultiSelect: React.FC<MultiSelectProps> = ({
+  label, name, value, onChange, options, error, required,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const ref = React.useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  const filtered = useMemo(
+    () => options.filter(opt => opt.toLowerCase().includes(search.toLowerCase())),
+    [options, search]
+  );
+
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -162,34 +218,100 @@ const SelectField: React.FC<{
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const select = (opt: string) => {
-    // Synthesise a change event so handleChange works unchanged
-    const nativeInput = document.createElement('select');
-    nativeInput.name = name;
-    Object.defineProperty(nativeInput, 'value', { get: () => opt });
-    onChange({ target: nativeInput } as unknown as React.ChangeEvent<HTMLSelectElement>);
-    setOpen(false);
+  const toggleOption = (opt: string) => {
+    if (value.includes(opt)) {
+      onChange(value.filter(v => v !== opt));
+    } else {
+      onChange([...value, opt]);
+    }
   };
 
   return (
-    <div className="flex flex-col gap-1 relative" ref={ref}>
-      <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-
+    <div className="relative" ref={ref}>
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center justify-between rounded-xl border bg-white px-4 py-3 text-sm outline-none transition-all duration-200 cursor-pointer ${
-          open ? 'ring-2 ring-blue-500 border-blue-500' : error ? 'border-red-400' : 'border-gray-200 hover:border-gray-300'
-        } ${value ? 'text-gray-800' : 'text-gray-400'}`}
+        onClick={() => setOpen(!open)}
+        className={`
+          w-full px-4 py-3 pt-6 rounded-xl border-2 transition-all duration-200 text-left
+          flex items-center justify-between relative bg-white text-sm
+          ${open ? 'border-blue-500 ring-2 ring-blue-100' :
+          error ? 'border-red-300' : 'border-gray-200 hover:border-gray-300'
+        }
+        `}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={label}
       >
-        <span>{value || 'Select industry...'}</span>
-        <ChevronIcon open={open} />
+        <div className="flex-1">
+          <label className={`
+            absolute left-4 transition-all duration-200 pointer-events-none font-semibold
+            ${open || value.length > 0 ? 'top-1.5 text-xs text-gray-700' : 'top-3.5 text-base text-gray-500'
+          }`}>
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          <div className="pt-1.5">
+            {value.length === 0 ? (
+              <span className="text-gray-500">Select options...</span>
+            ) : (
+              <span className="text-blue-600 font-semibold">{value.length} selected</span>
+            )}
+          </div>
+        </div>
+        <ChevronDown
+          size={20}
+          className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
-      {/* Dropdown panel */}
+      {/* Chips */}
+      {value.length > 0 && !open && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-2 mt-2"
+        >
+          {value.map(item => (
+            <motion.div
+              key={item}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold"
+            >
+              {item}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleOption(item);
+                }}
+                className="cursor-pointer hover:bg-red-500 hover:text-white rounded-full w-5 h-5 flex items-center justify-center transition-all duration-150 hover:scale-110"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    toggleOption(item);
+                  }
+                }}
+                aria-label={`Remove ${item}`}
+              >
+                <X size={12} strokeWidth={3} />
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      {error && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+          className="absolute -bottom-5 left-4 text-xs text-red-500 font-medium flex items-center gap-1">
+          <AlertCircle size={14} />
+          {error}
+        </motion.div>
+      )}
+
+      {/* Dropdown */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -197,75 +319,250 @@ const SelectField: React.FC<{
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 mt-1 w-full bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden"
-            style={{ top: 'calc(100% + 4px)', left: 0 }}
+            className="absolute z-50 mt-2 w-full bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden"
+            role="listbox"
           >
-            <div className="max-h-56 overflow-y-auto py-1.5 px-1.5 flex flex-col gap-0.5">
-              {options.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => select(opt)}
-                  className={`w-full text-left px-3 py-2.5 text-sm rounded-xl transition-colors duration-150 ${
-                    value === opt
-                      ? 'bg-blue-600 text-white font-semibold'
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
+            {/* Search */}
+            <div className="p-3 border-b border-gray-100">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search options..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="max-h-64 overflow-y-auto py-1">
+              {filtered.length === 0 ? (
+                <div className="px-4 py-3 text-center text-sm text-gray-500">No options found</div>
+              ) : (
+                filtered.map(opt => (
+                  <label
+                    key={opt}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors cursor-pointer group"
+                    role="option"
+                    aria-selected={value.includes(opt)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={value.includes(opt)}
+                      onChange={() => toggleOption(opt)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className={`text-sm ${value.includes(opt) ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                      {opt}
+                    </span>
+                  </label>
+                ))
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
     </div>
   );
 };
 
-// ── Section header ─────────────────────────────────────────────────────────────
-const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle: string; color: string }> = ({
-  icon, title, subtitle, color,
-}) => (
-  <div className={`flex items-center gap-3 p-4 rounded-2xl mb-6 ${color}`}>
-    <div className="p-2 bg-white rounded-xl shadow-sm">{icon}</div>
-    <div>
-      <h3 className="font-bold text-gray-800 text-base">{title}</h3>
-      <p className="text-xs text-gray-500">{subtitle}</p>
-    </div>
-  </div>
-);
+// ── Password Strength Meter ────────────────────────────────────────────────────
+interface PasswordStrengthProps {
+  password: string;
+}
 
-// ── Modal ──────────────────────────────────────────────────────────────────────
-const Modal: React.FC<{
-  open: boolean; onClose: () => void; title: string;
-  children: React.ReactNode; actions: React.ReactNode;
-}> = ({ open, onClose, title, children, actions }) => (
-  <AnimatePresence>
-    {open && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-            <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
-              <XIcon />
-            </button>
+const PasswordStrengthMeter: React.FC<PasswordStrengthProps> = ({ password }) => {
+  const calculateStrength = () => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return Math.min(5, Math.ceil(strength / 1.5));
+  };
+
+  const strength = calculateStrength();
+  const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+  const strengthLabel = strengthLabels[Math.max(0, strength - 1)];
+  const strengthColor = strengthColors[Math.max(0, strength - 1)];
+
+  const requirements = [
+    { met: password.length >= 8, label: 'At least 8 characters' },
+    { met: /[A-Z]/.test(password), label: 'Uppercase letter' },
+    { met: /[a-z]/.test(password), label: 'Lowercase letter' },
+    { met: /[0-9]/.test(password), label: 'Number' },
+  ];
+
+  return (
+    <div className="space-y-3">
+      {password && (
+        <>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full ${strengthColor}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${(strength / 5) * 100}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            <span className={`text-xs font-bold ${strengthColor.replace('bg-', 'text-')}`}>
+              {strengthLabel}
+            </span>
           </div>
-          <div className="text-sm text-gray-600 mb-6">{children}</div>
-          <div className="flex justify-end gap-3">{actions}</div>
-        </motion.div>
-      </div>
-    )}
-  </AnimatePresence>
-);
 
-// ── Main component ─────────────────────────────────────────────────────────────
+          <div className="grid grid-cols-2 gap-2">
+            {requirements.map((req, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="flex items-center gap-2 text-xs"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  {req.met ? (
+                    <Check size={14} className="text-green-500" strokeWidth={3} />
+                  ) : (
+                    <div className="w-3.5 h-3.5 border-2 border-gray-300 rounded" />
+                  )}
+                </motion.div>
+                <span className={req.met ? 'text-gray-700 font-medium' : 'text-gray-500'}>
+                  {req.label}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ── Step Indicator ─────────────────────────────────────────────────────────────
+interface StepIndicatorProps {
+  currentStep: number;
+  totalSteps: number;
+}
+
+const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps }) => {
+  const steps = ['Company', 'HR Contact', 'Account'];
+
+  return (
+    <div className="flex items-center gap-4 justify-center mb-6">
+      {steps.map((step, idx) => (
+        <React.Fragment key={idx}>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: idx * 0.1 }}
+            className="flex flex-col items-center"
+          >
+            <motion.div
+              animate={{
+                backgroundColor: idx + 1 <= currentStep ? '#3b82f6' : '#e5e7eb',
+                scale: idx + 1 === currentStep ? 1.1 : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
+            >
+              {idx + 1 < currentStep ? (
+                <Check size={20} strokeWidth={3} />
+              ) : (
+                idx + 1
+              )}
+            </motion.div>
+            <span className="text-xs font-semibold text-gray-600 mt-2 text-center">{step}</span>
+          </motion.div>
+
+          {idx < totalSteps - 1 && (
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: idx + 1 < currentStep ? 1 : 0.3 }}
+              transition={{ duration: 0.4 }}
+              className={`h-1 w-12 rounded-full origin-left ${idx + 1 < currentStep ? 'bg-blue-500' : 'bg-gray-200'
+              }`}
+              style={{ originX: 0 }}
+            />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+};
+
+// ── Logo Upload ────────────────────────────────────────────────────────────────
+interface LogoUploadProps {
+  logo: File | null;
+  preview: string | null;
+  onChange: (file: File) => void;
+}
+
+const LogoUpload: React.FC<LogoUploadProps> = ({ logo, preview, onChange }) => {
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+        Company Logo <span className="text-gray-400 normal-case font-normal">(Optional, max 5MB)</span>
+      </label>
+
+      <label
+        htmlFor="company-logo"
+        className="group block border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-2xl p-8 cursor-pointer transition-all duration-200 bg-gray-50 hover:bg-blue-50/30"
+      >
+        {preview ? (
+          <div className="flex items-center gap-4">
+            <img src={preview} alt="logo" className="w-16 h-16 object-contain rounded-xl border border-gray-200 bg-white p-2" />
+            <div>
+              <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
+                <Check size={16} />
+                {logo?.name}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Click to change</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <div className="p-3 bg-blue-100 rounded-xl text-blue-600 group-hover:bg-blue-200 transition-colors">
+              <Upload size={24} />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-800">Drop your logo here</p>
+              <p className="text-xs text-gray-500 mt-0.5">PNG, JPG, SVG · up to 5 MB</p>
+            </div>
+          </div>
+        )}
+
+        <input
+          type="file"
+          id="company-logo"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (!validateFileSize(file, 5)) {
+              toast.error('Logo must be under 5MB');
+              return;
+            }
+            onChange(file);
+          }}
+        />
+      </label>
+    </div>
+  );
+};
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 export const RecruiterRegister: React.FC = () => {
   const navigate = useNavigate();
   const { setUser, setLoading } = useAuthStore();
@@ -275,6 +572,7 @@ export const RecruiterRegister: React.FC = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
   const [existingDialogOpen, setExistingDialogOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -283,24 +581,35 @@ export const RecruiterRegister: React.FC = () => {
     gstNumber: '',
     cinNumber: '',
     companyEmail: '',
+    companyPhoneCountry: '+91',
     companyPhone: '',
     companyWebsite: '',
     companyAddress: '',
     companyDescription: '',
-    industryType: '',
+    industryType: [] as string[],
     hrContactPerson: '',
     hrEmail: '',
+    hrPhoneCountry: '+91',
     hrPhone: '',
     password: '',
     confirmPassword: '',
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    let { name, value } = e.target;
+    
+    // Allow only numbers for phone fields and limit to 10 digits
+    if (name === 'companyPhone' || name === 'hrPhone') {
+      value = value.replace(/[^\d]/g, '').slice(0, 10);
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleIndustryChange = (values: string[]) => {
+    setFormData(prev => ({ ...prev, industryType: values }));
+    if (errors.industryType) setErrors(prev => ({ ...prev, industryType: '' }));
   };
 
   const validateForm = () => {
@@ -308,14 +617,14 @@ export const RecruiterRegister: React.FC = () => {
     if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
     if (!validateGST(formData.gstNumber)) newErrors.gstNumber = 'Valid 15-character GST number required';
     if (!validateEmail(formData.companyEmail)) newErrors.companyEmail = 'Valid company email required';
-    if (!validatePhone(formData.companyPhone)) newErrors.companyPhone = 'Valid 10-digit phone required';
+    if (formData.companyPhone && formData.companyPhone.length !== 10) newErrors.companyPhone = 'Phone must be exactly 10 digits';
     if (!validateURL(formData.companyWebsite)) newErrors.companyWebsite = 'Valid website URL required';
     if (!formData.companyAddress.trim()) newErrors.companyAddress = 'Company address is required';
     if (!formData.companyDescription.trim()) newErrors.companyDescription = 'Company description is required';
-    if (!formData.industryType) newErrors.industryType = 'Industry type is required';
+    if (formData.industryType.length === 0) newErrors.industryType = 'At least one industry type is required';
     if (!formData.hrContactPerson.trim()) newErrors.hrContactPerson = 'HR contact person is required';
     if (!validateEmail(formData.hrEmail)) newErrors.hrEmail = 'Valid HR email required';
-    if (!validatePhone(formData.hrPhone)) newErrors.hrPhone = 'Valid HR phone required';
+    if (formData.hrPhone.length !== 10) newErrors.hrPhone = 'Phone must be exactly 10 digits';
     if (!validatePassword(formData.password)) newErrors.password = 'Min 8 chars with uppercase, lowercase & number';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     setErrors(newErrors);
@@ -348,7 +657,7 @@ export const RecruiterRegister: React.FC = () => {
           company_name: formData.companyName,
           company_website: formData.companyWebsite,
           company_logo_url: logoUrl,
-          industry: formData.industryType,
+          industry: formData.industryType.join(', '),
           description: formData.companyDescription,
           location: formData.companyAddress,
           company_email: formData.companyEmail,
@@ -388,289 +697,543 @@ export const RecruiterRegister: React.FC = () => {
 
   return (
     <Layout footer={false}>
-      {/* Background */}
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 py-10 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         {/* Decorative blobs */}
-        <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -right-32 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl" />
-          <div className="absolute -bottom-32 left-1/3 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl" />
+        <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="absolute -top-40 -left-40 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl"
+          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="absolute top-1/3 -right-32 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl"
+          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="absolute -bottom-32 left-1/4 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl"
+          />
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-blue-600/10 text-blue-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-blue-200">
-              <BuildingIcon />
-              <span>Recruiter Portal</span>
-            </div>
-            <h1 className="text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
-              Register Your Company
-            </h1>
-            <p className="text-gray-500 text-base max-w-md mx-auto">
-              Join thousands of recruiters hiring top talent. Set up your account in minutes.
-            </p>
-          </motion.div>
-
-          {/* Steps indicator */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-            className="flex items-center justify-center gap-3 mb-8">
-            {['Company Info', 'HR Contact', 'Account Setup'].map((step, idx) => (
-              <React.Fragment key={step}>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shadow-sm">
-                    {idx + 1}
-                  </div>
-                  <span className="text-xs font-semibold text-gray-600 hidden sm:block">{step}</span>
-                </div>
-                {idx < 2 && <div className="w-10 h-px bg-gray-300 hidden sm:block" />}
-              </React.Fragment>
-            ))}
-          </motion.div>
-
-          {/* Form card */}
+        <div className="max-w-2xl mx-auto">
+          {/* Hero Header */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60 overflow-hidden"
+            transition={{ duration: 0.6 }}
+            className="text-center mb-5"
           >
-            <form onSubmit={handleSubmit} noValidate>
-              {/* ── SECTION 1: Company Info ── */}
-              <div className="p-8 border-b border-gray-100">
-                <SectionHeader
-                  icon={<span className="text-blue-600"><BuildingIcon /></span>}
-                  title="Company Information"
-                  subtitle="Tell us about your organization"
-                  color="bg-blue-50"
-                />
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-blue-700 text-xs font-bold px-4 py-2 rounded-full border border-blue-200/60 mb-4"
+            >
+              <Building2 size={16} />
+              <span>Premium Recruiter Portal</span>
+            </motion.div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <Field label="Company Name" name="companyName" value={formData.companyName}
-                    onChange={handleChange} error={errors.companyName} required
-                    placeholder="Acme Technologies Pvt Ltd" />
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-3 leading-tight tracking-tight whitespace-nowrap"
+            >
+              Register Your{' '}
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Company
+              </span>
+            </motion.h1>
 
-                  <SelectField label="Industry Type" name="industryType" value={formData.industryType}
-                    onChange={handleChange as (e: React.ChangeEvent<HTMLSelectElement>) => void}
-                    options={INDUSTRY_TYPES} error={errors.industryType} required />
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-gray-600 text-base sm:text-lg whitespace-nowrap"
+            >
+              Join thousands of recruiters hiring top talent. Get started in minutes.
+            </motion.p>
+          </motion.div>
 
-                  <Field label="GST Number" name="gstNumber" value={formData.gstNumber}
-                    onChange={handleChange} error={errors.gstNumber} required
-                    placeholder="22AAAAA0000A1Z5" />
+          {/* Step Indicator */}
+          <StepIndicator currentStep={currentStep} totalSteps={3} />
 
-                  <Field label="CIN Number (Optional)" name="cinNumber" value={formData.cinNumber}
-                    onChange={handleChange} placeholder="U74999MH2020PTC340000" />
+          {/* Main Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-2xl overflow-hidden"
+          >
+            <form onSubmit={handleSubmit} noValidate className="divide-y divide-gray-100">
+              {/* STEP 1: Company Info */}
+              <motion.div
+                initial={currentStep !== 1 ? { opacity: 0, x: 100 } : {}}
+                animate={currentStep === 1 ? { opacity: 1, x: 0 } : currentStep > 1 ? { opacity: 0, x: -100 } : {}}
+                transition={{ duration: 0.4 }}
+                className={currentStep === 1 ? 'p-8 sm:p-10 space-y-6' : 'hidden'}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-blue-100 rounded-2xl text-blue-600 mt-1 flex-shrink-0">
+                    <Building2 size={28} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Company Information</h2>
+                    <p className="text-gray-500 text-sm mt-1">Tell us about your organization</p>
+                  </div>
+                </div>
 
-                  <Field label="Company Email" name="companyEmail" type="email" value={formData.companyEmail}
-                    onChange={handleChange} error={errors.companyEmail} required
-                    placeholder="contact@company.com" />
+                <div className="space-y-6">
+                  <FloatingInput
+                    label="Company Name"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    error={errors.companyName}
+                    required
+                  />
 
-                  <Field label="Company Phone" name="companyPhone" value={formData.companyPhone}
-                    onChange={handleChange} error={errors.companyPhone} required
-                    prefix="+91" placeholder="9876543210" />
+                  <SearchableMultiSelect
+                    label="Industry Type"
+                    name="industryType"
+                    value={formData.industryType}
+                    onChange={handleIndustryChange}
+                    options={INDUSTRY_TYPES}
+                    error={errors.industryType}
+                    required
+                  />
 
-                  <div className="sm:col-span-2">
-                    <Field label="Company Website" name="companyWebsite" value={formData.companyWebsite}
-                      onChange={handleChange} error={errors.companyWebsite} required
-                      placeholder="https://yourcompany.com" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <FloatingInput
+                      label="GST Number"
+                      name="gstNumber"
+                      value={formData.gstNumber}
+                      onChange={handleChange}
+                      error={errors.gstNumber}
+                      required
+                    />
+                    <FloatingInput
+                      label="CIN Number"
+                      name="cinNumber"
+                      value={formData.cinNumber}
+                      onChange={handleChange}
+                    />
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <Field label="Registered Address" name="companyAddress" value={formData.companyAddress}
-                      onChange={handleChange} error={errors.companyAddress} required
-                      rows={2} placeholder="Plot 12, Tech Park, Hyderabad, TS 500032" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <FloatingInput
+                      label="Company Email"
+                      name="companyEmail"
+                      type="email"
+                      value={formData.companyEmail}
+                      onChange={handleChange}
+                      error={errors.companyEmail}
+                      required
+                    />
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <Field label="Company Description" name="companyDescription" value={formData.companyDescription}
-                      onChange={handleChange} error={errors.companyDescription} required
-                      rows={3} placeholder="Brief overview of your company, culture, and what you offer..." />
-                  </div>
-
-                  {/* Logo upload */}
-                  <div className="sm:col-span-2">
-                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide block mb-1">
-                      Company Logo <span className="text-gray-400 normal-case font-normal">(optional, max 5MB)</span>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                      Company Phone
                     </label>
-                    <label
-                      htmlFor="company-logo"
-                      className="group flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl p-8 cursor-pointer transition-all duration-200 bg-gray-50/60 hover:bg-blue-50/40"
-                    >
-                      {logoPreview ? (
-                        <div className="flex items-center gap-4">
-                          <img src={logoPreview} alt="logo preview" className="w-16 h-16 rounded-xl object-contain border border-gray-200 bg-white p-1 shadow-sm" />
-                          <div className="text-left">
-                            <div className="flex items-center gap-1.5 text-green-600 font-semibold text-sm">
-                              <CheckIcon /> {companyLogo?.name}
-                            </div>
-                            <p className="text-xs text-gray-400 mt-0.5">Click to change logo</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="p-3 bg-blue-100 rounded-xl text-blue-600 group-hover:bg-blue-200 transition-colors">
-                            <UploadIcon />
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm font-semibold text-gray-700">Drop your logo here</p>
-                            <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, SVG · up to 5 MB</p>
-                          </div>
-                        </>
-                      )}
-                      <input
-                        type="file" id="company-logo" accept="image/*" className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          if (!validateFileSize(file, 5)) { toast.error('Logo must be under 5MB'); return; }
-                          setCompanyLogo(file);
-                          setLogoPreview(URL.createObjectURL(file));
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── SECTION 2: HR Contact ── */}
-              <div className="p-8 border-b border-gray-100">
-                <SectionHeader
-                  icon={<span className="text-purple-600"><UserIcon /></span>}
-                  title="HR Contact Details"
-                  subtitle="Primary point of contact for hiring"
-                  color="bg-purple-50"
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <Field label="HR Contact Person" name="hrContactPerson" value={formData.hrContactPerson}
-                    onChange={handleChange} error={errors.hrContactPerson} required
-                    placeholder="Ravi Kumar" />
-
-                  <Field label="HR Email" name="hrEmail" type="email" value={formData.hrEmail}
-                    onChange={handleChange} error={errors.hrEmail} required
-                    placeholder="hr@company.com" />
-
-                  <Field label="HR Phone" name="hrPhone" value={formData.hrPhone}
-                    onChange={handleChange} error={errors.hrPhone} required
-                    prefix="+91" placeholder="9876543210" />
-                </div>
-              </div>
-
-              {/* ── SECTION 3: Account Setup ── */}
-              <div className="p-8">
-                <SectionHeader
-                  icon={<span className="text-emerald-600"><LockIcon /></span>}
-                  title="Account Setup"
-                  subtitle="Create your recruiter login credentials"
-                  color="bg-emerald-50"
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <Field label="Password" name="password" value={formData.password}
-                    onChange={handleChange} error={errors.password} required
-                    showToggle showPassword={showPassword} onToggle={() => setShowPassword((p) => !p)}
-                    placeholder="Min 8 chars, uppercase & number" />
-
-                  <Field label="Confirm Password" name="confirmPassword" value={formData.confirmPassword}
-                    onChange={handleChange} error={errors.confirmPassword} required
-                    showToggle showPassword={showConfirm} onToggle={() => setShowConfirm((p) => !p)}
-                    placeholder="Re-enter password" />
-                </div>
-
-                {/* Password requirements hint */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500 mb-2">Password must include:</p>
-                  <div className="grid grid-cols-2 gap-1 text-xs text-gray-500">
-                    {['At least 8 characters', 'One uppercase letter', 'One lowercase letter', 'One number'].map((req) => (
-                      <div key={req} className="flex items-center gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-gray-400" />
-                        {req}
+                    <div className="flex gap-3">
+                      <div className="relative w-24">
+                        <select
+                          name="companyPhoneCountry"
+                          value={formData.companyPhoneCountry}
+                          onChange={handleChange}
+                          className="w-full appearance-none pl-3 pr-8 py-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-sm font-medium"
+                        >
+                          {CountryCodes.map(cc => (
+                            <option key={cc.code} value={cc.code}>
+                              {cc.code}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown
+                          size={16}
+                          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        />
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <FloatingInput
+                          label="Phone"
+                          name="companyPhone"
+                          value={formData.companyPhone}
+                          onChange={handleChange}
+                          error={errors.companyPhone}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <FloatingInput
+                    label="Company Website"
+                    name="companyWebsite"
+                    type="url"
+                    value={formData.companyWebsite}
+                    onChange={handleChange}
+                    error={errors.companyWebsite}
+                    required
+                  />
+
+                  <FloatingTextarea
+                    label="Registered Address"
+                    name="companyAddress"
+                    value={formData.companyAddress}
+                    onChange={handleChange}
+                    error={errors.companyAddress}
+                    required
+                    rows={2}
+                  />
+
+                  <FloatingTextarea
+                    label="Company Description"
+                    name="companyDescription"
+                    value={formData.companyDescription}
+                    onChange={handleChange}
+                    error={errors.companyDescription}
+                    required
+                    rows={3}
+                  />
+
+                  <LogoUpload
+                    logo={companyLogo}
+                    preview={logoPreview}
+                    onChange={(file) => {
+                      setCompanyLogo(file);
+                      setLogoPreview(URL.createObjectURL(file));
+                    }}
+                  />
+                </div>
+
+                <motion.button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full mt-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+                >
+                  Continue to HR Contact
+                  <ChevronDown size={20} className="rotate-270" />
+                </motion.button>
+              </motion.div>
+
+              {/* STEP 2: HR Contact */}
+              <motion.div
+                initial={currentStep !== 2 ? { opacity: 0, x: 100 } : {}}
+                animate={currentStep === 2 ? { opacity: 1, x: 0 } : currentStep > 2 ? { opacity: 0, x: -100 } : {}}
+                transition={{ duration: 0.4 }}
+                className={currentStep === 2 ? 'p-8 sm:p-10 space-y-6' : 'hidden'}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-purple-100 rounded-2xl text-purple-600 mt-1 flex-shrink-0">
+                    <User size={28} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">HR Contact Details</h2>
+                    <p className="text-gray-500 text-sm mt-1">Primary point of contact for hiring</p>
                   </div>
                 </div>
 
-                {/* Terms */}
-                <p className="text-xs text-gray-400 mt-4 text-center">
-                  By registering, you agree to our{' '}
-                  <Link to={ROUTES.TERMS_CONDITIONS} className="text-blue-600 hover:underline">Terms of Service</Link>
-                  {' '}and{' '}
-                  <Link to={ROUTES.PRIVACY_POLICY} className="text-blue-600 hover:underline">Privacy Policy</Link>.
-                </p>
+                <div className="space-y-6">
+                  <FloatingInput
+                    label="HR Contact Person"
+                    name="hrContactPerson"
+                    value={formData.hrContactPerson}
+                    onChange={handleChange}
+                    error={errors.hrContactPerson}
+                    required
+                  />
 
-                {/* Submit */}
-                <motion.button
-                  type="submit"
-                  disabled={loading}
-                  whileTap={{ scale: loading ? 1 : 0.98 }}
-                  className="mt-6 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-base py-4 rounded-2xl shadow-lg shadow-blue-200 transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Creating account...
-                    </>
-                  ) : (
-                    <>
-                      <BuildingIcon />
-                      Register as Recruiter
-                    </>
-                  )}
-                </motion.button>
+                  <FloatingInput
+                    label="HR Email"
+                    name="hrEmail"
+                    type="email"
+                    value={formData.hrEmail}
+                    onChange={handleChange}
+                    error={errors.hrEmail}
+                    required
+                  />
 
-                <p className="text-center text-sm text-gray-500 mt-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                      HR Phone <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-3">
+                      <select
+                        name="hrPhoneCountry"
+                        value={formData.hrPhoneCountry}
+                        onChange={handleChange}
+                        className="w-24 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-sm font-medium"
+                      >
+                        {CountryCodes.map(cc => (
+                          <option key={cc.code} value={cc.code}>
+                            {cc.code}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="flex-1">
+                        <FloatingInput
+                          label="Phone"
+                          name="hrPhone"
+                          value={formData.hrPhone}
+                          onChange={handleChange}
+                          error={errors.hrPhone}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <motion.button
+                    type="button"
+                    onClick={() => setCurrentStep(1)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-bold py-4 px-6 rounded-2xl transition-all duration-200"
+                  >
+                    Back
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg shadow-blue-200"
+                  >
+                    Continue to Account
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* STEP 3: Account Setup */}
+              <motion.div
+                initial={currentStep !== 3 ? { opacity: 0, x: 100 } : {}}
+                animate={currentStep === 3 ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.4 }}
+                className={currentStep === 3 ? 'p-8 sm:p-10 space-y-6' : 'hidden'}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-emerald-100 rounded-2xl text-emerald-600 mt-1 flex-shrink-0">
+                    <Lock size={28} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Account Setup</h2>
+                    <p className="text-gray-500 text-sm mt-1">Create your recruiter login credentials</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <FloatingInput
+                    label="Password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    error={errors.password}
+                    required
+                    showToggle
+                    showPassword={showPassword}
+                    onToggle={() => setShowPassword(!showPassword)}
+                  />
+
+                  <PasswordStrengthMeter password={formData.password} />
+
+                  <FloatingInput
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    error={errors.confirmPassword}
+                    required
+                    showToggle
+                    showPassword={showConfirm}
+                    onToggle={() => setShowConfirm(!showConfirm)}
+                  />
+
+                  {/* Terms */}
+                  <div className="pt-2 text-xs text-gray-500 text-center">
+                    By registering, you agree to our{' '}
+                    <Link to={ROUTES.TERMS_CONDITIONS} className="text-blue-600 hover:underline font-semibold">
+                      Terms of Service
+                    </Link>
+                    {' '}and{' '}
+                    <Link to={ROUTES.PRIVACY_POLICY} className="text-blue-600 hover:underline font-semibold">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <motion.button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-bold py-4 px-6 rounded-2xl transition-all duration-200"
+                  >
+                    Back
+                  </motion.button>
+                  <motion.button
+                    type="submit"
+                    disabled={loading}
+                    whileHover={!loading ? { scale: 1.02 } : {}}
+                    whileTap={!loading ? { scale: 0.98 } : {}}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                          <Building2 size={20} />
+                        </motion.div>
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={20} />
+                        Register Company
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+
+                <p className="text-center text-sm text-gray-600 mt-4">
                   Already have an account?{' '}
-                  <Link to={ROUTES.LOGIN} className="text-blue-600 font-semibold hover:underline">Sign in</Link>
+                  <Link to={ROUTES.LOGIN} className="text-blue-600 font-bold hover:underline">
+                    Sign in
+                  </Link>
                 </p>
-              </div>
+              </motion.div>
             </form>
+          </motion.div>
+
+          {/* Trust Badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="flex items-center justify-center gap-6 mt-12 flex-wrap"
+          >
+            {['🔒 ISO 27001', '✅ GDPR Compliant', '⭐ Enterprise Grade'].map((badge, idx) => (
+              <div key={idx} className="text-xs font-semibold text-gray-600">
+                {badge}
+              </div>
+            ))}
           </motion.div>
         </div>
       </div>
 
-      {/* ── Verify email modal ── */}
-      <Modal
-        open={verifyDialogOpen}
-        onClose={() => setVerifyDialogOpen(false)}
-        title="Verify Your Email"
-        actions={
-          <>
-            <button onClick={() => window.open('https://mail.google.com', '_blank')}
-              className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
-              Open Gmail
-            </button>
-            <button onClick={() => setVerifyDialogOpen(false)}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-              Close
-            </button>
-          </>
-        }
-      >
-        A confirmation email has been sent to <span className="font-semibold text-gray-800">{formData.hrEmail}</span>.
-        Please verify your email before logging in.
-      </Modal>
+      {/* Verify Email Modal */}
+      <AnimatePresence>
+        {verifyDialogOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setVerifyDialogOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                  <Check size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">Verify Your Email</h2>
+              </div>
+              <p className="text-gray-600 text-sm mb-6">
+                A confirmation email has been sent to <span className="font-semibold">{formData.hrEmail}</span>.
+                Please verify your email before logging in.
+              </p>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => window.open('https://mail.google.com', '_blank')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all"
+                >
+                  Open Gmail
+                </motion.button>
+                <motion.button
+                  onClick={() => setVerifyDialogOpen(false)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 border border-gray-300 text-gray-700 font-bold py-2.5 px-4 rounded-xl hover:bg-gray-50 transition-all"
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ── Account exists modal ── */}
-      <Modal
-        open={existingDialogOpen}
-        onClose={() => setExistingDialogOpen(false)}
-        title="Account Already Exists"
-        actions={
-          <>
-            <button onClick={() => navigate(ROUTES.LOGIN)}
-              className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
-              Sign In
-            </button>
-            <button onClick={() => setExistingDialogOpen(false)}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-              Close
-            </button>
-          </>
-        }
-      >
-        An account with this email already exists. If you have already verified your email, please sign in to continue.
-      </Modal>
+      {/* Account Exists Modal */}
+      <AnimatePresence>
+        {existingDialogOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setExistingDialogOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                  <AlertCircle size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">Account Already Exists</h2>
+              </div>
+              <p className="text-gray-600 text-sm mb-6">
+                An account with this email already exists. If you have already verified your email, please sign in to continue.
+              </p>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => navigate(ROUTES.LOGIN)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all"
+                >
+                  Sign In
+                </motion.button>
+                <motion.button
+                  onClick={() => setExistingDialogOpen(false)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 border border-gray-300 text-gray-700 font-bold py-2.5 px-4 rounded-xl hover:bg-gray-50 transition-all"
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 };

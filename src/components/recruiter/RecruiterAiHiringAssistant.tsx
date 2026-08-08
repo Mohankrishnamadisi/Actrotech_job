@@ -25,8 +25,6 @@ import {
   TextField,
   Tooltip,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -142,8 +140,19 @@ const markdownPanel = (title: string, content: string) => (
 const ensureArray = <T,>(value: T[] | null | undefined): T[] => Array.isArray(value) ? value : [];
 
 export const RecruiterAiHiringAssistant: React.FC<RecruiterAiHiringAssistantProps> = ({ recruiterId }) => {
-  const theme = useTheme();
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  const tabSx = {
+    textTransform: 'none',
+    fontWeight: 700,
+    fontSize: '0.82rem',
+    minHeight: 54,
+    minWidth: 'max-content',
+    px: 1.8,
+    whiteSpace: 'nowrap',
+    color: themeColors.text.secondary,
+    '&.Mui-selected': {
+      color: themeColors.primary,
+    },
+  };
 
   const [tab, setTab] = useState<AssistantTab>('dashboard');
   const [context, setContext] = useState<RecruiterAiContext | null>(null);
@@ -727,29 +736,47 @@ export const RecruiterAiHiringAssistant: React.FC<RecruiterAiHiringAssistantProp
         </Button>
       </Box>
 
-      <Paper sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, mb: 2 }}>
+      <Paper sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, mb: 2, overflow: 'hidden' }}>
         <Tabs
           value={tab}
           onChange={(_, value: AssistantTab) => setTab(value)}
-          variant={isTablet ? 'scrollable' : 'fullWidth'}
+          variant="scrollable"
           scrollButtons="auto"
+          allowScrollButtonsMobile
+          sx={{
+            minHeight: 54,
+            px: 0.5,
+            '& .MuiTabs-scroller': {
+              overflowX: 'auto !important',
+            },
+            '& .MuiTabs-scrollButtons': {
+              width: 34,
+              borderRadius: 1,
+              mx: 0.5,
+            },
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderTopLeftRadius: 3,
+              borderTopRightRadius: 3,
+            },
+          }}
         >
-          <Tab value="dashboard" label="Dashboard" />
-          <Tab value="chat" label="AI Chat" />
-          <Tab value="job-description" label="JD Assistant" />
-          <Tab value="resume-analyzer" label="Resume Analyzer" />
-          <Tab value="candidate-match" label="Candidate Match" />
-          <Tab value="interview-assistant" label="Interview Assistant" />
-          <Tab value="offer-assistant" label="Offer Assistant" />
-          <Tab value="message-assistant" label="Message Assistant" />
-          <Tab value="hiring-insights" label="Hiring Insights" />
-          <Tab value="copilot-suggestions" label="Copilot Suggestions" />
-          <Tab value="candidate-comparison" label="Comparison" />
-          <Tab value="ai-search" label="AI Search" />
-          <Tab value="meeting-summary" label="Meeting Summary" />
-          <Tab value="reports" label="Reports" />
-          <Tab value="saved-prompts" label="Saved Prompts" />
-          <Tab value="ai-history" label="AI History" />
+          <Tab value="dashboard" label="Dashboard" sx={tabSx} />
+          <Tab value="chat" label="AI Chat" sx={tabSx} />
+          <Tab value="job-description" label="JD Assistant" sx={tabSx} />
+          <Tab value="resume-analyzer" label="Resume Analyzer" sx={tabSx} />
+          <Tab value="candidate-match" label="Candidate Match" sx={tabSx} />
+          <Tab value="interview-assistant" label="Interview Assistant" sx={tabSx} />
+          <Tab value="offer-assistant" label="Offer Assistant" sx={tabSx} />
+          <Tab value="message-assistant" label="Message Assistant" sx={tabSx} />
+          <Tab value="hiring-insights" label="Hiring Insights" sx={tabSx} />
+          <Tab value="copilot-suggestions" label="Copilot Suggestions" sx={tabSx} />
+          <Tab value="candidate-comparison" label="Comparison" sx={tabSx} />
+          <Tab value="ai-search" label="AI Search" sx={tabSx} />
+          <Tab value="meeting-summary" label="Meeting Summary" sx={tabSx} />
+          <Tab value="reports" label="Reports" sx={tabSx} />
+          <Tab value="saved-prompts" label="Saved Prompts" sx={tabSx} />
+          <Tab value="ai-history" label="AI History" sx={tabSx} />
         </Tabs>
       </Paper>
 

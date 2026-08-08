@@ -354,7 +354,7 @@ export const RecruiterMarketIntelligence: React.FC<RecruiterMarketIntelligencePr
       </Card>
 
       <Paper sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, mb: 2 }}>
-        <Tabs value={tab} onChange={(_, value: MarketTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'fullWidth'} scrollButtons="auto">
+        <Tabs value={tab} onChange={(_, value: MarketTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'scrollable'} scrollButtons="auto" allowScrollButtonsMobile sx={{ minHeight: 54, px: 0.5, '& .MuiTabs-scroller': { overflowX: 'auto !important' }, '& .MuiTabs-scrollButtons': { width: 34, borderRadius: 1, mx: 0.5 }, '& .MuiTab-root': { textTransform: 'none', whiteSpace: 'nowrap', minHeight: 54, minWidth: 'max-content', px: 1.8, fontWeight: 700, fontSize: '0.82rem' } }}>
           <Tab value="overview" label="Overview" />
           <Tab value="salary" label="Salary Insights" />
           <Tab value="hiring-demand" label="Hiring Demand" />

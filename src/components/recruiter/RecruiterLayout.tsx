@@ -82,6 +82,7 @@ export const RecruiterLayout: React.FC<RecruiterLayoutProps> = ({
       >
         {/* Top Navigation */}
         <RecruiterTopbar
+          recruiterLogo={companyLogo}
           notificationCount={notificationCount}
           unreadMessagesCount={unreadMessagesCount}
           credits={credits}

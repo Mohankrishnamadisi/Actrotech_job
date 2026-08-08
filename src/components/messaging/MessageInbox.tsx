@@ -52,7 +52,7 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
               if (fallbackName) {
                 c.participantName = fallbackName;
               }
-              c.participantAvatar = c.participantAvatar || profile?.avatar_url || profile?.avatarUrl || profile?.avatar || null;
+              c.participantAvatar = c.participantAvatar || profile?.avatar_url || profile?.profile_image_url || null;
             } catch (e) {
               // ignore and keep existing fallback label
             }

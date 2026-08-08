@@ -641,7 +641,7 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
           const mergedName = isGenericCandidateName(serviceName)
             ? (mappedProfile?.name || serviceName)
             : serviceName;
-          const mergedAvatar = String(row.participantAvatar || '').trim() || mappedProfile?.avatar || '';
+          const mergedAvatar = String(row.participantAvatar || '').trim() || mappedProfile?.avatar_url || '';
 
           const { data: app } = await supabase
             .from('job_applications')
@@ -1588,37 +1588,37 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
   };
 
   const renderCenter = () => (
-    <Card sx={{ borderRadius: 2, p: { xs: 1.25, md: 2 } }}>
+    <Box sx={{ bgcolor: '#f1f5f9', borderRadius: 3, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '320px 420px minmax(0, 1fr)' },
-          gap: 2,
-          height: isMobile ? 'auto' : 'calc(100vh - 210px)',
-          minHeight: 620,
+          gridTemplateColumns: { xs: '1fr', lg: '280px 340px minmax(0, 1fr)' },
+          height: isMobile ? 'auto' : 'calc(100vh - 200px)',
+          minHeight: 640,
           alignItems: 'stretch',
         }}
       >
         <Box
           sx={{
-            border: `1px solid ${themeColors.border}`,
-            borderRadius: 2,
-            p: 1.5,
+            borderRight: '1px solid #e2e8f0',
+            p: 2,
             bgcolor: '#fff',
             minHeight: { xs: 'auto', lg: 0 },
             display: 'flex',
             flexDirection: 'column',
+            gap: 1.5,
           }}
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1 }}>Filters</Typography>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.7rem' }}>Conversations</Typography>
 
           <TextField
             fullWidth
             size="small"
-            placeholder="Search candidate, job, message, tag, date"
+            placeholder="Search candidate, job, message..."
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
-            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: '#94a3b8' }} /></InputAdornment> }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: '#f8fafc' } }}
           />
 
           <Stack direction="row" spacing={0.75} sx={{ mt: 1.25, flexWrap: 'wrap' }}>
@@ -1650,24 +1650,40 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
             </Select>
           </FormControl>
 
-          <Divider sx={{ my: 1.25 }} />
+          <Divider sx={{ my: 0.5 }} />
 
-          <Stack spacing={1.1} sx={{ mt: 'auto' }}>
-            <Button size="small" variant="outlined" startIcon={<ArchiveIcon />} onClick={() => runBulkAction('archive')}>Bulk Archive</Button>
-            <Button size="small" variant="outlined" startIcon={<DeleteIcon />} color="error" onClick={() => runBulkAction('delete')}>Bulk Delete</Button>
-            <Button size="small" variant="outlined" startIcon={<MarkEmailReadIcon />} onClick={() => runBulkAction('mark_read')}>Mark Read</Button>
-            <Button size="small" variant="outlined" startIcon={<MarkEmailUnreadIcon />} onClick={() => runBulkAction('mark_unread')}>Mark Unread</Button>
-            <Button size="small" variant="outlined" startIcon={<DownloadIcon />} onClick={() => runBulkAction('export')}>Export</Button>
-            <Button size="small" variant="outlined" startIcon={<PersonSearchIcon />} onClick={() => setBulkPoolOpen(true)}>Message Talent Pool</Button>
-          </Stack>
+          {/* Bulk actions as compact icon row */}
+          <Box>
+            <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Bulk Actions</Typography>
+            <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+              <Tooltip title="Bulk Archive">
+                <IconButton size="small" onClick={() => runBulkAction('archive')} sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 1.5 }}><ArchiveIcon fontSize="small" /></IconButton>
+              </Tooltip>
+              <Tooltip title="Bulk Delete">
+                <IconButton size="small" onClick={() => runBulkAction('delete')} sx={{ bgcolor: '#fff5f5', border: '1px solid #fecaca', borderRadius: 1.5, color: '#ef4444' }}><DeleteIcon fontSize="small" /></IconButton>
+              </Tooltip>
+              <Tooltip title="Mark Read">
+                <IconButton size="small" onClick={() => runBulkAction('mark_read')} sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 1.5 }}><MarkEmailReadIcon fontSize="small" /></IconButton>
+              </Tooltip>
+              <Tooltip title="Mark Unread">
+                <IconButton size="small" onClick={() => runBulkAction('mark_unread')} sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 1.5 }}><MarkEmailUnreadIcon fontSize="small" /></IconButton>
+              </Tooltip>
+              <Tooltip title="Export">
+                <IconButton size="small" onClick={() => runBulkAction('export')} sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 1.5 }}><DownloadIcon fontSize="small" /></IconButton>
+              </Tooltip>
+              <Tooltip title="Message Talent Pool">
+                <IconButton size="small" onClick={() => setBulkPoolOpen(true)} sx={{ bgcolor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 1.5, color: '#0284c7' }}><PersonSearchIcon fontSize="small" /></IconButton>
+              </Tooltip>
+            </Stack>
+          </Box>
         </Box>
 
-        <Box sx={{ border: `1px solid ${themeColors.border}`, borderRadius: 2, overflow: 'hidden', bgcolor: '#fff', display: 'flex', flexDirection: 'column', minHeight: { xs: 320, lg: 0 } }}>
-          <Box sx={{ p: 1.5, borderBottom: `1px solid ${themeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>Conversations</Typography>
-            {loadingConversations && <LinearProgress sx={{ width: 80 }} />}
+        <Box sx={{ borderRight: '1px solid #e2e8f0', overflow: 'hidden', bgcolor: '#fff', display: 'flex', flexDirection: 'column', minHeight: { xs: 320, lg: 0 } }}>
+          <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#fafafa' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a' }}>Inbox</Typography>
+            {loadingConversations && <LinearProgress sx={{ width: 60, borderRadius: 1 }} />}
           </Box>
-          <Box sx={{ flex: 1, overflowY: 'auto', p: 1.25 }}>
+          <Box sx={{ flex: 1, overflowY: 'auto' }}>
             {filteredConversations.map((row) => {
               const selected = selectedConversationId === row.id;
               const unread = row.unreadCount > 0 || row.meta.markedUnread;
@@ -1675,278 +1691,206 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 <Box
                   key={row.id}
                   sx={{
-                    p: 1.25,
-                    borderRadius: 2,
-                    mb: 1,
-                    border: selected ? `1px solid ${themeColors.primary}` : `1px solid ${themeColors.border}`,
-                    bgcolor: selected ? `${themeColors.primary}08` : '#fff',
+                    px: 2, py: 1.5,
+                    borderBottom: '1px solid #f8fafc',
+                    bgcolor: selected ? '#f5f3ff' : unread ? '#fffbf0' : '#fff',
+                    borderLeft: selected ? '3px solid #6366f1' : '3px solid transparent',
                     cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    '&:hover': { bgcolor: selected ? '#f5f3ff' : '#f8fafc' },
                   }}
-                  onClick={() => {
-                    setSelectedConversationId(row.id);
-                    setDraftTarget(null);
-                  }}
+                  onClick={() => { setSelectedConversationId(row.id); setDraftTarget(null); }}
                 >
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25 }}>
                     <Checkbox
                       checked={selectedConversationIds.has(row.id)}
                       onClick={(event) => event.stopPropagation()}
                       onChange={() => {
                         setSelectedConversationIds((current) => {
                           const next = new Set(current);
-                          if (next.has(row.id)) next.delete(row.id);
-                          else next.add(row.id);
+                          if (next.has(row.id)) next.delete(row.id); else next.add(row.id);
                           return next;
                         });
                       }}
                       size="small"
+                      sx={{ p: 0, mt: 0.5 }}
                     />
-                    <Avatar src={row.participantAvatar}>{row.participantName.charAt(0).toUpperCase()}</Avatar>
+                    <Box sx={{ position: 'relative' }}>
+                      <Avatar src={row.participantAvatar} sx={{ width: 40, height: 40, fontSize: '0.95rem', bgcolor: '#6366f1' }}>{row.participantName.charAt(0).toUpperCase()}</Avatar>
+                      <Box sx={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', bgcolor: row.status === 'online' ? '#22c55e' : '#d1d5db', border: '2px solid #fff' }} />
+                    </Box>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: unread ? 800 : 700 }} noWrap>{row.participantName}</Typography>
-                      <Typography variant="caption" sx={{ color: themeColors.text.secondary }} noWrap>{row.jobTitle || 'No job linked'}</Typography>
-                      <Typography variant="caption" sx={{ display: 'block', color: themeColors.text.secondary }} noWrap>{row.lastMessage || 'No message yet'}</Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.25 }}>
+                        <Typography variant="body2" sx={{ fontWeight: unread ? 800 : 600, color: '#0f172a', fontSize: '0.875rem' }} noWrap>{row.participantName}</Typography>
+                        <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem', flexShrink: 0, ml: 1 }}>{formatTimeAgo(row.lastMessageTime)}</Typography>
+                      </Box>
+                      <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontWeight: 500 }} noWrap>{row.jobTitle || 'No job linked'}</Typography>
+                      <Typography variant="caption" sx={{ color: '#94a3b8' }} noWrap>{row.lastMessage || 'No messages yet'}</Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25 }}>
-                      <Typography variant="caption" sx={{ color: themeColors.text.secondary }}>{formatTimeAgo(row.lastMessageTime)}</Typography>
-                      <Chip label={row.status} size="small" color={statusChipColor(row.status)} />
-                      {unread && <Chip label={row.unreadCount > 0 ? row.unreadCount : 'Unread'} size="small" color="warning" />}
-                      <Stack direction="row" spacing={0.25}>
-                        <Tooltip title={row.meta.starred ? 'Unstar' : 'Star'}>
-                          <IconButton
-                            size="small"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleConversationAction('star', row);
-                            }}
-                          >
-                            {row.meta.starred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={row.meta.pinned ? 'Unpin' : 'Pin'}>
-                          <IconButton
-                            size="small"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleConversationAction('pin', row);
-                            }}
-                          >
-                            <PushPinIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <IconButton
-                          size="small"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setConversationMenuAnchor(event.currentTarget);
-                            setConversationMenuId(row.id);
-                          }}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                      {unread && <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f59e0b' }} />}
+                      <IconButton size="small" sx={{ p: 0.25, opacity: 0.5 }}
+                        onClick={(event) => { event.stopPropagation(); void handleConversationAction('star', row); }}>
+                        {row.meta.starred ? <StarIcon sx={{ fontSize: 14, color: '#f59e0b' }} /> : <StarBorderIcon sx={{ fontSize: 14 }} />}
+                      </IconButton>
+                      <IconButton size="small" sx={{ p: 0.25, opacity: 0.5 }}
+                        onClick={(event) => { event.stopPropagation(); setConversationMenuAnchor(event.currentTarget); setConversationMenuId(row.id); }}>
+                        <MoreVertIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
                     </Box>
-                  </Stack>
+                  </Box>
                 </Box>
               );
             })}
 
             {filteredConversations.length === 0 && (
-              <Typography variant="body2" sx={{ p: 2, textAlign: 'center', color: themeColors.text.secondary }}>
-                No conversations found
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8, color: '#94a3b8' }}>
+                <MailIcon sx={{ fontSize: 40, mb: 1, opacity: 0.4 }} />
+                <Typography variant="body2">No conversations found</Typography>
+              </Box>
             )}
           </Box>
         </Box>
 
-        <Box sx={{ border: `1px solid ${themeColors.border}`, borderRadius: 2, display: 'flex', flexDirection: 'column', minHeight: { xs: 480, lg: 0 }, bgcolor: '#fff', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: { xs: 480, lg: 0 }, bgcolor: '#fff', overflow: 'hidden' }}>
           {selectedConversation || draftTarget ? (
             <>
-              <Box sx={{ p: 1.75, borderBottom: `1px solid ${themeColors.border}` }}>
-                <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between" flexWrap="wrap">
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Avatar src={selectedConversation?.participantAvatar}>{(selectedConversation?.participantName || draftTarget?.candidateName || 'C').charAt(0).toUpperCase()}</Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{selectedConversation?.participantName || draftTarget?.candidateName}</Typography>
-                      <Stack direction="row" spacing={0.75} flexWrap="wrap">
-                        {candidateContext?.matchScore !== undefined && <Chip size="small" label={`Match ${candidateContext.matchScore}%`} />}
-                        {candidateContext?.jobTitle && <Chip size="small" icon={<WorkIcon fontSize="small" />} label={candidateContext.jobTitle} />}
-                        {candidateContext?.atsStage && <Chip size="small" label={candidateContext.atsStage} />}
-                      </Stack>
+              {/* Chat header */}
+              <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #f1f5f9', bgcolor: '#fafafa' }}>
+
+                {/* Row 1: Avatar + name */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.25 }}>
+                  <Avatar src={selectedConversation?.participantAvatar} sx={{ width: 40, height: 40, bgcolor: '#6366f1', fontWeight: 800, flexShrink: 0 }}>
+                    {(selectedConversation?.participantName || draftTarget?.candidateName || 'C').charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0f172a', lineHeight: 1.2, fontSize: '0.95rem' }} noWrap>
+                      {selectedConversation?.participantName || draftTarget?.candidateName}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.25 }}>
+                      {candidateContext?.matchScore !== undefined && <Chip size="small" label={`${candidateContext.matchScore}% match`} sx={{ height: 18, fontSize: '0.6rem', bgcolor: '#dcfce7', color: '#16a34a' }} />}
+                      {candidateContext?.jobTitle && <Chip size="small" label={candidateContext.jobTitle} sx={{ height: 18, fontSize: '0.6rem' }} />}
+                      {candidateContext?.atsStage && <Chip size="small" label={candidateContext.atsStage} sx={{ height: 18, fontSize: '0.6rem', bgcolor: '#ede9fe', color: '#7c3aed' }} />}
                     </Box>
-                  </Stack>
-
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' },
-                      gap: 1,
-                      minWidth: { xs: '100%', lg: 520 },
-                    }}
-                  >
-                    <Button size="medium" variant="outlined" startIcon={<PersonIcon />} onClick={() => {
-                      if (!candidateContext) {
-                        toast.error('Candidate profile details unavailable');
-                        return;
-                      }
-                      toast.success(`Candidate: ${candidateContext.candidateName}${candidateContext.headline ? ` | ${candidateContext.headline}` : ''}`);
-                    }}>View Profile</Button>
-                    <Button size="medium" variant="outlined" onClick={() => {
-                      if (!candidateContext?.resumeUrl) {
-                        toast.error('Resume not available');
-                        return;
-                      }
-                      window.open(candidateContext.resumeUrl, '_blank', 'noopener,noreferrer');
-                    }}>View Resume</Button>
-                    <FormControl size="medium" fullWidth>
-                      <Select
-                        value={candidateContext?.atsStage || 'Move Stage'}
-                        displayEmpty
-                        onChange={(event) => {
-                          const stage = event.target.value;
-                          if (stage && stage !== 'Move Stage') void moveAtsStage(stage);
-                        }}
-                      >
-                        <MenuItem value="Move Stage" disabled>Move Stage</MenuItem>
-                        {ATS_STAGE_OPTIONS.map((stage) => <MenuItem key={stage} value={stage}>{stage}</MenuItem>)}
-                      </Select>
-                    </FormControl>
-                    <Button
-                      size="medium"
-                      variant="outlined"
-                      startIcon={<EventIcon />}
-                      onClick={() => {
-                        const name = selectedConversation?.participantName || draftTarget?.candidateName || 'Candidate';
-                        const id = selectedConversation?.participantId || draftTarget?.candidateId || '';
-                        onOpenInterviewManagement?.({
-                          candidateId: id,
-                          candidateName: name,
-                          jobId: candidateContext?.jobId,
-                          jobTitle: candidateContext?.jobTitle,
-                        });
-                      }}
-                    >
-                      Schedule Interview
-                    </Button>
-                    <Button
-                      size="medium"
-                      variant="contained"
-                      startIcon={<OpenInNewIcon />}
-                      onClick={() => setChatWindowOpen(true)}
-                    >
-                      Open Chat Window
-                    </Button>
                   </Box>
-                </Stack>
+                </Box>
+
+                {/* Row 2: Primary action buttons — all same height, no wrap */}
+                <Box sx={{ display: 'flex', gap: 0.75, mb: 1, flexWrap: 'nowrap', overflowX: 'auto', pb: 0.25 }}>
+                  <Button size="small" variant="outlined" startIcon={<PersonIcon sx={{ fontSize: '0.85rem !important' }} />}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    onClick={() => { if (!candidateContext) { toast.error('Candidate profile unavailable'); return; } toast.success(`${candidateContext.candidateName}${candidateContext.headline ? ` · ${candidateContext.headline}` : ''}`); }}>
+                    Profile
+                  </Button>
+                  <Button size="small" variant="outlined"
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    onClick={() => { if (!candidateContext?.resumeUrl) { toast.error('Resume not available'); return; } window.open(candidateContext.resumeUrl, '_blank', 'noopener,noreferrer'); }}>
+                    Resume
+                  </Button>
+                  <Button size="small" variant="outlined" startIcon={<EventIcon sx={{ fontSize: '0.85rem !important' }} />}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    onClick={() => { const name = selectedConversation?.participantName || draftTarget?.candidateName || 'Candidate'; const id = selectedConversation?.participantId || draftTarget?.candidateId || ''; onOpenInterviewManagement?.({ candidateId: id, candidateName: name, jobId: candidateContext?.jobId, jobTitle: candidateContext?.jobTitle }); }}>
+                    Interview
+                  </Button>
+                  <Button size="small" variant="contained" startIcon={<OpenInNewIcon sx={{ fontSize: '0.85rem !important' }} />}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}
+                    onClick={() => setChatWindowOpen(true)}>
+                    Chat Window
+                  </Button>
+                  <FormControl size="small" sx={{ flexShrink: 0, minWidth: 120, height: 32 }}>
+                    <Select value={candidateContext?.atsStage || ''} displayEmpty
+                      sx={{ borderRadius: 2, fontSize: '0.78rem', height: 32 }}
+                      onChange={(event) => { const stage = event.target.value; if (stage) void moveAtsStage(stage); }}
+                      renderValue={(value) => value || 'Move Stage'}>
+                      <MenuItem value="" disabled>Move Stage</MenuItem>
+                      {ATS_STAGE_OPTIONS.map((stage) => <MenuItem key={stage} value={stage} sx={{ fontSize: '0.8rem' }}>{stage}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {/* Row 3: Quick action buttons */}
+                <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'nowrap', overflowX: 'auto', pb: 0.25 }}>
+                  <Button size="small" onClick={sendResumeRequest}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, color: '#475569', border: '1px solid #e2e8f0', px: 1.25 }}>
+                    Request Resume
+                  </Button>
+                  <Button size="small" onClick={sendInterviewInvite}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, color: '#475569', border: '1px solid #e2e8f0', px: 1.25 }}>
+                    Interview Invite
+                  </Button>
+                  <Button size="small" onClick={openOfferDialog}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, color: '#16a34a', border: '1px solid #bbf7d0', px: 1.25 }}>
+                    Offer Letter
+                  </Button>
+                  <Button size="small" color="error" onClick={sendRejectTemplate}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, border: '1px solid #fecaca', px: 1.25 }}>
+                    Reject
+                  </Button>
+                  <FormControl size="small" sx={{ flexShrink: 0, minWidth: 140, height: 28 }}>
+                    <Select value="" displayEmpty
+                      sx={{ borderRadius: 2, fontSize: '0.72rem', height: 28, color: '#64748b' }}
+                      onChange={(event) => { const t = templates.find((item) => item.id === event.target.value); if (t) applyTemplateToComposer(t); }}
+                      renderValue={() => 'Use Template'}>
+                      {templates.map((template) => <MenuItem key={template.id} value={template.id} sx={{ fontSize: '0.8rem' }}>{template.title}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Box>
               </Box>
 
-              <Box
-                sx={{
-                  p: 1.5,
-                  borderBottom: `1px solid ${themeColors.border}`,
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' },
-                  gap: 1,
-                }}
-              >
-                <Button size="medium" variant="outlined" onClick={sendResumeRequest}>Request Resume</Button>
-                <Button size="medium" variant="outlined" onClick={sendInterviewInvite}>Interview Invite</Button>
-                <Button size="medium" variant="outlined" onClick={openOfferDialog}>Offer Letter</Button>
-                <Button size="medium" variant="outlined" color="error" onClick={sendRejectTemplate}>Reject with Template</Button>
-                <FormControl size="medium" sx={{ gridColumn: { xs: '1 / -1', xl: 'span 2' } }}>
-                  <InputLabel>Message Template</InputLabel>
-                  <Select
-                    label="Message Template"
-                    value=""
-                    onChange={(event) => {
-                      const template = templates.find((item) => item.id === event.target.value);
-                      if (template) applyTemplateToComposer(template);
-                    }}
-                  >
-                    {templates.map((template) => (
-                      <MenuItem key={template.id} value={template.id}>{template.title}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Box sx={{ flex: 1, overflowY: 'auto', p: 1.75, bgcolor: '#FAFAFC' }}>
-                {loadingMessages && <Typography variant="body2">Loading messages...</Typography>}
+              <Box sx={{ flex: 1, overflowY: 'auto', p: 2, bgcolor: '#fafafa', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {loadingMessages && <LinearProgress sx={{ mb: 1, borderRadius: 1 }} />}
                 {!loadingMessages && selectedMessages.length === 0 && (
-                  <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>
-                    Start the conversation with a message.
-                  </Typography>
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', py: 8 }}>
+                    <MailIcon sx={{ fontSize: 48, mb: 1.5, opacity: 0.3 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>Start the conversation</Typography>
+                    <Typography variant="caption">Send a message to begin</Typography>
+                  </Box>
                 )}
                 {selectedMessages.map((message, idx) => renderMessageRow(message, idx > 0 ? selectedMessages[idx - 1] : null))}
-                {typing && (
-                  <Typography variant="caption" sx={{ color: themeColors.text.secondary }}>
-                    Typing indicator: composing message...
-                  </Typography>
-                )}
+                {typing && <Typography variant="caption" sx={{ color: '#94a3b8', px: 1 }}>typing...</Typography>}
                 <div ref={messagesEndRef} />
               </Box>
 
-              <Box sx={{ p: 1.5, borderTop: `1px solid ${themeColors.border}` }}>
-                <Stack direction="row" spacing={1} sx={{ mb: 1 }} flexWrap="wrap">
-                  <Button size="medium" variant="outlined" onClick={(event) => setEmojiAnchorEl(event.currentTarget)}>Emoji</Button>
-                  <Button size="medium" variant="outlined" startIcon={<AutoFixHighIcon />} onClick={(event) => setAiAnchorEl(event.currentTarget)}>AI Tools</Button>
-                  <Tooltip title={`Allowed: ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()} | Max ${MAX_FILE_MB}MB`}>
-                    <Button size="medium" variant="outlined" startIcon={<FileUploadIcon />} onClick={() => fileInputRef.current?.click()} disabled={!selectedConversation || uploading}>Attach</Button>
-                  </Tooltip>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    hidden
-                    multiple
-                    onChange={onFilePick}
-                    accept={ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(',')}
-                  />
-                </Stack>
-
+              {/* Composer */}
+              <Box sx={{ borderTop: '1px solid #f1f5f9', bgcolor: '#fff' }}>
                 {composerAttachments.length > 0 && (
-                  <Stack direction="row" spacing={0.5} sx={{ mb: 0.75, flexWrap: 'wrap' }}>
+                  <Box sx={{ px: 2, pt: 1.25, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {composerAttachments.map((url, idx) => (
-                      <Chip
-                        key={`${url}-${idx}`}
-                        icon={<FolderZipIcon fontSize="small" />}
+                      <Chip key={`${url}-${idx}`} icon={<FolderZipIcon fontSize="small" />}
                         label={url.split('/').pop() || `Attachment ${idx + 1}`}
                         onDelete={() => setComposerAttachments((current) => current.filter((_, i) => i !== idx))}
-                        size="small"
-                      />
+                        size="small" sx={{ borderRadius: 2 }} />
                     ))}
-                  </Stack>
+                  </Box>
                 )}
-
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  maxRows={6}
-                  placeholder="Type your message, use templates, AI tools, and attachments"
-                  value={composerText}
-                  onChange={(event) => {
-                    setComposerText(event.target.value);
-                    setTyping(event.target.value.trim().length > 0);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      void sendMessage();
-                    }
-                  }}
-                />
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.75 }}>
-                  <Typography variant="caption" sx={{ color: themeColors.text.secondary }}>
-                    Attachments: PDF, DOC, DOCX, Images, ZIP up to {MAX_FILE_MB}MB
-                  </Typography>
-                  <Button
-                    size="medium"
-                    variant="contained"
-                    endIcon={<SendIcon />}
+                <Box sx={{ px: 2, pt: 1.25 }}>
+                  <TextField
+                    fullWidth multiline minRows={2} maxRows={5}
+                    placeholder="Type your message…"
+                    value={composerText}
+                    onChange={(event) => { setComposerText(event.target.value); setTyping(event.target.value.trim().length > 0); }}
+                    onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: '#f8fafc', fontSize: '0.9rem' } }}
+                  />
+                </Box>
+                <Box sx={{ px: 2, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Stack direction="row" spacing={0.5}>
+                    <Tooltip title="Emoji">
+                      <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={(event) => setEmojiAnchorEl(event.currentTarget)}>😊</IconButton>
+                    </Tooltip>
+                    <Tooltip title="AI Tools">
+                      <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={(event) => setAiAnchorEl(event.currentTarget)}><AutoFixHighIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                    <Tooltip title={`Attach file (max ${MAX_FILE_MB}MB)`}>
+                      <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={() => fileInputRef.current?.click()} disabled={!selectedConversation || uploading}><FileUploadIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                    <input ref={fileInputRef} type="file" hidden multiple onChange={onFilePick} accept={ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(',')} />
+                    <Typography variant="caption" sx={{ color: '#cbd5e1', lineHeight: '34px' }}>PDF, DOC, Images, ZIP ≤ {MAX_FILE_MB}MB</Typography>
+                  </Stack>
+                  <Button variant="contained" endIcon={<SendIcon />}
                     disabled={(!composerText.trim() && composerAttachments.length === 0) || uploading}
                     onClick={() => void sendMessage()}
-                  >
+                    sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 700, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, px: 2.5 }}>
                     Send
                   </Button>
                 </Box>
@@ -2010,13 +1954,15 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
               </Menu>
             </>
           ) : (
-            <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-              <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>Select or start a conversation to begin messaging</Typography>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', gap: 1.5 }}>
+              <MailIcon sx={{ fontSize: 56, opacity: 0.25 }} />
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>No conversation selected</Typography>
+              <Typography variant="body2">Select a conversation from the inbox to start messaging</Typography>
             </Box>
           )}
         </Box>
       </Box>
-    </Card>
+    </Box>
   );
 
   const renderTemplates = () => (

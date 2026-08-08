@@ -36,6 +36,7 @@ import {
 import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
+import { recruiterService } from '@services/api';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
@@ -45,6 +46,29 @@ export const MobileNavbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [recruiterAvatar, setRecruiterAvatar] = useState('');
+
+  React.useEffect(() => {
+    let mounted = true;
+    const loadRecruiterAvatar = async () => {
+      if (!user?.id || user.role !== USER_ROLES.RECRUITER) {
+        setRecruiterAvatar('');
+        return;
+      }
+      try {
+        const profile = await recruiterService.getRecruiterProfile(user.id);
+        if (!mounted) return;
+        setRecruiterAvatar(String(profile?.company_logo_url || profile?.logo_url || '').trim());
+      } catch {
+        if (mounted) setRecruiterAvatar('');
+      }
+    };
+
+    loadRecruiterAvatar();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id, user?.role]);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -135,6 +159,7 @@ export const MobileNavbar: React.FC = () => {
         <>
           <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: '#f5f5f5' }}>
             <Avatar
+              src={user.role === USER_ROLES.RECRUITER ? (recruiterAvatar || user.avatar) : user.avatar}
               sx={{
                 width: 48,
                 height: 48,

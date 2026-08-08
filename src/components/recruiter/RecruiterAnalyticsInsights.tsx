@@ -555,8 +555,7 @@ export const RecruiterAnalyticsInsights: React.FC<RecruiterAnalyticsInsightsProp
         <Tabs
           value={tab}
           onChange={(_event, value: AnalyticsTab) => setTab(value)}
-          variant={isTablet ? 'scrollable' : 'fullWidth'}
-          scrollButtons="auto"
+          variant={isTablet ? 'scrollable' : 'scrollable'} scrollButtons="auto" allowScrollButtonsMobile sx={{ minHeight: 54, px: 0.5, '& .MuiTabs-scroller': { overflowX: 'auto !important' }, '& .MuiTabs-scrollButtons': { width: 34, borderRadius: 1, mx: 0.5 }, '& .MuiTab-root': { textTransform: 'none', whiteSpace: 'nowrap', minHeight: 54, minWidth: 'max-content', px: 1.8, fontWeight: 700, fontSize: '0.82rem' } }}
         >
           <Tab value="overview" label="Overview" />
           <Tab value="funnel" label="Hiring Funnel" />

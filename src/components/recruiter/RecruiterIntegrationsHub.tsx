@@ -401,7 +401,7 @@ export const RecruiterIntegrationsHub: React.FC<RecruiterIntegrationsHubProps> =
       )}
 
       <Paper sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, mb: 2 }}>
-        <Tabs value={tab} onChange={(_, value: IntegrationsTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'fullWidth'} scrollButtons="auto">
+        <Tabs value={tab} onChange={(_, value: IntegrationsTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'scrollable'} scrollButtons="auto" allowScrollButtonsMobile sx={{ minHeight: 54, px: 0.5, '& .MuiTabs-scroller': { overflowX: 'auto !important' }, '& .MuiTabs-scrollButtons': { width: 34, borderRadius: 1, mx: 0.5 }, '& .MuiTab-root': { textTransform: 'none', whiteSpace: 'nowrap', minHeight: 54, minWidth: 'max-content', px: 1.8, fontWeight: 700, fontSize: '0.82rem' } }}>
           <Tab value="overview" label="Overview" />
           <Tab value="marketplace" label="Marketplace" />
           <Tab value="connections" label="Connection Wizard" />
@@ -444,7 +444,7 @@ export const RecruiterIntegrationsHub: React.FC<RecruiterIntegrationsHubProps> =
                   {connections.length === 0 ? (
                     <Alert severity="info">No integrations connected yet.</Alert>
                   ) : connections.map((connection) => (
-                    <Chip key={connection.id} icon={<HubIcon />} label={`${integrationById[connection.integrationId]?.name || connection.integrationId} • ${connection.status}`} />
+                    <Chip key={connection.id} icon={<HubIcon />} label={`${integrationById[connection.integrationId]?.name || connection.integrationId} â€¢ ${connection.status}`} />
                   ))}
                 </Stack>
               </CardContent>
@@ -612,7 +612,7 @@ export const RecruiterIntegrationsHub: React.FC<RecruiterIntegrationsHubProps> =
                 <TableHead>
                   <TableRow>
                     <TableCell>External Stage</TableCell>
-                    <TableCell>↓</TableCell>
+                    <TableCell>â†“</TableCell>
                     <TableCell>Internal ATS Stage</TableCell>
                     <TableCell>Updated</TableCell>
                   </TableRow>
@@ -621,7 +621,7 @@ export const RecruiterIntegrationsHub: React.FC<RecruiterIntegrationsHubProps> =
                   {stageMappings.map((mapping: StageMapping) => (
                     <TableRow key={mapping.id}>
                       <TableCell>{mapping.externalStage}</TableCell>
-                      <TableCell>↓</TableCell>
+                      <TableCell>â†“</TableCell>
                       <TableCell>{mapping.internalStage}</TableCell>
                       <TableCell>{parseDate(mapping.updatedAt)}</TableCell>
                     </TableRow>
@@ -715,7 +715,7 @@ export const RecruiterIntegrationsHub: React.FC<RecruiterIntegrationsHubProps> =
                 <Stack spacing={0.8}>
                   {webhooks.length === 0 ? <Alert severity="info">No webhook endpoints.</Alert> : webhooks.map((endpoint: WebhookEndpoint) => (
                     <Paper key={endpoint.id} sx={{ p: 1, border: `1px solid ${themeColors.border}` }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{endpoint.direction.toUpperCase()} • {endpoint.url}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{endpoint.direction.toUpperCase()} â€¢ {endpoint.url}</Typography>
                       <Typography variant="caption" color="text.secondary">Events: {endpoint.events.join(', ')}</Typography>
                       <Stack direction="row" spacing={0.6} sx={{ mt: 0.8 }}>
                         <Button size="small" variant="outlined" onClick={() => {

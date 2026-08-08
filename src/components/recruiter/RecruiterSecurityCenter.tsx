@@ -267,7 +267,7 @@ export const RecruiterSecurityCenter: React.FC<RecruiterSecurityCenterProps> = (
       )}
 
       <Paper sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, mb: 2 }}>
-        <Tabs value={tab} onChange={(_, value: SecurityTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'fullWidth'} scrollButtons="auto">
+        <Tabs value={tab} onChange={(_, value: SecurityTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'scrollable'} scrollButtons="auto" allowScrollButtonsMobile sx={{ minHeight: 54, px: 0.5, '& .MuiTabs-scroller': { overflowX: 'auto !important' }, '& .MuiTabs-scrollButtons': { width: 34, borderRadius: 1, mx: 0.5 }, '& .MuiTab-root': { textTransform: 'none', whiteSpace: 'nowrap', minHeight: 54, minWidth: 'max-content', px: 1.8, fontWeight: 700, fontSize: '0.82rem' } }}>
           <Tab value="overview" label="Overview" />
           <Tab value="score" label="Security Score" />
           <Tab value="audit" label="Audit Logs" />
@@ -456,7 +456,7 @@ export const RecruiterSecurityCenter: React.FC<RecruiterSecurityCenterProps> = (
                   {trustedDevices.map((d) => (
                     <Paper key={d.id} sx={{ p: 1, border: `1px solid ${themeColors.border}` }}>
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>{d.name}</Typography>
-                      <Typography variant="caption">{d.browser} • {d.operatingSystem}</Typography>
+                      <Typography variant="caption">{d.browser} â€¢ {d.operatingSystem}</Typography>
                       <Typography variant="caption" display="block">Last seen: {format(new Date(d.lastSeenAt), 'dd MMM yyyy, hh:mm a')}</Typography>
                       <Button size="small" color="error" variant="outlined" sx={{ mt: 0.7 }} onClick={() => {
                         try {

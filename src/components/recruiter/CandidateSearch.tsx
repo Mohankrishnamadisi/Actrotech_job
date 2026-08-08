@@ -65,7 +65,6 @@ interface Candidate {
   total_experience_months?: number;
   current_designation?: string | null;
   currentDesignation?: string | null;
-  avatar?: string;
   avatar_url?: string | null;
   profile_image_url?: string | null;
   resume_url?: string | null;
@@ -223,7 +222,6 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const profileAvatarUrl =
     selectedCandidate?.avatar_url ||
     selectedCandidate?.profile_image_url ||
-    selectedCandidate?.avatar ||
     '';
   const resumeUrl = selectedCandidate?.resume_url || '';
   const isProfileUnlocked = Boolean(selectedCandidate && unlockedCandidates[selectedCandidate.id]);
@@ -360,7 +358,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                     }
                   >
                     <ListItemAvatar>
-                      <Avatar src={candidate.avatar} alt={candidate.name} />
+                      <Avatar src={candidate.avatar_url || candidate.profile_image_url || undefined} alt={candidate.name} />
                     </ListItemAvatar>
                     <ListItemText
                       primary={
@@ -463,7 +461,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
-                  src={selectedCandidate.avatar}
+                  src={selectedCandidate.avatar_url || selectedCandidate.profile_image_url || undefined}
                   sx={{
                     width: 70,
                     height: 70,
@@ -687,11 +685,13 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                   {Array.isArray(selectedCandidate.work_experience) && selectedCandidate.work_experience.length > 0 && (
                     <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Work Experience</Typography>
-                      <Box sx={{ display: 'grid', gap: 1.25 }}>
-                        {selectedCandidate.work_experience.map((item, index) => (
-                          <Box key={index} sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 1.5 }}>
-                            <Typography sx={{ fontWeight: 700 }}>{item.title || item.role || item.position || 'Role'}</Typography>
-                            <Typography variant="body2" color="text.secondary">{item.company || item.organization || ''}</Typography>
+                      <Box sx={{ display: 'grid', gap: 1.5 }}>
+                        {selectedCandidate.work_experience.map((item: any, index: number) => (
+                          <Box key={index} sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 1.5, borderLeft: '3px solid #6366f1' }}>
+                            <Typography sx={{ fontWeight: 700 }}>{item.position || item.title || item.role || 'Role'}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>{item.company || item.organization || ''}</Typography>
+                            {item.duration && <Typography variant="caption" color="text.secondary">{item.duration}</Typography>}
+                            {item.description && <Typography variant="body2" sx={{ mt: 0.5, color: '#64748b', lineHeight: 1.6 }}>{item.description}</Typography>}
                           </Box>
                         ))}
                       </Box>
@@ -702,15 +702,77 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                     <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Education</Typography>
                       <Box sx={{ display: 'grid', gap: 1.25 }}>
-                        {selectedCandidate.education_details.map((item, index) => (
+                        {selectedCandidate.education_details.map((item: any, index: number) => (
                           <Box key={index} sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 1.5 }}>
-                            <Typography sx={{ fontWeight: 700 }}>{item.degree || item.qualification || item.field || 'Education'}</Typography>
-                            <Typography variant="body2" color="text.secondary">{item.institution || item.school || item.college || ''}</Typography>
+                            <Typography sx={{ fontWeight: 700 }}>{item.degree || item.qualification || 'Degree'}{item.field ? ` – ${item.field}` : ''}</Typography>
+                            <Typography variant="body2" color="text.secondary">{item.school || item.institution || item.college || ''}</Typography>
+                            {item.year && <Typography variant="caption" color="text.secondary">{item.year}</Typography>}
                           </Box>
                         ))}
                       </Box>
                     </Box>
                   )}
+
+                  {Array.isArray((selectedCandidate as any).it_skills) && (selectedCandidate as any).it_skills.length > 0 && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>IT Skills</Typography>
+                      <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <Box component="thead">
+                          <Box component="tr">
+                            {['Skill', 'Version', 'Last Used', 'Experience'].map((h) => (
+                              <Box component="th" key={h} sx={{ textAlign: 'left', pb: 0.75, fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{h}</Box>
+                            ))}
+                          </Box>
+                        </Box>
+                        <Box component="tbody">
+                          {(selectedCandidate as any).it_skills.map((s: any, i: number) => (
+                            <Box component="tr" key={i}>
+                              <Box component="td" sx={{ py: 0.75, fontWeight: 600, fontSize: '0.875rem' }}>{s.skill}</Box>
+                              <Box component="td" sx={{ py: 0.75, fontSize: '0.875rem', color: '#64748b' }}>{s.version || '–'}</Box>
+                              <Box component="td" sx={{ py: 0.75, fontSize: '0.875rem', color: '#64748b' }}>{s.lastUsed || '–'}</Box>
+                              <Box component="td" sx={{ py: 0.75, fontSize: '0.875rem', color: '#64748b' }}>{s.experience || '–'}</Box>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    </Box>
+                  )}
+
+                  {Array.isArray(selectedCandidate.certifications) && selectedCandidate.certifications.length > 0 && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Certifications</Typography>
+                      {(selectedCandidate.certifications as any[]).map((cert, i) => (
+                        <Box key={i} sx={{ mb: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{cert.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">{cert.issuer}{cert.year ? ` · ${cert.year}` : ''}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+
+                  {Array.isArray(selectedCandidate.projects) && selectedCandidate.projects.length > 0 && (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Projects</Typography>
+                      {(selectedCandidate.projects as any[]).map((proj, i) => (
+                        <Box key={i} sx={{ mb: 1.5 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700 }}>{proj.title}</Typography>
+                          {proj.description && <Typography variant="caption" color="text.secondary">{proj.description}</Typography>}
+                          {proj.url && <Box><Typography component="a" href={proj.url} target="_blank" variant="caption" sx={{ color: '#6366f1' }}>{proj.url} ↗</Typography></Box>}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+
+                  {(selectedCandidate as any).linkedin_url || (selectedCandidate as any).github_url || (selectedCandidate as any).portfolio_url ? (
+                    <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Online Profiles</Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        {(selectedCandidate as any).linkedin_url && <Typography component="a" href={(selectedCandidate as any).linkedin_url} target="_blank" variant="body2" sx={{ color: '#0077b5' }}>LinkedIn ↗</Typography>}
+                        {(selectedCandidate as any).github_url && <Typography component="a" href={(selectedCandidate as any).github_url} target="_blank" variant="body2" sx={{ color: '#333' }}>GitHub ↗</Typography>}
+                        {(selectedCandidate as any).portfolio_url && <Typography component="a" href={(selectedCandidate as any).portfolio_url} target="_blank" variant="body2" sx={{ color: '#6366f1' }}>Portfolio ↗</Typography>}
+                      </Box>
+                    </Box>
+                  ) : null}
                 </Box>
               </Grid>
             </Grid>

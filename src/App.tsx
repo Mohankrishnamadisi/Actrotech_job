@@ -69,6 +69,7 @@ import AssessmentLibrary from './admin/pages/AssessmentLibrary';
 import PlatformCommunities from './admin/pages/PlatformCommunities';
 import GlobalEnterprisePlatform from './admin/pages/GlobalEnterprisePlatform';
 import { RecruiterSubscriptionPage } from '@pages/recruiter/RecruiterSubscriptionPage';
+import AdminBillingManagement from './admin/pages/AdminBillingManagement';
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription, loading: subscriptionLoading } = useSubscription(user?.id || null);
@@ -311,6 +312,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path={ROUTES.ADMIN_LOCALIZATION} element={<GlobalEnterprisePlatform mode="localization" />} />
           <Route path={ROUTES.ADMIN_COMPLIANCE} element={<GlobalEnterprisePlatform mode="compliance" />} />
           <Route path={ROUTES.ADMIN_REGIONAL_MANAGEMENT} element={<GlobalEnterprisePlatform mode="regional-management" />} />
+          <Route path={ROUTES.ADMIN_BILLING_MANAGEMENT} element={<AdminBillingManagement />} />
         </Route>
         <Route
           path={ROUTES.MESSAGING}
@@ -373,7 +375,7 @@ const AppContent: React.FC = () => {
               email: session.user.email || '',
               name: profile?.name || session.user.user_metadata?.name || 'User',
               role: finalRole,
-              avatar: profile?.avatar || profile?.profile_image_url || session.user.user_metadata?.avatar_url,
+              avatar: profile?.avatar_url || profile?.profile_image_url || session.user.user_metadata?.avatar_url,
               createdAt: profile?.created_at || session.user.created_at || new Date().toISOString(),
               updatedAt: profile?.updated_at || session.user.updated_at || new Date().toISOString(),
             });
@@ -413,7 +415,7 @@ const AppContent: React.FC = () => {
             email: s.user.email || '',
             name: profile?.name || s.user.user_metadata?.name || 'User',
             role: finalRole,
-            avatar: profile?.avatar || profile?.profile_image_url || s.user.user_metadata?.avatar_url,
+            avatar: profile?.avatar_url || profile?.profile_image_url || s.user.user_metadata?.avatar_url,
             createdAt: profile?.created_at || s.user.created_at || new Date().toISOString(),
             updatedAt: profile?.updated_at || s.user.updated_at || new Date().toISOString(),
           });

@@ -233,12 +233,12 @@ export const messagingService = {
           if (participantRole === 'candidate') {
             const { data: participantData } = await supabase
               .from('profiles')
-              .select('id, name, full_name, avatar_url, user_id')
-              .or(`id.eq.${participantId},user_id.eq.${participantId}`)
+              .select('id, name, avatar_url, profile_image_url')
+              .eq('id', participantId)
               .maybeSingle();
 
-            participantName = (participantData && (participantData.name || participantData.full_name)) || 'Candidate';
-            participantAvatar = participantData?.avatar_url;
+            participantName = (participantData?.name) || 'Candidate';
+            participantAvatar = participantData?.avatar_url || participantData?.profile_image_url || undefined;
 
             // Fallback: fetch candidate profile through job applications linkage.
             if (isGenericDisplayName(participantName) || !participantAvatar) {
@@ -290,20 +290,20 @@ export const messagingService = {
             if (!participantAvatar) {
               const { data: fallbackProfile } = await supabase
                 .from('profiles')
-                .select('avatar_url')
-                .or(`id.eq.${participantId},user_id.eq.${participantId}`)
+                .select('avatar_url, profile_image_url')
+                .eq('id', participantId)
                 .maybeSingle();
-              participantAvatar = fallbackProfile?.avatar_url || undefined;
+              participantAvatar = fallbackProfile?.avatar_url || fallbackProfile?.profile_image_url || undefined;
             }
           }
 
           if (!participantAvatar && participantRole === 'candidate') {
             const { data: fallbackProfile } = await supabase
               .from('profiles')
-              .select('avatar_url')
-              .or(`id.eq.${participantId},user_id.eq.${participantId}`)
+              .select('avatar_url, profile_image_url')
+              .eq('id', participantId)
               .maybeSingle();
-            participantAvatar = fallbackProfile?.avatar_url || undefined;
+            participantAvatar = fallbackProfile?.avatar_url || fallbackProfile?.profile_image_url || undefined;
           }
 
           // Determine the latest message from the embedded messages array

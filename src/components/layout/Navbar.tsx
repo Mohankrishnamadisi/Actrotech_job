@@ -33,6 +33,7 @@ import { useTheme } from '@mui/material/styles';
 import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
+import { recruiterService } from '@services/api';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
@@ -66,6 +67,7 @@ export const Navbar: React.FC = () => {
   const [exploreAnchor, setExploreAnchor] = useState<null | HTMLElement>(null);
   const [supportOpen, setSupportOpen] = useState(false);
   const [ticketNotifCount, setTicketNotifCount] = useState(0);
+  const [recruiterAvatar, setRecruiterAvatar] = useState('');
 
   useEffect(() => {
     if (!user?.id) {
@@ -74,6 +76,30 @@ export const Navbar: React.FC = () => {
     }
     supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => setTicketNotifCount(0));
   }, [user?.id, supportOpen]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadRecruiterAvatar = async () => {
+      if (!user?.id || !isRecruiter) {
+        setRecruiterAvatar('');
+        return;
+      }
+
+      try {
+        const profile = await recruiterService.getRecruiterProfile(user.id);
+        if (!mounted) return;
+        const logo = String(profile?.company_logo_url || profile?.logo_url || '').trim();
+        setRecruiterAvatar(logo);
+      } catch {
+        if (mounted) setRecruiterAvatar('');
+      }
+    };
+
+    loadRecruiterAvatar();
+    return () => {
+      mounted = false;
+    };
+  }, [isRecruiter, user?.id]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -600,7 +626,7 @@ export const Navbar: React.FC = () => {
                   }}
                 >
                   <Avatar
-                    src={user.avatar}
+                    src={isRecruiter ? (recruiterAvatar || user.avatar) : user.avatar}
                     sx={{
                       width: 38,
                       height: 38,
@@ -647,9 +673,14 @@ export const Navbar: React.FC = () => {
                     <DashboardIcon sx={{ mr: 1.5, fontSize: 20 }} /> Dashboard
                   </MenuItem>
                   <MenuItem
-                    component={RouterLink}
-                    to={ROUTES.DASHBOARD_PROFILE}
-                    onClick={handleMenuClose}
+                    onClick={() => {
+                      handleMenuClose();
+                      if (isRecruiter) {
+                        navigate(ROUTES.RECRUITER_DASHBOARD, { state: { tab: 'my-details' } });
+                        return;
+                      }
+                      navigate(ROUTES.DASHBOARD_PROFILE);
+                    }}
                   >
                     <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} /> My Profile
                   </MenuItem>

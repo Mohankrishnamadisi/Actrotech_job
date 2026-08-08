@@ -18,7 +18,7 @@ import {
   Add as AddIcon,
   ArrowRight as ArrowRightIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@store/index';
 import { ROUTES } from '@constants/index';
 import { recruiterService, statsService, notificationService, jobService } from '@services/api';
@@ -97,6 +97,7 @@ type DashboardTab =
   | 'talent-pool'
   | 'tags'
   | 'ats-pipeline'
+  | 'my-details'
   | 'settings';
 
 const MotionBox = motion(Box);
@@ -109,6 +110,7 @@ const RecommendedCandidates = React.lazy(() =>
 export const RecruiterDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // State
   const [currentTab, setCurrentTab] = useState<DashboardTab>('overview');
@@ -137,6 +139,14 @@ export const RecruiterDashboard: React.FC = () => {
       fetchData();
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    const requestedTab = (location.state as { tab?: DashboardTab } | null)?.tab;
+    if (requestedTab) {
+      setCurrentTab(requestedTab);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -964,6 +974,7 @@ export const RecruiterDashboard: React.FC = () => {
         );
 
       case 'company-profile':
+      case 'my-details':
         return (
           <MotionBox
             initial={{ opacity: 0 }}
@@ -1031,14 +1042,14 @@ export const RecruiterDashboard: React.FC = () => {
         setCurrentTab(tab as DashboardTab);
       }}
       companyName={recruiterProfile?.company_name || 'Your Company'}
-      companyLogo={recruiterProfile?.logo_url}
+      companyLogo={recruiterProfile?.company_logo_url || recruiterProfile?.logo_url}
       notificationCount={notificationsCount}
       unreadMessagesCount={unreadMessagesCount}
       credits={layoutCredits}
       planName={layoutPlanName}
       onNotificationsClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
       onMessagesClick={() => setCurrentTab('messages')}
-      onProfileClick={() => setCurrentTab('company-profile')}
+      onProfileClick={() => setCurrentTab('my-details')}
       onSettingsClick={() => setCurrentTab('settings')}
     >
       {renderContent()}

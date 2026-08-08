@@ -15,6 +15,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import {
+  AccountCircle as AccountCircleIcon,
   Notifications as NotificationsIcon,
   Chat as ChatIcon,
   Settings as SettingsIcon,
@@ -30,6 +31,7 @@ import { ROUTES } from '@constants/index';
 import { supportService } from '@services/support';
 
 interface RecruiterTopbarProps {
+  recruiterLogo?: string;
   notificationCount?: number;
   unreadMessagesCount?: number;
   credits?: number;
@@ -44,6 +46,7 @@ interface RecruiterTopbarProps {
 const MotionBox = motion(Box);
 
 export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
+  recruiterLogo,
   notificationCount = 0,
   unreadMessagesCount = 0,
   credits = 0,
@@ -215,7 +218,7 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
                 }}
               >
                 <Avatar
-                  src={user?.avatar}
+                  src={recruiterLogo || user?.avatar}
                   sx={{
                     width: 36,
                     height: 36,
@@ -276,6 +279,16 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
               {user?.name || 'User'}
             </Typography>
           </Box>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleMenuClose();
+            onProfileClick?.();
+          }}
+          sx={{ '&:hover': { backgroundColor: themeColors.hover } }}
+        >
+          <AccountCircleIcon sx={{ mr: 1.5, fontSize: '1.1rem' }} />
+          My Details
         </MenuItem>
         <MenuItem
           onClick={() => {
