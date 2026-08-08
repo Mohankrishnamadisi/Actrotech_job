@@ -292,8 +292,25 @@ export const AiCareerHub: React.FC = () => {
                 </Typography>
               </Box>
               <Stack direction="row" spacing={0.7} flexWrap="wrap">
-                <Chip icon={<AiIcon />} label={`Plan: ${permissions.plan}`} sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} variant="outlined" />
-                <Chip label={permissions.isPremium ? 'Unlimited AI Access' : `${permissions.remainingDailyRequests} requests left today`} sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} variant="outlined" />
+                {(() => {
+                  const planLabel = permissions?.plan ? String(permissions.plan).replace(/^\w/, (c) => c.toUpperCase()) : 'Free';
+                  const requestsLabel = permissions?.isPremium ? 'Unlimited AI Access' : `${permissions?.remainingDailyRequests ?? 0} requests left today`;
+                  return (
+                    <>
+                      <Chip
+                        icon={<AiIcon />}
+                        label={`Plan: ${planLabel}`}
+                        sx={{ bgcolor: 'rgba(255,255,255,0.98)', color: '#0f172a', borderColor: 'rgba(15,23,42,0.06)', fontWeight: 800 }}
+                        variant="outlined"
+                      />
+                      <Chip
+                        label={requestsLabel}
+                        sx={{ bgcolor: 'rgba(255,255,255,0.98)', color: '#0f172a', borderColor: 'rgba(15,23,42,0.06)', fontWeight: 700 }}
+                        variant="outlined"
+                      />
+                    </>
+                  );
+                })()}
               </Stack>
             </Stack>
           </CardContent>

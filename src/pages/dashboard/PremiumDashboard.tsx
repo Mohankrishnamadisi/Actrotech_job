@@ -957,9 +957,9 @@ export const PremiumDashboard: React.FC = () => {
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
                       <action.icon color={action.color} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                        {action.label}
-                      </Typography>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                          {action.label === 'Complete Profile' ? (Math.min(100, profileStrength) >= 100 ? 'Edit Profile' : 'Complete Profile') : action.label}
+                        </Typography>
                     </Box>
                     <button
                       className="cta"

@@ -8,6 +8,11 @@ import {
   CardContent,
   Chip,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Drawer,
   Grid,
   IconButton,
   LinearProgress,
@@ -19,15 +24,40 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   ArrowForward as ArrowForwardIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
+  AttachMoney as AttachMoneyIcon,
+  AutoAwesome as AutoAwesomeIcon,
   Bookmark as BookmarkIcon,
+  ChatBubbleOutline as ChatIcon,
+  CheckCircle as CheckCircleIcon,
+  Dashboard as DashboardIcon,
+  Description as DescriptionIcon,
   Download as DownloadIcon,
-  Logout as LogoutIcon,
+  EventAvailable as EventAvailableIcon,
+  ExpandMore as ExpandMoreIcon,
+  FolderOpen as FolderOpenIcon,
+  LocationOn as LocationOnIcon,
+  Login as LogoutIcon,
+  Logout as LogoutIconOld,
+  Menu as MenuIcon,
   Notifications as NotificationsIcon,
+  PeopleAlt as PeopleAltIcon,
   Person as PersonIcon,
+  Quiz as QuizIcon,
+  RateReview as RateReviewIcon,
+  Schedule as ScheduleIcon,
+  Search as SearchIcon,
   Settings as SettingsIcon,
-  AutoAwesome as AiCareerHubIcon,
+  SettingsSuggest as SettingsSuggestIcon,
+  SmartToy as SmartToyIcon,
+  SupportAgent as SupportAgentIcon,
+  Timeline as TimelineIcon,
+  TrendingUp as TrendingUpIcon,
+  Verified as VerifiedIcon,
+  VideoCameraBack as VideocamIcon,
   Visibility as VisibilityIcon,
   Work as WorkIcon,
 } from '@mui/icons-material';
@@ -37,14 +67,14 @@ import { useTheme } from '@mui/material/styles';
 
 import { Layout } from '@components/layout/Layout';
 import { UnlockProButton } from '@components/common/UnlockProButton';
-import RecruiterActivityCenter, { type RecruiterActivityQuickAction } from '@components/dashboard/RecruiterActivityCenter';
 import SupportWidget from '@components/common/SupportWidget';
+import { InstallApp } from '@components/InstallApp/InstallApp';
 import { supportService } from '@services/support';
 import { ROUTES } from '@constants/index';
 import { useSubscription } from '@hooks/index';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
-import { applicationService, jobService, notificationService, savedService, userService } from '@services/api';
+import { applicationService, jobService, notificationService, savedService, userService, recruiterService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { formatDate } from '@utils/index';
 import {
@@ -53,7 +83,6 @@ import {
   getCandidateResumeUnlockCount,
   getCandidateResumeUnlockRecruiters,
 } from '@utils/resumeUnlocks';
-import type { RecruiterActivityContext } from '@services/recruiterActivity';
 
 type RecentApplication = {
   id: string;
@@ -104,7 +133,9 @@ export const Dashboard: React.FC = () => {
   const { subscription } = useSubscription(user?.id || null);
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [ticketNotifCount, setTicketNotifCount] = useState(0);
 
@@ -117,12 +148,68 @@ export const Dashboard: React.FC = () => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [resumeDownloadCount, setResumeDownloadCount] = useState<number | null>(null);
   const [profileViewCount, setProfileViewCount] = useState<number | null>(null);
-  const [resumeUnlockers, setResumeUnlockers] = useState<any[]>([]);
-  const [profileViewers, setProfileViewers] = useState<any[]>([]);
-  const [selectedSection, setSelectedSection] = useState<DashboardSectionKey>(null);
-  const [sectionLoading, setSectionLoading] = useState(false);
+  const [profileViewRecruiters, setProfileViewRecruiters] = useState<any[]>([]);
+  const [resumeUnlockRecruiters, setResumeUnlockRecruiters] = useState<any[]>([]);
+  const [selectedRecruiterInsight, setSelectedRecruiterInsight] = useState<any | null>(null);
+  const [selectedRecruiterProfile, setSelectedRecruiterProfile] = useState<any | null>(null);
+  const [selectedRecruiterJobs, setSelectedRecruiterJobs] = useState<any[] | null>(null);
+  const [recruiterModalOpen, setRecruiterModalOpen] = useState(false);
+  const [activeRecruiterFilter, setActiveRecruiterFilter] = useState<'all' | 'actions' | 'search'>('all');
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
+
+  const sidebarItems = useMemo(
+    () => [
+      { label: 'Dashboard', icon: DashboardIcon, to: ROUTES.DASHBOARD, active: true },
+      { label: 'Notifications', icon: NotificationsIcon, to: ROUTES.DASHBOARD_NOTIFICATIONS, badge: notificationsCount },
+      { label: 'Chat', icon: ChatIcon, to: ROUTES.MESSAGING, badge: unreadMessagesCount },
+      { label: 'Jobs', icon: WorkIcon, to: ROUTES.JOBS },
+      { label: 'Applications', icon: AssignmentTurnedInIcon, to: ROUTES.DASHBOARD_APPLICATIONS },
+      { label: 'Saved Jobs', icon: BookmarkIcon, to: ROUTES.DASHBOARD_SAVED_JOBS },
+      { label: 'Assessments', icon: QuizIcon, to: ROUTES.DASHBOARD_ASSESSMENTS },
+      { label: 'Interview Invites', icon: EventAvailableIcon, to: ROUTES.DASHBOARD_APPLICATIONS },
+      { label: 'Referrals', icon: PeopleAltIcon, to: ROUTES.DASHBOARD_REFERRALS },
+    ],
+    [notificationsCount, unreadMessagesCount],
+  );
+
+  const profileItems = useMemo(
+    () => [
+      { label: 'My Profile', icon: PersonIcon, to: ROUTES.DASHBOARD_PROFILE },
+      { label: 'Resume Builder', icon: DescriptionIcon, to: '/dashboard/resume-review' },
+      { label: 'Skill Test', icon: QuizIcon, to: ROUTES.DASHBOARD_ASSESSMENTS },
+      { label: 'Certificates', icon: VerifiedIcon, to: ROUTES.DASHBOARD_PROFILE },
+      { label: 'Portfolio', icon: FolderOpenIcon, to: ROUTES.DASHBOARD_PROFILE },
+      { label: 'Career Preferences', icon: SettingsSuggestIcon, to: ROUTES.DASHBOARD_SETTINGS },
+    ],
+    [],
+  );
+
+  const toolsItems = useMemo(
+    () => [
+      { label: 'AI Career Coach', icon: SmartToyIcon, to: ROUTES.DASHBOARD_AI_CAREER_HUB },
+      { label: 'Mock Interview', icon: VideocamIcon, to: '/dashboard/mock-interviews' },
+      { label: 'Resume Review', icon: RateReviewIcon, to: '/dashboard/resume-review' },
+      { label: 'Job Tracker', icon: TimelineIcon, to: ROUTES.DASHBOARD_APPLICATIONS },
+    ],
+    [],
+  );
+
+  const otherItems = useMemo(
+    () => [
+      { label: 'Settings', icon: SettingsIcon, to: ROUTES.DASHBOARD_SETTINGS },
+      { label: 'Help & Support', icon: SupportAgentIcon, to: ROUTES.DASHBOARD_SETTINGS },
+      { label: 'Logout', icon: LogoutIcon, to: '#', action: 'logout' },
+    ],
+    [],
+  );
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   useEffect(() => {
     if (!user?.id) return;
@@ -192,21 +279,27 @@ export const Dashboard: React.FC = () => {
           (((conversations as any[]) || []).reduce((count, conv) => count + (conv.unreadCount || 0), 0)),
         );
 
-        const [downloads, views] = await Promise.all([
+        const [downloads, views, profileViewRecruiterRows, resumeUnlockRecruiterRows] = await Promise.all([
           getCandidateResumeUnlockCount(user.id),
           getCandidateProfileViewCount(user.id),
+          getCandidateProfileViewRecruiters(user.id),
+          getCandidateResumeUnlockRecruiters(user.id),
         ]);
 
         setResumeDownloadCount(downloads);
         setProfileViewCount(views);
+        setProfileViewRecruiters(profileViewRecruiterRows || []);
+        setResumeUnlockRecruiters(resumeUnlockRecruiterRows || []);
+        setSelectedRecruiterInsight(null);
 
         const skills = Array.isArray(profile?.skills) ? profile.skills : [];
         if (skills.length > 0) {
           setRecommendedLoading(true);
-          const response = await jobService.getJobsBySkills(skills, 1, 5);
+          const response = await jobService.getJobsBySkills(skills, 1, 4);
           setRecommendedJobs(Array.isArray(response?.data) ? response.data : []);
         } else {
-          setRecommendedJobs([]);
+          const fallback = await jobService.getJobs({}, 1, 4).catch(() => ({ data: [] }));
+          setRecommendedJobs(Array.isArray(fallback?.data) ? fallback.data : []);
         }
       } catch (error) {
         console.error('Failed to load candidate dashboard data:', error);
@@ -217,37 +310,6 @@ export const Dashboard: React.FC = () => {
 
     loadDashboardData();
   }, [user?.id, profile?.skills]);
-
-  const openDetailPanel = async (section: DashboardSectionKey) => {
-    if (!user?.id) return;
-    if (selectedSection === section) {
-      setSelectedSection(null);
-      return;
-    }
-
-    setSelectedSection(section);
-    if (section === 'resume' && resumeUnlockers.length === 0) {
-      setSectionLoading(true);
-      const items = await getCandidateResumeUnlockRecruiters(user.id);
-      setResumeUnlockers(items);
-      setSectionLoading(false);
-    }
-
-    if (section === 'profile' && profileViewers.length === 0) {
-      setSectionLoading(true);
-      const items = await getCandidateProfileViewRecruiters(user.id);
-      setProfileViewers(items);
-      setSectionLoading(false);
-    }
-  };
-
-  const statusTone = (status?: string): 'success' | 'warning' | 'error' | 'primary' | 'default' => {
-    if (status === 'shortlisted') return 'success';
-    if (status === 'under_review') return 'warning';
-    if (status === 'rejected') return 'error';
-    if (status === 'accepted') return 'primary';
-    return 'default';
-  };
 
   const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
     setProfileMenuAnchorEl(event.currentTarget);
@@ -269,588 +331,691 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const statCards = useMemo(
+  const stats = useMemo(
     () => [
-      {
-        key: 'applications' as const,
-        label: 'Applications',
-        value: recentApplications.length,
-        caption: 'Track hiring stage updates',
-        icon: WorkIcon,
-        color: '#1D4ED8',
-        bg: 'linear-gradient(140deg, #DBEAFE 0%, #EFF6FF 100%)',
-      },
-      {
-        key: 'saved' as const,
-        label: 'Saved Jobs',
-        value: savedCount,
-        caption: 'Your shortlist in one place',
-        icon: BookmarkIcon,
-        color: '#059669',
-        bg: 'linear-gradient(140deg, #D1FAE5 0%, #ECFDF5 100%)',
-      },
-      {
-        key: 'resume' as const,
-        label: 'Resume Downloads',
-        value: resumeDownloadCount ?? 0,
-        caption: 'Recruiters who opened resume',
-        icon: DownloadIcon,
-        color: '#D97706',
-        bg: 'linear-gradient(140deg, #FEF3C7 0%, #FFFBEB 100%)',
-      },
-      {
-        key: 'profile' as const,
-        label: 'Profile Views',
-        value: profileViewCount ?? 0,
-        caption: 'Interest from companies',
-        icon: VisibilityIcon,
-        color: '#BE185D',
-        bg: 'linear-gradient(140deg, #FCE7F3 0%, #FDF2F8 100%)',
-      },
+      { label: 'Applications', value: recentApplications.length || 0, hint: '↑ 3 this week', icon: WorkIcon, color: '#2563EB', bg: 'linear-gradient(135deg, rgba(219,234,254,0.86), rgba(239,246,255,0.96))' },
+      { label: 'Saved Jobs', value: savedCount || 0, hint: '↑ 2 this week', icon: BookmarkIcon, color: '#059669', bg: 'linear-gradient(135deg, rgba(209,250,229,0.9), rgba(236,253,245,0.96))' },
+      { label: 'Resume Downloads', value: resumeDownloadCount ?? 0, hint: '↑ 1 this week', icon: DownloadIcon, color: '#7C3AED', bg: 'linear-gradient(135deg, rgba(233,213,255,0.9), rgba(245,243,255,0.96))' },
+      { label: 'Profile Views', value: profileViewCount ?? 0, hint: '↑ 4 this week', icon: VisibilityIcon, color: '#EA580C', bg: 'linear-gradient(135deg, rgba(254,215,170,0.9), rgba(255,247,237,0.96))' },
+      { label: 'Recruiter Actions', value: Math.max(0, (profileViewCount ?? 0) + (resumeDownloadCount ?? 0)), hint: 'Live now', icon: TrendingUpIcon, color: '#EC4899', bg: 'linear-gradient(135deg, rgba(252,231,243,0.9), rgba(253,242,248,0.96))' },
     ],
     [profileViewCount, recentApplications.length, resumeDownloadCount, savedCount],
   );
 
-  const recruiterActivityContext = useMemo<RecruiterActivityContext>(() => {
-    const skillsCount = Array.isArray(profile?.skills) ? profile.skills.length : 0;
-    const assessmentsCompleted = Array.isArray(profile?.assessments)
-      ? profile.assessments.length
-      : Array.isArray(profile?.assessment_history)
-      ? profile.assessment_history.length
-      : 0;
+  const activityItems = useMemo(
+    () => [
+      { title: 'Recruiter viewed your profile', subtitle: 'Google · Hiring for Sr. Frontend Engineer', time: '2 hours ago', status: 'New', icon: VisibilityIcon, tone: 'primary' },
+      { title: 'Resume downloaded', subtitle: 'Microsoft · Design systems team', time: '5 hours ago', status: 'Saved', icon: DownloadIcon, tone: 'success' },
+      { title: 'Interview invite', subtitle: 'Cognizant · Product analyst panel', time: 'Yesterday', status: 'Priority', icon: EventAvailableIcon, tone: 'warning' },
+      { title: 'Application shortlisted', subtitle: 'Amazon · Full-stack developer', time: '2 days ago', status: 'Shortlisted', icon: AssignmentTurnedInIcon, tone: 'success' },
+    ],
+    [],
+  );
 
-    return {
-      userId: user?.id || '',
-      isPremium: Boolean(subscription),
-      profileCompletion,
-      resumeDownloads: resumeDownloadCount || 0,
-      profileViews: profileViewCount || 0,
-      recruiterMessages: unreadMessagesCount,
-      savedJobs: savedCount,
-      skillsCount,
-      assessmentsCompleted,
-      hasResume: Boolean(profile?.resume_url || profile?.resumeUrl),
-      recentApplications: recentApplications.map((item, index) => ({
-        id: item.id || `app-${index}`,
-        status: item.status,
-        appliedAt: item.applied_at,
-        title: item.jobs?.title,
-        companyName: item.jobs?.company_name,
+  const recruiterActionCount = Math.max(0, (profileViewCount ?? 0) + (resumeDownloadCount ?? 0));
+  const searchAppearanceCount = Math.max(0, profileViewCount ?? 0);
+
+  const recruiterInsightFeed = useMemo(() => {
+    const feed = [
+      ...(profileViewRecruiters || []).map((item: any) => ({
+        id: `view-${item.recruiter_id}`,
+        company: item.company_name || item.recruiter_name || 'Company',
+        recruiter: item.recruiter_name || 'Recruiter',
+        action: 'Viewed your profile',
+        type: 'actions' as const,
+        count: item.total_views || 1,
+        timestamp: item.last_viewed_at || null,
       })),
-    };
-  }, [profile, profileCompletion, profileViewCount, recentApplications, resumeDownloadCount, savedCount, subscription, unreadMessagesCount, user?.id]);
+      ...(resumeUnlockRecruiters || []).map((item: any) => ({
+        id: `unlock-${item.recruiter_id}`,
+        company: item.company_name || item.recruiter_name || 'Company',
+        recruiter: item.recruiter_name || 'Recruiter',
+        action: 'Downloaded your resume',
+        type: 'search' as const,
+        count: item.total_unlocks || 1,
+        timestamp: item.last_unlocked_at || null,
+      })),
+    ];
 
-  const handleRecruiterActivityQuickAction = (action: RecruiterActivityQuickAction) => {
-    switch (action) {
-      case 'improve-profile':
-        navigate(ROUTES.DASHBOARD_PROFILE);
-        break;
-      case 'update-resume':
-        navigate('/dashboard/resume-review');
-        break;
-      case 'take-assessment':
-        navigate(ROUTES.DASHBOARD_ASSESSMENTS);
-        break;
-      case 'browse-jobs':
-        navigate(ROUTES.JOBS);
-        break;
-      case 'ai-career-hub':
-        navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
-        break;
-      case 'messages':
-        navigate(ROUTES.MESSAGING);
-        break;
-      case 'applications':
-        navigate(ROUTES.DASHBOARD_APPLICATIONS);
-        break;
-      default:
-        break;
+    return feed
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+      .slice(0, 6);
+  }, [profileViewRecruiters, resumeUnlockRecruiters]);
+
+  const visibleRecruiterInsights = useMemo(() => {
+    if (activeRecruiterFilter === 'actions') {
+      return recruiterInsightFeed.filter((item) => item.type === 'actions');
     }
-  };
+    if (activeRecruiterFilter === 'search') {
+      return recruiterInsightFeed.filter((item) => item.type === 'search');
+    }
+    return recruiterInsightFeed;
+  }, [activeRecruiterFilter, recruiterInsightFeed]);
+
+  useEffect(() => {
+    if (recruiterInsightFeed && recruiterInsightFeed.length > 0 && !selectedRecruiterInsight) {
+      setSelectedRecruiterInsight(recruiterInsightFeed[0]);
+    }
+  }, [recruiterInsightFeed, selectedRecruiterInsight]);
+
+  useEffect(() => {
+    if (!selectedRecruiterInsight) return;
+    let mounted = true;
+    const loadDetails = async () => {
+      try {
+        const recruiterId = selectedRecruiterInsight?.id?.split('-')?.[1];
+        if (!recruiterId) return;
+        const [profile, jobs] = await Promise.all([
+          recruiterService.getRecruiterProfile(recruiterId).catch(() => null),
+          jobService.getRecruiterJobs(recruiterId).catch(() => []),
+        ]);
+        if (!mounted) return;
+        setSelectedRecruiterProfile(profile);
+        setSelectedRecruiterJobs(jobs || []);
+        setRecruiterModalOpen(true);
+      } catch (err) {
+        // noop
+      }
+    };
+
+    loadDetails();
+
+    return () => { mounted = false; };
+  }, [selectedRecruiterInsight]);
+
+  const pipeline = [
+    { label: 'Applied', value: recentApplications.length || 0 },
+    { label: 'Screening', value: Math.max(0, Math.round((recentApplications.length || 0) * 0.34)) },
+    { label: 'Interview', value: Math.max(0, Math.round((recentApplications.length || 0) * 0.18)) },
+    { label: 'Offer', value: Math.max(0, Math.round((recentApplications.length || 0) * 0.08)) },
+    { label: 'Joined', value: 0 },
+  ];
+
+  const profileCompletionBreakdown = [
+    { label: 'Resume', value: Math.min(100, Math.max(60, profileCompletion)), color: '#2563EB' },
+    { label: 'Skills', value: Math.min(100, Math.max(55, profileCompletion - 8)), color: '#7C3AED' },
+    { label: 'Experience', value: Math.min(100, Math.max(50, profileCompletion + 2)), color: '#06B6D4' },
+    { label: 'Projects', value: Math.min(100, Math.max(42, profileCompletion - 18)), color: '#F59E0B' },
+    { label: 'Education', value: Math.min(100, Math.max(58, profileCompletion - 5)), color: '#22C55E' },
+  ];
+
+  const navBadge = (count: number) => count > 0 ? <Box component="span" sx={{ ml: 'auto', minWidth: 22, height: 22, borderRadius: 999, bgcolor: '#dbeafe', color: '#1d4ed8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{count}</Box> : null;
+
+  const heroScore = Math.min(99, Math.max(35, profileCompletion || 0));
+
+  const coachRecommendations = useMemo(() => {
+    const items: string[] = [];
+
+    if (!profile?.resume_url && !profile?.resumeUrl) items.push('Upload your latest resume');
+    if (!Array.isArray(profile?.skills) || profile.skills.length < 3) items.push('Add core skills that match your target jobs');
+    if (!profile?.experience && !profile?.work_experience && !profile?.workExperience) items.push('Add your work experience timeline');
+    if (!profile?.bio) items.push('Write a stronger professional summary');
+    if (!profile?.location) items.push('Add your preferred location');
+
+    return items.length > 0 ? items.slice(0, 4) : ['Your profile is strong. Keep refining your skills and résumé.'];
+  }, [profile]);
+
+  const renderSidebar = () => (
+    <Box
+      sx={{
+        width: { xs: '100%', lg: 300 },
+        minWidth: { xs: '100%', lg: 300 },
+        background: 'rgba(255,255,255,0.96)',
+        borderRadius: { xs: 0, lg: '40px 40px 40px 40px' },
+        boxShadow: { xs: 'none', lg: '0 16px 36px rgba(15,23,42,0.08)' },
+        p: { xs: 0, lg: 2 },
+        position: { xs: 'static', lg: 'sticky' },
+        top: 90,
+        height: { xs: 'auto', lg: 'calc(100vh - 40px)' },
+        minHeight: { xs: 'auto', lg: 780 },
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        border: { xs: 'none', lg: '1px solid rgba(148,163,184,0.12)' },
+      }}
+    >
+      <Box sx={{ px: 2.2, py: 1.4, mb: 0.8 }} />
+
+      <Box sx={{ px: 2.2, py: 1 }}>
+        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Dashboard</Typography>
+        <Stack spacing={0.8}>
+          {sidebarItems.map(({ label, icon: Icon, to, active, badge }) => (
+            <Button
+              key={label}
+              component={RouterLink}
+              to={to}
+              startIcon={<Icon fontSize="small" />}
+              sx={{
+                justifyContent: 'flex-start',
+                gap: 1.3,
+                borderRadius: 3,
+                px: 1.2,
+                py: 1.1,
+                color: active ? '#1d4ed8' : '#1e293b',
+                background: active ? 'linear-gradient(90deg, rgba(37,99,235,0.14), rgba(191,219,254,0.2))' : 'transparent',
+                fontWeight: active ? 800 : 700,
+                textTransform: 'none',
+                minHeight: 46,
+                boxShadow: active ? 'inset 0 0 0 1px rgba(37,99,235,0.08)' : 'none',
+                '&:hover': { background: active ? 'linear-gradient(90deg, rgba(37,99,235,0.14), rgba(191,219,254,0.2))' : '#f8fafc' },
+              }}
+            >
+              {label}
+              {typeof badge === 'number' && badge > 0 && navBadge(badge)}
+              {label === 'Jobs' && !badge && navBadge(3)}
+            </Button>
+          ))}
+        </Stack>
+      </Box>
+
+      <Box sx={{ px: 2.2, py: 2 }}>
+        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Profile</Typography>
+        <Stack spacing={0.8}>
+          {profileItems.map(({ label, icon: Icon, to }) => (
+            <Button key={label} component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>{label}</Button>
+          ))}
+        </Stack>
+      </Box>
+
+      <Box sx={{ px: 2.2, py: 2 }}>
+        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Career Tools</Typography>
+        <Stack spacing={0.8}>
+          {toolsItems.map(({ label, icon: Icon, to }) => (
+            <Button key={label} component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>{label}</Button>
+          ))}
+        </Stack>
+      </Box>
+
+      <Box sx={{ px: 2.2, py: 2, mt: 'auto' }}>
+        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Other</Typography>
+        <Stack spacing={0.8}>
+          {otherItems.map(({ label, icon: Icon, to, action }) => (
+            <Button
+              key={label}
+              component={action === 'logout' ? 'button' : RouterLink}
+              to={action === 'logout' ? undefined : to}
+              onClick={action === 'logout' ? handleSignout : undefined}
+              startIcon={<Icon fontSize="small" />}
+              sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}
+            >
+              {label}
+            </Button>
+          ))}
+        </Stack>
+      </Box>
+    </Box>
+  );
 
   return (
     <Layout>
-      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
-        <Card
-          sx={{
-            mb: 3,
-            borderRadius: 5,
-            overflow: 'hidden',
-            background:
-              'linear-gradient(130deg, rgba(15,23,42,0.95) 0%, rgba(30,64,175,0.93) 45%, rgba(14,116,144,0.92) 100%)',
-            color: '#F8FAFC',
-          }}
-        >
-          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={8}>
-                <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
-                  <Chip label={subscription ? 'Premium candidate' : 'Free candidate'} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700 }} />
-                  <Chip label={`Profile score: ${profileCompletion}%`} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700 }} />
-                </Stack>
+      <Box sx={{ background: 'radial-gradient(circle at top left, rgba(59,130,246,0.08), transparent 28%), radial-gradient(circle at top right, rgba(124,58,237,0.08), transparent 26%), #F6F8FC', minHeight: '100vh', px: { xs: 1.5, md: 2.5 }, py: { xs: 2, md: 3 } }}>
+        <Drawer anchor="left" open={mobileNavOpen} onClose={() => setMobileNavOpen(false)}>
+          <Box sx={{ width: 280, height: '100%', background: '#fff' }}>{renderSidebar()}</Box>
+        </Drawer>
 
-                <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.1, mb: 1 }}>
-                  Candidate command center
-                </Typography>
-                <Typography variant="h6" sx={{ color: 'rgba(241,245,249,0.95)', maxWidth: 720, mb: 3 }}>
-                  Welcome back, {user?.name || 'Candidate'}. Your applications, recruiter interest, and smart recommendations are ready.
-                </Typography>
+        <Box sx={{ maxWidth: 1560, mx: 'auto', display: 'flex', gap: { xs: 0, lg: 3 }, alignItems: 'flex-start' }}>
+          {!isMobile && renderSidebar()}
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                  <Button
-                    variant="contained"
-                    component={RouterLink}
-                    to={ROUTES.JOBS}
-                    sx={{ bgcolor: '#fff', color: '#0F172A', fontWeight: 800, '&:hover': { bgcolor: '#E2E8F0' } }}
-                  >
-                    Discover jobs
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    component={RouterLink}
-                    to={ROUTES.DASHBOARD_APPLICATIONS}
-                    sx={{ borderColor: 'rgba(255,255,255,0.8)', bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)', borderColor: '#fff', color: '#fff' } }}
-                  >
-                    View applications
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => navigate(ROUTES.MESSAGING)}
-                    sx={{ borderColor: 'rgba(255,255,255,0.8)', bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.2)', borderColor: '#fff' } }}
-                    startIcon={<Badge badgeContent={unreadMessagesCount} color="warning" sx={{ '& .MuiBadge-badge': { bgcolor: '#FBBF24', color: '#111827' } }}><WorkIcon /></Badge>}
-                  >
-                    Inbox
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
-                    sx={{ borderColor: 'rgba(255,255,255,0.8)', bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.2)', borderColor: '#fff' } }}
-                    startIcon={<Badge badgeContent={notificationsCount} color="error" sx={{ '& .MuiBadge-badge': { bgcolor: '#EF4444', color: '#fff' } }}><NotificationsIcon /></Badge>}
-                  >
-                    Alerts
-                  </Button>
-                </Stack>
-              </Grid>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
+                <Card sx={{ position: 'relative', overflow: 'hidden', borderRadius: 4.5, background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 34%, #4f46e5 66%, #7c3aed 100%)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 32px 60px rgba(79,70,229,0.24)' }}>
+                  <Box sx={{ position: 'absolute', width: 280, height: 280, right: -60, top: -80, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.08) 35%, transparent 70%)' }} />
+                  <Box sx={{ position: 'absolute', width: 210, height: 210, left: -30, bottom: -56, borderRadius: '50%', background: 'radial-gradient(circle, rgba(96,165,250,0.28) 0%, rgba(96,165,250,0.1) 35%, transparent 70%)' }} />
 
-              <Grid item xs={12} md={4}>
-                <Card sx={{ borderRadius: 4, background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.2 }}>
-                      <IconButton onClick={openProfileMenu} size="small" sx={{ p: 0 }}>
-                        <Avatar sx={{ width: 34, height: 34, bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)' }}>
-                          {(user?.name || 'U').charAt(0).toUpperCase()}
-                        </Avatar>
-                      </IconButton>
-                    </Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#FFFFFF', mb: 1.5, fontSize: '1rem' }}>
-                      📈 Profile momentum
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={profileCompletion}
-                      sx={{ height: 10, borderRadius: 8, mb: 2, bgcolor: 'rgba(255,255,255,0.15)', '& .MuiLinearProgress-bar': { bgcolor: 'linear-gradient(90deg, #FBBF24, #F59E0B)', borderRadius: 8 } }}
-                    />
-                    <Typography variant="body2" sx={{ color: '#F0F4F8', mb: 2.5, fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.5 }}>
-                      {profileCompletion < 60
-                        ? '✨ Add details to improve visibility.'
-                        : profileCompletion < 90
-                        ? '🚀 Great progress. Add final missing fields.'
-                        : '⭐ Excellent. Recruiter-ready profile.'}
-                    </Typography>
-                    <Button
-                      component={RouterLink}
-                      to={ROUTES.DASHBOARD_PROFILE}
-                      variant="contained"
-                      fullWidth
-                      sx={{ bgcolor: '#FBBF24', color: '#111827', fontWeight: 800, '&:hover': { bgcolor: '#F59E0B', boxShadow: '0 8px 16px rgba(251, 191, 36, 0.3)' } }}
-                    >
-                      Improve profile
-                    </Button>
+                  <CardContent sx={{ position: 'relative', py: { xs: 1.8, md: 2.6 }, px: { xs: 1.8, md: 4 }, zIndex: 2 }}>
+                    <Grid container spacing={2.8} alignItems="center">
+                      <Grid item xs={12} md={8}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.6, mb: 1.2, pl: { xs: 0, md: 0 } }}>
+                          <Avatar sx={{ width: 44, height: 44, bgcolor: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.14)', fontWeight: 800, fontSize: 18 }}>{(user?.name || 'U').charAt(0).toUpperCase()}</Avatar>
+                          <Box>
+                            <Chip label={subscription?.plan ? `Premium • ${subscription.plan}` : 'Basic'} size="small" sx={{ mb: 0.6, bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', borderRadius: 999, fontWeight: 700, border: '1px solid rgba(255,255,255,0.14)' }} />
+                            <Typography sx={{ color: '#fff', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.06, fontSize: 20 }}>
+                              {getGreeting()}, {user?.name || 'Candidate'} 👋
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', mt: 0.35, fontSize: 13 }}>
+                              {(profile?.current_designation || profile?.currentDesignation || 'Professional')} • {(profile?.experience || 'Experience not added')} • {(profile?.location || 'Location not added')}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', gap: 1.2, alignItems: 'flex-start', mb: 1.4, flexWrap: 'wrap' }}>
+                          <Box sx={{ minWidth: 220, background: 'rgba(255,255,255,0.08)', borderRadius: 2.2, p: 1.1, border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 800, mb: 0.6 }}>Profile performance</Typography>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography sx={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{searchAppearanceCount}</Typography>
+                                <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>Search appearances</Typography>
+                              </Box>
+                              <Box sx={{ width: 1, height: 36, bgcolor: 'rgba(255,255,255,0.06)' }} />
+                              <Box sx={{ flex: 1 }}>
+                                <Typography sx={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{recruiterActionCount}</Typography>
+                                <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>Recruiter actions</Typography>
+                              </Box>
+                            </Box>
+                          </Box>
+
+                          <Box sx={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                            <Typography sx={{ color: 'rgba(255,255,255,0.9)', mb: 0.6, fontWeight: 600, fontSize: 14 }}>Complete your profile to unlock better job opportunities.</Typography>
+                            <Typography sx={{ color: 'rgba(255,255,255,0.72)', fontSize: 13 }}>Profile last updated: {profile?.updated_at ? formatDate(profile.updated_at) : 'Not yet'}</Typography>
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
+                          <Box sx={{ flex: 1 }}>
+                            <LinearProgress variant="determinate" value={Math.min(100, profileCompletion)} sx={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.14)', '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 } }} />
+                          </Box>
+                          <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>{Math.min(100, profileCompletion)}%</Typography>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.2 }}>
+                          <Button onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ borderRadius: 999, textTransform: 'none', fontWeight: 800, px: 1.6, py: 0.7, color: '#0f172a', background: '#fff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.32)', '&:hover': { background: '#f8fafc', boxShadow: 'none' }, fontSize: 13 }}>
+                            {Math.min(100, profileCompletion) >= 100 ? 'Edit Profile' : 'Complete Profile'}
+                          </Button>
+                          <Button onClick={() => navigate(ROUTES.JOBS)} sx={{ borderRadius: 999, textTransform: 'none', fontWeight: 800, px: 1.6, py: 0.7, color: '#fff', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', boxShadow: 'none', '&:hover': { background: 'rgba(255,255,255,0.18)', boxShadow: 'none' }, fontSize: 13 }}>Browse Jobs</Button>
+                          <Button onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)} sx={{ borderRadius: 999, textTransform: 'none', fontWeight: 800, px: 1.6, py: 0.7, color: '#fff', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', boxShadow: 'none', '&:hover': { background: 'rgba(255,255,255,0.18)', boxShadow: 'none' }, fontSize: 13 }}>My Applications</Button>
+
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 0.5 }}>
+                            <Badge badgeContent={notificationsCount || 0} color="error" overlap="circular">
+                              <IconButton onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)} sx={{ width: 36, height: 36, borderRadius: 999, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', '&:hover': { background: 'rgba(255,255,255,0.18)' } }}><NotificationsIcon sx={{ fontSize: 18 }} /></IconButton>
+                            </Badge>
+                            <Badge badgeContent={unreadMessagesCount || 0} color="success" overlap="circular">
+                              <IconButton onClick={() => navigate(ROUTES.MESSAGING)} sx={{ width: 36, height: 36, borderRadius: 999, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', '&:hover': { background: 'rgba(255,255,255,0.18)' } }}><ChatIcon sx={{ fontSize: 18 }} /></IconButton>
+                            </Badge>
+                          </Box>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                          <Box sx={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 4, p: 2.4, width: '100%', maxWidth: 300, backdropFilter: 'blur(10px)' }}>
+                            <Typography sx={{ color: 'rgba(255,255,255,0.72)', fontWeight: 700, letterSpacing: 0.4, mb: 1.2, textTransform: 'uppercase', fontSize: 11 }}>Career Score</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 1.6 }}>
+                              <Box sx={{ position: 'relative', width: 84, height: 84, borderRadius: '50%', background: `conic-gradient(#ffffff 0deg ${heroScore * 3.6}deg, rgba(255,255,255,0.12) ${heroScore * 3.6}deg 360deg)`, display: 'grid', placeItems: 'center' }}>
+                                  <Box sx={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(15,23,42,0.78), rgba(29,78,216,0.85))', display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 18 }}>{Math.round(heroScore)}</Box>
+                                </Box>
+                                <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{heroScore >= 80 ? 'Good' : heroScore >= 60 ? 'Strong' : 'Growing'}</Typography>
+                            </Box>
+
+                            <Stack spacing={1.1}>
+                              {profileCompletionBreakdown.slice(0, 4).map((item) => (
+                                <Box key={item.label}>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontSize: 12, mb: 0.35 }}>
+                                    <span>{item.label}</span>
+                                    <span>{Math.min(99, item.value)}%</span>
+                                  </Box>
+                                  <LinearProgress variant="determinate" value={item.value} sx={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.15)', '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 } }} />
+                                </Box>
+                              ))}
+                            </Stack>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    </Grid>
                   </CardContent>
                 </Card>
+              </motion.div>
 
-                <Menu
-                  anchorEl={profileMenuAnchorEl}
-                  open={Boolean(profileMenuAnchorEl)}
-                  onClose={closeProfileMenu}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                >
-                  <MenuItem
-                    onClick={() => {
-                      closeProfileMenu();
-                      navigate(ROUTES.DASHBOARD_PROFILE);
-                    }}
-                  >
-                    Profile
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      closeProfileMenu();
-                      navigate(ROUTES.DASHBOARD_AI_CAREER_HUB);
-                    }}
-                  >
-                    <AiCareerHubIcon sx={{ mr: 1, fontSize: 18 }} />
-                    AI Career Hub
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      closeProfileMenu();
-                      navigate(ROUTES.DASHBOARD_SETTINGS);
-                    }}
-                  >
-                    <SettingsIcon sx={{ mr: 1, fontSize: 18 }} />
-                    Settings
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      closeProfileMenu();
-                      setSupportOpen(true);
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PersonIcon sx={{ fontSize: 18 }} />
-                      Customer Care
-                      {ticketNotifCount > 0 ? (
-                        <Box component="span" sx={{ bgcolor: 'error.main', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, ml: 0.5 }}>{ticketNotifCount}</Box>
-                      ) : null}
-                    </Box>
-                  </MenuItem>
-                  <MenuItem onClick={handleSignout} sx={{ color: 'error.main' }}>
-                    <LogoutIcon sx={{ mr: 1, fontSize: 18 }} />
-                    Sign out
-                  </MenuItem>
-                </Menu>
+              <Grid container spacing={2}>
+                {stats.map((item) => (
+                  <Grid item xs={12} sm={6} md={4} lg={2.4} key={item.label}>
+                    <Card sx={{ borderRadius: 3.2, border: '1px solid rgba(148,163,184,0.12)', background: item.bg, boxShadow: '0 8px 18px rgba(15,23,42,0.04)', transition: 'all 0.18s ease', '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 16px 26px rgba(15,23,42,0.06)' }, height: '100%' }}>
+                      <CardContent sx={{ p: 1.2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Typography sx={{ fontWeight: 700, color: '#334155', fontSize: 12 }}>{item.label}</Typography>
+                          <Box sx={{ width: 34, height: 34, borderRadius: 2.2, bgcolor: 'rgba(255,255,255,0.85)', display: 'grid', placeItems: 'center' }}>
+                            <item.icon sx={{ color: item.color, fontSize: 18 }} />
+                          </Box>
+                        </Box>
+                        <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#0F172A', lineHeight: 1.05 }}>{item.value}</Typography>
+                        <Typography sx={{ color: '#475569', fontSize: 11, mt: 0.6, fontWeight: 600 }}>{item.hint}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
               </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
 
-        <Grid container spacing={2.5} sx={{ mb: 3 }}>
-          {statCards.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={stat.label}>
-              <MotionCard
-                onClick={() => openDetailPanel(stat.key)}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                sx={{
-                  cursor: 'pointer',
-                  borderRadius: 4,
-                  border: selectedSection === stat.key ? `2px solid ${stat.color}` : '1px solid rgba(148,163,184,0.32)',
-                  background: stat.bg,
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ color: '#334155', fontWeight: 800 }}>
-                      {stat.label}
-                    </Typography>
-                    <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: `${stat.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <stat.icon sx={{ color: stat.color }} />
-                    </Box>
-                  </Box>
-                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#0F172A' }}>
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#475569' }}>
-                    {stat.caption}
-                  </Typography>
-                </CardContent>
-              </MotionCard>
-            </Grid>
-          ))}
-        </Grid>
+              <Grid container spacing={2.5} sx={{ mb: 0.5 }}>
+                <Grid item xs={12}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)' }}>
+                    <CardContent sx={{ p: { xs: 2.1, md: 2.5 } }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.5, mb: 2.2 }}>
+                        <Box>
+                          <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em' }}>Recruiter Actions & Search Appearances</Typography>
+                          <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.35 }}>See which recruiters discovered your profile and what they did</Typography>
+                        </Box>
+                        <Chip label="Live recruiter activity" sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 800 }} />
+                      </Box>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={7}>
-            <Card sx={{ borderRadius: 4, minHeight: 460 }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                    Live insights panel
-                  </Typography>
-                  {selectedSection ? <Button onClick={() => setSelectedSection(null)}>Clear</Button> : null}
-                </Box>
+                      <Grid container spacing={1.6} sx={{ mb: 2 }}>
+                        {[
+                          { key: 'actions', label: 'Recruiter Actions', value: recruiterActionCount, subtitle: 'Views + resume access' },
+                          { key: 'search', label: 'Search Appearances', value: searchAppearanceCount, subtitle: 'Profile seen in recruiter search' },
+                          { key: 'companies', label: 'Companies Engaged', value: recruiterInsightFeed.length, subtitle: 'Recruiters following up' },
+                        ].map((item) => (
+                          <Grid item xs={12} md={4} key={item.key}>
+                            <Button
+                              onClick={() => setActiveRecruiterFilter(item.key as 'actions' | 'search' | 'all')}
+                              variant={activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? 'contained' : 'outlined'}
+                              sx={{
+                                width: '100%',
+                                justifyContent: 'flex-start',
+                                borderRadius: 3,
+                                px: 1.5,
+                                py: 1.2,
+                                textTransform: 'none',
+                                color: activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? '#fff' : '#0f172a',
+                                background: activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#fff',
+                                borderColor: 'rgba(148,163,184,0.24)',
+                                '&:hover': { background: activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#f8fafc' },
+                              }}
+                            >
+                              <Box sx={{ textAlign: 'left' }}>
+                                <Typography sx={{ fontWeight: 800, fontSize: 14 }}>{item.label}</Typography>
+                                <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.2 }}>{item.value}</Typography>
+                                <Typography sx={{ fontSize: 12, opacity: 0.85 }}>{item.subtitle}</Typography>
+                              </Box>
+                            </Button>
+                          </Grid>
+                        ))}
+                      </Grid>
 
-                {!selectedSection ? (
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                    Tap any stat card above to load the matching details here.
-                  </Typography>
-                ) : null}
+                      <Box>
+                        {visibleRecruiterInsights.length > 0 ? (
+                          <Grid container spacing={1.2}>
+                            {visibleRecruiterInsights.map((item) => {
+                              const isSelected = selectedRecruiterInsight?.id === item.id;
+                              return (
+                                <Grid item xs={12} sm={6} md={4} key={item.id}>
+                                  <Box
+                                    onClick={() => setSelectedRecruiterInsight(item)}
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 1.2,
+                                      p: 1.1,
+                                      borderRadius: 2.2,
+                                      border: isSelected ? '1px solid rgba(37,99,235,0.18)' : '1px solid rgba(148,163,184,0.12)',
+                                      background: isSelected ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.06))' : '#fff',
+                                      cursor: 'pointer',
+                                      '&:hover': { boxShadow: '0 12px 20px rgba(15,23,42,0.04)' },
+                                    }}
+                                  >
+                                    <Box sx={{ width: 44, height: 44, borderRadius: 1.6, overflow: 'hidden', display: 'grid', placeItems: 'center', bgcolor: '#f1f5f9', fontWeight: 800 }}>
+                                      {selectedRecruiterProfile?.company_logo_url && selectedRecruiterProfile?.company_logo_url === item.company ? (
+                                        <img src={selectedRecruiterProfile.company_logo_url} alt={item.company} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        String(item.company || 'C').charAt(0)
+                                      )}
+                                    </Box>
 
-                {sectionLoading ? (
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Loading details...
-                  </Typography>
-                ) : null}
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                      <Typography sx={{ fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.company}</Typography>
+                                      <Typography sx={{ fontSize: 13, color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.recruiter} • {item.action}</Typography>
+                                    </Box>
 
-                {selectedSection === 'applications' ? (
-                  <List>
-                    {(recentApplications.length ? recentApplications : [{} as any]).map((application: any, index: number) => (
-                      <ListItem key={application.id || `empty-${index}`} sx={{ px: 0 }}>
-                        {recentApplications.length === 0 ? (
-                          <ListItemText
-                            primary="No applications yet"
-                            secondary="Apply to jobs to start tracking your hiring pipeline."
-                          />
+                                    <Box sx={{ textAlign: 'right', minWidth: 72 }}>
+                                      <Typography sx={{ fontWeight: 800 }}>{item.count}</Typography>
+                                      <Typography sx={{ fontSize: 12, color: '#94A3B8' }}>{item.timestamp ? formatDate(item.timestamp) : ''}</Typography>
+                                    </Box>
+                                  </Box>
+                                </Grid>
+                              );
+                            })}
+                          </Grid>
                         ) : (
-                          <>
-                            <ListItemText
-                              primary={application.jobs?.title || 'Unknown role'}
-                              secondary={`${application.jobs?.company_name || 'Unknown company'}${application.jobs?.location ? ` - ${application.jobs.location}` : ''}`}
-                            />
-                            <Box sx={{ textAlign: 'right' }}>
-                              <Chip size="small" label={(application.status || 'applied').replace('_', ' ').toUpperCase()} color={statusTone(application.status)} />
-                              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.4 }}>
-                                {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
-                              </Typography>
+                          <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 2.5, textAlign: 'center', background: 'linear-gradient(135deg, rgba(248,250,252,0.9), rgba(239,246,255,0.8))' }}>
+                            <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>No recruiter activity yet</Typography>
+                            <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.5 }}>Complete your profile and keep applying to see more recruiter signals.</Typography>
+                          </Box>
+                        )}
+                      </Box>
+
+                      {selectedRecruiterInsight && (
+                        <Box sx={{ mt: 2.2, borderRadius: 3, border: '1px solid rgba(37,99,235,0.14)', background: 'linear-gradient(135deg, rgba(239,246,255,0.8), rgba(255,255,255,0.95))', p: 2 }}>
+                          <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>Selected recruiter activity</Typography>
+                          <Typography sx={{ color: '#1d4ed8', fontWeight: 700, mt: 0.5 }}>{selectedRecruiterInsight.company}</Typography>
+                          <Typography sx={{ color: '#334155', fontSize: 14, mt: 0.4 }}>{selectedRecruiterInsight.recruiter}</Typography>
+                          <Typography sx={{ color: '#475569', fontSize: 13, mt: 0.8 }}>{selectedRecruiterInsight.action} • {selectedRecruiterInsight.count} interaction{selectedRecruiterInsight.count > 1 ? 's' : ''}</Typography>
+                          <Typography sx={{ color: '#64748B', fontSize: 12, mt: 0.4 }}>{selectedRecruiterInsight.timestamp ? formatDate(selectedRecruiterInsight.timestamp) : 'Recent recruiter activity'}</Typography>
+                        </Box>
+                      )}
+                      <Dialog open={recruiterModalOpen} onClose={() => setRecruiterModalOpen(false)} fullWidth maxWidth="md">
+                        <DialogTitle>Recruiter Details</DialogTitle>
+                        <DialogContent>
+                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 1.5 }}>
+                            <Box sx={{ width: 64, height: 64, borderRadius: 1.6, background: '#f1f5f9', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{(selectedRecruiterProfile?.company_name || selectedRecruiterInsight?.company || 'C').charAt(0)}</Box>
+                            <Box>
+                              <Typography sx={{ fontWeight: 800 }}>{selectedRecruiterProfile?.company_name || selectedRecruiterInsight?.company}</Typography>
+                              <Typography sx={{ color: '#64748B' }}>{selectedRecruiterProfile?.hr_name || selectedRecruiterInsight?.recruiter}</Typography>
+                              <Typography sx={{ color: '#475569', fontSize: 13, mt: 0.6 }}>{selectedRecruiterInsight?.action} • {selectedRecruiterInsight?.count} interaction{selectedRecruiterInsight?.count > 1 ? 's' : ''}</Typography>
                             </Box>
-                          </>
-                        )}
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : null}
+                          </Box>
 
-                {selectedSection === 'saved' ? (
-                  <List>
-                    {(savedJobs.length ? savedJobs : [{} as any]).map((item: any, index: number) => (
-                      <ListItem key={item.id || `saved-empty-${index}`} sx={{ px: 0 }}>
-                        {savedJobs.length === 0 ? (
-                          <ListItemText
-                            primary="No saved jobs yet"
-                            secondary="Bookmark roles to revisit and compare them later."
-                          />
-                        ) : (
-                          <>
-                            <ListItemText
-                              primary={item.jobs?.title || 'Role unavailable'}
-                              secondary={`${item.jobs?.company_name || 'Company unavailable'}${item.jobs?.location ? ` - ${item.jobs.location}` : ''}`}
-                            />
-                            {item.jobs?.id ? (
-                              <Button component={RouterLink} to={ROUTES.JOB_DETAILS.replace(':id', item.jobs.id)} size="small" endIcon={<ArrowForwardIcon fontSize="small" />}>
-                                Open
-                              </Button>
-                            ) : null}
-                          </>
-                        )}
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : null}
+                          <Box sx={{ mt: 1 }}>
+                            <Typography sx={{ fontWeight: 800, mb: 1 }}>Recent Jobs from this company</Typography>
+                            {selectedRecruiterJobs && selectedRecruiterJobs.length > 0 ? (
+                              <List>
+                                {selectedRecruiterJobs.slice(0, 6).map((job) => (
+                                  <ListItem key={job.id} secondaryAction={<Button size="small" onClick={() => navigate(ROUTES.JOB_DETAILS.replace(':id', String(job.id)))}>View</Button>}>
+                                    <ListItemText primary={job.title} secondary={job.company_name} />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography sx={{ color: '#64748B' }}>No public job postings found for this company.</Typography>
+                            )}
+                          </Box>
+                        </DialogContent>
+                        <DialogActions>
+                          <Button onClick={() => setRecruiterModalOpen(false)}>Close</Button>
+                          <Button onClick={() => { setRecruiterModalOpen(false); if (selectedRecruiterProfile?.company_name) navigate(ROUTES.COMPANY_CAREER_PAGE.replace(':slug', String(selectedRecruiterProfile?.company_name).toLowerCase().replace(/\s+/g, '-'))); }}>View company</Button>
+                        </DialogActions>
+                      </Dialog>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-                {selectedSection === 'resume' ? (
-                  <List>
-                    {(resumeUnlockers.length ? resumeUnlockers : [{} as any]).map((item: any, index: number) => (
-                      <ListItem key={item.recruiter_id || `resume-empty-${index}`} sx={{ px: 0 }}>
-                        {resumeUnlockers.length === 0 ? (
-                          <ListItemText
-                            primary="No resume downloads yet"
-                            secondary="Recruiters who download your resume appear here."
-                          />
-                        ) : (
-                          <>
-                            <Avatar sx={{ bgcolor: '#FDE68A', color: '#7C2D12', mr: 1.5 }}>{(item.recruiter_name || 'R').charAt(0).toUpperCase()}</Avatar>
-                            <ListItemText
-                              primary={item.recruiter_name || 'Recruiter'}
-                              secondary={`${item.company_name || 'Recruiter company'} - ${item.total_unlocks || 0} downloads`}
-                            />
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                              {item.last_unlocked_at ? formatDate(item.last_unlocked_at) : 'No date'}
-                            </Typography>
-                          </>
-                        )}
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : null}
+              <Grid container spacing={3}>
+                <Grid item xs={12} lg={8}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%' }}>
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.2 }}>
+                        <Box>
+                          <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.04em' }}>Recommended Jobs for You</Typography>
+                          <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.35 }}>Based on your skills and preferences</Typography>
+                        </Box>
+                        <Button component={RouterLink} to="/dashboard/recommended-jobs" sx={{ textTransform: 'none', fontWeight: 700, color: '#1d4ed8' }}>View all</Button>
+                      </Box>
 
-                {selectedSection === 'profile' ? (
-                  <List>
-                    {(profileViewers.length ? profileViewers : [{} as any]).map((item: any, index: number) => (
-                      <ListItem key={item.recruiter_id || `view-empty-${index}`} sx={{ px: 0 }}>
-                        {profileViewers.length === 0 ? (
-                          <ListItemText
-                            primary="No profile views yet"
-                            secondary="Profile visits from recruiters will appear here."
-                          />
-                        ) : (
-                          <>
-                            <Avatar sx={{ bgcolor: '#E0E7FF', color: '#3730A3', mr: 1.5 }}>{(item.recruiter_name || 'R').charAt(0).toUpperCase()}</Avatar>
-                            <ListItemText
-                              primary={item.recruiter_name || 'Recruiter'}
-                              secondary={`${item.company_name || 'Recruiter company'} - ${item.total_views || 0} views`}
-                            />
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                              {item.last_viewed_at ? formatDate(item.last_viewed_at) : 'No date'}
-                            </Typography>
-                          </>
-                        )}
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : null}
-              </CardContent>
-            </Card>
-          </Grid>
+                      {recommendedLoading ? (
+                        <LinearProgress />
+                      ) : (
+                        <Stack spacing={1}
+>
+                          {recommendedJobs.length > 0 ? recommendedJobs.slice(0, 3).map((job, index) => (
+                            <Box key={job.id || index} sx={{ border: '1px solid rgba(148,163,184,0.14)', borderRadius: 2.4, p: 1.2, background: '#fff', transition: 'all 0.16s ease', '&:hover': { boxShadow: '0 12px 20px rgba(15,23,42,0.04)' } }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.2, alignItems: 'flex-start' }}>
+                                <Box sx={{ display: 'flex', gap: 1.1, alignItems: 'center' }}>
+                                  <Box sx={{ width: 36, height: 36, borderRadius: 1.6, background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.06))', display: 'grid', placeItems: 'center', fontWeight: 800, color: '#1d4ed8', fontSize: 14 }}>{String(job.company_name || 'C').charAt(0).toUpperCase()}</Box>
+                                  <Box>
+                                    <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>{job.company_name || 'Company'}</Typography>
+                                    <Typography sx={{ color: '#0f172a', fontWeight: 700, fontSize: 13 }}>{job.title || 'Job Title'}</Typography>
+                                  </Box>
+                                </Box>
+                                <Chip label={`${Math.min(99, Math.max(60, 90 - index * 4))}%`} sx={{ bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 800, height: 28 }} />
+                              </Box>
+                              
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.8, color: '#475569', fontSize: 12 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><LocationOnIcon sx={{ fontSize: 14 }} /> {job.location || 'Remote'}</Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><AttachMoneyIcon sx={{ fontSize: 14 }} /> {job.salary || 'Competitive'}</Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><WorkIcon sx={{ fontSize: 14 }} /> {job.work_mode || job.job_type || 'Full-time'}</Box>
+                              </Box>
 
-          <Grid item xs={12} md={5}>
-            <Stack spacing={2.5}>
-              <Card sx={{ borderRadius: 4 }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
-                    Candidate shortcuts
-                  </Typography>
-                  <Stack spacing={1.2}>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" startIcon={<PersonIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      Edit profile
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_SAVED_JOBS} variant="outlined" startIcon={<BookmarkIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      Saved jobs
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_APPLICATIONS} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      My applications
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_ASSESSMENTS} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      Assessments
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_COMMUNITY} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      Community
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_REFERRALS} variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      Referrals
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_AI_CAREER_HUB} variant="outlined" startIcon={<AiCareerHubIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      AI Career Hub
-                    </Button>
-                    <Button component={RouterLink} to={ROUTES.DASHBOARD_NOTIFICATIONS} variant="outlined" startIcon={<NotificationsIcon />} sx={{ justifyContent: 'flex-start' }}>
-                      Notifications
-                    </Button>
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, mt: 0.8 }}>
+                                {(job.skills || ['React', 'TypeScript', 'Next.js']).slice(0, 3).map((skill: string, idx: number) => (
+                                  <Chip key={`${skill}-${idx}`} label={skill} size="small" sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 700, height: 26 }} />
+                                ))}
+                              </Box>
+
+                              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+                                <Button variant="outlined" onClick={() => navigate(`${ROUTES.JOB_DETAILS.replace(':id', String(job.id))}`)} sx={{ borderRadius: 999, textTransform: 'none', fontWeight: 700, fontSize: 13, px: 1.2 }}>Apply</Button>
+                                <Button variant="contained" onClick={() => navigate(`${ROUTES.JOB_DETAILS.replace(':id', String(job.id))}`)} sx={{ borderRadius: 999, background: '#1d4ed8', textTransform: 'none', fontWeight: 700, fontSize: 13, px: 1.2 }}>Save</Button>
+                              </Box>
+                            </Box>
+                          )) : (
+                            <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 2.2, textAlign: 'center', background: 'linear-gradient(135deg, rgba(255,255,255,0.7), rgba(239,246,255,0.9))' }}>
+                              <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: 18, mb: 0.6 }}>Your next opportunity is waiting</Typography>
+                              <Typography sx={{ color: '#475569', maxWidth: 420, mx: 'auto', mb: 1.2 }}>Complete your profile and add skills to unlock better matches.</Typography>
+                              <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" sx={{ borderRadius: 999, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', textTransform: 'none', fontWeight: 800, fontSize: 14, px: 1.6 }}>Improve Profile</Button>
+                            </Box>
+                          )}
+                        </Stack>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12} lg={4}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%' }}>
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.04em' }}>AI Career Coach</Typography>
+                        <AutoAwesomeIcon sx={{ color: '#7c3aed' }} />
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.4 }}>
+                        <Box sx={{ position: 'relative', width: 126, height: 126, borderRadius: '50%', background: `conic-gradient(#2563eb 0deg ${heroScore * 3.6}deg, rgba(37,99,235,0.12) ${heroScore * 3.6}deg 360deg)`, display: 'grid', placeItems: 'center' }}>
+                          <Box sx={{ width: 90, height: 90, borderRadius: '50%', display: 'grid', placeItems: 'center', background: '#fff', color: '#0f172a', fontWeight: 800, fontSize: 28 }}>{Math.round(heroScore)}</Box>
+                        </Box>
+                      </Box>
+                      <Stack spacing={1.2}>
+                        {coachRecommendations.map((tip) => (
+                          <Box key={tip} sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#334155', fontWeight: 600 }}>
+                            <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 18 }} />
+                            {tip}
+                          </Box>
+                        ))}
+                      </Stack>
+                      <Button component={RouterLink} to={ROUTES.DASHBOARD_AI_CAREER_HUB} variant="contained" sx={{ mt: 2.2, width: '100%', borderRadius: 999, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', textTransform: 'none', fontWeight: 800 }}>Improve Profile</Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} lg={7}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%' }}>
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', mb: 2, letterSpacing: '-0.04em' }}>Recent Activity</Typography>
+                      <Stack spacing={2}>
+                        {activityItems.map(({ title, subtitle, time, status, icon: Icon, tone }) => (
+                          <Box key={title} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, border: '1px solid rgba(148,163,184,0.12)', borderRadius: 3, p: 1.5 }}>
+                            <Box sx={{ width: 38, height: 38, borderRadius: 2.2, display: 'grid', placeItems: 'center', background: tone === 'primary' ? '#dbeafe' : tone === 'success' ? '#dcfce7' : '#fef3c7', color: tone === 'primary' ? '#1d4ed8' : tone === 'success' ? '#15803d' : '#b45309' }}><Icon sx={{ fontSize: 18 }} /></Box>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center' }}>
+                                <Typography sx={{ fontWeight: 700, color: '#0f172a' }}>{title}</Typography>
+                                <Chip label={status} size="small" sx={{ bgcolor: tone === 'primary' ? '#dbeafe' : tone === 'success' ? '#dcfce7' : '#fef3c7', color: tone === 'primary' ? '#1d4ed8' : tone === 'success' ? '#15803d' : '#b45309', fontWeight: 700 }} />
+                              </Box>
+                              <Typography sx={{ color: '#475569', fontSize: 13, mt: 0.3 }}>{subtitle}</Typography>
+                              <Typography sx={{ color: '#64748B', fontSize: 12, mt: 0.5 }}>{time}</Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12} lg={5}>
+                  <Stack spacing={3}>
+                    <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)' }}>
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', mb: 2, letterSpacing: '-0.04em' }}>Application Pipeline</Typography>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0,1fr))', gap: 1.2, mb: 2 }}>
+                          {pipeline.map((step, index) => (
+                            <Box key={step.label} sx={{ textAlign: 'center' }}>
+                              <Box sx={{ height: 10, background: index === 0 ? '#2563EB' : '#e2e8f0', borderRadius: 999, mb: 1 }} />
+                              <Typography sx={{ fontSize: 12, color: '#334155', fontWeight: 700 }}>{step.label}</Typography>
+                              <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{step.value}</Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                        <Typography sx={{ color: '#2563EB', fontWeight: 800 }}>Win more opportunities</Typography>
+                        <Button variant="contained" onClick={() => navigate(ROUTES.DASHBOARD_ASSESSMENTS)} sx={{ mt: 2, borderRadius: 999, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', textTransform: 'none', fontWeight: 800 }}>Take Assessment</Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)' }}>
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', mb: 2, letterSpacing: '-0.04em' }}>Profile Completion</Typography>
+                        <Stack spacing={1.5}>
+                          {profileCompletionBreakdown.map((item) => (
+                            <Box key={item.label}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5, color: '#334155', fontWeight: 700 }}>
+                                <span>{item.label}</span><span>{Math.min(99, item.value)}%</span>
+                              </Box>
+                              <LinearProgress variant="determinate" value={item.value} sx={{ height: 8, borderRadius: 999, background: 'rgba(148,163,184,0.18)', '& .MuiLinearProgress-bar': { bgcolor: item.color, borderRadius: 999 } }} />
+                            </Box>
+                          ))}
+                        </Stack>
+                      </CardContent>
+                    </Card>
                   </Stack>
-                </CardContent>
-              </Card>
+                </Grid>
+              </Grid>
 
-              <Card
-                sx={{
-                  borderRadius: 4,
-                  background: subscription
-                    ? 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)'
-                    : 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
-                }}
-              >
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.2 }}>
-                    Subscription status
-                  </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} lg={8}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)' }}>
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', mb: 2, letterSpacing: '-0.04em' }}>Quick Actions</Typography>
+                      <Grid container spacing={2}>
+                        {[
+                          { label: 'Upload Resume', icon: DescriptionIcon },
+                          { label: 'Update Profile', icon: PersonIcon },
+                          { label: 'Skill Test', icon: QuizIcon },
+                          { label: 'Mock Interview', icon: VideocamIcon },
+                          { label: 'Resume Review', icon: RateReviewIcon },
+                          { label: 'Browse Jobs', icon: WorkIcon },
+                        ].map(({ label, icon: Icon }) => (
+                          <Grid item xs={12} sm={6} md={4} key={label}>
+                            <Button variant="outlined" startIcon={<Icon />} sx={{ justifyContent: 'flex-start', width: '100%', borderRadius: 2.5, px: 1.5, py: 1.1, borderColor: 'rgba(148,163,184,0.22)', color: '#0f172a', fontWeight: 700, textTransform: 'none' }}>{label}</Button>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-                  {subscription ? (
-                    <>
-                      <Chip label={`${subscription.plan?.toUpperCase()} plan active`} color="success" sx={{ mb: 1.2 }} />
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                        Valid until: {subscription.end_date}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Premium candidate features are enabled for your account.
-                      </Typography>
-                    </>
-                  ) : (
-                    <>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                        Upgrade for remote jobs, premium recommendations, and advanced career tools.
-                      </Typography>
-                      <UnlockProButton to={ROUTES.PRICING} />
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card sx={{ borderRadius: 4 }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.2 }}>
-                    Smart recommendations
-                  </Typography>
-                  {recommendedLoading ? (
-                    <LinearProgress />
-                  ) : recommendedJobs.length > 0 ? (
-                    <List>
-                      {recommendedJobs.map((job: any) => (
-                        <ListItem key={job.id} sx={{ px: 0 }}>
-                          <ListItemText
-                            primary={job.title || 'Role'}
-                            secondary={`${job.company_name || 'Company'}${job.location ? ` - ${job.location}` : ''}`}
-                          />
-                          <Button onClick={() => navigate(ROUTES.JOB_DETAILS.replace(':id', String(job.id)))} size="small">
-                            View
-                          </Button>
-                        </ListItem>
-                      ))}
-                    </List>
-                  ) : (
-                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.2 }}>
-                      Add skills in profile to get tailored role matches.
-                    </Typography>
-                  )}
-                  <Button component={RouterLink} to="/dashboard/recommended-jobs" endIcon={<ArrowForwardIcon />}>
-                    Explore all matches
-                  </Button>
-                </CardContent>
-              </Card>
-            </Stack>
-          </Grid>
-        </Grid>
-
-        <RecruiterActivityCenter
-          context={recruiterActivityContext}
-          onQuickAction={handleRecruiterActivityQuickAction}
-        />
-
-        <Card sx={{ mt: 3, borderRadius: 4, bgcolor: theme.palette.background.paper }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Recent Applications
-              </Typography>
-              <Button component={RouterLink} to={ROUTES.DASHBOARD_APPLICATIONS}>
-                View all ({recentApplications.length})
-              </Button>
+                <Grid item xs={12} lg={4}>
+                  <Card sx={{ borderRadius: 4, background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 50%, #7c3aed 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 50px rgba(37,99,235,0.22)', color: '#fff' }}>
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Typography sx={{ fontSize: 28, fontWeight: 800, mb: 0.5 }}>Go Premium</Typography>
+                      <Typography sx={{ color: 'rgba(255,255,255,0.8)', mb: 2 }}>Unlock exclusive career benefits</Typography>
+                      <Stack spacing={1.1}>
+                        {['AI Resume Review', 'Priority Job Alerts', 'See Who Viewed Your Profile', 'Unlimited Applications', 'Interview Preparation', 'Remote Jobs'].map((feature) => (
+                          <Box key={feature} sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#eff6ff', fontWeight: 600 }}><CheckCircleIcon sx={{ color: '#a5b4fc', fontSize: 18 }} /> {feature}</Box>
+                        ))}
+                      </Stack>
+                      <Button variant="contained" sx={{ mt: 2.2, width: '100%', borderRadius: 999, background: '#fff', color: '#0f172a', textTransform: 'none', fontWeight: 800 }}>Upgrade Now</Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
             </Box>
+          </Box>
+        </Box>
 
-            <List>
-              {recentApplications.length === 0 ? (
-                <ListItem sx={{ px: 0 }}>
-                  <ListItemText
-                    primary="No recent applications"
-                    secondary="Start applying to see your latest activity feed here."
-                  />
-                </ListItem>
-              ) : (
-                recentApplications.slice(0, 4).map((application) => (
-                  <ListItem key={application.id} sx={{ px: 0 }}>
-                    <ListItemText
-                      primary={application.jobs?.title || 'Unknown role'}
-                      secondary={application.jobs?.company_name || 'Unknown company'}
-                    />
-                    <Box sx={{ textAlign: 'right' }}>
-                      <Chip size="small" label={(application.status || 'applied').replace('_', ' ').toUpperCase()} color={statusTone(application.status)} />
-                      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.4 }}>
-                        {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
-                      </Typography>
-                    </Box>
-                  </ListItem>
-                ))
-              )}
-            </List>
-          </CardContent>
-        </Card>
+        <Menu anchorEl={profileMenuAnchorEl} open={Boolean(profileMenuAnchorEl)} onClose={closeProfileMenu} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+          <MenuItem onClick={() => { closeProfileMenu(); navigate(ROUTES.DASHBOARD_PROFILE); }}>Profile</MenuItem>
+          <MenuItem onClick={() => { closeProfileMenu(); navigate(ROUTES.DASHBOARD_AI_CAREER_HUB); }}>AI Career Hub</MenuItem>
+          <MenuItem onClick={() => { closeProfileMenu(); navigate(ROUTES.DASHBOARD_SETTINGS); }}>Settings</MenuItem>
+          <MenuItem onClick={() => { closeProfileMenu(); setSupportOpen(true); }}>Help & Support</MenuItem>
+          <MenuItem onClick={handleSignout} sx={{ color: 'error.main' }}>Logout</MenuItem>
+        </Menu>
+      </Box>
 
-        <SupportWidget
-          audience="candidate"
-          showFab={false}
-          open={supportOpen}
-          onClose={() => setSupportOpen(false)}
-        />
-      </Container>
+      <SupportWidget audience="candidate" showFab={false} open={supportOpen} onClose={() => setSupportOpen(false)} />
     </Layout>
   );
 };

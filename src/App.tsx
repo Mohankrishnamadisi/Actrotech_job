@@ -135,6 +135,14 @@ const AnimatedRoutes: React.FC = () => {
           }
         />
         <Route
+          path={ROUTES.DASHBOARD_RESUME}
+          element={
+            <ProtectedRoute>
+              <ResumeReview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path={ROUTES.DASHBOARD_APPLICATIONS}
           element={
             <ProtectedRoute>

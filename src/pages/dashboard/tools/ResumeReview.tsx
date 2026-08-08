@@ -62,7 +62,7 @@ export const ResumeReview: React.FC = () => {
   }, [user?.id]);
 
   const analyzeResume = async () => {
-    if (!resumeContent.trim()) {
+    if (!resumeContent.trim() && !resumeFile) {
       await Swal.fire({
         title: 'Paste your resume',
         text: 'Please paste your resume content before analyzing.',
@@ -74,6 +74,31 @@ export const ResumeReview: React.FC = () => {
 
     setLoading(true);
     try {
+      // If user uploaded a file but didn't paste content, try to read text from simple text files
+      let contentToAnalyze = resumeContent;
+      const readFileAsText = (file: File) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = (err) => reject(err);
+          reader.readAsText(file);
+        });
+
+      if (!contentToAnalyze && resumeFile) {
+        try {
+          if (resumeFile.type.startsWith('text') || /\.txt$/i.test(resumeFile.name)) {
+            contentToAnalyze = await readFileAsText(resumeFile);
+            setResumeContent(contentToAnalyze);
+          } else {
+            // For binary formats (PDF/DOCX) we simulate analysis of the uploaded file
+            // In production, server-side extraction would be used.
+            contentToAnalyze = `Analyzing uploaded file: ${resumeFile.name}`;
+          }
+        } catch (err) {
+          console.warn('Could not read file as text, proceeding with uploaded-file analysis');
+          contentToAnalyze = `Analyzing uploaded file: ${resumeFile.name}`;
+        }
+      }
       // Simulate resume analysis
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -163,18 +188,43 @@ export const ResumeReview: React.FC = () => {
                     onChange={(e) => setResumeContent(e.target.value)}
                     sx={{ mb: 3 }}
                   />
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={analyzeResume}
-                    disabled={loading || !resumeContent.trim()}
-                    sx={{
-                      background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {loading ? 'Analyzing...' : 'Analyze Resume'}
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={analyzeResume}
+                      disabled={loading || (!resumeContent.trim() && !resumeFile)}
+                      sx={{
+                        background: 'linear-gradient(135deg, #2563EB 0%, #4F46E5 100%)',
+                        color: '#fff',
+                        fontWeight: 800,
+                        px: 3,
+                        py: 1.1,
+                        borderRadius: 3,
+                        boxShadow: '0 8px 20px rgba(37,99,235,0.12)',
+                      }}
+                    >
+                      {loading ? 'Analyzing...' : 'Analyze Resume'}
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      startIcon={<UploadIcon />}
+                      onClick={() => setOpenUpload(true)}
+                      sx={{
+                        borderRadius: 3,
+                        background: '#fff',
+                        color: '#0f172a',
+                        fontWeight: 700,
+                        px: 2.2,
+                        py: 0.9,
+                        border: '1px solid rgba(15,23,42,0.06)',
+                        '&:hover': { background: '#fbfdff' },
+                      }}
+                    >
+                      Upload Resume
+                    </Button>
+                  </Box>
                 </>
               )}
 
@@ -196,14 +246,7 @@ export const ResumeReview: React.FC = () => {
                 </Box>
               )}
 
-              <Button
-                variant="outlined"
-                startIcon={<UploadIcon />}
-                onClick={() => setOpenUpload(true)}
-                sx={{ mt: 2 }}
-              >
-                Upload Resume
-              </Button>
+              {/* Removed duplicate Upload button — use the upload dialog button above */}
             </CardContent>
           </Card>
         )}
