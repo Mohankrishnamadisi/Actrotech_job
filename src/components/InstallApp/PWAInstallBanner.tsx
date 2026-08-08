@@ -42,12 +42,12 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
     <Card
       role="region"
       aria-label="Install app banner"
+      className="relative w-full overflow-hidden border border-slate-200/80 bg-white/90 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm"
       sx={{
-        borderRadius: 3,
-        border: '1px solid rgba(148,163,184,0.28)',
-        background: 'linear-gradient(130deg, rgba(15,23,42,0.95) 0%, rgba(29,78,216,0.93) 52%, rgba(8,145,178,0.9) 100%)',
-        color: '#F8FAFC',
-        boxShadow: '0 16px 26px rgba(2,6,23,0.18)',
+        borderRadius: 4,
+        background: 'linear-gradient(135deg, rgba(239,246,255,0.94) 0%, rgba(255,255,255,0.98) 38%, rgba(224,242,254,0.94) 100%)',
+        color: '#0F172A',
+        boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
         animation: 'installBannerReveal 320ms ease-out',
         '@keyframes installBannerReveal': {
           '0%': { opacity: 0, transform: 'translateY(8px) scale(0.99)' },
@@ -55,63 +55,80 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
         },
       }}
     >
-      <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1.2}>
-          <Stack direction="row" spacing={1.2} sx={{ minWidth: 0 }}>
+      <CardContent sx={{ p: { xs: 1.5, md: 1.8 } }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={1.5}
+          sx={{ minHeight: 72 }}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
             <Box
+              className="flex items-center justify-center rounded-[18px] bg-gradient-to-br from-amber-200 via-yellow-100 to-sky-100 ring-1 ring-amber-300/70"
               sx={{
-                width: 44,
-                height: 44,
-                borderRadius: 2,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: 'rgba(248,250,252,0.2)',
-                border: '1px solid rgba(248,250,252,0.28)',
+                width: 54,
+                height: 54,
                 flexShrink: 0,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 18px rgba(59,130,246,0.12)',
               }}
               aria-hidden="true"
             >
-              <InstallMobileIcon />
+              <InstallMobileIcon sx={{ fontSize: 26, color: '#1d4ed8' }} />
             </Box>
 
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.02em',
+                  color: '#0f172a',
+                  fontSize: { xs: '1.05rem', md: '1.2rem' },
+                }}
+              >
                 Install {appName}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(241,245,249,0.95)', mt: 0.25 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#475569',
+                  mt: 0.3,
+                  fontSize: '0.82rem',
+                }}
+              >
                 {description}
               </Typography>
-              {isUnsupported ? (
-                <Typography variant="caption" sx={{ display: 'block', color: '#FDE68A', mt: 0.6 }}>
-                  {unsupportedTip || 'Your browser does not support app installation.'}
-                </Typography>
-              ) : null}
             </Box>
           </Stack>
 
-          <IconButton
-            size="small"
-            onClick={onHide}
-            aria-label="Hide install banner"
-            sx={{ color: '#E2E8F0' }}
+          <Box
+            className="flex items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 shadow-[0_8px_20px_rgba(37,99,235,0.28)]"
+            sx={{
+              width: 56,
+              height: 56,
+              flexShrink: 0,
+            }}
+            aria-hidden="true"
           >
-            <CloseIcon fontSize="small" />
-          </IconButton>
+            <InstallMobileIcon sx={{ color: '#fff', fontSize: 26 }} />
+          </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap', rowGap: 1 }}>
+        <Stack direction="row" spacing={1} sx={{ mt: 1.6, flexWrap: 'wrap', rowGap: 1 }}>
           <Button
             variant="contained"
             color="primary"
             onClick={onInstallNow}
             startIcon={<GetAppIcon />}
             aria-label="Install app now"
+            className="!rounded-full !px-4 !py-2 !text-sm !font-semibold !shadow-[0_8px_18px_rgba(37,99,235,0.18)]"
             sx={{
-              fontWeight: 700,
-              bgcolor: '#FFFFFF',
-              color: '#0F172A',
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              color: '#fff',
               '&:hover': {
-                bgcolor: '#E2E8F0',
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
               },
             }}
           >
@@ -123,18 +140,17 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
             onClick={onRemindLater}
             startIcon={<ScheduleIcon />}
             aria-label="Remind me later"
+            className="!rounded-full !border-slate-200 !px-4 !py-2 !text-sm !font-semibold"
             sx={{
-              fontWeight: 700,
-              borderColor: 'rgba(241,245,249,0.62)',
-              color: '#020202',
+              borderColor: '#cbd5e1',
+              color: '#0f172a',
               '&:hover': {
-                borderColor: '#F8FAFC',
-                bgcolor: 'rgba(255, 255, 255, 0.12)',
-                color: '#F8FAFC'
+                borderColor: '#94a3b8',
+                bgcolor: 'rgba(148, 163, 184, 0.08)',
               },
             }}
           >
-            Remind Me Later
+            Remind Later
           </Button>
 
           <Button
@@ -142,29 +158,51 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
             onClick={onNeverShowAgain}
             startIcon={<VisibilityOffIcon />}
             aria-label="Never show install banner again"
+            className="!rounded-full !px-3 !py-2 !text-sm !font-semibold"
             sx={{
-              fontWeight: 700,
-              color: '#E2E8F0',
+              color: '#475569',
               '&:hover': {
-                bgcolor: 'rgba(241,245,249,0.1)',
+                bgcolor: 'rgba(148, 163, 184, 0.08)',
               },
             }}
           >
-            Never Show Again
+            Never Show
           </Button>
 
           {isUnsupported ? (
             <Chip
-              label="Unsupported Browser"
+              label={unsupportedTip || 'Unsupported Browser'}
               size="small"
               sx={{
-                bgcolor: 'rgba(251,191,36,0.22)',
-                color: '#FEF3C7',
+                bgcolor: 'rgba(251,191,36,0.14)',
+                color: '#92400e',
                 fontWeight: 700,
+                border: '1px solid rgba(245,158,11,0.2)',
               }}
             />
           ) : null}
         </Stack>
+
+        {isUnsupported ? (
+          <Typography variant="caption" sx={{ display: 'block', color: '#b45309', mt: 1, fontWeight: 600 }}>
+            {unsupportedTip || 'Your browser does not support app installation.'}
+          </Typography>
+        ) : null}
+
+        <IconButton
+          size="small"
+          onClick={onHide}
+          aria-label="Hide install banner"
+          className="!absolute !right-3 !top-3 !rounded-full !bg-white/70 !text-slate-500 hover:!bg-white"
+          sx={{
+            position: 'absolute',
+            right: 12,
+            top: 12,
+            boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
       </CardContent>
     </Card>
   );

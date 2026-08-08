@@ -44,8 +44,8 @@ body {
     filter: brightness(1);
   }
   50% {
-    transform: translateY(-1px) scale(1.04);
-    filter: brightness(1.25) drop-shadow(0 0 8px rgba(255, 215, 0, 0.38));
+    transform: translateY(-1px) scale(1.02);
+    filter: brightness(1.08);
   }
 }
 

@@ -1,36 +1,58 @@
 /* From Uiverse.io by vinodjangid07 - adapted for navbar */
 
 .navbar-premium-btn {
-  width: 170px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border: none;
-  border-radius: 40px;
-  background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+  border-radius: 50%;
+  background: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 0.76rem;
+  padding: 0;
   color: rgb(121, 103, 3);
-  font-weight: 700;
   cursor: pointer;
   position: relative;
   z-index: 2;
-  transition-duration: 0.35s;
-  box-shadow: none;
-  background-size: 200% 200%;
-  letter-spacing: 0.03em;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.navbar-premium-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));
+  animation: crownFloat 3.5s ease-in-out infinite, crownGlow 2.2s ease-in-out infinite;
+}
+
+.navbar-premium-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
+}
+
+@keyframes crownFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes crownGlow {
+  0%, 100% {
+    filter: drop-shadow(0 2px 4px rgba(255, 215, 80, 0.45));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 223, 93, 0.9)) saturate(1.2);
+  }
 }
 
 .navbar-premium-logoIcon path {
   fill: rgb(121, 103, 3);
 }
 
-.navbar-premium-btn:hover {
-  transform: scale(0.95);
-  animation: navbarPremiumGradient 5s ease infinite;
-  background-position: right;
-}
 
 @keyframes navbarPremiumGradient {
   0% {

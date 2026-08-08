@@ -32,81 +32,80 @@ const StatCard: React.FC<{
   index?: number;
 }> = ({ title, value, icon, color, trend, onClick, index = 0 }) => (
   <MotionCard
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4, delay: index * 0.1 }}
-    whileHover={{ y: -8, boxShadow: '0 12px 24px rgba(0, 0, 0, 0.1)' }}
+    transition={{ duration: 0.45, delay: index * 0.08 }}
+    whileHover={{ y: -8, scale: 1.02, boxShadow: '0 18px 44px rgba(15, 23, 42, 0.14)' }}
     onClick={onClick}
     sx={{
       cursor: onClick ? 'pointer' : 'default',
-      borderRadius: '16px',
+      borderRadius: '20px',
       border: `1px solid ${themeColors.border}`,
-      background: `linear-gradient(135deg, ${color}05 0%, ${color}02 100%)`,
-      transition: 'all 0.3s ease-in-out',
+      background: `linear-gradient(180deg, ${color}0D 0%, ${color}08 40%, transparent 100%)`,
+      backdropFilter: 'blur(18px)',
+      minHeight: 180,
+      display: 'flex',
+      transition: 'all 0.25s ease-in-out',
       '&:hover': {
         borderColor: color,
       },
     }}
   >
-    <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Icon and Title */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-        <Typography
-          variant="body2"
-          sx={{
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            color: themeColors.text.secondary,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          {title}
-        </Typography>
+    <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5 }}>
+        <Box>
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              color: themeColors.text.secondary,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+              mb: 0.75,
+            }}
+          >
+            {title}
+          </Typography>
+          <Typography
+            variant="h3"
+            sx={{
+              fontSize: '2.2rem',
+              fontWeight: 800,
+              color: themeColors.text.primary,
+              lineHeight: 1,
+            }}
+          >
+            {value}
+          </Typography>
+        </Box>
         <Box
           sx={{
-            p: 1,
-            borderRadius: '10px',
-            backgroundColor: `${color}20`,
+            width: 44,
+            height: 44,
+            borderRadius: 2,
+            backgroundColor: `${color}1A`,
             color: color,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: `0 14px 28px ${color}14`,
           }}
         >
           {icon}
         </Box>
       </Box>
 
-      {/* Value */}
-      <Typography
-        variant="h3"
-        sx={{
-          fontSize: '2rem',
-          fontWeight: 700,
-          color: themeColors.text.primary,
-          mb: 1,
-        }}
-      >
-        {value}
-      </Typography>
-
-      {/* Trend */}
-      {trend && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <TrendingUpIcon sx={{ fontSize: '0.875rem', color: themeColors.success }} />
-          <Typography
-            variant="caption"
-            sx={{
-              color: themeColors.success,
-              fontWeight: 600,
-              fontSize: '0.75rem',
-            }}
-          >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1 }}>
+        <Typography variant="body2" sx={{ color: themeColors.text.tertiary, fontSize: '0.85rem' }}>
+          Live recruitment insight
+        </Typography>
+        {trend ? (
+          <Typography variant="caption" sx={{ color, fontWeight: 700, textTransform: 'uppercase' }}>
             {trend}
           </Typography>
-        </Box>
-      )}
+        ) : null}
+      </Box>
     </CardContent>
   </MotionCard>
 );

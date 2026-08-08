@@ -101,6 +101,7 @@ type DashboardTab =
   | 'settings';
 
 const MotionBox = motion(Box);
+const MotionCard = motion(Card);
 const RecommendedCandidates = React.lazy(() =>
   import('@components/recruiter/RecommendedCandidates').then((module) => ({
     default: module.RecommendedCandidates,
@@ -279,28 +280,42 @@ export const RecruiterDashboard: React.FC = () => {
             <Grid container spacing={3} sx={{ mt: 2 }}>
               {/* Post New Job Card */}
               <Grid item xs={12} md={6}>
-                <Card
-                  sx={{
-                    borderRadius: '16px',
-                    border: `1px solid ${themeColors.border}`,
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.1)',
-                      borderColor: themeColors.primary,
-                    },
-                  }}
+                <MotionCard
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: 0.08 }}
+                  whileHover={{ y: -8, boxShadow: '0 18px 44px rgba(15, 23, 42, 0.14)' }}
                   onClick={() => setJobPostingFormOpen(true)}
+                  sx={{
+                    borderRadius: '22px',
+                    border: `1px solid ${themeColors.border}`,
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(245,250,255,0.95) 100%)`,
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out',
+                    minHeight: 180,
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: 6,
+                      background: `linear-gradient(90deg, ${themeColors.primary} 0%, #7C3AED 100%)`,
+                    }}
+                  />
+                  <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                      <Box sx={{ flex: 1 }}>
                         <Typography
                           variant="h6"
                           sx={{
-                            fontWeight: 700,
+                            fontWeight: 800,
                             color: themeColors.text.primary,
-                            mb: 0.5,
+                            mb: 1,
                           }}
                         >
                           Post a New Job
@@ -309,10 +324,11 @@ export const RecruiterDashboard: React.FC = () => {
                           variant="body2"
                           sx={{
                             color: themeColors.text.secondary,
-                            fontSize: '0.875rem',
+                            fontSize: '0.9rem',
+                            lineHeight: 1.6,
                           }}
                         >
-                          Start recruiting for your open positions
+                          Start recruiting for your open positions with a beautiful job listing experience.
                         </Typography>
                       </Box>
                       <Button
@@ -320,41 +336,58 @@ export const RecruiterDashboard: React.FC = () => {
                         size="small"
                         startIcon={<AddIcon />}
                         sx={{
+                          minWidth: 130,
                           background: `linear-gradient(135deg, ${themeColors.primary} 0%, #7C3AED 100%)`,
                           color: '#FFFFFF',
+                          fontWeight: 700,
+                          py: 1.25,
                         }}
                       >
                         Post Job
                       </Button>
                     </Box>
                   </CardContent>
-                </Card>
+                </MotionCard>
               </Grid>
 
               {/* View Pipeline Card */}
               <Grid item xs={12} md={6}>
-                <Card
-                  sx={{
-                    borderRadius: '16px',
-                    border: `1px solid ${themeColors.border}`,
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.1)',
-                      borderColor: themeColors.primary,
-                    },
-                  }}
+                <MotionCard
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: 0.12 }}
+                  whileHover={{ y: -8, boxShadow: '0 18px 44px rgba(15, 23, 42, 0.14)' }}
                   onClick={() => setCurrentTab('ats-pipeline')}
+                  sx={{
+                    borderRadius: '22px',
+                    border: `1px solid ${themeColors.border}`,
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,252,255,0.96) 100%)`,
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out',
+                    minHeight: 180,
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: 6,
+                      background: `linear-gradient(90deg, ${themeColors.primary} 0%, ${themeColors.primaryLight} 100%)`,
+                    }}
+                  />
+                  <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                      <Box sx={{ flex: 1 }}>
                         <Typography
                           variant="h6"
                           sx={{
-                            fontWeight: 700,
+                            fontWeight: 800,
                             color: themeColors.text.primary,
-                            mb: 0.5,
+                            mb: 1,
                           }}
                         >
                           View ATS Pipeline
@@ -363,16 +396,17 @@ export const RecruiterDashboard: React.FC = () => {
                           variant="body2"
                           sx={{
                             color: themeColors.text.secondary,
-                            fontSize: '0.875rem',
+                            fontSize: '0.9rem',
+                            lineHeight: 1.6,
                           }}
                         >
-                          Manage your hiring stages and candidates
+                          Manage your hiring stages and candidate flow with confidence.
                         </Typography>
                       </Box>
-                      <ArrowRightIcon sx={{ color: themeColors.primary, fontSize: '1.5rem' }} />
+                      <ArrowRightIcon sx={{ color: themeColors.primary, fontSize: '2rem' }} />
                     </Box>
                   </CardContent>
-                </Card>
+                </MotionCard>
               </Grid>
             </Grid>
           </MotionBox>
