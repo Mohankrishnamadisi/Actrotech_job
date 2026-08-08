@@ -780,8 +780,8 @@ export const PremiumDashboard: React.FC = () => {
                         <div className="space-circle"></div>
                       </div>
                     </div>
-                    <Button variant="contained" onClick={() => navigate('/dashboard/mock-interviews')} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'transparent' } }}>
-                      Mock Interview
+                    <Button variant="contained" onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'transparent' } }}>
+                      Edit Profile
                     </Button>
                   </Box>
                 </Box>
@@ -873,19 +873,6 @@ export const PremiumDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Suspense
-          fallback={(
-            <Card sx={{ borderRadius: 4, mb: 3 }}>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">Generating AI Daily Career Brief...</Typography>
-                <LinearProgress sx={{ mt: 1.2 }} />
-              </CardContent>
-            </Card>
-          )}
-        >
-          <AiDailyCareerBrief context={aiDailyBriefContext} onAction={handleAiDailyBriefAction} />
-        </Suspense>
-
         <Grid container spacing={2.2} sx={{ mb: 3 }}>
           {stats.map((stat, idx) => (
             <Grid item xs={12} sm={6} md={3} key={stat.label}>
@@ -926,6 +913,19 @@ export const PremiumDashboard: React.FC = () => {
           ))}
         </Grid>
 
+        <Suspense
+          fallback={(
+            <Card sx={{ borderRadius: 4, mb: 3 }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">Generating AI Daily Career Brief...</Typography>
+                <LinearProgress sx={{ mt: 1.2 }} />
+              </CardContent>
+            </Card>
+          )}
+        >
+          <AiDailyCareerBrief context={aiDailyBriefContext} onAction={handleAiDailyBriefAction} />
+        </Suspense>
+
         <Box sx={{ mb: 3 }}>
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 2.2 }}>
             Quick Actions
@@ -933,7 +933,7 @@ export const PremiumDashboard: React.FC = () => {
           <Grid container spacing={2}>
             {[
               { label: 'Browse Jobs', to: ROUTES.JOBS, icon: WorkIcon, color: 'primary' as const },
-              { label: 'Complete Profile', to: ROUTES.DASHBOARD_PROFILE, icon: AccountCircleIcon, color: 'secondary' as const },
+              { label: 'Mock Interviews', to: '/dashboard/mock-interviews', icon: VideocamIcon, color: 'secondary' as const },
               { label: 'Assessments', to: ROUTES.DASHBOARD_ASSESSMENTS, icon: TrackChangesIcon, color: 'success' as const },
               { label: 'Community', to: ROUTES.DASHBOARD_COMMUNITY, icon: PublicIcon, color: 'info' as const },
               { label: 'Referrals', to: ROUTES.DASHBOARD_REFERRALS, icon: BoltIcon, color: 'secondary' as const },
@@ -958,7 +958,7 @@ export const PremiumDashboard: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
                       <action.icon color={action.color} />
                         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                          {action.label === 'Complete Profile' ? (Math.min(100, profileStrength) >= 100 ? 'Edit Profile' : 'Complete Profile') : action.label}
+                          {action.label}
                         </Typography>
                     </Box>
                     <button
@@ -1238,27 +1238,7 @@ export const PremiumDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Suspense
-          fallback={(
-            <Card sx={{ borderRadius: 4, mb: 3 }}>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">Loading AI Match Center...</Typography>
-                <LinearProgress sx={{ mt: 1.2 }} />
-              </CardContent>
-            </Card>
-          )}
-        >
-          <AiMatchCenter
-            jobs={recommendedJobs}
-            context={aiMatchContext}
-            onApplyNow={handleAiMatchApplyNow}
-            onSaveJob={handleAiMatchSaveJob}
-            onImproveMatch={handleAiMatchImproveMatch}
-            onResumeOptimizer={() => navigate('/dashboard/resume-review')}
-            onMockInterview={() => navigate('/dashboard/mock-interviews')}
-            onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
-          />
-        </Suspense>
+        
 
         <Card
           sx={{
@@ -1590,6 +1570,28 @@ export const PremiumDashboard: React.FC = () => {
           open={supportOpen}
           onClose={() => setSupportOpen(false)}
         />
+
+        <Suspense
+          fallback={(
+            <Card sx={{ borderRadius: 4, mb: 3 }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">Loading AI Match Center...</Typography>
+                <LinearProgress sx={{ mt: 1.2 }} />
+              </CardContent>
+            </Card>
+          )}
+        >
+          <AiMatchCenter
+            jobs={recommendedJobs}
+            context={aiMatchContext}
+            onApplyNow={handleAiMatchApplyNow}
+            onSaveJob={handleAiMatchSaveJob}
+            onImproveMatch={handleAiMatchImproveMatch}
+            onResumeOptimizer={() => navigate('/dashboard/resume-review')}
+            onMockInterview={() => navigate('/dashboard/mock-interviews')}
+            onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
+          />
+        </Suspense>
 
         <Dialog
           open={interactionModalOpen}
