@@ -32,7 +32,10 @@ import {
   School as MentorIcon,
   Event as EventIcon,
   AttachMoney as PricingIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon,
 } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
@@ -40,13 +43,23 @@ import { recruiterService } from '@services/api';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
+import { useSubscription, useThemeMode } from '@hooks/index';
 
 export const MobileNavbar: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const { subscription } = useSubscription(user?.id || null);
+  const { setThemeMode } = useThemeMode();
+  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [recruiterAvatar, setRecruiterAvatar] = useState('');
+  const isDarkMode = theme.palette.mode === 'dark';
+  const showPremiumThemeToggle = Boolean(
+    user
+      && user.role === USER_ROLES.JOB_SEEKER
+      && subscription
+  );
 
   React.useEffect(() => {
     let mounted = true;
@@ -298,9 +311,9 @@ export const MobileNavbar: React.FC = () => {
       position="sticky"
       elevation={0}
       sx={{
-        background: 'rgba(255, 255, 255, 0.95)',
+        background: isDarkMode ? 'rgba(10, 15, 30, 0.96)' : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(18px)',
-        borderBottom: '1px solid rgba(226,232,240,0.9)',
+        borderBottom: `1px solid ${isDarkMode ? '#334155' : 'rgba(226,232,240,0.9)'}`,
       }}
     >
       <Toolbar
@@ -314,6 +327,24 @@ export const MobileNavbar: React.FC = () => {
         }}
       >
         <Logo size="small" />
+        {showPremiumThemeToggle ? (
+          <IconButton
+            onClick={() => setThemeMode(isDarkMode ? 'light' : 'dark')}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            sx={{
+              ml: 'auto',
+              mr: 0.5,
+              bgcolor: isDarkMode ? 'rgba(250, 204, 21, 0.2)' : 'rgba(15, 23, 42, 0.08)',
+              color: isDarkMode ? '#FACC15' : '#0F172A',
+              border: `1px solid ${isDarkMode ? 'rgba(250, 204, 21, 0.35)' : 'rgba(15,23,42,0.16)'}`,
+              '&:hover': {
+                bgcolor: isDarkMode ? 'rgba(250, 204, 21, 0.28)' : 'rgba(15, 23, 42, 0.14)',
+              },
+            }}
+          >
+            {isDarkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+          </IconButton>
+        ) : null}
         <IconButton
           onClick={handleDrawerToggle}
           sx={{ color: 'text.primary' }}
@@ -330,6 +361,8 @@ export const MobileNavbar: React.FC = () => {
           sx: {
             width: '280px',
             maxWidth: '100vw',
+            bgcolor: isDarkMode ? '#0B0F17' : undefined,
+            color: isDarkMode ? '#FFFFFF' : undefined,
           },
         }}
       >

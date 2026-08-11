@@ -22,6 +22,18 @@
   --shadow-soft: 0 24px 70px rgba(15, 23, 42, 0.08);
 }
 
+:root[data-theme='dark'] {
+  --color-page: #000000;
+  --color-surface: #111827;
+  --color-primary: #60a5fa;
+  --color-primary-dark: #93c5fd;
+  --color-secondary: #c084fc;
+  --color-text: #ffffff;
+  --color-text-secondary: #cbd5e1;
+  --color-border: #334155;
+  --shadow-soft: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
 html {
   scroll-behavior: smooth;
   min-height: 100%;
@@ -36,6 +48,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
+}
+
+:root[data-theme='dark'] body {
+  background: #000000;
+  color: #ffffff;
 }
 
 @keyframes crownShine {
@@ -72,10 +89,29 @@ body {
   background: #8ea0ba;
 }
 
+:root[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: #050608;
+}
+
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-color: #050608;
+}
+
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 ::selection,
 ::-moz-selection {
   background-color: #dbeafe;
   color: #1e3a8a;
+}
+
+:root[data-theme='dark'] ::selection,
+:root[data-theme='dark'] ::-moz-selection {
+  background-color: #1d4ed8;
+  color: #ffffff;
 }
 
 a {
@@ -90,6 +126,11 @@ a:hover {
 
 ::placeholder {
   color: #8a97aa;
+}
+
+:root[data-theme='dark'] ::placeholder {
+  color: #cbd5e1;
+  opacity: 1;
 }
 
 ::-moz-placeholder {
@@ -110,7 +151,7 @@ a:hover {
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 38%),
     radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.08), transparent 42%),
-    #ffffff !important;
+    var(--color-surface) !important;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.2) !important;
   padding: 1.35rem 1.35rem 1.1rem !important;
 }
@@ -118,14 +159,27 @@ a:hover {
 .ac-sw-title {
   font-size: 1.45rem !important;
   font-weight: 800 !important;
-  color: #0f172a !important;
+  color: var(--color-text) !important;
   letter-spacing: 0.01em;
 }
 
 .ac-sw-content {
-  color: #334155 !important;
+  color: var(--color-text-secondary) !important;
   font-size: 1rem !important;
   line-height: 1.6 !important;
+}
+
+:root[data-theme='dark'] .ac-sw-popup {
+  border-color: #334155 !important;
+  background: #111827 !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55) !important;
+}
+
+:root[data-theme='dark'] .ac-sw-popup .swal2-input,
+:root[data-theme='dark'] .ac-sw-popup .swal2-textarea {
+  background: #0B0F17 !important;
+  color: #FFFFFF !important;
+  border-color: #475569 !important;
 }
 
 .ac-sw-icon {

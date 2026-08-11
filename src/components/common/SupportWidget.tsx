@@ -20,6 +20,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   HeadsetMic as HeadsetMicIcon,
   Email as EmailIcon,
@@ -58,6 +59,8 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
   onClose,
 }) => {
   const { user } = useAuthStore();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
 
   const [internalOpen, setInternalOpen] = useState(false);
   const [tab, setTab] = useState(0);
@@ -246,16 +249,20 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           sx: {
             borderRadius: 3,
             overflow: 'hidden',
-            border: '1px solid rgba(37, 99, 235, 0.18)',
-            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.22)',
+            bgcolor: isDarkMode ? '#0B0F17' : undefined,
+            color: isDarkMode ? '#FFFFFF' : undefined,
+            border: `1px solid ${isDarkMode ? '#334155' : 'rgba(37, 99, 235, 0.18)'}`,
+            boxShadow: isDarkMode ? '0 24px 60px rgba(0, 0, 0, 0.58)' : '0 24px 60px rgba(15, 23, 42, 0.22)',
           },
         }}
       >
         <DialogTitle
           sx={{
             pb: 1.4,
-            background: 'linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(16,185,129,0.1) 100%)',
-            borderBottom: '1px solid rgba(37, 99, 235, 0.15)',
+            background: isDarkMode
+              ? 'linear-gradient(135deg, #111827 0%, #0F172A 100%)'
+              : 'linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(16,185,129,0.1) 100%)',
+            borderBottom: `1px solid ${isDarkMode ? '#334155' : 'rgba(37, 99, 235, 0.15)'}`,
           }}
         >
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
@@ -269,7 +276,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
               label={contactLabel}
               color="info"
               size="small"
-              sx={{ fontWeight: 700, bgcolor: 'rgba(3, 105, 161, 0.14)' }}
+              sx={{ fontWeight: 700, bgcolor: isDarkMode ? 'rgba(56, 189, 248, 0.16)' : 'rgba(3, 105, 161, 0.14)', color: isDarkMode ? '#BAE6FD' : undefined }}
             />
           </Stack>
         </DialogTitle>
@@ -279,7 +286,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           sx={{
             px: { xs: 2, md: 3 },
             py: 2.5,
-            bgcolor: 'rgba(248, 250, 252, 0.75)',
+            bgcolor: isDarkMode ? '#050608' : 'rgba(248, 250, 252, 0.75)',
           }}
         >
           <Tabs
@@ -288,7 +295,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
             variant="fullWidth"
             sx={{
               mb: 2.5,
-              bgcolor: '#FFFFFF',
+              bgcolor: isDarkMode ? '#111827' : '#FFFFFF',
               borderRadius: 2,
               p: 0.5,
               border: '1px solid rgba(148, 163, 184, 0.25)',
@@ -300,9 +307,10 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
                 fontWeight: 600,
               },
               '& .Mui-selected': {
-                bgcolor: 'rgba(37, 99, 235, 0.12)',
+                bgcolor: isDarkMode ? 'rgba(59, 130, 246, 0.22)' : 'rgba(37, 99, 235, 0.12)',
                 color: 'primary.main',
               },
+              '& .MuiTab-root': { color: isDarkMode ? '#CBD5E1' : undefined },
             }}
           >
             <Tab label="Raise Ticket" />
@@ -321,7 +329,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           {errorMessage ? <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert> : null}
 
           {tab === 0 ? (
-            <Stack spacing={2} sx={{ p: { xs: 0.5, md: 1 }, bgcolor: '#FFFFFF', borderRadius: 2, border: '1px solid rgba(148, 163, 184, 0.2)' }}>
+            <Stack spacing={2} sx={{ p: { xs: 0.5, md: 1 }, bgcolor: isDarkMode ? '#0B0F17' : '#FFFFFF', borderRadius: 2, border: `1px solid ${isDarkMode ? '#334155' : 'rgba(148, 163, 184, 0.2)'}` }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
                   select
@@ -400,8 +408,8 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
                           py: 1.1,
                           mb: 1,
                           borderRadius: 2,
-                          bgcolor: '#FFFFFF',
-                          border: '1px solid rgba(148, 163, 184, 0.22)',
+                          bgcolor: isDarkMode ? '#111827' : '#FFFFFF',
+                          border: `1px solid ${isDarkMode ? '#334155' : 'rgba(148, 163, 184, 0.22)'}`,
                         }}
                       >
                         <ListItemText
@@ -419,7 +427,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
                                 {ticket.category} • {ticket.created_at ? new Date(ticket.created_at).toLocaleString() : 'Recent'}
                               </Typography>
                               {ticket.admin_note ? (
-                                <Box sx={{ mt: 1, p: 1.2, borderRadius: 1.5, bgcolor: 'rgba(25,118,210,0.08)', border: '1px solid rgba(25,118,210,0.18)' }}>
+                                  <Box sx={{ mt: 1, p: 1.2, borderRadius: 1.5, bgcolor: isDarkMode ? 'rgba(37, 99, 235, 0.18)' : 'rgba(25,118,210,0.08)', border: '1px solid rgba(25,118,210,0.18)' }}>
                                   <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mb: 0.4 }}>
                                     <AdminPanelSettingsIcon sx={{ fontSize: 14, color: 'primary.main' }} />
                                     <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>Admin Response</Typography>
@@ -448,7 +456,7 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           ) : null}
 
           {tab === 2 ? (
-            <Stack spacing={2} sx={{ p: { xs: 0.5, md: 1 }, bgcolor: '#FFFFFF', borderRadius: 2, border: '1px solid rgba(148, 163, 184, 0.2)' }}>
+            <Stack spacing={2} sx={{ p: { xs: 0.5, md: 1 }, bgcolor: isDarkMode ? '#0B0F17' : '#FFFFFF', borderRadius: 2, border: `1px solid ${isDarkMode ? '#334155' : 'rgba(148, 163, 184, 0.2)'}` }}>
               <Alert severity="info">
                 Support hours: Monday to Saturday, 9:00 AM - 7:00 PM.
               </Alert>
@@ -475,14 +483,14 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1.2, fontWeight: 700 }}>Quick FAQs</Typography>
                 <Stack spacing={1}>
-                  <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: 'rgba(25,118,210,0.06)' }}>
+                  <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: isDarkMode ? 'rgba(37, 99, 235, 0.16)' : 'rgba(25,118,210,0.06)' }}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <HelpOutlineIcon fontSize="small" color="primary" />
                       <Typography variant="body2">How soon will I get a response?</Typography>
                     </Stack>
                     <Typography variant="caption" color="text.secondary">Usually within 24 working hours.</Typography>
                   </Box>
-                  <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: 'rgba(25,118,210,0.06)' }}>
+                  <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: isDarkMode ? 'rgba(37, 99, 235, 0.16)' : 'rgba(25,118,210,0.06)' }}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <HelpOutlineIcon fontSize="small" color="primary" />
                       <Typography variant="body2">Can I track my issue status?</Typography>
@@ -495,14 +503,20 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
           ) : null}
         </DialogContent>
 
-        <DialogActions sx={{ px: 2.5, py: 1.4, borderTop: '1px solid rgba(148, 163, 184, 0.2)', bgcolor: '#FFFFFF' }}>
+        <DialogActions sx={{ px: 2.5, py: 1.4, borderTop: `1px solid ${isDarkMode ? '#334155' : 'rgba(148, 163, 184, 0.2)'}`, bgcolor: isDarkMode ? '#0B0F17' : '#FFFFFF' }}>
           <Button onClick={closeDialog} sx={{ textTransform: 'none', fontWeight: 600 }}>
             Close
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={ticketDetailOpen} onClose={closeTicketDetail} fullWidth maxWidth="sm">
+      <Dialog
+        open={ticketDetailOpen}
+        onClose={closeTicketDetail}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ sx: { bgcolor: isDarkMode ? '#0B0F17' : undefined, color: isDarkMode ? '#FFFFFF' : undefined, border: isDarkMode ? '1px solid #334155' : undefined } }}
+      >
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -525,14 +539,14 @@ const SupportWidget: React.FC<SupportWidgetProps> = ({
               <Typography variant="caption" color="text.secondary">
                 {selectedTicket.category} • {selectedTicket.created_at ? new Date(selectedTicket.created_at).toLocaleString() : 'Recent'}
               </Typography>
-              <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: 'rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.1)' }}>
+              <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: isDarkMode ? '#111827' : 'rgba(15,23,42,0.04)', border: `1px solid ${isDarkMode ? '#334155' : 'rgba(15,23,42,0.1)'}` }}>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                   {selectedTicket.message || '-'}
                 </Typography>
               </Box>
 
               {selectedTicket.admin_note ? (
-                <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: 'rgba(25,118,210,0.08)', border: '1px solid rgba(25,118,210,0.18)' }}>
+                <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: isDarkMode ? 'rgba(37, 99, 235, 0.18)' : 'rgba(25,118,210,0.08)', border: '1px solid rgba(25,118,210,0.18)' }}>
                   <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mb: 0.4 }}>
                     <AdminPanelSettingsIcon sx={{ fontSize: 14, color: 'primary.main' }} />
                     <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main' }}>

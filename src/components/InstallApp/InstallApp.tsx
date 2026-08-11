@@ -1,10 +1,13 @@
 import React, { Suspense } from 'react';
+import { useTheme } from '@mui/material/styles';
 import usePWAInstall from '@hooks/usePWAInstall';
 import '../../styles/installAppButton.css';
 
 const PWAInstallModal = React.lazy(() => import('./PWAInstallModal'));
 
 export const InstallApp: React.FC = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const {
     isInstalled,
     promptInstall,
@@ -25,7 +28,7 @@ export const InstallApp: React.FC = () => {
       <button
         onClick={handleInstall}
         type="button"
-        className="install-app-button install-app-type1"
+        className={`install-app-button install-app-type1${isDarkMode ? ' install-app-dark' : ''}`}
         aria-label="Install app"
         title="Install app"
       >

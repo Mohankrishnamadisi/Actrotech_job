@@ -21,6 +21,7 @@ import {
   Stack,
   LinearProgress,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   LocationOn as LocationOnIcon,
@@ -53,6 +54,8 @@ const RecommendedCandidates = React.lazy(() =>
 );
 
 export const JobDetails: React.FC = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -212,8 +215,8 @@ export const JobDetails: React.FC = () => {
         text: 'Please login to save this job.',
         timer: 1800,
         showConfirmButton: false,
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       });
       return;
     }
@@ -228,8 +231,8 @@ export const JobDetails: React.FC = () => {
           title: 'Removed from saved jobs',
           timer: 1400,
           showConfirmButton: false,
-          background: '#FFFFFF',
-          color: '#172033',
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
         });
       } else {
         await savedService.saveJob(user.id, job.id);
@@ -239,8 +242,8 @@ export const JobDetails: React.FC = () => {
           title: 'Job saved successfully',
           timer: 1400,
           showConfirmButton: false,
-          background: '#FFFFFF',
-          color: '#172033',
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
         });
       }
     } catch (err) {
@@ -249,8 +252,8 @@ export const JobDetails: React.FC = () => {
         icon: 'error',
         title: 'Unable to update saved job',
         text: 'Please try again later.',
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       });
     } finally {
       setSavedLoading(false);
@@ -265,8 +268,8 @@ export const JobDetails: React.FC = () => {
         text: 'Login to apply and unlock job opportunities.',
         timer: 1800,
         showConfirmButton: false,
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       }).then(() => navigate(ROUTES.LOGIN));
       return;
     }
@@ -286,8 +289,8 @@ export const JobDetails: React.FC = () => {
         text: 'Remote Jobs are available only for Premium Members.',
         confirmButtonText: 'View pricing',
         confirmButtonColor: '#1D4ED8',
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       }).then((result) => {
         if (result.isConfirmed) {
           navigate(ROUTES.PRICING);
@@ -303,8 +306,8 @@ export const JobDetails: React.FC = () => {
         text: 'You have already applied for this job.',
         timer: 1600,
         showConfirmButton: false,
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       });
       return;
     }
@@ -320,8 +323,8 @@ export const JobDetails: React.FC = () => {
         text: 'Login to apply and unlock job opportunities.',
         timer: 1800,
         showConfirmButton: false,
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       }).then(() => navigate(ROUTES.LOGIN));
       return;
     }
@@ -333,8 +336,8 @@ export const JobDetails: React.FC = () => {
         text: 'Remote Jobs are available only for Premium Members.',
         confirmButtonText: 'View pricing',
         confirmButtonColor: '#1D4ED8',
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       }).then((result) => {
         if (result.isConfirmed) {
           navigate(ROUTES.PRICING);
@@ -350,8 +353,8 @@ export const JobDetails: React.FC = () => {
         text: 'You have already applied for this job.',
         timer: 1600,
         showConfirmButton: false,
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       });
       return;
     }
@@ -370,8 +373,8 @@ export const JobDetails: React.FC = () => {
           icon: 'error',
           title: 'Resume required',
           text: 'Please upload a resume before applying.',
-          background: '#FFFFFF',
-          color: '#172033',
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
         });
         return;
       }
@@ -399,8 +402,8 @@ export const JobDetails: React.FC = () => {
           text: 'Your priority application has been submitted and will be shown to the recruiter first.',
           timer: 2000,
           showConfirmButton: false,
-          background: '#FFFFFF',
-          color: '#172033',
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
         });
       } else {
         await Swal.fire({
@@ -409,8 +412,8 @@ export const JobDetails: React.FC = () => {
           text: 'Your application has been sent successfully.',
           timer: 1800,
           showConfirmButton: false,
-          background: '#FFFFFF',
-          color: '#172033',
+          background: 'var(--color-surface)',
+          color: 'var(--color-text)',
         });
       }
       setHasApplied(true);
@@ -421,8 +424,8 @@ export const JobDetails: React.FC = () => {
         icon: 'error',
         title: 'Application failed',
         text: error instanceof Error ? error.message : 'Failed to apply',
-        background: '#FFFFFF',
-        color: '#172033',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
       });
     } finally {
       setApplyLoading(false);
@@ -570,7 +573,7 @@ export const JobDetails: React.FC = () => {
                     Share Job
                   </Button>
                   {!hasAccess ? (
-                    <Alert severity="info" sx={{ mt: 1.3, bgcolor: 'rgba(224, 242, 254, 0.95)' }}>
+                    <Alert severity="info" sx={{ mt: 1.3, bgcolor: isDarkMode ? 'rgba(30, 64, 175, 0.28)' : 'rgba(224, 242, 254, 0.95)' }}>
                       Remote job details are available only for premium members.
                     </Alert>
                   ) : null}
@@ -587,7 +590,7 @@ export const JobDetails: React.FC = () => {
                 borderRadius: 4,
                 border: '1px solid',
                 borderColor: 'divider',
-                background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                background: isDarkMode ? 'linear-gradient(180deg, #111827, #0F172A)' : 'linear-gradient(180deg, #ffffff, #f8fbff)',
                 boxShadow: '0 18px 40px rgba(15, 23, 42, 0.07)',
               }}
             >
@@ -597,7 +600,7 @@ export const JobDetails: React.FC = () => {
                 </Typography>
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2.4 }}>
                   {job.skills.map((skill) => (
-                    <Chip key={skill} label={skill} variant="outlined" sx={{ fontWeight: 600, bgcolor: 'rgba(224, 242, 254, 0.45)' }} />
+                    <Chip key={skill} label={skill} variant="outlined" sx={{ fontWeight: 600, bgcolor: isDarkMode ? 'rgba(96, 165, 250, 0.16)' : 'rgba(224, 242, 254, 0.45)', color: isDarkMode ? '#BFDBFE' : undefined }} />
                   ))}
                 </Stack>
 
@@ -626,7 +629,7 @@ export const JobDetails: React.FC = () => {
                     />
                   </Suspense>
                 ) : !hasAccess && requiresSubscription ? (
-                  <Box sx={{ p: 3, border: '1px solid rgba(191, 219, 254, 1)', borderRadius: 3, background: 'linear-gradient(180deg, #eff6ff, #dbeafe)' }}>
+                  <Box sx={{ p: 3, border: `1px solid ${isDarkMode ? 'rgba(96, 165, 250, 0.38)' : 'rgba(191, 219, 254, 1)'}`, borderRadius: 3, background: isDarkMode ? 'linear-gradient(180deg, #172554, #1E293B)' : 'linear-gradient(180deg, #eff6ff, #dbeafe)' }}>
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.8 }}>
                       Premium Remote Job
                     </Typography>
@@ -692,7 +695,7 @@ export const JobDetails: React.FC = () => {
                 borderRadius: 4,
                 border: '1px solid',
                 borderColor: 'divider',
-                background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                background: isDarkMode ? 'linear-gradient(180deg, #111827, #0F172A)' : 'linear-gradient(180deg, #ffffff, #f8fbff)',
                 boxShadow: '0 20px 42px rgba(15, 23, 42, 0.09)',
               }}
             >
@@ -763,7 +766,7 @@ export const JobDetails: React.FC = () => {
                       </Box>
                     ) : subscription ? (
                       aiMatch ? (
-                        <Card variant="outlined" sx={{ p: 1.6, borderRadius: 2.5, bgcolor: '#fff' }}>
+                        <Card variant="outlined" sx={{ p: 1.6, borderRadius: 2.5, bgcolor: isDarkMode ? '#111827' : '#fff' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                             <Typography
                               variant="h4"
@@ -804,7 +807,7 @@ export const JobDetails: React.FC = () => {
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>No profile data to compute match.</Typography>
                       )
                     ) : (
-                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2.5, position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg,#f8fafc,#eef2ff)' }}>
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2.5, position: 'relative', overflow: 'hidden', background: isDarkMode ? 'linear-gradient(180deg, #111827, #172033)' : 'linear-gradient(180deg,#f8fafc,#eef2ff)' }}>
                         <Box sx={{ filter: 'blur(4px)', userSelect: 'none' }}>
                           <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.8 }}>Premium Feature</Typography>
                           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.8 }}>Know how well your profile matches this job.</Typography>

@@ -71,6 +71,9 @@ const createAppTheme = (themeMode: ThemeMode) => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
+            background: palette.mode === 'dark'
+              ? palette.background.default
+              : `radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 24%), radial-gradient(circle at right center, rgba(124, 58, 237, 0.08), transparent 22%), ${palette.background.default}`,
             backgroundColor: palette.background.default,
             color: palette.text.primary,
             minHeight: '100vh',

@@ -1,11 +1,11 @@
 /* From Uiverse.io by vinodjangid07 - adapted for navbar */
 
 .navbar-premium-btn {
-  width: 48px;
-  height: 48px;
+  width: auto;
+  height: auto;
   border: none;
-  border-radius: 50%;
-  background: #ffffff;
+  border-radius: 0;
+  background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -14,16 +14,14 @@
   cursor: pointer;
   position: relative;
   z-index: 2;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 0.25s ease;
 }
 
 .navbar-premium-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: block;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));
-  animation: crownFloat 3.5s ease-in-out infinite, crownGlow 2.2s ease-in-out infinite;
+  animation: crownFloat 3.5s ease-in-out infinite;
 }
 
 .navbar-premium-btn:hover {

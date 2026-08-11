@@ -9,16 +9,19 @@ import {
 } from '@mui/icons-material';
 import { ROUTES } from '@constants/index';
 import { useAuthStore } from '@store/index';
+import { useTheme } from '@mui/material/styles';
 
 export const MobileFooter: React.FC = () => {
   const { user } = useAuthStore();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const currentYear = new Date().getFullYear();
 
   return (
     <Box
       component="footer"
       sx={{
-        background: '#FFFFFF',
+        background: isDarkMode ? '#0B0F17' : '#FFFFFF',
         borderTop: '1px solid',
         borderColor: 'divider',
         py: 4,

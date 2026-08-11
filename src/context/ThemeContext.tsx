@@ -26,6 +26,7 @@ export const ThemeModeProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    document.documentElement.dataset.theme = themeMode;
     window.localStorage.setItem(STORAGE_KEYS.THEME, themeMode);
   }, [themeMode]);
 

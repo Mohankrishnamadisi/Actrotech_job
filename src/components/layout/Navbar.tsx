@@ -57,9 +57,8 @@ export const Navbar: React.FC = () => {
   const isDarkMode = theme.palette.mode === 'dark';
   const showPremiumThemeToggle = Boolean(
     user
-      && !isRecruiter
+      && user.role === USER_ROLES.JOB_SEEKER
       && subscription
-      && location.pathname === ROUTES.DASHBOARD,
   );
   const canGoBack = location.pathname !== ROUTES.HOME && location.pathname !== '/';
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -278,12 +277,14 @@ export const Navbar: React.FC = () => {
           >
             {canGoBack && (
               <Box
+                className={isDarkMode ? 'navbar-dark-mode' : undefined}
                 onClick={handleBackNavigation}
                 sx={{
                   transform: 'scale(0.62)',
                   transformOrigin: 'left center',
                   ml: -1,
                   cursor: 'pointer',
+                  color: isDarkMode ? '#E2E8F0' : '#334155',
                 }}
               >
                 <AnimatedBackButton onClick={handleBackNavigation} ariaLabel="Go back" />
@@ -356,8 +357,10 @@ export const Navbar: React.FC = () => {
                   mt: 1,
                   minWidth: 320,
                   borderRadius: 2.5,
-                  border: '1px solid #E2E8F0',
-                  boxShadow: '0 18px 36px rgba(15, 23, 42, 0.12)',
+                  background: isDarkMode ? '#111827' : '#FFFFFF',
+                  color: isDarkMode ? '#F8FAFC' : '#0F172A',
+                  border: `1px solid ${isDarkMode ? '#334155' : '#E2E8F0'}`,
+                  boxShadow: isDarkMode ? '0 18px 36px rgba(0, 0, 0, 0.5)' : '0 18px 36px rgba(15, 23, 42, 0.12)',
                   py: 0.6,
                 },
               }}
@@ -644,12 +647,15 @@ export const Navbar: React.FC = () => {
                   anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   PaperProps={{
                     sx: {
-                      background: '#FFFFFF',
-                      border: '1px solid #E4E9F2',
+                          background: isDarkMode ? '#111827' : '#FFFFFF',
+                          color: isDarkMode ? '#F8FAFC' : '#0F172A',
+                          border: `1px solid ${isDarkMode ? '#334155' : '#E4E9F2'}`,
                       borderRadius: 2,
-                      boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
+                          boxShadow: isDarkMode ? '0 18px 40px rgba(0, 0, 0, 0.55)' : '0 18px 40px rgba(15, 23, 42, 0.12)',
                       minWidth: 200,
                       mt: 1,
+                          '& .MuiDivider-root': { borderColor: isDarkMode ? '#334155' : undefined },
+                          '& .MuiMenuItem-root:hover': { backgroundColor: isDarkMode ? 'rgba(148, 163, 184, 0.14)' : undefined },
                     },
                   }}
                 >
@@ -698,7 +704,7 @@ export const Navbar: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       Customer Care
                       {ticketNotifCount > 0 ? (
-                        <Box component="span" sx={{ bgcolor: 'error.main', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{ticketNotifCount}</Box>
+                        <Box component="span" sx={{ bgcolor: '#2563EB', color: '#FFFFFF', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{ticketNotifCount}</Box>
                       ) : null}
                     </Box>
                   </MenuItem>

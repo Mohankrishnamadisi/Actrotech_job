@@ -21,6 +21,7 @@ import {
   Collapse,
   IconButton,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@store/index';
@@ -45,6 +46,7 @@ import type { Job } from '../types';
 const MotionPaper = motion(Paper);
 
 export const Jobs: React.FC = () => {
+  const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
@@ -383,7 +385,9 @@ export const Jobs: React.FC = () => {
                 overflowY: 'visible',
                 overflowX: 'hidden',
                 alignSelf: 'flex-start',
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241, 248, 255, 0.96))',
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(180deg, #111827, #0F172A)'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241, 248, 255, 0.96))',
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 4,
@@ -746,7 +750,9 @@ export const Jobs: React.FC = () => {
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: 'divider',
-                background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                background: theme.palette.mode === 'dark'
+                  ? 'linear-gradient(180deg, #111827, #0F172A)'
+                  : 'linear-gradient(180deg, #ffffff, #f8fbff)',
                 boxShadow: '0 14px 36px rgba(15, 23, 42, 0.06)',
               }}
             >
@@ -803,7 +809,9 @@ export const Jobs: React.FC = () => {
                   borderRadius: 4,
                   border: '1px solid',
                   borderColor: 'divider',
-                  background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+                  background: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(180deg, #111827, #0F172A)'
+                    : 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
                 }}
               >
                 <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 700, mb: 1.4 }}>

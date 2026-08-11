@@ -34,6 +34,7 @@ import {
   Divider,
   Switch,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Edit as EditIcon,
   CloudUpload as CloudUploadIcon,
@@ -133,18 +134,23 @@ const SectionCard: React.FC<{
   onAdd?: () => void;
   addLabel?: string;
   children: React.ReactNode;
-}> = ({ id, title, onEdit, onAdd, addLabel = 'Add', children }) => (
+}> = ({ id, title, onEdit, onAdd, addLabel = 'Add', children }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
+  return (
   <Card
     id={id}
     sx={{
       mb: 2,
       borderRadius: 3,
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
+      background: isDarkMode ? '#0B0F17' : undefined,
+      border: `1px solid ${isDarkMode ? '#263244' : '#e2e8f0'}`,
+      boxShadow: isDarkMode ? '0 1px 3px rgba(0,0,0,0.35)' : '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
       transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       scrollMarginTop: 80,
       '&:hover': {
-        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+        boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.55)' : '0 4px 16px rgba(0,0,0,0.1)',
         transform: 'translateY(-1px)',
       },
     }}
@@ -153,7 +159,7 @@ const SectionCard: React.FC<{
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ width: 3, height: 20, borderRadius: 2, bgcolor: '#6366f1' }} />
-          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b', letterSpacing: '-0.01em' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1rem', color: isDarkMode ? '#FFFFFF' : '#1e293b', letterSpacing: '-0.01em' }}>
             {title}
           </Typography>
         </Box>
@@ -169,9 +175,9 @@ const SectionCard: React.FC<{
                 cursor: 'pointer',
                 px: 1.5, py: 0.5,
                 borderRadius: 2,
-                border: '1px solid #e0e7ff',
-                bgcolor: '#f5f3ff',
-                '&:hover': { bgcolor: '#ede9fe' },
+                border: `1px solid ${isDarkMode ? '#334155' : '#e0e7ff'}`,
+                bgcolor: isDarkMode ? '#172033' : '#f5f3ff',
+                '&:hover': { bgcolor: isDarkMode ? '#263244' : '#ede9fe' },
                 transition: 'all 0.15s',
               }}
             >
@@ -182,8 +188,8 @@ const SectionCard: React.FC<{
             <IconButton
               size="small" onClick={onEdit}
               sx={{
-                color: '#94a3b8',
-                '&:hover': { color: '#6366f1', bgcolor: '#f5f3ff' },
+                color: isDarkMode ? '#CBD5E1' : '#94a3b8',
+                '&:hover': { color: '#818CF8', bgcolor: isDarkMode ? '#172033' : '#f5f3ff' },
               }}
             >
               <EditIcon sx={{ fontSize: 16 }} />
@@ -194,7 +200,8 @@ const SectionCard: React.FC<{
       {children}
     </CardContent>
   </Card>
-);
+  );
+};
 
 // ─── Profile completion ring ──────────────────────────────────────────────────
 
@@ -251,6 +258,8 @@ const CheckCell: React.FC<{ value: boolean }> = ({ value }) => (
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const ProfilePage: React.FC = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -596,17 +605,35 @@ export const ProfilePage: React.FC = () => {
   // ════════════════════════════════════════════════════════════════════════════
   return (
     <Layout>
-      <Box sx={{ bgcolor: '#f3f2f0', minHeight: '100vh', py: 2 }}>
+      <Box
+        className={isDarkMode ? 'profile-dark-mode' : undefined}
+        sx={{
+          bgcolor: isDarkMode ? '#000000' : '#f3f2f0',
+          minHeight: '100vh',
+          py: 2,
+          color: isDarkMode ? '#FFFFFF' : undefined,
+          '&.profile-dark-mode .MuiCard-root': { backgroundColor: '#0B0F17', color: '#FFFFFF' },
+          '&.profile-dark-mode .MuiTypography-root': { color: '#FFFFFF' },
+          '&.profile-dark-mode .MuiTableCell-root': { color: '#FFFFFF', borderColor: '#263244' },
+          '&.profile-dark-mode .MuiDivider-root': { borderColor: '#263244' },
+          '&.profile-dark-mode .MuiInputBase-root': { color: '#FFFFFF' },
+          '&.profile-dark-mode .MuiInputLabel-root': { color: '#CBD5E1' },
+          '&.profile-dark-mode .MuiOutlinedInput-notchedOutline': { borderColor: '#475569' },
+          '&.profile-dark-mode .MuiFormHelperText-root': { color: '#CBD5E1' },
+        }}
+      >
         <Container maxWidth="lg">
 
           {/* ── Profile Header ──────────────────────────────────────────── */}
           <Card
             sx={{
-              mb: 2, borderRadius: 2, border: '1px solid #e0ddd8',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              mb: 2, borderRadius: 2,
+              border: `1px solid ${isDarkMode ? '#263244' : '#e0ddd8'}`,
+              background: isDarkMode ? '#0B0F17' : undefined,
+              boxShadow: isDarkMode ? '0 1px 3px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
-            <Box sx={{ bgcolor: '#fdf8f0', px: 3, pt: 3, pb: 2, borderRadius: '8px 8px 0 0' }}>
+            <Box sx={{ bgcolor: isDarkMode ? '#111827' : '#fdf8f0', px: 3, pt: 3, pb: 2, borderRadius: '8px 8px 0 0' }}>
               <Grid container spacing={2} alignItems="flex-start">
 
                 {/* Avatar with ring */}
@@ -643,22 +670,22 @@ export const ProfilePage: React.FC = () => {
                 {/* Name + info */}
                 <Grid item xs>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1.4rem' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: isDarkMode ? '#FFFFFF' : '#1a1a1a', fontSize: '1.4rem' }}>
                       {formData.fullName || 'Your Name'}
                     </Typography>
-                    <IconButton size="small" onClick={() => setHeaderDialog(true)} sx={{ color: '#888' }}>
+                    <IconButton size="small" onClick={() => setHeaderDialog(true)} sx={{ color: isDarkMode ? '#CBD5E1' : '#888' }}>
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Box>
 
                   {/* Designation on its own line, company on next — matching Naukri layout */}
                   {formData.currentDesignation && (
-                    <Typography variant="body1" sx={{ fontWeight: 600, color: '#222', lineHeight: 1.3 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 600, color: isDarkMode ? '#FFFFFF' : '#222', lineHeight: 1.3 }}>
                       {formData.currentDesignation}
                     </Typography>
                   )}
                   {formData.currentCompany && (
-                    <Typography variant="body2" sx={{ color: '#555', mb: 1.5 }}>
+                    <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555', mb: 1.5 }}>
                       at {formData.currentCompany}
                     </Typography>
                   )}
@@ -677,22 +704,22 @@ export const ProfilePage: React.FC = () => {
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.9 }}>
                         {formData.city && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <LocationIcon sx={{ fontSize: 15, color: '#888', flexShrink: 0 }} />
-                            <Typography variant="body2" sx={{ color: '#555' }}>
+                            <LocationIcon sx={{ fontSize: 15, color: isDarkMode ? '#CBD5E1' : '#888', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555' }}>
                               {[formData.city, formData.state].filter(Boolean).join(', ')}{formData.country ? `, ${formData.country}` : ''}
                             </Typography>
                           </Box>
                         )}
                         {experienceLabel !== 'Not specified' && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <WorkIcon sx={{ fontSize: 15, color: '#888', flexShrink: 0 }} />
-                            <Typography variant="body2" sx={{ color: '#555' }}>{experienceLabel}</Typography>
+                            <WorkIcon sx={{ fontSize: 15, color: isDarkMode ? '#CBD5E1' : '#888', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555' }}>{experienceLabel}</Typography>
                           </Box>
                         )}
                         {formData.currentCTC && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <CurrencyRupeeIcon sx={{ fontSize: 15, color: '#888', flexShrink: 0 }} />
-                            <Typography variant="body2" sx={{ color: '#555' }}>{formData.currentCTC}</Typography>
+                            <CurrencyRupeeIcon sx={{ fontSize: 15, color: isDarkMode ? '#CBD5E1' : '#888', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555' }}>{formData.currentCTC}</Typography>
                           </Box>
                         )}
                       </Box>
@@ -701,22 +728,22 @@ export const ProfilePage: React.FC = () => {
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.9 }}>
                         {formData.phone && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <PhoneIcon sx={{ fontSize: 15, color: '#888', flexShrink: 0 }} />
-                            <Typography variant="body2" sx={{ color: '#555' }}>{formData.phone}</Typography>
+                            <PhoneIcon sx={{ fontSize: 15, color: isDarkMode ? '#CBD5E1' : '#888', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555' }}>{formData.phone}</Typography>
                             <CheckCircleIcon sx={{ fontSize: 14, color: '#43a047' }} />
                           </Box>
                         )}
                         {formData.email && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <EmailIcon sx={{ fontSize: 15, color: '#888', flexShrink: 0 }} />
-                            <Typography variant="body2" sx={{ color: '#555' }}>{formData.email}</Typography>
+                            <EmailIcon sx={{ fontSize: 15, color: isDarkMode ? '#CBD5E1' : '#888', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555' }}>{formData.email}</Typography>
                             <CheckCircleIcon sx={{ fontSize: 14, color: '#43a047' }} />
                           </Box>
                         )}
                         {formData.noticePeriod && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <ScheduleIcon sx={{ fontSize: 15, color: '#888', flexShrink: 0 }} />
-                            <Typography variant="body2" sx={{ color: '#555' }}>{formData.noticePeriod} notice period</Typography>
+                            <ScheduleIcon sx={{ fontSize: 15, color: isDarkMode ? '#CBD5E1' : '#888', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#555' }}>{formData.noticePeriod} notice period</Typography>
                           </Box>
                         )}
                       </Box>
@@ -726,7 +753,7 @@ export const ProfilePage: React.FC = () => {
 
                 {/* Top-right meta */}
                 <Grid item xs={12} sm="auto" sx={{ textAlign: { sm: 'right' } }}>
-                  <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                  <Typography variant="caption" sx={{ color: isDarkMode ? '#FFFFFF' : '#94a3b8', fontSize: '0.75rem' }}>
                     Profile last updated · Today
                   </Typography>
                   {user?.subscriptionPlan && user.subscriptionPlan !== 'free' && (
@@ -765,7 +792,8 @@ export const ProfilePage: React.FC = () => {
               <Card
                 sx={{
                   borderRadius: 3,
-                  border: '1px solid #e2e8f0',
+                    border: `1px solid ${isDarkMode ? '#263244' : '#e2e8f0'}`,
+                    background: isDarkMode ? '#0B0F17' : undefined,
                   boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                   position: 'sticky', top: 80,
                   overflow: 'hidden',
@@ -806,19 +834,19 @@ export const ProfilePage: React.FC = () => {
                         }}
                         sx={{
                           px: 2.5, py: 1,
-                          borderBottom: '1px solid #f8fafc',
-                          '&:hover': { bgcolor: '#f5f3ff', color: '#6366f1' },
+                          borderBottom: `1px solid ${isDarkMode ? '#263244' : '#f8fafc'}`,
+                          '&:hover': { bgcolor: isDarkMode ? '#172033' : '#f5f3ff', color: '#818CF8' },
                           transition: 'all 0.15s',
                           cursor: 'pointer',
                         }}
                       >
                         <ListItemText
                           primary={label}
-                          primaryTypographyProps={{ variant: 'body2', color: '#475569', fontSize: '0.83rem' }}
+                          primaryTypographyProps={{ variant: 'body2', color: isDarkMode ? '#FFFFFF' : '#475569', fontSize: '0.83rem' }}
                         />
                         {badge && (
                           <Typography variant="caption"
-                            sx={{ color: '#6366f1', fontWeight: 700, bgcolor: '#f0f0ff', px: 1, py: 0.25, borderRadius: 1, fontSize: '0.7rem' }}>
+                            sx={{ color: '#A5B4FC', fontWeight: 700, bgcolor: isDarkMode ? '#1E293B' : '#f0f0ff', px: 1, py: 0.25, borderRadius: 1, fontSize: '0.7rem' }}>
                             {badge}
                           </Typography>
                         )}
@@ -842,7 +870,7 @@ export const ProfilePage: React.FC = () => {
                           {resume?.name || resumeFileName || 'Resume.pdf'}
                         </Typography>
                         {resumeUploadDate && (
-                          <Typography variant="caption" sx={{ color: '#888' }}>
+                          <Typography variant="caption" sx={{ color: isDarkMode ? '#FFFFFF' : '#888' }}>
                             Uploaded on {resumeUploadDate}
                           </Typography>
                         )}
@@ -863,7 +891,7 @@ export const ProfilePage: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        border: '1.5px dashed #ccc', borderRadius: 1,
+                        border: `1.5px dashed ${isDarkMode ? '#64748B' : '#ccc'}`, borderRadius: 1,
                         p: 2, textAlign: 'center',
                         '&:hover': { borderColor: '#1a73e8' },
                       }}
@@ -885,7 +913,7 @@ export const ProfilePage: React.FC = () => {
                           }}
                         />
                       </Button>
-                      <Typography variant="caption" display="block" sx={{ mt: 0.5, color: '#888' }}>
+                      <Typography variant="caption" display="block" sx={{ mt: 0.5, color: isDarkMode ? '#FFFFFF' : '#888' }}>
                         Supported Formats: doc, docx, rtf, pdf, upto 2 MB
                       </Typography>
                     </Box>
@@ -893,7 +921,7 @@ export const ProfilePage: React.FC = () => {
                 ) : (
                   <Box
                     sx={{
-                      border: '1.5px dashed #ccc', borderRadius: 1,
+                      border: `1.5px dashed ${isDarkMode ? '#64748B' : '#ccc'}`, borderRadius: 1,
                       p: 3, textAlign: 'center',
                       '&:hover': { borderColor: '#1a73e8' },
                     }}
@@ -914,7 +942,7 @@ export const ProfilePage: React.FC = () => {
                         }}
                       />
                     </Button>
-                    <Typography variant="caption" display="block" sx={{ mt: 0.5, color: '#888' }}>
+                    <Typography variant="caption" display="block" sx={{ mt: 0.5, color: isDarkMode ? '#FFFFFF' : '#888' }}>
                       Supported Formats: doc, docx, rtf, pdf, upto 2 MB
                     </Typography>
                   </Box>
@@ -924,7 +952,7 @@ export const ProfilePage: React.FC = () => {
               {/* Resume headline */}
               <SectionCard id="sec-headline" title="Resume headline" onEdit={() => setHeadlineDialog(true)}>
                 {formData.resumeHeadline ? (
-                  <Typography variant="body2" sx={{ color: '#444', lineHeight: 1.7 }}>
+                  <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#444', lineHeight: 1.7 }}>
                     {formData.resumeHeadline}
                   </Typography>
                 ) : (
@@ -944,7 +972,7 @@ export const ProfilePage: React.FC = () => {
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {formData.skills.map((s) => (
                       <Chip key={s} label={s} size="small" variant="outlined"
-                        sx={{ borderColor: '#ccc', color: '#333' }} />
+                        sx={{ borderColor: isDarkMode ? '#64748B' : '#ccc', color: isDarkMode ? '#FFFFFF' : '#333' }} />
                     ))}
                   </Box>
                 ) : (

@@ -337,10 +337,16 @@ const AnimatedRoutes: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { themeMode } = useThemeMode();
+  const { themeMode, setThemeMode } = useThemeMode();
   const { setUser, setLoading, user } = useAuthStore();
 
   useNotificationAlerts(user?.id || null);
+
+  useEffect(() => {
+    if (!user && themeMode === 'dark') {
+      setThemeMode('light');
+    }
+  }, [themeMode, setThemeMode, user]);
 
   useEffect(() => {
     const hash = window.location.hash || '';

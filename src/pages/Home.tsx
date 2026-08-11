@@ -18,6 +18,7 @@ import {
   Autocomplete,
   IconButton,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -65,6 +66,8 @@ const categoryColors = [
   'linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%)',
 ];
 
+const darkCategoryColors = ['#111827', '#10231F', '#292313', '#102426', '#111827', '#17152E'];
+
 const suggestedJobs = [
   { title: 'Frontend Developer', company: 'Skyline Labs', location: 'Bangalore', keyword: 'Frontend Developer' },
   { title: 'React Developer', company: 'Nimbus Analytics', location: 'Hyderabad', keyword: 'React Developer' },
@@ -101,6 +104,8 @@ const categoryIconColors = [
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [experience, setExperience] = useState('');
@@ -160,7 +165,12 @@ export const Home: React.FC = () => {
     <Layout>
       <MotionBox
         sx={{
-          background: `
+          background: isDarkMode ? `
+            radial-gradient(circle at 14% 18%, rgba(14, 165, 233, 0.16), transparent 34%),
+            radial-gradient(circle at 87% 12%, rgba(16, 185, 129, 0.14), transparent 32%),
+            linear-gradient(112deg, #000000 0%, #050608 48%, #0B1220 100%),
+            repeating-linear-gradient(135deg, rgba(96, 165, 250, 0.04) 0 1px, transparent 1px 34px)
+          ` : `
             radial-gradient(circle at 14% 18%, rgba(14, 165, 233, 0.2), transparent 34%),
             radial-gradient(circle at 87% 12%, rgba(16, 185, 129, 0.2), transparent 32%),
             linear-gradient(112deg, rgba(255, 255, 255, 0.97) 0%, rgba(240, 253, 250, 0.92) 44%, rgba(239, 246, 255, 0.97) 100%),
@@ -206,7 +216,7 @@ export const Home: React.FC = () => {
               sx={{
                 mb: 2,
                 px: 1,
-                background: 'rgba(255, 255, 255, 0.72)',
+                  background: isDarkMode ? 'rgba(17, 24, 39, 0.88)' : 'rgba(255, 255, 255, 0.72)',
                 borderColor: 'rgba(14, 116, 144, 0.24)',
                 color: 'secondary.dark',
               }}
@@ -217,7 +227,9 @@ export const Home: React.FC = () => {
                 fontSize: { xs: '2.25rem', md: '4.4rem' },
                 fontWeight: 800,
                 mb: 2,
-                background: 'linear-gradient(90deg, #172033 0%, #2563EB 45%, #0F766E 100%)',
+                background: isDarkMode
+                  ? 'linear-gradient(90deg, #FFFFFF 0%, #60A5FA 45%, #5EEAD4 100%)'
+                  : 'linear-gradient(90deg, #172033 0%, #2563EB 45%, #0F766E 100%)',
                 backgroundSize: '220% 100%',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -257,11 +269,11 @@ export const Home: React.FC = () => {
                     navigate(`${ROUTES.JOBS}?${filters.toString()}`);
                   }}
                   sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.8)',
+                    bgcolor: isDarkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.8)',
                     border: '1px solid rgba(148, 163, 184, 0.35)',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    '&:hover': { bgcolor: '#ffffff' },
+                    '&:hover': { bgcolor: isDarkMode ? '#1E293B' : '#ffffff' },
                   }}
                 />
               ))}
@@ -273,7 +285,7 @@ export const Home: React.FC = () => {
               elevation={0}
               sx={{
                 p: { xs: 2.5, md: 4 },
-                background: 'rgba(255, 255, 255, 0.92)',
+                background: isDarkMode ? 'rgba(17, 24, 39, 0.94)' : 'rgba(255, 255, 255, 0.92)',
                 backdropFilter: 'blur(18px)',
                 border: '1px solid',
                 borderColor: 'rgba(148, 163, 184, 0.28)',
@@ -434,7 +446,7 @@ export const Home: React.FC = () => {
                     }}
                     sx={{
                       cursor: 'pointer',
-                      background: categoryColors[index % categoryColors.length],
+                      background: isDarkMode ? darkCategoryColors[index % darkCategoryColors.length] : categoryColors[index % categoryColors.length],
                       border: '1px solid',
                       borderColor: 'divider',
                       transition: 'all 0.2s ease',
@@ -511,7 +523,7 @@ export const Home: React.FC = () => {
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     border: '1px solid rgba(226, 232, 240, 1)',
-                    background: 'linear-gradient(180deg, #ffffff, #f8fbff)',
+                    background: isDarkMode ? '#0B0F17' : 'linear-gradient(180deg, #ffffff, #f8fbff)',
                     boxShadow: '0 14px 30px rgba(15, 23, 42, 0.07)',
                   }}
                 >
@@ -560,14 +572,14 @@ export const Home: React.FC = () => {
             <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <MotionBox variants={sectionItemVariants}>
-              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)', boxShadow: '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: isDarkMode ? '#0B0F17' : 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)', boxShadow: isDarkMode ? '0 18px 38px rgba(0, 0, 0, 0.42)' : '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                   Top Companies Hiring Now
                 </Typography>
                 <Grid container spacing={2}>
                   {topCompanies.map((company) => (
                     <Grid item xs={6} key={company.name}>
-                      <Paper sx={{ p: 2, borderRadius: 2, background: '#fff', border: '1px solid', borderColor: 'divider' }}>
+                      <Paper sx={{ p: 2, borderRadius: 2, background: isDarkMode ? '#111827' : '#fff', border: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>
                           {company.name}
                         </Typography>
@@ -595,7 +607,7 @@ export const Home: React.FC = () => {
 
             <Grid item xs={12} md={6}>
               <MotionBox variants={sectionItemVariants}>
-              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)', boxShadow: '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
+              <Card sx={{ borderRadius: 3, p: 3, height: '100%', background: isDarkMode ? '#0B0F17' : 'linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%)', boxShadow: isDarkMode ? '0 18px 38px rgba(0, 0, 0, 0.42)' : '0 18px 38px rgba(15, 23, 42, 0.08)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                   Featured Companies Actively Hiring
                 </Typography>
@@ -642,7 +654,7 @@ export const Home: React.FC = () => {
           viewport={{ once: true }}
         >
           <MotionBox variants={sectionItemVariants}>
-            <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, background: 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', border: '1px solid', borderColor: 'divider', boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)' }}>
+            <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, background: isDarkMode ? '#0B0F17' : 'linear-gradient(180deg, #EFF8FF 0%, #FFFFFF 100%)', color: isDarkMode ? '#FFFFFF' : undefined, border: '1px solid', borderColor: 'divider', boxShadow: isDarkMode ? '0 20px 40px rgba(0, 0, 0, 0.42)' : '0 20px 40px rgba(15, 23, 42, 0.08)' }}>
             <MotionTypography variants={sectionItemVariants} variant="h4" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
               Interview Questions by Role
             </MotionTypography>
@@ -663,7 +675,7 @@ export const Home: React.FC = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ background: '#fff', borderRadius: 2 }}
+                sx={{ background: isDarkMode ? '#111827' : '#fff', borderRadius: 2 }}
               />
               <FormControl sx={{ minWidth: 180 }}>
                 <InputLabel>Category</InputLabel>
@@ -671,7 +683,7 @@ export const Home: React.FC = () => {
                   value={selectedRoleCategory}
                   label="Category"
                   onChange={(e) => setSelectedRoleCategory(e.target.value)}
-                  sx={{ background: '#fff', borderRadius: 2 }}
+                  sx={{ background: isDarkMode ? '#111827' : '#fff', borderRadius: 2 }}
                 >
                   {INTERVIEW_ROLE_CATEGORIES.map((category) => (
                     <MenuItem key={category} value={category}>
@@ -696,7 +708,7 @@ export const Home: React.FC = () => {
                     sx={{
                       p: 3,
                       borderRadius: 4,
-                      background: '#fff',
+                      background: isDarkMode ? '#111827' : '#fff',
                       boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
                       border: '1px solid transparent',
                       textAlign: 'left',
@@ -768,7 +780,7 @@ export const Home: React.FC = () => {
                       sx={{
                         p: 3,
                         borderRadius: 4,
-                        background: '#fff',
+                        background: isDarkMode ? '#111827' : '#fff',
                         boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
                         border: '1px solid transparent',
                         textAlign: 'left',
@@ -823,12 +835,13 @@ export const Home: React.FC = () => {
             textAlign: { xs: 'center', md: 'left' },
             mt: 8,
             p: { xs: 4, md: 6 },
-            background:
-              'radial-gradient(circle at 20% 25%, rgba(56, 189, 248, 0.2), transparent 35%), radial-gradient(circle at 84% 18%, rgba(16, 185, 129, 0.2), transparent 35%), linear-gradient(135deg, #ffffff 0%, #f0fdff 48%, #eff6ff 100%)',
+            background: isDarkMode
+              ? 'radial-gradient(circle at 20% 25%, rgba(56, 189, 248, 0.14), transparent 35%), radial-gradient(circle at 84% 18%, rgba(16, 185, 129, 0.14), transparent 35%), linear-gradient(135deg, #050608 0%, #0B1220 48%, #111827 100%)'
+              : 'radial-gradient(circle at 20% 25%, rgba(56, 189, 248, 0.2), transparent 35%), radial-gradient(circle at 84% 18%, rgba(16, 185, 129, 0.2), transparent 35%), linear-gradient(135deg, #ffffff 0%, #f0fdff 48%, #eff6ff 100%)',
             borderRadius: 3,
             border: '1px solid',
-            borderColor: 'rgba(203, 213, 225, 0.8)',
-            boxShadow: '0 24px 50px rgba(15, 23, 42, 0.10)',
+            borderColor: isDarkMode ? '#334155' : 'rgba(203, 213, 225, 0.8)',
+            boxShadow: isDarkMode ? '0 24px 50px rgba(0, 0, 0, 0.42)' : '0 24px 50px rgba(15, 23, 42, 0.10)',
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: 'center',

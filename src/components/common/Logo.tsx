@@ -35,7 +35,9 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
         borderRadius: 2,
         px: isDarkMode ? 1 : 0,
         py: isDarkMode ? 0.35 : 0,
-        background: isDarkMode ? 'rgba(248, 250, 252, 0.92)' : 'transparent',
+        background: isDarkMode ? 'rgba(30, 41, 59, 0.92)' : 'transparent',
+        border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.36)' : 'none',
+        boxShadow: isDarkMode ? '0 5px 16px rgba(0, 0, 0, 0.28)' : 'none',
       }}
     >
       {showText && (
@@ -48,7 +50,9 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
             height,
             display: 'block',
             objectFit: 'contain',
-            filter: isDarkMode ? 'drop-shadow(0 1px 2px rgba(2, 6, 23, 0.28))' : 'none',
+            filter: isDarkMode
+              ? 'brightness(0.86) saturate(1.12) drop-shadow(0 1px 2px rgba(2, 6, 23, 0.45))'
+              : 'none',
           }}
         />
       )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { MobileNavbar } from './MobileNavbar';
 import { MobileFooter } from './MobileFooter';
 
@@ -9,13 +10,16 @@ interface MobileLayoutProps {
 }
 
 export const MobileLayout: React.FC<MobileLayoutProps> = ({ children, footer = true }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        bgcolor: '#f6f8fb',
+        bgcolor: isDarkMode ? '#000000' : '#f6f8fb',
       }}
     >
       <MobileNavbar />

@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Button,
+  ButtonBase,
   Card,
   CardContent,
   Chip,
@@ -27,6 +28,7 @@ import { motion } from 'framer-motion';
 import {
   Chat as ChatIcon,
   Description as DescriptionIcon,
+  ListAlt as ListAltIcon,
   Notifications as NotificationsIcon,
   Star as StarIcon,
   TrendingUp as TrendingUpIcon,
@@ -44,6 +46,7 @@ import {
   Bolt as BoltIcon,
   TrackChanges as TrackChangesIcon,
   Tune as TuneIcon,
+  ExpandMore as ExpandMoreIcon,
   StickyNote2 as StickyNote2Icon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -116,6 +119,52 @@ type OpportunitySignal = {
   priorityScore: number;
 };
 
+type DashboardOptionKey =
+  | 'applications'
+  | 'savedJobs'
+  | 'resumeDownloads'
+  | 'profileViews'
+  | 'matchedJobs'
+  | 'remoteHub'
+  | 'editProfile'
+  | 'messages'
+  | 'notifications'
+  | 'browseJobs'
+  | 'mockInterviews'
+  | 'assessments'
+  | 'community'
+  | 'referrals'
+  | 'freeNotes'
+  | 'aiCareerHub';
+
+type DashboardOption = {
+  key: DashboardOptionKey;
+  label: string;
+  description: string;
+  value?: number;
+  action: () => void;
+  actionLabel: string;
+};
+
+type PremiumSectionKey =
+  | 'dailyBrief'
+  | 'intelligence'
+  | 'remoteHub'
+  | 'premiumTools'
+  | 'recruiterActivity'
+  | 'matchCenter'
+  | 'recentApplications';
+
+const sectionTabs: Array<{ key: PremiumSectionKey; label: string; icon: React.ElementType }> = [
+  { key: 'dailyBrief', label: 'AI Daily Career Brief', icon: DescriptionIcon },
+  { key: 'intelligence', label: 'Premium Intelligence Center', icon: InsightsIcon },
+  { key: 'remoteHub', label: 'Remote Job Hub', icon: PublicIcon },
+  { key: 'premiumTools', label: 'Exclusive Premium Tools', icon: AutoAwesomeIcon },
+  { key: 'recruiterActivity', label: 'Recruiter Activity', icon: ChatIcon },
+  { key: 'matchCenter', label: 'AI Match Center', icon: TrendingUpIcon },
+  { key: 'recentApplications', label: 'Recent Applications', icon: ListAltIcon },
+];
+
 export const PremiumDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { themeMode } = useThemeMode();
@@ -143,6 +192,7 @@ export const PremiumDashboard: React.FC = () => {
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
+  const [selectedSection, setSelectedSection] = useState<PremiumSectionKey>('dailyBrief');
   const [selectedRoleModel, setSelectedRoleModel] = useState('General');
   const [roleWeightMap, setRoleWeightMap] = useState<Record<string, DemandWeights>>({});
   const [weeklyTargets, setWeeklyTargets] = useState<WeeklyGoalTargets>({ applications: 6, interactions: 10, pipeline: 4 });
@@ -308,48 +358,57 @@ export const PremiumDashboard: React.FC = () => {
   const stats = useMemo(
     () => [
       {
+        key: 'applications' as const,
         label: 'Applications',
         value: applicationCount,
-        subtext: 'Track hiring movement',
+        description: 'Track hiring movement',
         icon: WorkIcon,
         color: theme.palette.primary.main,
         lightBg: 'linear-gradient(140deg, #DBEAFE 0%, #EEF4FF 55%, #FFFFFF 100%)',
-        darkBg: 'linear-gradient(145deg, rgba(30,58,138,0.42), rgba(15,23,42,0.95))',
-        action: () => navigate(ROUTES.DASHBOARD_APPLICATIONS),
+        darkBg: 'linear-gradient(145deg, rgba(8,10,16,0.98), rgba(0,0,0,1))',
+        action: () => setSelectedSection('applications'),
+        actionLabel: 'View applications',
       },
       {
+        key: 'savedJobs' as const,
         label: 'Saved Jobs',
         value: savedJobsCount,
-        subtext: 'Your shortlisted roles',
+        description: 'Your shortlisted roles',
         icon: FavoriteIcon,
         color: theme.palette.error.main,
         lightBg: 'linear-gradient(140deg, #FFE4E6 0%, #FFF1F2 55%, #FFFFFF 100%)',
-        darkBg: 'linear-gradient(145deg, rgba(131,24,67,0.4), rgba(15,23,42,0.95))',
-        action: () => navigate(ROUTES.DASHBOARD_SAVED_JOBS),
+        darkBg: 'linear-gradient(145deg, rgba(8,10,16,0.98), rgba(0,0,0,1))',
+        action: () => setSelectedSection('savedJobs'),
+        actionLabel: 'View saved jobs',
       },
       {
+        key: 'resumeDownloads' as const,
         label: 'Resume Downloads',
         value: resumeDownloadCount,
-        subtext: 'Recruiter resume opens',
+        description: 'Recruiter resume opens',
         icon: VideocamIcon,
         color: theme.palette.success.main,
         lightBg: 'linear-gradient(140deg, #DCFCE7 0%, #F0FDF4 55%, #FFFFFF 100%)',
-        darkBg: 'linear-gradient(145deg, rgba(20,83,45,0.4), rgba(15,23,42,0.95))',
-        action: () => openInteractionModal('downloads'),
+        darkBg: 'linear-gradient(145deg, rgba(8,10,16,0.98), rgba(0,0,0,1))',
+        action: () => setSelectedSection('resumeDownloads'),
+        actionLabel: 'View resume downloads',
       },
       {
+        key: 'profileViews' as const,
         label: 'Profile Views',
         value: profileViewCount,
-        subtext: 'Interest from employers',
+        description: 'Interest from employers',
         icon: VisibilityIcon,
         color: theme.palette.secondary.main,
         lightBg: 'linear-gradient(140deg, #F3E8FF 0%, #FAF5FF 55%, #FFFFFF 100%)',
-        darkBg: 'linear-gradient(145deg, rgba(76,29,149,0.4), rgba(15,23,42,0.95))',
-        action: () => openInteractionModal('views'),
+        darkBg: 'linear-gradient(145deg, rgba(8,10,16,0.98), rgba(0,0,0,1))',
+        action: () => setSelectedSection('profileViews'),
+        actionLabel: 'View profile views',
       },
     ],
     [applicationCount, navigate, profileViewCount, resumeDownloadCount, savedJobsCount, theme.palette.error.main, theme.palette.primary.main, theme.palette.secondary.main, theme.palette.success.main],
   );
+
 
   const premiumInsights = useMemo(() => {
     const views = Number(profileViewCount || 0);
@@ -669,7 +728,7 @@ export const PremiumDashboard: React.FC = () => {
           py: { xs: 3, md: 4 },
           maxWidth: 1440,
           mx: 'auto',
-          backgroundColor: isDarkMode ? 'transparent' : '#FFFFFF',
+          backgroundColor: isDarkMode ? '#000000' : '#FFFFFF',
           position: 'relative',
           '&::before': {
             content: '""',
@@ -705,8 +764,8 @@ export const PremiumDashboard: React.FC = () => {
             borderRadius: 6,
             position: 'relative',
             overflow: 'hidden',
-            border: '1px solid rgba(148, 163, 184, 0.32)',
-            background: 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%)',
+            border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(148, 163, 184, 0.32)',
+            background: isDarkMode ? '#050608' : 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%)',
             color: '#E2E8F0',
             boxShadow: 'none',
           }}
@@ -726,8 +785,8 @@ export const PremiumDashboard: React.FC = () => {
                     label="Premium Candidate"
                     sx={{
                       fontWeight: 700,
-                      bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)',
-                      color: isDarkMode ? '#E2E8F0' : '#FFF7E6',
+                      bgcolor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255, 248, 230, 0.2)',
+                      color: isDarkMode ? '#FFFFFF' : '#FFF7E6',
                       '& .MuiChip-icon': { color: '#F59E0B' },
                     }}
                   />
@@ -736,14 +795,14 @@ export const PremiumDashboard: React.FC = () => {
                     label={`Profile strength ${profileStrength}%`}
                     sx={{
                       fontWeight: 700,
-                      bgcolor: isDarkMode ? 'rgba(148,163,184,0.18)' : 'rgba(255, 248, 230, 0.2)',
-                      color: isDarkMode ? '#E2E8F0' : '#FFF7E6',
+                      bgcolor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255, 248, 230, 0.2)',
+                      color: isDarkMode ? '#FFFFFF' : '#FFF7E6',
                       '& .MuiChip-icon': { color: '#F59E0B' },
                     }}
                   />
                 </Box>
 
-                <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.08, mb: 1.2 }}>
+                <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.08, mb: 1.2, color: '#FFFFFF' }}>
                   Premium command deck
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#FFFFFF', mb: 2.4, maxWidth: 760 }}>
@@ -754,9 +813,9 @@ export const PremiumDashboard: React.FC = () => {
                   <button className="sparkle-button" style={{ transform: 'scale(0.85)' }} onClick={() => navigate('/dashboard/recommended-jobs?minMatch=50')}>
                     <div className="dots-border"></div>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="sparkle-icon">
-                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z" />
-                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z" />
-                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z" />
+                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor" fill="currentColor" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z" />
+                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor" fill="currentColor" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z" />
+                      <path className="path" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor" fill="currentColor" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z" />
                     </svg>
                     <span className="text-button">AI Matched Jobs</span>
                   </button>
@@ -768,7 +827,7 @@ export const PremiumDashboard: React.FC = () => {
                         <div className="space-circle"></div>
                       </div>
                     </div>
-                    <Button variant="contained" onClick={() => navigate('/dashboard/remote-jobs')} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'transparent' } }}>
+                    <Button variant="contained" onClick={() => navigate('/dashboard/remote-jobs')} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' } }}>
                       Remote Hub
                     </Button>
                   </Box>
@@ -780,7 +839,7 @@ export const PremiumDashboard: React.FC = () => {
                         <div className="space-circle"></div>
                       </div>
                     </div>
-                    <Button variant="contained" onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'transparent' } }}>
+                    <Button variant="contained" onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ position: 'relative', zIndex: 2, border: 'none', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' } }}>
                       Edit Profile
                     </Button>
                   </Box>
@@ -791,10 +850,10 @@ export const PremiumDashboard: React.FC = () => {
                 <Card
                   sx={{
                     borderRadius: 3,
-                    background: 'rgba(10, 15, 28, 0.72)',
-                    border: '1px solid rgba(148, 163, 184, 0.22)',
+                    background: isDarkMode ? '#050608' : 'rgba(10, 15, 28, 0.72)',
+                    border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(148, 163, 184, 0.22)',
                     backdropFilter: 'blur(14px)',
-                    boxShadow: 'inset 0 1px 0 rgba(148,163,184,0.1), 0 8px 24px rgba(2,6,23,0.5)',
+                    boxShadow: isDarkMode ? '0 8px 24px rgba(0, 0, 0, 0.45)' : 'inset 0 1px 0 rgba(148,163,184,0.1), 0 8px 24px rgba(2,6,23,0.5)',
                   }}
                 >
                   <CardContent>
@@ -802,22 +861,22 @@ export const PremiumDashboard: React.FC = () => {
                       Premium communication
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
-                      <Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>Unread messages</Typography>
-                      <Typography sx={{ color: '#F1F5F9', fontWeight: 800 }}>{unreadMessagesCount}</Typography>
+                      <Typography sx={{ color: '#E5E7EB', fontWeight: 600 }}>Unread messages</Typography>
+                      <Typography sx={{ color: '#FFFFFF', fontWeight: 800 }}>{unreadMessagesCount}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2.2 }}>
-                      <Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>Notifications</Typography>
-                      <Typography sx={{ color: '#F1F5F9', fontWeight: 800 }}>{notificationsCount}</Typography>
+                      <Typography sx={{ color: '#E5E7EB', fontWeight: 600 }}>Notifications</Typography>
+                      <Typography sx={{ color: '#FFFFFF', fontWeight: 800 }}>{notificationsCount}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <IconButton onClick={() => navigate(ROUTES.MESSAGING)} sx={{ bgcolor: 'rgba(148,163,184,0.14)', '&:hover': { bgcolor: 'rgba(148,163,184,0.24)' } }}>
+                      <IconButton onClick={() => navigate(ROUTES.MESSAGING)} sx={{ bgcolor: 'rgba(255,255,255,0.08)', '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' } }}>
                         <Badge badgeContent={unreadMessagesCount} color="warning">
-                          <ChatIcon sx={{ color: '#CBD5E1' }} />
+                          <ChatIcon sx={{ color: '#3B82F6' }} />
                         </Badge>
                       </IconButton>
-                      <IconButton onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)} sx={{ bgcolor: 'rgba(148,163,184,0.14)', '&:hover': { bgcolor: 'rgba(148,163,184,0.24)' } }}>
-                        <Badge badgeContent={notificationsCount} color="error">
-                          <NotificationsIcon sx={{ color: '#CBD5E1' }} />
+                      <IconButton onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)} sx={{ bgcolor: 'rgba(255,255,255,0.08)', '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' } }}>
+                        <Badge badgeContent={notificationsCount} color="primary">
+                          <NotificationsIcon sx={{ color: '#3B82F6' }} />
                         </Badge>
                       </IconButton>
                     </Box>
@@ -884,27 +943,27 @@ export const PremiumDashboard: React.FC = () => {
                 sx={{
                   cursor: 'pointer',
                   borderRadius: 4,
-                  border: isDarkMode ? '1px solid rgba(148,163,184,0.26)' : `1px solid ${theme.palette.divider}`,
-                  background: isDarkMode ? stat.darkBg : stat.lightBg,
+                  border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : `1px solid ${theme.palette.divider}`,
+                  background: isDarkMode ? '#050608' : stat.lightBg,
                   '&:hover': {
                     transform: 'translateY(-4px)',
-                    boxShadow: isDarkMode ? '0 12px 28px rgba(2, 6, 23, 0.44)' : '0 12px 28px rgba(15, 23, 42, 0.12)',
+                    boxShadow: isDarkMode ? '0 12px 28px rgba(0, 0, 0, 0.56)' : '0 12px 28px rgba(15, 23, 42, 0.12)',
                   },
                 }}
               >
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, color: isDarkMode ? '#CBD5E1' : '#334155' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: isDarkMode ? '#FFFFFF' : '#334155' }}>
                       {stat.label}
                     </Typography>
-                    <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: `${stat.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: isDarkMode ? 'rgba(255,255,255,0.08)' : `${stat.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <stat.icon sx={{ color: stat.color }} />
                     </Box>
                   </Box>
-                  <Typography variant="h4" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#0F172A' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: isDarkMode ? '#FFFFFF' : '#0F172A' }}>
                     {stat.value}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: isDarkMode ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
+                  <Typography variant="caption" sx={{ color: isDarkMode ? '#FFFFFF' : '#64748B', fontWeight: 600 }}>
                     {stat.subtext}
                   </Typography>
                 </CardContent>
@@ -913,685 +972,866 @@ export const PremiumDashboard: React.FC = () => {
           ))}
         </Grid>
 
-        <Suspense
-          fallback={(
-            <Card sx={{ borderRadius: 4, mb: 3 }}>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">Generating AI Daily Career Brief...</Typography>
-                <LinearProgress sx={{ mt: 1.2 }} />
-              </CardContent>
-            </Card>
-          )}
+        <Box
+          sx={{
+            mb: 3,
+            borderRadius: 3,
+            bgcolor: isDarkMode ? '#000000' : '#F8FAFC',
+            p: 1,
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'nowrap',
+            overflow: 'hidden',
+            '&:hover > button:not(:hover)': {
+              flex: '0.75 1 0',
+            },
+          }}
         >
-          <AiDailyCareerBrief context={aiDailyBriefContext} onAction={handleAiDailyBriefAction} />
-        </Suspense>
-
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 800, mb: 2.2 }}>
-            Quick Actions
-          </Typography>
-          <Grid container spacing={2}>
-            {[
-              { label: 'Browse Jobs', to: ROUTES.JOBS, icon: WorkIcon, color: 'primary' as const },
-              { label: 'Mock Interviews', to: '/dashboard/mock-interviews', icon: VideocamIcon, color: 'secondary' as const },
-              { label: 'Assessments', to: ROUTES.DASHBOARD_ASSESSMENTS, icon: TrackChangesIcon, color: 'success' as const },
-              { label: 'Community', to: ROUTES.DASHBOARD_COMMUNITY, icon: PublicIcon, color: 'info' as const },
-              { label: 'Referrals', to: ROUTES.DASHBOARD_REFERRALS, icon: BoltIcon, color: 'secondary' as const },
-              { label: 'Matched Jobs', to: '/dashboard/recommended-jobs?minMatch=50', icon: TrendingUpIcon, color: 'warning' as const },
-              { label: 'Free Notes', to: ROUTES.DASHBOARD_FREE_NOTES, icon: StickyNote2Icon, color: 'success' as const },
-              { label: 'AI Career Hub', to: ROUTES.DASHBOARD_AI_CAREER_HUB, icon: AutoAwesomeIcon, color: 'info' as const },
-            ].map((action, idx) => (
-              <Grid item xs={12} sm={6} md={3} key={action.label}>
-                <MotionCard
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+          {sectionTabs.map((tab) => {
+            const SelectedIcon = tab.icon;
+            const selected = selectedSection === tab.key;
+            return (
+              <ButtonBase
+                key={tab.key}
+                onClick={() => setSelectedSection(tab.key)}
+                focusRipple
+                sx={{
+                  flex: '1 1 0',
+                  minWidth: 0,
+                  width: 0,
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  border: selected ? `1px solid ${theme.palette.primary.main}` : '1px solid transparent',
+                  bgcolor: selected ? (isDarkMode ? 'rgba(56,189,248,0.18)' : '#EFF6FF') : isDarkMode ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
+                  color: selected ? (isDarkMode ? '#FFFFFF' : '#0F172A') : isDarkMode ? '#E5E7EB' : 'rgba(51,65,85,0.9)',
+                  boxShadow: isDarkMode ? '0 1px 3px rgba(0,0,0,0.16)' : '0 1px 2px rgba(15,23,42,0.08)',
+                  transition: 'flex 180ms ease, transform 180ms ease, background 180ms ease, border 180ms ease',
+                  '&:hover': {
+                    flex: '2 1 0',
+                    transform: 'translateY(-2px)',
+                    bgcolor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
+                    border: '1px solid lightgray',
+                  },
+                }}
+              >
+                <Box
                   sx={{
-                    borderRadius: 4,
-                    border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
-                    background: isDarkMode
-                      ? 'linear-gradient(150deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9))'
-                      : 'linear-gradient(150deg, #ffffff, #f8fafc)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 0.8,
+                    textAlign: 'center',
+                    p: 2,
+                    width: '100%',
                   }}
                 >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
-                      <action.icon color={action.color} />
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                          {action.label}
-                        </Typography>
-                    </Box>
-                    <button
-                      className="cta"
-                      onClick={() => navigate(action.to)}
-                      style={{
-                        background: candidateHeroGradient,
-                        borderColor: 'rgba(255,255,255,0.2)',
-                        boxShadow: '0 10px 22px rgba(2,6,23,0.16)',
-                      }}
-                    >
-                      <span style={{ color: '#FFFFFF' }}>Open&nbsp;</span>
-                      <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true" style={{ stroke: '#FFFFFF' }}>
-                        <path d="M1,5 L11,5"></path>
-                        <polyline points="8 1 12 5 8 9"></polyline>
-                      </svg>
-                    </button>
-                  </CardContent>
-                </MotionCard>
-              </Grid>
-            ))}
-          </Grid>
+                  <SelectedIcon sx={{ fontSize: 28 }} />
+                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: 13 }}>
+                    {tab.label}
+                  </Typography>
+                </Box>
+              </ButtonBase>
+            );
+          })}
         </Box>
 
-        <Card
-          sx={{
-            mb: 3,
-            borderRadius: 4,
-            border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
-            background: isDarkMode
-              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
-              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
-          }}
-        >
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.2, mb: 2.2 }}>
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                  Premium Intelligence Center
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.4 }}>
-                  Live signals based on your activity, recruiter interactions, and match momentum.
-                </Typography>
+        {selectedSection === 'dailyBrief' && (
+          <Suspense
+            fallback={(
+              <Card sx={{ borderRadius: 4, mb: 3 }}>
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary">Generating AI Daily Career Brief...</Typography>
+                  <LinearProgress sx={{ mt: 1.2 }} />
+                </CardContent>
+              </Card>
+            )}
+          >
+            <AiDailyCareerBrief context={aiDailyBriefContext} onAction={handleAiDailyBriefAction} />
+          </Suspense>
+        )}
+
+        {selectedSection === 'intelligence' && (
+          <Card
+            sx={{
+              mb: 3,
+              borderRadius: 4,
+              border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
+              background: isDarkMode
+                ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
+                : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.2, mb: 2.2 }}>
+                <Box>
+                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                    Premium Intelligence Center
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.4 }}>
+                    Live signals based on your activity, recruiter interactions, and match momentum.
+                  </Typography>
+                </Box>
+                <Chip icon={<InsightsIcon />} label={`Demand score ${premiumInsights.demandScore}/100`} color={premiumInsights.demandScore >= 70 ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
               </Box>
-              <Chip icon={<InsightsIcon />} label={`Demand score ${premiumInsights.demandScore}/100`} color={premiumInsights.demandScore >= 70 ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
-            </Box>
 
-            <Grid container spacing={2} sx={{ mb: 2.2 }}>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.1 }}>
-                      <BoltIcon color="warning" />
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                        Weekly velocity
-                      </Typography>
-                    </Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
-                      {premiumInsights.recentApplications7d}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      applications in last 7 days
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.1 }}>
-                      <TrackChangesIcon color="primary" />
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                        Interview pipeline
-                      </Typography>
-                    </Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
-                      {premiumInsights.interviewPipelineCount}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      active under review or shortlisted
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
-                  <CardContent>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.1 }}>
-                      Strategic strengths
-                    </Typography>
-                    <List sx={{ p: 0, display: 'grid', gap: 0.6 }}>
-                      {(premiumInsights.strengths.length > 0 ? premiumInsights.strengths : ['Add skills and update profile to unlock stronger signals.']).map((point) => (
-                        <ListItem key={point} sx={{ px: 0, py: 0.1 }}>
-                          <ListItemText
-                            primary={point}
-                            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}` }}>
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.2 }}>
-                      Weekly Sprint Tracker
-                    </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontWeight: 700, mb: 1.1 }}>
-                      Active model: {selectedRoleModel} ({activeRoleWeights.profileStrength.toFixed(2)} / {activeRoleWeights.applications.toFixed(2)} / {activeRoleWeights.interactions.toFixed(2)} / {activeRoleWeights.skills.toFixed(2)})
-                    </Typography>
-                    <Box sx={{ display: 'grid', gap: 1.1 }}>
-                      {premiumInsights.weeklyGoals.map((goal) => {
-                        const progress = Math.min(100, Math.round((goal.current / goal.target) * 100));
-                        return (
-                          <Box key={goal.label}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.45 }}>
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                {goal.label}
-                              </Typography>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                                {goal.current}/{goal.target}
-                              </Typography>
-                            </Box>
-                            <LinearProgress
-                              variant="determinate"
-                              value={progress}
-                              sx={{
-                                height: 8,
-                                borderRadius: 8,
-                                bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(148,163,184,0.2)',
-                                '& .MuiLinearProgress-bar': {
-                                  borderRadius: 8,
-                                },
-                              }}
-                            />
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                    <Box sx={{ mt: 1.4, display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button size="small" variant="outlined" startIcon={<TuneIcon />} onClick={() => navigate(ROUTES.DASHBOARD_SETTINGS_PREMIUM)} sx={{ fontWeight: 700 }}>
-                        Customize Intelligence
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}` }}>
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.2 }}>
-                      Opportunity Signals
-                    </Typography>
-                    <List sx={{ p: 0, display: 'grid', gap: 1 }}>
-                      {opportunitySignals.length > 0 ? opportunitySignals.map((signal) => (
-                        <ListItem key={signal.title} sx={{ borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`, bgcolor: isDarkMode ? 'rgba(15,23,42,0.7)' : '#FFFFFF', px: 1.4, py: 1.1, display: 'block' }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.35 }}>
-                            {signal.title}
-                          </Typography>
-                          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1 }}>
-                            {signal.description}
-                          </Typography>
-                          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1, fontWeight: 600 }}>
-                            Priority {signal.priorityScore}
-                            {signal.observedAt ? ` • Updated ${formatDate(signal.observedAt)}` : ''}
-                          </Typography>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color={signal.tone}
-                            onClick={signal.action}
-                            className="opportunity-signal-btn"
-                            sx={{
-                              fontWeight: 700,
-                            }}
-                          >
-                            <span className="opportunity-signal-text">{signal.cta}</span>
-                          </Button>
-                        </ListItem>
-                      )) : (
-                        <ListItem sx={{ borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`, bgcolor: isDarkMode ? 'rgba(15,23,42,0.7)' : '#FFFFFF', px: 1.4, py: 1.1 }}>
-                          <ListItemText
-                            primary="No urgent signals"
-                            secondary="Your dashboard is stable. Keep applying consistently this week."
-                            primaryTypographyProps={{ fontWeight: 700 }}
-                          />
-                        </ListItem>
-                      )}
-                    </List>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-
-        <Card
-          sx={{
-            mb: 3,
-            borderRadius: 4,
-            border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
-            background: isDarkMode
-              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
-              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
-          }}
-        >
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2.6 }}>
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.6 }}>
-                  Remote Job Hub
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 660 }}>
-                  Premium remote opportunities in one place. Explore remote roles, track remote applications, and jump to high-match options.
-                </Typography>
-              </Box>
-              <Chip label="Remote Focus" color="success" sx={{ fontWeight: 700 }} />
-            </Box>
-
-            <Grid container spacing={2}>
-              {[
-                {
-                  title: 'Explore Remote Jobs',
-                  description: 'Browse remote roles tailored to your profile.',
-                  action: () => navigate('/dashboard/remote-jobs'),
-                  icon: PublicIcon,
-                },
-                {
-                  title: 'Remote Applications',
-                  description: 'Track remote jobs you already applied to.',
-                  action: () => navigate(`${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`),
-                  icon: FlightTakeoffIcon,
-                },
-                {
-                  title: 'Priority Remote Matches',
-                  description: 'Open newly matched premium remote opportunities.',
-                  action: () => navigate('/dashboard/remote-jobs'),
-                  icon: AutoAwesomeIcon,
-                },
-              ].map((item) => (
-                <Grid item xs={12} md={4} key={item.title}>
-                  <Card sx={{ borderRadius: 3, height: '100%', border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, background: isDarkMode ? 'linear-gradient(180deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9))' : '#FFFFFF' }}>
+              <Grid container spacing={2} sx={{ mb: 2.2 }}>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
                     <CardContent>
-                      <item.icon color="success" sx={{ mb: 1 }} />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.8 }}>
-                        {item.title}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.1 }}>
+                        <BoltIcon color="warning" />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                          Weekly velocity
+                        </Typography>
+                      </Box>
+                      <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
+                        {premiumInsights.recentApplications7d}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                        {item.description}
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        applications in last 7 days
                       </Typography>
-                      <button
-                        className="cta"
-                        onClick={item.action}
-                        type="button"
-                        style={{
-                          background: candidateHeroGradient,
-                          borderColor: 'rgba(255,255,255,0.2)',
-                          boxShadow: '0 10px 22px rgba(2,6,23,0.16)',
-                        }}
-                      >
-                        <span style={{ color: '#FFFFFF' }}>Open&nbsp;</span>
-                        <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true" style={{ stroke: '#FFFFFF' }}>
-                          <path d="M1,5 L11,5"></path>
-                          <polyline points="8 1 12 5 8 9"></polyline>
-                        </svg>
-                      </button>
                     </CardContent>
                   </Card>
                 </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
-
-        
-
-        <Card
-          sx={{
-            borderRadius: 4,
-            border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : `1px solid ${theme.palette.divider}`,
-            background: isDarkMode
-              ? 'linear-gradient(145deg, rgba(2,6,23,0.96), rgba(15,23,42,0.95))'
-              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
-            mb: 0.6,
-          }}
-        >
-          <CardContent sx={{ p: { xs: 2, md: 2.4 } }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={3.2}>
-                <Box sx={{ display: 'grid', gap: 1.2, position: { md: 'sticky' }, top: { md: 92 } }}>
-                  {[
-                    { id: '01', title: 'Exclusive Premium Tools', sub: 'Action studio' },
-                    { id: '02', title: 'Recommended Jobs For You', sub: 'AI match feed' },
-                    { id: '03', title: 'Quick Preferences', sub: 'Personal controls' },
-                  ].map((tab, index) => (
-                    <Box
-                      key={tab.id}
-                      sx={{
-                        p: 1.3,
-                        borderRadius: 2,
-                        border: isDarkMode ? '1px solid rgba(148,163,184,0.3)' : '1px solid rgba(148,163,184,0.28)',
-                        background: index === 0
-                          ? (isDarkMode ? 'linear-gradient(135deg, rgba(51,65,85,0.85), rgba(15,23,42,0.85))' : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)')
-                          : (isDarkMode ? 'rgba(15,23,42,0.56)' : 'rgba(248,250,252,0.94)'),
-                      }}
-                    >
-                      <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.08em', color: 'text.secondary' }}>
-                        {tab.id}
-                      </Typography>
-                      <Typography variant="subtitle2" sx={{ mt: 0.4, fontWeight: 800 }}>
-                        {tab.title}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {tab.sub}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={8.8}>
-                <Box sx={{ display: 'grid', gap: 1.5 }}>
-                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'linear-gradient(138deg, rgba(2,6,23,0.9), rgba(30,41,59,0.88))' : '#FFFFFF' }}>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
                     <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.4 }}>
-                        Exclusive Premium Tools
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.1 }}>
+                        <TrackChangesIcon color="primary" />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                          Interview pipeline
+                        </Typography>
+                      </Box>
+                      <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
+                        {premiumInsights.interviewPipelineCount}
                       </Typography>
-                      <Grid container spacing={1.2}>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<VideocamIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate('/dashboard/mock-interviews')}>
-                            Mock Interviews
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<DescriptionIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate('/dashboard/resume-review')}>
-                            Resume Review
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<WorkIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate('/dashboard/priority-apply')}>
-                            Priority Apply
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<ChatIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => window.open('https://www.ambitionbox.com/interviews?campaign=desktop_nav', '_blank', 'noopener')}>
-                            Interview Preparation
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<StickyNote2Icon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_FREE_NOTES)}>
-                            Free Notes
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<TrackChangesIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_ASSESSMENTS)}>
-                            Assessments
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<PublicIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_COMMUNITY)}>
-                            Community
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<BoltIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_REFERRALS)}>
-                            Referrals
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Button fullWidth variant="outlined" startIcon={<AutoAwesomeIcon />} sx={{ justifyContent: 'flex-start' }} onClick={() => navigate(ROUTES.DASHBOARD_AI_CAREER_HUB)}>
-                            AI Career Hub
-                          </Button>
-                        </Grid>
-                      </Grid>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        active under review or shortlisted
+                      </Typography>
                     </CardContent>
                   </Card>
-
-                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'rgba(15,23,42,0.72)' : '#FFFFFF' }}>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, height: '100%' }}>
                     <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1.4 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                          Recommended Jobs For You
-                        </Typography>
-                        <Button size="small" sx={{ fontWeight: 700 }} onClick={() => navigate('/dashboard/recommended-jobs?minMatch=50')}>
-                          View all matches
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.1 }}>
+                        Strategic strengths
+                      </Typography>
+                      <List sx={{ p: 0, display: 'grid', gap: 0.6 }}>
+                        {(premiumInsights.strengths.length > 0 ? premiumInsights.strengths : ['Add skills and update profile to unlock stronger signals.']).map((point) => (
+                          <ListItem key={point} sx={{ px: 0, py: 0.1 }}>
+                            <ListItemText
+                              primary={point}
+                              primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ borderRadius: 3, background: isDarkMode ? '#050608' : '#FFFFFF', border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}` }}>
+                    <CardContent>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.2, color: isDarkMode ? '#F8FAFC' : undefined }}>
+                        Weekly Sprint Tracker
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#FFFFFF' : 'text.secondary', fontWeight: 700, mb: 1.1 }}>
+                        Active model: {selectedRoleModel} ({activeRoleWeights.profileStrength.toFixed(2)} / {activeRoleWeights.applications.toFixed(2)} / {activeRoleWeights.interactions.toFixed(2)} / {activeRoleWeights.skills.toFixed(2)})
+                      </Typography>
+                      <Box sx={{ display: 'grid', gap: 1.1 }}>
+                        {premiumInsights.weeklyGoals.map((goal) => {
+                          const progress = Math.min(100, Math.round((goal.current / goal.target) * 100));
+                          return (
+                            <Box key={goal.label}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.45 }}>
+                                <Typography variant="caption" sx={{ fontWeight: 700, color: isDarkMode ? '#F8FAFC' : undefined }}>
+                                  {goal.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: isDarkMode ? '#FFFFFF' : 'text.secondary', fontWeight: 700 }}>
+                                  {goal.current}/{goal.target}
+                                </Typography>
+                              </Box>
+                              <LinearProgress
+                                variant="determinate"
+                                value={progress}
+                                sx={{
+                                  height: 8,
+                                  borderRadius: 8,
+                                  bgcolor: isDarkMode ? 'rgba(148,163,184,0.24)' : 'rgba(148,163,184,0.2)',
+                                  '& .MuiLinearProgress-bar': {
+                                    borderRadius: 8,
+                                  },
+                                }}
+                              />
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                      <Box sx={{ mt: 1.4, display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button size="small" variant="outlined" startIcon={<TuneIcon />} onClick={() => navigate(ROUTES.DASHBOARD_SETTINGS_PREMIUM)} sx={{ fontWeight: 700 }}>
+                          Customize Intelligence
                         </Button>
                       </Box>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.4 }}>
-                        {userSkills.length > 0 ? `Matched with ${userSkills.slice(0, 4).join(', ')}` : 'Add skills in profile to get recommendations'}
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ borderRadius: 3, background: isDarkMode ? '#050608' : '#FFFFFF', border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}` }}>
+                    <CardContent>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.2, color: isDarkMode ? '#F8FAFC' : undefined }}>
+                        Opportunity Signals
                       </Typography>
-
-                      <List sx={{ p: 0, display: 'grid', gap: 0.9 }}>
-                        {recommendedJobs.length > 0 ? (
-                          recommendedJobs.slice(0, 4).map((job) => (
-                            <ListItem key={job.id} sx={{ px: 1.2, py: 0.8, borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.22)' : '1px solid rgba(203,213,225,0.8)', bgcolor: isDarkMode ? 'rgba(2,6,23,0.46)' : 'rgba(248,250,252,0.9)' }}>
-                              <ListItemText
-                                primary={job.title || 'Role'}
-                                secondary={`${job.company_name || 'Company'}${job.location ? ` • ${job.location}` : ''}`}
-                                primaryTypographyProps={{ fontWeight: 700 }}
-                              />
-                              <Button size="small" sx={{ fontWeight: 700 }} onClick={() => navigate(`/jobs/${job.id}`)}>
-                                View
-                              </Button>
-                            </ListItem>
-                          ))
-                        ) : (
-                          <ListItem sx={{ px: 1.2, py: 1, borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.22)' : '1px solid rgba(203,213,225,0.8)', bgcolor: isDarkMode ? 'rgba(2,6,23,0.46)' : 'rgba(248,250,252,0.9)' }}>
-                            <ListItemText primary="No recommendations yet" secondary="Complete your profile to unlock matches." />
+                      <List sx={{ p: 0, display: 'grid', gap: 1 }}>
+                        {opportunitySignals.length > 0 ? opportunitySignals.map((signal) => (
+                          <ListItem key={signal.title} sx={{ borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`, bgcolor: isDarkMode ? 'rgba(15,23,42,0.7)' : '#FFFFFF', px: 1.4, py: 1.1, display: 'block' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.35, color: isDarkMode ? '#F8FAFC' : undefined }}>
+                              {signal.title}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#FFFFFF' : 'text.secondary', mb: 1 }}>
+                              {signal.description}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#FFFFFF' : 'text.secondary', mb: 1, fontWeight: 600 }}>
+                              Priority {signal.priorityScore}
+                              {signal.observedAt ? ` • Updated ${formatDate(signal.observedAt)}` : ''}
+                            </Typography>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color={signal.tone}
+                              onClick={signal.action}
+                              className="opportunity-signal-btn"
+                              sx={{
+                                fontWeight: 700,
+                              }}
+                            >
+                              <span className="opportunity-signal-text">{signal.cta}</span>
+                            </Button>
+                          </ListItem>
+                        )) : (
+                          <ListItem sx={{ borderRadius: 1.8, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`, bgcolor: isDarkMode ? 'rgba(15,23,42,0.7)' : '#FFFFFF', px: 1.4, py: 1.1 }}>
+                            <ListItemText
+                              primary="No urgent signals"
+                              secondary="Your dashboard is stable. Keep applying consistently this week."
+                              primaryTypographyProps={{ fontWeight: 700, color: isDarkMode ? '#F8FAFC' : undefined }}
+                              secondaryTypographyProps={{ color: isDarkMode ? '#94A3B8' : undefined }}
+                            />
                           </ListItem>
                         )}
                       </List>
                     </CardContent>
                   </Card>
-
-                  <Card sx={{ borderRadius: 3, border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(203,213,225,0.8)', background: isDarkMode ? 'rgba(15,23,42,0.72)' : '#FFFFFF' }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.2 }}>
-                        Quick Preferences
-                      </Typography>
-                      <Grid container spacing={1.2} alignItems="center">
-                        <Grid item xs={12} sm={8}>
-                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                            Theme toggle is available in the navbar for premium candidates.
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Chip
-                            label={themeMode === 'dark' ? 'Dark mode active' : 'Light mode active'}
-                            color={themeMode === 'dark' ? 'secondary' : 'primary'}
-                            variant="outlined"
-                            sx={{ fontWeight: 700 }}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Button fullWidth variant="outlined" sx={{ fontWeight: 700 }} onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}>
-                            Update profile
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-                  </Card>
-                </Box>
+                </Grid>
               </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        <RecruiterActivityCenter
-          context={recruiterActivityContext}
-          onQuickAction={handleRecruiterActivityQuickAction}
-        />
-
-        <Card
-          sx={{
-            mt: 3,
-            borderRadius: 4,
-            border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.24)',
-            background: isDarkMode
-              ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
-              : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              inset: 0,
+        {selectedSection === 'remoteHub' && (
+          <Card
+            sx={{
+              mb: 3,
+              borderRadius: 4,
+              border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : `1px solid ${theme.palette.divider}`,
               background: isDarkMode
-                ? 'radial-gradient(circle at 90% 12%, rgba(56,189,248,0.12), transparent 35%)'
-                : 'radial-gradient(circle at 90% 12%, rgba(245,158,11,0.16), transparent 35%)',
-              pointerEvents: 'none',
-            },
-          }}
-        >
-          <CardContent>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 2,
-                pb: 1.6,
-                borderBottom: isDarkMode ? '1px dashed rgba(148,163,184,0.32)' : '1px dashed rgba(180, 122, 20, 0.35)',
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 800, color: isDarkMode ? '#E2E8F0' : '#000000' }}>
-                Recent Applications
+                ? 'linear-gradient(138deg, rgba(2,6,23,0.95), rgba(30,41,59,0.95))'
+                : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2.6 }}>
+                <Box>
+                  <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.6 }}>
+                    Remote Job Hub
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 660 }}>
+                    Premium remote opportunities in one place. Explore remote roles, track remote applications, and jump to high-match options.
+                  </Typography>
+                </Box>
+                <Chip label="Remote Focus" color="success" sx={{ fontWeight: 700 }} />
+              </Box>
+
+              <Grid container spacing={2}>
+                {[
+                  {
+                    title: 'Explore Remote Jobs',
+                    description: 'Browse remote roles tailored to your profile.',
+                    action: () => navigate('/dashboard/remote-jobs'),
+                    icon: PublicIcon,
+                  },
+                  {
+                    title: 'Remote Applications',
+                    description: 'Track remote jobs you already applied to.',
+                    action: () => navigate(`${ROUTES.DASHBOARD_APPLICATIONS}?filter=remote`),
+                    icon: FlightTakeoffIcon,
+                  },
+                  {
+                    title: 'Priority Remote Matches',
+                    description: 'Open newly matched premium remote opportunities.',
+                    action: () => navigate('/dashboard/remote-jobs'),
+                    icon: AutoAwesomeIcon,
+                  },
+                ].map((item) => (
+                  <Grid item xs={12} md={4} key={item.title}>
+                    <Card sx={{ borderRadius: 3, height: '100%', border: isDarkMode ? '1px solid rgba(148,163,184,0.18)' : `1px solid ${theme.palette.divider}`, background: isDarkMode ? 'linear-gradient(180deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9))' : '#FFFFFF' }}>
+                      <CardContent>
+                        <item.icon color="success" sx={{ mb: 1 }} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.8 }}>
+                          {item.title}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                          {item.description}
+                        </Typography>
+                        <button
+                          className="cta"
+                          onClick={item.action}
+                          type="button"
+                          style={{
+                            background: candidateHeroGradient,
+                            borderColor: 'rgba(255,255,255,0.2)',
+                            boxShadow: '0 10px 22px rgba(2,6,23,0.16)',
+                          }}
+                        >
+                          <span style={{ color: '#FFFFFF' }}>Open&nbsp;</span>
+                          <svg viewBox="0 0 13 10" height="10px" width="15px" aria-hidden="true" style={{ stroke: '#FFFFFF' }}>
+                            <path d="M1,5 L11,5"></path>
+                            <polyline points="8 1 12 5 8 9"></polyline>
+                          </svg>
+                        </button>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedSection === 'premiumTools' && (
+          <Box
+            sx={{
+              mb: 3,
+              borderRadius: 5,
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(226,232,240,0.8)',
+              bgcolor: isDarkMode ? '#000000' : '#F8FAFF',
+              boxShadow: isDarkMode ? '0 24px 60px rgba(0,0,0,0.34)' : '0 20px 60px rgba(15,23,42,0.08)',
+              overflow: 'hidden',
+              position: 'relative',
+              '&:before': {
+                content: '""',
+                position: 'absolute',
+                top: -40,
+                right: -30,
+                width: 220,
+                height: 220,
+                borderRadius: '50%',
+                bgcolor: isDarkMode ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.14)',
+                filter: 'blur(52px)',
+              },
+              '&:after': {
+                content: '""',
+                position: 'absolute',
+                bottom: -30,
+                left: -40,
+                width: 240,
+                height: 240,
+                borderRadius: '50%',
+                bgcolor: isDarkMode ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.12)',
+                filter: 'blur(48px)',
+              },
+            }}
+          >
+            <Box sx={{ position: 'relative', zIndex: 1, px: { xs: 3, md: 4 }, pt: { xs: 3, md: 4 }, pb: 2 }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: isDarkMode ? '#FFFFFF' : '#0F172A', textAlign: 'center' }}>
+                ✨ Explore Premium Workspace ✨
               </Typography>
-              <Button
-                onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)}
-                className="opportunity-signal-btn"
+              <Typography
+                variant="body2"
                 sx={{
-                  fontWeight: 700,
+                  color: isDarkMode ? '#FFFFFF' : '#475569',
+                  textAlign: 'center',
+                  maxWidth: 680,
+                  mx: 'auto',
+                  mt: 1,
                 }}
               >
-                <span className="opportunity-signal-text">View all ({recentApplications.length})</span>
-              </Button>
+                Powerful tools and insights to accelerate your career growth
+              </Typography>
+              <Box
+                sx={{
+                  height: 4,
+                  width: 120,
+                  mx: 'auto',
+                  mt: 3,
+                  borderRadius: 2,
+                  background: 'linear-gradient(135deg, rgba(37,99,235,0.85), rgba(124,58,237,0.85))',
+                }}
+              />
             </Box>
 
-            <List sx={{ p: 0, display: 'grid', gap: 1.2 }}>
-              {recentApplications.length === 0 ? (
-                <ListItem
-                  sx={{
-                    px: 2,
-                    py: 2,
-                    borderRadius: 2.5,
-                    border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.25)',
-                    background: isDarkMode
-                      ? 'linear-gradient(140deg, rgba(30,41,59,0.75), rgba(15,23,42,0.76))'
-                      : '#FFFFFF',
-                  }}
-                >
-                  <ListItemText primary="No applications yet" secondary="Apply to jobs to track your application history." />
-                </ListItem>
-              ) : (
-                recentApplications.slice(0, 3).map((application) => (
-                  <ListItem
-                    key={application.id}
-                    sx={{
-                      px: 2,
-                      py: 1.6,
-                      borderRadius: 2.5,
-                      border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(180, 122, 20, 0.24)',
-                      background: isDarkMode
-                        ? 'linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.84))'
-                        : '#FFFFFF',
-                      alignItems: 'flex-start',
-                      gap: 1.4,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        mt: 1,
-                        bgcolor:
-                          application.status === 'shortlisted'
-                            ? '#22C55E'
-                            : application.status === 'under_review'
-                            ? '#F59E0B'
-                            : application.status === 'rejected'
-                            ? '#EF4444'
-                            : application.status === 'accepted'
-                            ? '#3B82F6'
-                            : isDarkMode
-                            ? '#94A3B8'
-                            : '#B7791F',
-                        boxShadow: '0 0 0 4px rgba(148,163,184,0.12)',
-                        flexShrink: 0,
-                      }}
-                    />
-
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#000000', lineHeight: 1.2 }}>
-                        {application.jobs?.title || 'Unknown role'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#CBD5E1' : '#000000', fontWeight: 600, mt: 0.35 }}>
-                        {application.jobs?.company_name || 'Unknown company'}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#94A3B8' : '#000000', mt: 0.55 }}>
-                        {application.jobs?.location || 'Location not specified'}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ textAlign: 'right', minWidth: 128 }}>
-                      <Chip
-                        label={(application.status || 'applied').replace('_', ' ').toUpperCase()}
-                        size="small"
-                        color={
-                          application.status === 'shortlisted'
-                            ? 'success'
-                            : application.status === 'under_review'
-                            ? 'warning'
-                            : application.status === 'rejected'
-                            ? 'error'
-                            : application.status === 'accepted'
-                            ? 'primary'
-                            : 'default'
-                        }
-                        sx={{ fontWeight: 700 }}
-                      />
-                      <Typography
-                        variant="caption"
+            <Grid container spacing={2} sx={{ px: { xs: 2, md: 3 }, pb: { xs: 3, md: 3 } }}>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ display: 'grid', gap: 1.75 }}>
+                  {[
+                    {
+                      id: '01',
+                      title: 'Exclusive Premium Tools',
+                      subtitle: 'Action studio',
+                      icon: AutoAwesomeIcon,
+                      active: true,
+                    },
+                    {
+                      id: '02',
+                      title: 'Recommended Jobs For You',
+                      subtitle: 'AI match feed',
+                      icon: TrendingUpIcon,
+                      active: false,
+                    },
+                    {
+                      id: '03',
+                      title: 'Quick Preferences',
+                      subtitle: 'Personal controls',
+                      icon: TuneIcon,
+                      active: false,
+                    },
+                  ].map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <MotionCard
+                        key={item.id}
+                        whileHover={{ y: -4 }}
+                        transition={{ duration: 0.25 }}
                         sx={{
-                          display: 'block',
-                          color: isDarkMode ? '#94A3B8' : '#000000',
-                          mt: 0.75,
-                          fontWeight: 600,
+                          p: 2.2,
+                          borderRadius: 4,
+                          border: item.active
+                            ? `1px solid ${isDarkMode ? 'rgba(59,130,246,0.35)' : 'rgba(59,130,246,0.28)'}`
+                            : isDarkMode
+                            ? '1px solid rgba(255,255,255,0.08)'
+                            : '1px solid rgba(203,213,225,0.8)',
+                          bgcolor: item.active
+                            ? isDarkMode
+                              ? '#080a0f'
+                              : '#FFFFFF'
+                            : isDarkMode
+                            ? '#050608'
+                            : '#FFFFFF',
+                          boxShadow: isDarkMode
+                            ? '0 18px 45px rgba(0,0,0,0.28)'
+                            : '0 16px 36px rgba(15,23,42,0.06)',
                         }}
                       >
-                        {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
-                      </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.8 }}>
+                          <Box
+                            sx={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: '50%',
+                              bgcolor: item.active ? 'rgba(59,130,246,0.12)' : 'rgba(148,163,184,0.12)',
+                              color: item.active ? '#2563EB' : isDarkMode ? '#E5E7EB' : '#475569',
+                              display: 'grid',
+                              placeItems: 'center',
+                              fontWeight: 800,
+                            }}
+                          >
+                            {item.id}
+                          </Box>
+                          <Box
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 2,
+                              bgcolor: item.active
+                                ? 'linear-gradient(135deg, rgba(37,99,235,0.18), rgba(124,58,237,0.18))'
+                                : isDarkMode
+                                ? 'rgba(255,255,255,0.08)'
+                                : 'rgba(241,245,249,0.82)',
+                              display: 'grid',
+                              placeItems: 'center',
+                              color: item.active ? '#2563EB' : isDarkMode ? '#E5E7EB' : '#475569',
+                            }}
+                          >
+                            <ItemIcon sx={{ fontSize: 20 }} />
+                          </Box>
+                        </Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#0F172A' }}>
+                          {item.title}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.9, color: isDarkMode ? '#E5E7EB' : '#64748B' }}>
+                          {item.subtitle}
+                        </Typography>
+                      </MotionCard>
+                    );
+                  })}
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} md={9}>
+                <Grid container spacing={2} sx={{ alignItems: 'stretch' }}>
+                  {[
+                    {
+                      label: 'Mock Interviews',
+                      icon: VideocamIcon,
+                      action: () => navigate('/dashboard/mock-interviews'),
+                      iconGradient: 'linear-gradient(135deg, rgba(59,130,246,0.18), rgba(191,219,254,0.35))',
+                      accent: '#2563EB',
+                    },
+                    {
+                      label: 'Resume Review',
+                      icon: DescriptionIcon,
+                      action: () => navigate('/dashboard/resume-review'),
+                      iconGradient: 'linear-gradient(135deg, rgba(124,58,237,0.16), rgba(233,213,255,0.3))',
+                      accent: '#7C3AED',
+                    },
+                    {
+                      label: 'Priority Apply',
+                      icon: WorkIcon,
+                      action: () => navigate('/dashboard/priority-apply'),
+                      iconGradient: 'linear-gradient(135deg, rgba(245,158,11,0.16), rgba(254,243,199,0.32))',
+                      accent: '#F59E0B',
+                    },
+                    {
+                      label: 'Interview Preparation',
+                      icon: ChatIcon,
+                      action: () => window.open('https://www.ambitionbox.com/interviews?campaign=desktop_nav', '_blank', 'noopener'),
+                      iconGradient: 'linear-gradient(135deg, rgba(14,165,233,0.16), rgba(204,242,254,0.3))',
+                      accent: '#0284C7',
+                    },
+                    {
+                      label: 'Free Notes',
+                      icon: StickyNote2Icon,
+                      action: () => navigate(ROUTES.DASHBOARD_FREE_NOTES),
+                      iconGradient: 'linear-gradient(135deg, rgba(34,197,94,0.16), rgba(209,250,229,0.3))',
+                      accent: '#16A34A',
+                    },
+                    {
+                      label: 'Assessments',
+                      icon: TrackChangesIcon,
+                      action: () => navigate(ROUTES.DASHBOARD_ASSESSMENTS),
+                      iconGradient: 'linear-gradient(135deg, rgba(168,85,247,0.16), rgba(244,231,255,0.32))',
+                      accent: '#7C3AED',
+                    },
+                    {
+                      label: 'Community',
+                      icon: PublicIcon,
+                      action: () => navigate(ROUTES.DASHBOARD_COMMUNITY),
+                      iconGradient: 'linear-gradient(135deg, rgba(34,211,238,0.16), rgba(192,232,249,0.34))',
+                      accent: '#0EA5E9',
+                    },
+                    {
+                      label: 'Referrals',
+                      icon: BoltIcon,
+                      action: () => navigate(ROUTES.DASHBOARD_REFERRALS),
+                      iconGradient: 'linear-gradient(135deg, rgba(251,191,36,0.16), rgba(254,243,199,0.34))',
+                      accent: '#F59E0B',
+                    },
+                  ].map((tool) => {
+                    const ToolIcon = tool.icon;
+                    return (
+                      <Grid item xs={12} sm={6} md={3} key={tool.label} sx={{ display: 'flex' }}>
+                        <MotionCard
+                          whileHover={{ y: -4 }}
+                          transition={{ duration: 0.25 }}
+                          onClick={tool.action}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              tool.action();
+                            }
+                          }}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            minHeight: 170,
+                            borderRadius: 4,
+                            border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(226,232,240,0.9)',
+                            bgcolor: isDarkMode ? '#050608' : '#FFFFFF',
+                            boxShadow: isDarkMode ? '0 14px 28px rgba(0,0,0,0.32)' : '0 12px 26px rgba(15,23,42,0.08)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            p: 2,
+                            cursor: 'pointer',
+                            '&:hover': {
+                              boxShadow: isDarkMode ? '0 18px 34px rgba(0,0,0,0.38)' : '0 16px 32px rgba(15,23,42,0.12)',
+                            },
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 52,
+                              height: 52,
+                              borderRadius: 3,
+                              bgcolor: tool.iconGradient,
+                              display: 'grid',
+                              placeItems: 'center',
+                              boxShadow: isDarkMode ? '0 12px 28px rgba(59,130,246,0.08)' : '0 12px 28px rgba(59,130,246,0.12)',
+                            }}
+                          >
+                            <ToolIcon sx={{ fontSize: 22, color: tool.accent }} />
+                          </Box>
+                          <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#0F172A' }}>
+                            {tool.label}
+                          </Typography>
+                        </MotionCard>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+
+                <Grid item xs={12}>
+                  <MotionCard
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.25 }}
+                    sx={{
+                      mt: 1,
+                      borderRadius: 4,
+                      border: isDarkMode ? '1px solid rgba(148,163,184,0.16)' : '1px solid rgba(226,232,240,0.9)',
+                      bgcolor: isDarkMode ? 'rgba(15,23,42,0.88)' : '#FFFFFF',
+                      boxShadow: isDarkMode ? '0 18px 40px rgba(15,23,42,0.22)' : '0 14px 36px rgba(15,23,42,0.08)',
+                      p: 2.25,
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 2,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        sx={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 3,
+                          bgcolor: 'linear-gradient(135deg, rgba(37,99,235,0.18), rgba(124,58,237,0.18))',
+                          display: 'grid',
+                          placeItems: 'center',
+                        }}
+                      >
+                        <StarIcon sx={{ color: '#2563EB', fontSize: 24 }} />
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#0F172A' }}>
+                          Unlock the full power of Actro Premium
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#64748B', mt: 0.5 }}>
+                          More tools. More insights. More opportunities.
+                        </Typography>
+                      </Box>
                     </Box>
-                  </ListItem>
-                ))
-              )}
-            </List>
-          </CardContent>
-        </Card>
+                    <Button
+                      variant="contained"
+                      onClick={() => navigate(ROUTES.DASHBOARD_SETTINGS_PREMIUM)}
+                      sx={{
+                        bgcolor: 'linear-gradient(135deg, #2563EB, #7C3AED)',
+                        color: '#FFFFFF',
+                        borderRadius: 3,
+                        py: 1.4,
+                        px: 3,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        boxShadow: '0 14px 30px rgba(37,99,235,0.28)',
+                        '&:hover': {
+                          bgcolor: 'linear-gradient(135deg, #1D4ED8, #6D28D9)',
+                        },
+                      }}
+                    >
+                      👑 Go Premium
+                    </Button>
+                  </MotionCard>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
 
-        <SupportWidget
-          audience="candidate"
-          showFab={false}
-          open={supportOpen}
-          onClose={() => setSupportOpen(false)}
-        />
-
-        <Suspense
-          fallback={(
-            <Card sx={{ borderRadius: 4, mb: 3 }}>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">Loading AI Match Center...</Typography>
-                <LinearProgress sx={{ mt: 1.2 }} />
-              </CardContent>
-            </Card>
-          )}
-        >
-          <AiMatchCenter
-            jobs={recommendedJobs}
-            context={aiMatchContext}
-            onApplyNow={handleAiMatchApplyNow}
-            onSaveJob={handleAiMatchSaveJob}
-            onImproveMatch={handleAiMatchImproveMatch}
-            onResumeOptimizer={() => navigate('/dashboard/resume-review')}
-            onMockInterview={() => navigate('/dashboard/mock-interviews')}
-            onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
+        {selectedSection === 'recruiterActivity' && (
+          <RecruiterActivityCenter
+            context={recruiterActivityContext}
+            onQuickAction={handleRecruiterActivityQuickAction}
           />
-        </Suspense>
+        )}
+
+        {selectedSection === 'recentApplications' && (
+          <Card
+            sx={{
+              mt: 3,
+              borderRadius: 4,
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(180, 122, 20, 0.24)',
+              background: isDarkMode
+                ? 'linear-gradient(138deg, rgba(5,6,8,0.95), rgba(15,23,42,0.95))'
+                : 'linear-gradient(140deg, #BFDBFE 0%, #DBEAFE 55%, #EFF6FF 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: 0,
+                background: isDarkMode
+                  ? 'radial-gradient(circle at 90% 12%, rgba(56,189,248,0.12), transparent 35%)'
+                  : 'radial-gradient(circle at 90% 12%, rgba(245,158,11,0.16), transparent 35%)',
+                pointerEvents: 'none',
+              },
+            }}
+          >
+            <CardContent>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                  pb: 1.6,
+                  borderBottom: isDarkMode ? '1px dashed rgba(148,163,184,0.32)' : '1px dashed rgba(180, 122, 20, 0.35)',
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 800, color: isDarkMode ? '#E2E8F0' : '#000000' }}>
+                  Recent Applications
+                </Typography>
+                <Button
+                  onClick={() => navigate(ROUTES.DASHBOARD_APPLICATIONS)}
+                  className="opportunity-signal-btn"
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
+                  <span className="opportunity-signal-text">View all ({recentApplications.length})</span>
+                </Button>
+              </Box>
+
+              <List sx={{ p: 0, display: 'grid', gap: 1.2 }}>
+                {recentApplications.length === 0 ? (
+                  <ListItem
+                    sx={{
+                      px: 2,
+                      py: 2,
+                      borderRadius: 2.5,
+                      border: isDarkMode ? '1px solid rgba(148,163,184,0.24)' : '1px solid rgba(180, 122, 20, 0.25)',
+                      background: isDarkMode
+                        ? 'linear-gradient(140deg, rgba(30,41,59,0.75), rgba(15,23,42,0.76))'
+                        : '#FFFFFF',
+                    }}
+                  >
+                    <ListItemText primary="No applications yet" secondary="Apply to jobs to track your application history." />
+                  </ListItem>
+                ) : (
+                  recentApplications.slice(0, 3).map((application) => (
+                    <ListItem
+                      key={application.id}
+                      sx={{
+                        px: 2,
+                        py: 1.6,
+                        borderRadius: 2.5,
+                        border: isDarkMode ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(180, 122, 20, 0.24)',
+                        background: isDarkMode
+                          ? 'linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.84))'
+                          : '#FFFFFF',
+                        alignItems: 'flex-start',
+                        gap: 1.4,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          mt: 1,
+                          bgcolor:
+                            application.status === 'shortlisted'
+                              ? '#22C55E'
+                              : application.status === 'under_review'
+                              ? '#F59E0B'
+                              : application.status === 'rejected'
+                              ? '#EF4444'
+                              : application.status === 'accepted'
+                              ? '#3B82F6'
+                              : isDarkMode
+                              ? '#94A3B8'
+                              : '#B7791F',
+                          boxShadow: '0 0 0 4px rgba(148,163,184,0.12)',
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: isDarkMode ? '#F8FAFC' : '#000000', lineHeight: 1.2 }}>
+                          {application.jobs?.title || 'Unknown role'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: isDarkMode ? '#FFFFFF' : '#000000', fontWeight: 600, mt: 0.35 }}>
+                          {application.jobs?.company_name || 'Unknown company'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ display: 'block', color: isDarkMode ? '#FFFFFF' : '#000000', mt: 0.55 }}>
+                          {application.jobs?.location || 'Location not specified'}
+                        </Typography>
+                      </Box>
+
+                      <Box sx={{ textAlign: 'right', minWidth: 128 }}>
+                        <Chip
+                          label={(application.status || 'applied').replace('_', ' ').toUpperCase()}
+                          size="small"
+                          color={
+                            application.status === 'shortlisted'
+                              ? 'success'
+                              : application.status === 'under_review'
+                              ? 'warning'
+                              : application.status === 'rejected'
+                              ? 'error'
+                              : application.status === 'accepted'
+                              ? 'primary'
+                              : 'default'
+                          }
+                          sx={{ fontWeight: 700 }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            color: isDarkMode ? '#FFFFFF' : '#000000',
+                            mt: 0.75,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {application.applied_at ? formatDate(application.applied_at) : 'Date unavailable'}
+                        </Typography>
+                      </Box>
+                    </ListItem>
+                  ))
+                )}
+              </List>
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedSection === 'matchCenter' && (
+          <Suspense
+            fallback={(
+              <Card sx={{ borderRadius: 4, mb: 3 }}>
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary">Loading AI Match Center...</Typography>
+                  <LinearProgress sx={{ mt: 1.2 }} />
+                </CardContent>
+              </Card>
+            )}
+          >
+            <AiMatchCenter
+              jobs={recommendedJobs}
+              context={aiMatchContext}
+              onApplyNow={handleAiMatchApplyNow}
+              onSaveJob={handleAiMatchSaveJob}
+              onImproveMatch={handleAiMatchImproveMatch}
+              onResumeOptimizer={() => navigate('/dashboard/resume-review')}
+              onMockInterview={() => navigate('/dashboard/mock-interviews')}
+              onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
+            />
+          </Suspense>
+        )}
 
         <Dialog
           open={interactionModalOpen}

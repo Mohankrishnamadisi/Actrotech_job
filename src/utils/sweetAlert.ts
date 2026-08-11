@@ -1,8 +1,8 @@
 import SweetAlert from 'sweetalert2';
 
 const Swal = SweetAlert.mixin({
-  background: '#ffffff',
-  color: '#0f172a',
+  background: 'var(--color-surface)',
+  color: 'var(--color-text)',
   customClass: {
     popup: 'ac-sw-popup',
     title: 'ac-sw-title',

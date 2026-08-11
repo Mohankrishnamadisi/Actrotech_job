@@ -62,3 +62,14 @@
 .install-app-type1:hover::before {
   transform: translateY(-34px) scale(0) rotate(120deg);
 }
+
+.install-app-dark.install-app-type1::before {
+  background-color: #111827;
+  color: #ffffff;
+  border-color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.install-app-dark.install-app-type1:hover::after {
+  background: linear-gradient(90deg, #0f766e, #2563eb);
+}

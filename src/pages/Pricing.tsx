@@ -32,9 +32,12 @@ import { ROUTES } from '@constants/index';
 import toast from 'react-hot-toast';
 import { PaymentSection } from '@components/payments/PaymentSection';
 import { PaymentModal } from '@components/payments/PaymentModal';
+import { useTheme } from '@mui/material/styles';
 
 export const Pricing: React.FC = () => {
   const { user } = useAuthStore();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const [selectedPlanId, setSelectedPlanId] = useState(SUBSCRIPTION_PLANS[0]?.id || 'basic');
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'phonepe' | 'credit_card' | 'upi'>('razorpay');
@@ -250,7 +253,7 @@ export const Pricing: React.FC = () => {
         </Box>
 
         {/* Payment Section */}
-        <Box sx={{ mb: 8, background: '#FFFFFF', borderRadius: 4, p: 4, boxShadow: '0 12px 32px rgba(15,23,42,0.08)' }}>
+        <Box sx={{ mb: 8, background: isDarkMode ? '#0B0F17' : '#FFFFFF', color: isDarkMode ? '#FFFFFF' : undefined, borderRadius: 4, p: 4, boxShadow: isDarkMode ? '0 12px 32px rgba(0,0,0,0.42)' : '0 12px 32px rgba(15,23,42,0.08)' }}>
           <PaymentSection
             plan={selectedPlan}
             onPaymentSuccess={handlePaymentSuccess}
@@ -423,7 +426,7 @@ export const Pricing: React.FC = () => {
                       top: -12,
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      background: '#FFFFFF',
+                      background: isDarkMode ? '#111827' : '#FFFFFF',
                       color: '#667eea',
                       px: 2,
                       py: 0.5,
