@@ -1,47 +1,19 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Layout, Menu, Typography } from 'antd';
-import {
-  AppstoreOutlined,
-  BarChartOutlined,
-  BugOutlined,
-  CustomerServiceOutlined,
-  DashboardOutlined,
-  DatabaseOutlined,
-  DollarOutlined,
-  FileSearchOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  ToolOutlined,
-  ExperimentOutlined,
-  GlobalOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../constants';
-
-const { Sider } = Layout;
+import '../styles/fixedSideNav.css';
 
 const items = [
-  { label: 'Super Admin Dashboard', to: ROUTES.ADMIN_DASHBOARD, icon: <DashboardOutlined /> },
-  { label: 'Organizations', to: ROUTES.ADMIN_USERS, icon: <UserOutlined /> },
-  { label: 'Recruiters', to: ROUTES.ADMIN_RECRUITERS, icon: <TeamOutlined /> },
-  { label: 'Candidates', to: ROUTES.ADMIN_CANDIDATES, icon: <TeamOutlined /> },
-  { label: 'Jobs', to: ROUTES.ADMIN_JOBS, icon: <ToolOutlined /> },
-  { label: 'Applications', to: ROUTES.ADMIN_APPLICATIONS, icon: <FileSearchOutlined /> },
-  { label: 'Support Center', to: ROUTES.ADMIN_CUSTOMER_CARE, icon: <CustomerServiceOutlined /> },
-  { label: 'Communities', to: ROUTES.ADMIN_COMMUNITIES, icon: <GlobalOutlined /> },
-  { label: 'Subscriptions', to: ROUTES.ADMIN_SUBSCRIPTIONS, icon: <DatabaseOutlined /> },
-  { label: 'Billing Management', to: ROUTES.ADMIN_BILLING_MANAGEMENT, icon: <DollarOutlined /> },
-  { label: 'Platform Analytics', to: ROUTES.ADMIN_ANALYTICS, icon: <BarChartOutlined /> },
-  { label: 'Assessment Library', to: ROUTES.ADMIN_ASSESSMENT_LIBRARY, icon: <ExperimentOutlined /> },
-  { label: 'Global Settings', to: ROUTES.ADMIN_GLOBAL_SETTINGS, icon: <GlobalOutlined /> },
-  { label: 'Localization', to: ROUTES.ADMIN_LOCALIZATION, icon: <GlobalOutlined /> },
-  { label: 'Compliance', to: ROUTES.ADMIN_COMPLIANCE, icon: <SettingOutlined /> },
-  { label: 'Regional Management', to: ROUTES.ADMIN_REGIONAL_MANAGEMENT, icon: <TeamOutlined /> },
-  { label: 'Data Export', to: ROUTES.ADMIN_BULK_IMPORT, icon: <AppstoreOutlined /> },
-  { label: 'Moderation', to: ROUTES.ADMIN_DATA_INTEGRITY, icon: <BugOutlined /> },
-  { label: 'System Monitoring', to: ROUTES.ADMIN_SYSTEM_HEALTH, icon: <BarChartOutlined /> },
-  { label: 'Platform Settings', to: ROUTES.ADMIN_SETTINGS, icon: <SettingOutlined /> },
+  { label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD },
+  { label: 'Organizations', to: ROUTES.ADMIN_USERS },
+  { label: 'Recruiters', to: ROUTES.ADMIN_RECRUITERS },
+  { label: 'Candidates', to: ROUTES.ADMIN_CANDIDATES },
+  { label: 'Jobs', to: ROUTES.ADMIN_JOBS },
+  { label: 'Applications', to: ROUTES.ADMIN_APPLICATIONS },
+  { label: 'Support', to: ROUTES.ADMIN_CUSTOMER_CARE },
+  { label: 'Communities', to: ROUTES.ADMIN_COMMUNITIES },
+  { label: 'Subscriptions', to: ROUTES.ADMIN_SUBSCRIPTIONS },
+  { label: 'Settings', to: ROUTES.ADMIN_SETTINGS },
 ];
 
 type AdminSidebarProps = {
@@ -50,48 +22,36 @@ type AdminSidebarProps = {
   onCollapsedChange?: (collapsed: boolean) => void;
 };
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({
-  drawerWidth = 268,
-  collapsed = false,
-  onCollapsedChange,
-}) => {
-  const location = useLocation();
+const AdminSidebar: React.FC<AdminSidebarProps> = () => {
   const navigate = useNavigate();
 
-  const selected = React.useMemo(() => {
-    const match = items.find((item) => location.pathname.startsWith(item.to));
-    return match ? [match.to] : [ROUTES.ADMIN_DASHBOARD];
-  }, [location.pathname]);
-
-  const menuItems = items.map((it) => ({ key: it.to, icon: it.icon, label: it.label }));
+  const handleMouseEnter = React.useCallback(() => {
+    try { document.body.classList.add('nav-expanded'); } catch (e) {}
+  }, []);
+  const handleMouseLeave = React.useCallback(() => {
+    try { document.body.classList.remove('nav-expanded'); } catch (e) {}
+  }, []);
 
   return (
-    <Sider
-      width={drawerWidth}
-      collapsed={collapsed}
-      collapsible
-      onCollapse={(value) => onCollapsedChange?.(value)}
-      breakpoint="lg"
-      theme="light"
-      style={{
-        borderRight: '1px solid rgba(148, 163, 184, 0.18)',
-        boxShadow: '2px 0 20px rgba(15, 23, 42, 0.05)',
-      }}
-    >
-      <div style={{ height: 70, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? 0 : '0 18px', borderBottom: '1px solid rgba(148, 163, 184, 0.14)' }}>
-        <Typography.Title level={5} style={{ margin: 0, color: '#0f172a' }}>
-          {collapsed ? 'SA' : 'Super Admin'}
-        </Typography.Title>
-      </div>
-
-      <Menu
-        mode="inline"
-        selectedKeys={selected}
-        items={menuItems}
-        style={{ borderInlineEnd: 'none', paddingTop: 10 }}
-        onClick={({ key }) => navigate(String(key))}
-      />
-    </Sider>
+    <nav className="nav__cont" aria-label="Main navigation" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      <ul className="nav">
+        {items.map((it) => (
+          <li
+            className="nav__items"
+            key={it.to}
+            onClick={() => navigate(it.to)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate(it.to); }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden>
+              <circle cx="12" cy="12" r="10" fill="#90A4AE" />
+            </svg>
+            <a>{it.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 };
 

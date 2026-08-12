@@ -1,0 +1,106 @@
+/* Fixed dashboard sidebar that is collapsed by default and expands on hover */
+:root {
+  --dash-collapsed: 80px;
+  --dash-expanded: 300px;
+  --dash-gap: 130px;
+  --sidebar-width: var(--dash-collapsed);
+}
+
+body.nav-expanded {
+  --sidebar-width: var(--dash-expanded);
+  --dash-gap: 38px;
+}
+
+.dash-nav__cont {
+  position: fixed;
+  top: 80px;
+  left: 16px;
+  width: var(--dash-collapsed);
+  height: calc(100vh - 96px);
+  background: rgba(255,255,255,0.96);
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(15,23,42,0.08);
+  overflow: hidden;
+  transition: width .28s ease;
+  z-index: 90;
+}
+.dash-nav__cont:hover,
+body.nav-expanded .dash-nav__cont {
+  width: var(--dash-expanded);
+}
+
+.dash-nav__cont .dash-nav-inner {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.dash-nav__cont .sidebar-section-title,
+.dash-nav__cont .sidebar-button-label {
+  display: none;
+}
+
+.dash-nav__cont .dash-nav-button {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.dash-nav__cont .dash-nav-button .MuiButton-startIcon {
+  margin-right: 0;
+}
+
+body.nav-expanded .dash-nav__cont .sidebar-section-title,
+body.nav-expanded .dash-nav__cont .sidebar-button-label {
+  display: block;
+}
+
+body.nav-expanded .dash-nav__cont .dash-nav-button {
+  justify-content: flex-start;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+}
+
+body.nav-expanded .dash-nav__cont .dash-nav-button .MuiButton-startIcon {
+  margin-right: 0.875rem;
+}
+
+.dashboard-content {
+  transition: margin-left .28s ease, width .28s ease;
+  margin-left: calc(var(--sidebar-width) + var(--dash-gap));
+  width: calc(100% - var(--sidebar-width) - var(--dash-gap));
+  box-sizing: border-box;
+}
+
+body.nav-expanded .dashboard-content {
+  margin-left: calc(var(--sidebar-width) + var(--dash-gap));
+  width: calc(100% - var(--sidebar-width) - var(--dash-gap));
+}
+
+.footer-visible .dash-nav__cont {
+  width: 0 !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: width .28s ease, opacity .28s ease;
+}
+
+.footer-visible .dash-nav__cont:hover {
+  width: 0 !important;
+}
+
+.footer-visible .dashboard-content {
+  margin: 0 auto;
+  width: min(1200px, calc(100% - 32px));
+  max-width: 1200px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  body.nav-expanded .dashboard-content {
+    margin-left: 0;
+    width: 100%;
+  }
+}

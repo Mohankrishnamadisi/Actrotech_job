@@ -1,0 +1,97 @@
+/* Fixed Side Drawer Hover Navigation - adapted from provided styles */
+.nav__cont {
+  --collapsed-width: 80px;
+  --expanded-width: 200px;
+  position: fixed;
+  width: var(--collapsed-width);
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+  background-color: #202020;
+  overflow: hidden;
+  transition: width .28s ease;
+  cursor: pointer;
+  box-shadow: 4px 7px 10px rgba(0,0,0,.4);
+}
+.nav__cont:hover, .nav-expanded .nav__cont {
+  width: var(--expanded-width);
+}
+@media screen and (max-width: 599px) {
+  .nav__cont { --collapsed-width: 60px; }
+}
+
+.nav {
+  list-style-type: none;
+  color: white;
+  margin: 0;
+  padding-top: 1.5rem;
+}
+
+.nav__items {
+  padding: 1.2rem 0;
+  font-family: Roboto, sans-serif;
+  display: flex;
+  align-items: center;
+}
+.nav__items a {
+  position: relative;
+  display: block;
+  padding-left: 25px;
+  padding-right: 15px;
+  transition: all .3s ease;
+  margin-left: 25px;
+  margin-right: 10px;
+  text-decoration: none;
+  color: white;
+  font-weight: 300;
+  font-size: 1.05rem;
+}
+.nav__items a:after {
+  content: '';
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 2px;
+  background: radial-gradient(circle at 94.02% 88.03%, #54a4ff, transparent 100%);
+  opacity: 0;
+  transition: all .5s ease;
+  z-index: -10;
+}
+.nav__items:hover a:after {
+  opacity: 1;
+}
+
+.nav__items svg {
+  width: 26px;
+  height: 26px;
+  position: relative;
+  left: -25px;
+}
+@media screen and (min-width: 600px) {
+  .nav__items svg {
+    width: 32px;
+    height: 32px;
+    left: -15px;
+  }
+}
+
+/* Keep the adjacent layout pushed to the right.
+   The inner Ant Layout is the immediate sibling of the nav, so we
+   adjust its margin-left when the nav expands/collapses. */
+.nav__cont + .ant-layout,
+body .ant-layout {
+  margin-left: var(--collapsed-width);
+  transition: margin-left .28s ease;
+}
+body.nav-expanded .ant-layout,
+.nav__cont + .ant-layout.nav-expanded {
+  margin-left: var(--expanded-width);
+}
+
+/* Prefer body-driven expansion for reliability */
+body.nav-expanded .ant-layout {
+  margin-left: var(--expanded-width) !important;
+}

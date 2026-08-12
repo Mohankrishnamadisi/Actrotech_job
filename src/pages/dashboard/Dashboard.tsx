@@ -66,6 +66,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 
 import { Layout } from '@components/layout/Layout';
+import '../../styles/dashboardFixedNav.css';
 import { UnlockProButton } from '@components/common/UnlockProButton';
 import SupportWidget from '@components/common/SupportWidget';
 import { InstallApp } from '@components/InstallApp/InstallApp';
@@ -137,6 +138,7 @@ export const Dashboard: React.FC = () => {
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
   const [ticketNotifCount, setTicketNotifCount] = useState(0);
 
   const [profile, setProfile] = useState<any | null>(null);
@@ -455,28 +457,53 @@ export const Dashboard: React.FC = () => {
     return items.length > 0 ? items.slice(0, 4) : ['Your profile is strong. Keep refining your skills and résumé.'];
   }, [profile]);
 
-  const renderSidebar = () => (
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
+
+    const footerElement = document.querySelector('footer');
+    if (!footerElement) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
+
+    observer.observe(footerElement);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const renderSidebar = ({ drawerMode = false } = {}) => (
     <Box
-      sx={{
-        width: { xs: '100%', lg: 300 },
-        minWidth: { xs: '100%', lg: 300 },
-        background: 'rgba(255,255,255,0.96)',
-        borderRadius: { xs: 0, lg: '40px 40px 40px 40px' },
-        boxShadow: { xs: 'none', lg: '0 16px 36px rgba(15,23,42,0.08)' },
-        p: { xs: 0, lg: 2 },
-        position: { xs: 'static', lg: 'sticky' },
-        top: 90,
-        height: { xs: 'auto', lg: 'calc(100vh - 40px)' },
-        minHeight: { xs: 'auto', lg: 780 },
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        border: { xs: 'none', lg: '1px solid rgba(148,163,184,0.12)' },
-      }}
+      component="nav"
+      className={!drawerMode ? 'dash-nav__cont' : undefined}
+      aria-label="Dashboard navigation"
+      onMouseEnter={!drawerMode ? () => document.body.classList.add('nav-expanded') : undefined}
+      onMouseLeave={!drawerMode ? () => document.body.classList.remove('nav-expanded') : undefined}
+      sx={drawerMode ? { position: 'relative', width: '100%' } : undefined}
     >
+      <Box className="dash-nav-inner">
+      <Box
+        sx={{
+          width: '100%',
+          minWidth: 0,
+          background: 'transparent',
+          borderRadius: { xs: 0, lg: '20px' },
+          boxShadow: 'none',
+          p: { xs: 0, lg: 2 },
+          position: 'relative',
+          top: 0,
+          height: '100%',
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          border: { xs: 'none', lg: '1px solid rgba(148,163,184,0.12)' },
+        }}
+      >
       <Box sx={{ px: 2.2, py: 1.4, mb: 0.8 }} />
 
       <Box sx={{ px: 2.2, py: 1 }}>
-        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Dashboard</Typography>
+        <Typography className="sidebar-section-title" sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Dashboard</Typography>
         <Stack spacing={0.8}>
           {sidebarItems.map(({ label, icon: Icon, to, active, badge }) => (
             <Button
@@ -484,6 +511,7 @@ export const Dashboard: React.FC = () => {
               component={RouterLink}
               to={to}
               startIcon={<Icon fontSize="small" />}
+              className="dash-nav-button"
               sx={{
                 justifyContent: 'flex-start',
                 gap: 1.3,
@@ -499,7 +527,7 @@ export const Dashboard: React.FC = () => {
                 '&:hover': { background: active ? 'linear-gradient(90deg, rgba(37,99,235,0.14), rgba(191,219,254,0.2))' : '#f8fafc' },
               }}
             >
-              {label}
+              <span className="sidebar-button-label">{label}</span>
               {typeof badge === 'number' && badge > 0 && navBadge(badge)}
               {label === 'Jobs' && !badge && navBadge(3)}
             </Button>
@@ -511,51 +539,58 @@ export const Dashboard: React.FC = () => {
         <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Profile</Typography>
         <Stack spacing={0.8}>
           {profileItems.map(({ label, icon: Icon, to }) => (
-            <Button key={label} component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>{label}</Button>
+            <Button key={label} className="dash-nav-button" component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>
+              <span className="sidebar-button-label">{label}</span>
+            </Button>
           ))}
         </Stack>
       </Box>
 
       <Box sx={{ px: 2.2, py: 2 }}>
-        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Career Tools</Typography>
+        <Typography className="sidebar-section-title" sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Career Tools</Typography>
         <Stack spacing={0.8}>
           {toolsItems.map(({ label, icon: Icon, to }) => (
-            <Button key={label} component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>{label}</Button>
+            <Button key={label} className="dash-nav-button" component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>
+              <span className="sidebar-button-label">{label}</span>
+            </Button>
           ))}
         </Stack>
       </Box>
 
       <Box sx={{ px: 2.2, py: 2, mt: 'auto' }}>
-        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Other</Typography>
+        <Typography className="sidebar-section-title" sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Other</Typography>
         <Stack spacing={0.8}>
           {otherItems.map(({ label, icon: Icon, to, action }) => (
             <Button
               key={label}
+              className="dash-nav-button"
               component={action === 'logout' ? 'button' : RouterLink}
               to={action === 'logout' ? undefined : to}
               onClick={action === 'logout' ? handleSignout : undefined}
               startIcon={<Icon fontSize="small" />}
               sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}
             >
-              {label}
+              <span className="sidebar-button-label">{label}</span>
             </Button>
           ))}
         </Stack>
+      </Box>
+      </Box>
       </Box>
     </Box>
   );
 
   return (
     <Layout>
-      <Box sx={{ background: 'radial-gradient(circle at top left, rgba(59,130,246,0.08), transparent 28%), radial-gradient(circle at top right, rgba(124,58,237,0.08), transparent 26%), #F6F8FC', minHeight: '100vh', px: { xs: 1.5, md: 2.5 }, py: { xs: 2, md: 3 } }}>
+      <Box className={footerVisible ? 'dashboard-page footer-visible' : 'dashboard-page'} sx={{ background: 'radial-gradient(circle at top left, rgba(59,130,246,0.08), transparent 28%), radial-gradient(circle at top right, rgba(124,58,237,0.08), transparent 26%), #F6F8FC', minHeight: '100vh', px: { xs: 1.5, md: 2.5 }, py: { xs: 2, md: 3 } }}>
         <Drawer anchor="left" open={mobileNavOpen} onClose={() => setMobileNavOpen(false)}>
-          <Box sx={{ width: 280, height: '100%', background: '#fff' }}>{renderSidebar()}</Box>
+          <Box sx={{ width: 280, height: '100%', background: '#fff' }}>{renderSidebar({ drawerMode: true })}</Box>
         </Drawer>
 
-        <Box sx={{ maxWidth: 1560, mx: 'auto', display: 'flex', gap: { xs: 0, lg: 3 }, alignItems: 'flex-start' }}>
-          {!isMobile && renderSidebar()}
+        {!isMobile && renderSidebar()}
 
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box className="dashboard-content">
+          <Box sx={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-start' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
                 <Card sx={{ position: 'relative', overflow: 'hidden', borderRadius: 4.5, background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 34%, #4f46e5 66%, #7c3aed 100%)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 32px 60px rgba(79,70,229,0.24)' }}>
