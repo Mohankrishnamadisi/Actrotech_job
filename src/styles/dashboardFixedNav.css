@@ -34,36 +34,6 @@ body.nav-expanded .dash-nav__cont {
   overflow-y: auto;
 }
 
-.dash-nav__cont .sidebar-section-title,
-.dash-nav__cont .sidebar-button-label {
-  display: none;
-}
-
-.dash-nav__cont .dash-nav-button {
-  justify-content: center;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.dash-nav__cont .dash-nav-button .MuiButton-startIcon {
-  margin-right: 0;
-}
-
-body.nav-expanded .dash-nav__cont .sidebar-section-title,
-body.nav-expanded .dash-nav__cont .sidebar-button-label {
-  display: block;
-}
-
-body.nav-expanded .dash-nav__cont .dash-nav-button {
-  justify-content: flex-start;
-  padding-left: 1.2rem;
-  padding-right: 1.2rem;
-}
-
-body.nav-expanded .dash-nav__cont .dash-nav-button .MuiButton-startIcon {
-  margin-right: 0.875rem;
-}
-
 .dashboard-content {
   transition: margin-left .28s ease, width .28s ease;
   margin-left: calc(var(--sidebar-width) + var(--dash-gap));
