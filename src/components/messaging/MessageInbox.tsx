@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  Typography,
+} from '@mui/material';
+import {
+  DeleteOutline as DeleteOutlineIcon,
+} from '@mui/icons-material';
 import Swal from '@utils/sweetAlert';
 import { messagingService, Conversation } from '@services/messaging';
 import { userService } from '@services/api';
@@ -10,12 +18,37 @@ interface MessageInboxProps {
   userId: string;
   userRole: 'recruiter' | 'candidate';
   onSelectConversation: (conv: Conversation) => void;
+  selectedConversationId?: string;
 }
+
+const formatConversationTimestamp = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+const getInitials = (name?: string) => {
+  const safeName = (name || 'Unknown').trim();
+  if (!safeName) return 'U';
+
+  const parts = safeName.split(/\s+/).filter(Boolean).slice(0, 2);
+  if (parts.length === 0) return 'U';
+  return parts.map((part) => part[0]?.toUpperCase() || '').join('');
+};
 
 export const MessageInbox: React.FC<MessageInboxProps> = ({
   userId,
   userRole,
   onSelectConversation,
+  selectedConversationId,
 }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +61,6 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
     try {
       setLoading(true);
       const convs = await messagingService.getConversations(userId);
-      // Ensure we have participant names; if missing, try fetching profile as a fallback
       const normalized: Conversation[] = (convs || []).map((c: any) => ({
         id: c.id,
         participantId: c.participantId,
@@ -41,7 +73,6 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
         isInitiatedByRecruiter: c.isInitiatedByRecruiter || c.initiated_by_recruiter || false,
       }));
 
-      // Fetch missing names in parallel
       await Promise.all(
         normalized.map(async (c) => {
           const needsFallbackName = !c.participantName || c.participantName === 'Candidate' || c.participantName === 'Recruiter' || c.participantName === 'Unknown';
@@ -70,23 +101,25 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
 
   if (loading) {
     return (
-      <div style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+      <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
         Loading conversations...
-      </div>
+      </Box>
     );
   }
 
   if (conversations.length === 0) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-        <div style={{ marginBottom: 12 }}>No conversations yet</div>
+      <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+        <Typography variant="subtitle2" sx={{ color: '#0f172a', fontWeight: 700, mb: 1 }}>
+          No conversations yet
+        </Typography>
         {userRole === 'recruiter' && (
-          <div style={{ fontSize: 13 }}>Start messaging candidates to build relationships</div>
+          <Typography variant="body2">Start messaging candidates to build relationships</Typography>
         )}
         {userRole === 'candidate' && (
-          <div style={{ fontSize: 13 }}>Wait for recruiters to message you</div>
+          <Typography variant="body2">Wait for recruiters to message you</Typography>
         )}
-      </div>
+      </Box>
     );
   }
 
@@ -147,100 +180,180 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
   };
 
   return (
-    <div>
-      <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(15,23,42,0.08)', marginBottom: 10 }}>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>Messages</div>
-        <Button size="small" variant="outlined" onClick={handleDeleteAll}>
-          Delete all
-        </Button>
-      </div>
-      {conversations.map((conv, idx) => (
-        <motion.div
-          key={conv.id}
-          initial={{ opacity: 0, x: -12 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: idx * 0.05 }}
-          onClick={() => onSelectConversation(conv)}
-          style={{
-            padding: 14,
-            marginBottom: 8,
-            borderRadius: 12,
-            border: '1px solid rgba(15,23,42,0.06)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = 'rgba(79,70,229,0.04)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+    <Box>
+      <Box
+        sx={{
+          px: 2,
+          py: 1.5,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 1,
+          borderBottom: '1px solid rgba(148, 163, 184, 0.18)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(239,246,255,0.72))',
+        }}
+      >
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0f172a' }}>
+            Inbox
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {conversations.length} conversation{conversations.length === 1 ? '' : 's'}
+          </Typography>
+        </Box>
+
+        <Button
+          size="small"
+          variant="text"
+          onClick={handleDeleteAll}
+          startIcon={<DeleteOutlineIcon fontSize="small" />}
+          sx={{
+            minWidth: 'auto',
+            color: '#dc2626',
+            borderRadius: 2,
+            px: 1,
+            py: 0.5,
+            fontWeight: 700,
+            textTransform: 'none',
+            '&:hover': { background: 'rgba(220,38,38,0.06)' },
           }}
         >
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div
+          Clear all
+        </Button>
+      </Box>
+
+      <Box sx={{ p: 1.25 }}>
+        {conversations.map((conv, idx) => {
+          const isSelected = selectedConversationId === conv.id;
+
+          return (
+            <motion.div
+              key={conv.id}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.04 }}
+              onClick={() => onSelectConversation(conv)}
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: conv.participantAvatar
-                  ? `url(${conv.participantAvatar}) center/cover`
-                  : 'linear-gradient(135deg,#4F46E5,#7C3AED)',
-                flexShrink: 0,
+                position: 'relative',
+                cursor: 'pointer',
+                marginBottom: 8,
               }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 4 }}>
-                <div style={{ fontWeight: 700, color: 'var(--color-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.participantName || 'Unknown'}</div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                  {(() => {
-                    const dt = new Date(conv.lastMessageTime);
-                    return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleString();
-                  })()}
-                </div>
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: 'var(--color-text-secondary)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {conv.lastMessage}
-              </div>
-            </div>
-            {conv.unreadCount > 0 && (
-              <div
-                style={{
-                  minWidth: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg,#4F46E5,#7C3AED)',
-                  color: '#fff',
+            >
+              <Box
+                sx={{
                   display: 'flex',
+                  gap: 1.25,
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 11,
-                  fontWeight: 700,
+                  p: 1.25,
+                  borderRadius: 3,
+                  border: isSelected ? '1px solid rgba(59,130,246,0.25)' : '1px solid rgba(148,163,184,0.18)',
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(59,130,246,0.10), rgba(124,58,237,0.06))'
+                    : 'rgba(255,255,255,0.7)',
+                  boxShadow: isSelected ? '0 10px 18px rgba(59,130,246,0.08)' : 'none',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    background: isSelected ? 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(124,58,237,0.08))' : 'rgba(148,163,184,0.05)',
+                    transform: 'translateY(-1px)',
+                  },
                 }}
               >
-                {conv.unreadCount}
-              </div>
-            )}
-            <div style={{ marginLeft: 8 }}>
-              <DeleteActionButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteConversation(conv.id);
-                }}
-                ariaLabel="delete conversation"
-              />
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </div>
+                <Box
+                  sx={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    background: conv.participantAvatar
+                      ? `url(${conv.participantAvatar}) center/cover no-repeat`
+                      : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 800,
+                    border: '1px solid rgba(255,255,255,0.7)',
+                  }}
+                >
+                  {!conv.participantAvatar && getInitials(conv.participantName)}
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: 800,
+                        color: '#0f172a',
+                        lineHeight: 1.2,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {conv.participantName || 'Unknown'}
+                    </Typography>
+
+                    {conv.unreadCount > 0 && (
+                      <Chip
+                        label={conv.unreadCount}
+                        size="small"
+                        sx={{
+                          height: 20,
+                          minWidth: 20,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                          color: '#fff',
+                          '& .MuiChip-label': { px: 0.75 },
+                        }}
+                      />
+                    )}
+                  </Box>
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      lineHeight: 1.4,
+                      mb: 0.5,
+                    }}
+                  >
+                    {conv.lastMessage || 'No messages yet'}
+                  </Typography>
+
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {formatConversationTimestamp(conv.lastMessageTime)}
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    opacity: 0.8,
+                    transition: 'opacity 0.2s ease',
+                    '&:hover': { opacity: 1 },
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <DeleteActionButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteConversation(conv.id);
+                    }}
+                    ariaLabel="delete conversation"
+                  />
+                </Box>
+              </Box>
+            </motion.div>
+          );
+        })}
+      </Box>
+    </Box>
   );
 };
 

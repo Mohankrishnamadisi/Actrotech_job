@@ -2,7 +2,7 @@
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence } from 'framer-motion';
 
@@ -70,6 +70,29 @@ import PlatformCommunities from './admin/pages/PlatformCommunities';
 import GlobalEnterprisePlatform from './admin/pages/GlobalEnterprisePlatform';
 import { RecruiterSubscriptionPage } from '@pages/recruiter/RecruiterSubscriptionPage';
 import AdminBillingManagement from './admin/pages/AdminBillingManagement';
+
+const BUILD_VERSION_STORAGE_KEY = 'actro_build_id';
+
+const getLatestBuildId = async () => {
+  try {
+    const response = await fetch('/build-meta.json', {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
+
+    if (!response.ok) return null;
+    const payload = await response.json();
+    return typeof payload?.buildId === 'string' ? payload.buildId : null;
+  } catch (error) {
+    console.warn('Failed to fetch deploy build metadata', error);
+    return null;
+  }
+};
+
+const refreshNow = () => {
+  window.location.reload();
+};
+
 const RoleDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const { subscription, loading: subscriptionLoading } = useSubscription(user?.id || null);
@@ -341,6 +364,94 @@ const AppContent: React.FC = () => {
   const { setUser, setLoading, user } = useAuthStore();
 
   useNotificationAlerts(user?.id || null);
+
+  useEffect(() => {
+    let active = true;
+
+    const showUpdateToast = (nextBuildId: string) => {
+      const storedBuildId = localStorage.getItem(BUILD_VERSION_STORAGE_KEY);
+      if (!storedBuildId) {
+        localStorage.setItem(BUILD_VERSION_STORAGE_KEY, nextBuildId);
+        return;
+      }
+
+      if (storedBuildId === nextBuildId) return;
+
+      localStorage.setItem(BUILD_VERSION_STORAGE_KEY, nextBuildId);
+      toast.custom(
+        (t) => (
+          <div style={{
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
+            background: '#111827',
+            color: '#fff',
+            borderRadius: 12,
+            padding: '10px 14px',
+            boxShadow: '0 18px 30px rgba(15, 23, 42, 0.28)',
+            maxWidth: 360,
+          }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 2 }}>New version available</div>
+              <div style={{ fontSize: 12, opacity: 0.82 }}>Refresh to use the latest build.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                toast.dismiss(t.id);
+                refreshNow();
+              }}
+              style={{
+                border: 'none',
+                borderRadius: 8,
+                background: '#2563eb',
+                color: '#fff',
+                padding: '8px 12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Refresh Now
+            </button>
+          </div>
+        ),
+        { id: 'app-update-toast', duration: Infinity, position: 'bottom-right' }
+      );
+    };
+
+    const checkForUpdatedBuild = async () => {
+      const latestBuildId = await getLatestBuildId();
+      if (!latestBuildId || !active) return;
+      showUpdateToast(latestBuildId);
+    };
+
+    const onSwUpdateAvailable = () => {
+      if (!active) return;
+      getLatestBuildId().then((latestBuildId) => {
+        if (latestBuildId) showUpdateToast(latestBuildId);
+      });
+    };
+
+    checkForUpdatedBuild();
+    const timer = window.setInterval(checkForUpdatedBuild, 60000);
+    window.addEventListener('app-sw-update-available', onSwUpdateAvailable);
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('app-sw-update-available', onSwUpdateAvailable);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.update().catch(() => undefined);
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (!user && themeMode === 'dark') {

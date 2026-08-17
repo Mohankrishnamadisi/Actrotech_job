@@ -1,4 +1,10 @@
 import React, { useState, useRef } from 'react';
+import { Box, IconButton, TextField } from '@mui/material';
+import {
+  AttachFile as AttachFileIcon,
+  Send as SendIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
 import { messagingService } from '@services/messaging';
 
 interface ComposeMessageProps {
@@ -43,43 +49,42 @@ export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, 
   };
 
   return (
-    <div>
-      {/* Attachments preview */}
+    <Box>
       {attachments.length > 0 && (
-        <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <Box sx={{ mb: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
           {attachments.map((attach, idx) => (
-            <div
+            <Box
               key={idx}
-              style={{
+              sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '8px 12px',
-                background: 'rgba(79,70,229,0.06)',
-                borderRadius: 8,
+                gap: 1,
+                px: 1.25,
+                py: 0.85,
+                background: 'rgba(37,99,235,0.06)',
+                border: '1px solid rgba(37,99,235,0.12)',
+                borderRadius: 2,
                 fontSize: 13,
+                color: '#0f172a',
               }}
             >
-              <span>📎 {attach.split('/').pop()}</span>
-              <button
+              <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                📎 {attach.split('/').pop()}
+              </Box>
+              <IconButton
+                size="small"
                 onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--color-accent)',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                }}
+                sx={{ color: '#475569' }}
               >
-                ✕
-              </button>
-            </div>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
           ))}
-        </div>
+        </Box>
       )}
 
-      {/* Input area */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
         <input
           ref={fileInputRef}
           type="file"
@@ -87,62 +92,75 @@ export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, 
           onChange={handleFileSelect}
           style={{ display: 'none' }}
         />
-        <button
+
+        <IconButton
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          style={{
-            background: 'rgba(79,70,229,0.1)',
-            border: '1px solid rgba(79,70,229,0.2)',
-            borderRadius: 8,
-            padding: '10px 12px',
-            cursor: 'pointer',
-            fontWeight: 700,
-            color: 'var(--color-primary)',
+          sx={{
+            width: 42,
+            height: 42,
+            borderRadius: 2,
+            background: 'rgba(59,130,246,0.08)',
+            color: '#2563eb',
+            border: '1px solid rgba(59,130,246,0.12)',
+            '&:hover': { background: 'rgba(59,130,246,0.12)' },
           }}
         >
-          {uploading ? '📤' : '📎'}
-        </button>
+          <AttachFileIcon fontSize="small" />
+        </IconButton>
 
-        <textarea
+        <TextField
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message..."
+          placeholder="Type a message..."
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleSend();
             }
           }}
-          style={{
-            flex: 1,
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid rgba(15,23,42,0.06)',
-            fontFamily: 'inherit',
-            resize: 'none',
-            minHeight: 40,
-            maxHeight: 100,
+          multiline
+          minRows={1}
+          maxRows={4}
+          fullWidth
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 3,
+              background: '#fff',
+              minHeight: 46,
+              fontSize: 14,
+              '& fieldset': {
+                borderColor: 'rgba(148, 163, 184, 0.24)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#60a5fa',
+                boxShadow: '0 0 0 3px rgba(96,165,250,0.12)',
+              },
+            },
           }}
         />
 
-        <button
+        <IconButton
           onClick={handleSend}
           disabled={!message.trim() && attachments.length === 0}
-          style={{
-            background: 'linear-gradient(135deg,#4F46E5,#7C3AED)',
+          sx={{
+            width: 46,
+            height: 46,
+            borderRadius: 2.5,
+            background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
             color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            padding: '10px 18px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            opacity: !message.trim() && attachments.length === 0 ? 0.5 : 1,
+            boxShadow: '0 12px 24px rgba(59,130,246,0.22)',
+            '&:hover': { background: 'linear-gradient(135deg, #1d4ed8, #4338ca)' },
+            '&.Mui-disabled': { background: 'rgba(148,163,184,0.25)', color: '#fff', boxShadow: 'none' },
           }}
         >
-          Send
-        </button>
-      </div>
-    </div>
+          <SendIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </Box>
   );
 };
 
