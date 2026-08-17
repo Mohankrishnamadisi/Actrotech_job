@@ -10,9 +10,10 @@ import { messagingService } from '@services/messaging';
 interface ComposeMessageProps {
   conversationId: string;
   onSend: (content: string, attachments?: string[]) => void;
+  disabled?: boolean;
 }
 
-export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, onSend }) => {
+export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, onSend, disabled = false }) => {
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -95,7 +96,7 @@ export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, 
 
         <IconButton
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || disabled}
           sx={{
             width: 42,
             height: 42,
@@ -112,11 +113,12 @@ export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, 
         <TextField
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder={disabled ? 'This conversation is blocked' : 'Type a message...'}
+          disabled={disabled}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              handleSend();
+              if (!disabled) handleSend();
             }
           }}
           multiline
@@ -145,7 +147,7 @@ export const ComposeMessage: React.FC<ComposeMessageProps> = ({ conversationId, 
 
         <IconButton
           onClick={handleSend}
-          disabled={!message.trim() && attachments.length === 0}
+          disabled={disabled || (!message.trim() && attachments.length === 0)}
           sx={{
             width: 46,
             height: 46,

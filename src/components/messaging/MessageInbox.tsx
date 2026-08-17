@@ -71,6 +71,7 @@ export const MessageInbox: React.FC<MessageInboxProps> = ({
         lastMessageTime: c.lastMessageTime,
         unreadCount: c.unreadCount || 0,
         isInitiatedByRecruiter: c.isInitiatedByRecruiter || c.initiated_by_recruiter || false,
+        isBlocked: !!c.isBlocked,
       }));
 
       await Promise.all(

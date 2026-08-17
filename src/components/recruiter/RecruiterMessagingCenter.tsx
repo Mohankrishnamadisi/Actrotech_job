@@ -37,6 +37,7 @@ import {
   Block as BlockIcon,
   Delete as DeleteIcon,
   Download as DownloadIcon,
+  Edit as EditIcon,
   Event as EventIcon,
   FileUpload as FileUploadIcon,
   FilterAlt as FilterAltIcon,
@@ -470,6 +471,10 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
   const [composerAttachments, setComposerAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editMessageContent, setEditMessageContent] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [emojiAnchorEl, setEmojiAnchorEl] = useState<HTMLElement | null>(null);
   const [aiAnchorEl, setAiAnchorEl] = useState<HTMLElement | null>(null);
   const [conversationMenuAnchor, setConversationMenuAnchor] = useState<HTMLElement | null>(null);
@@ -727,7 +732,7 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
         })
       );
 
-      const visibleRows = enrichedRows.filter((row) => !row.meta.blocked);
+      const visibleRows = enrichedRows;
 
       visibleRows.sort((a, b) => {
         const pinA = a.meta.pinned ? 1 : 0;
@@ -912,6 +917,11 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
       return;
     }
 
+    if (activeConversation?.isBlocked || activeConversation?.meta.blocked) {
+      toast.error('This conversation is blocked. Unblock the candidate before sending a new message.');
+      return;
+    }
+
     try {
       await messagingService.sendMessage(recruiterId, targetId, text, attachments, 'recruiter');
       setComposerText('');
@@ -1043,13 +1053,33 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
     }
 
     if (action === 'block') {
-      recruiterSettingsService.upsertBlockedCandidate(recruiterId, {
-        candidateId: row.participantId,
-        name: row.participantName,
-      });
-      updateConversationMeta(row.id, { blocked: true });
-      toast.success('Candidate blocked from messaging');
-      await loadConversations();
+      try {
+        await messagingService.blockConversation(recruiterId, row.id, 'Recruiter blocked candidate from messaging');
+        recruiterSettingsService.upsertBlockedCandidate(recruiterId, {
+          candidateId: row.participantId,
+          name: row.participantName,
+        });
+        updateConversationMeta(row.id, { blocked: true });
+        toast.success('Candidate blocked from messaging');
+        await loadConversations();
+      } catch (error) {
+        console.error('Failed to block candidate', error);
+        toast.error(error instanceof Error ? error.message : 'Failed to block candidate');
+      }
+      return;
+    }
+
+    if (action === 'unblock') {
+      try {
+        await messagingService.unblockConversation(recruiterId, row.id);
+        recruiterSettingsService.removeBlockedCandidate(recruiterId, row.participantId);
+        updateConversationMeta(row.id, { blocked: false });
+        toast.success('Candidate unblocked');
+        await loadConversations();
+      } catch (error) {
+        console.error('Failed to unblock candidate', error);
+        toast.error(error instanceof Error ? error.message : 'Failed to unblock candidate');
+      }
       return;
     }
 
@@ -1576,50 +1606,280 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
     </>
   );
 
+  const handleEditMessageClick = (message: Message) => {
+    setEditingMessageId(message.id);
+    setEditMessageContent(message.content);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditMessageSubmit = async () => {
+    if (!editingMessageId || !editMessageContent.trim()) {
+      setEditDialogOpen(false);
+      return;
+    }
+
+    try {
+      const updatedMessage = await messagingService.editMessage(editingMessageId, editMessageContent.trim());
+      setMessagesByConversation((prev) => ({
+        ...prev,
+        [selectedConversationId]: (prev[selectedConversationId] || []).map((msg) =>
+          msg.id === editingMessageId ? updatedMessage : msg
+        ),
+      }));
+      setEditDialogOpen(false);
+      setEditingMessageId(null);
+      setEditMessageContent('');
+      toast.success('Message updated');
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      toast.error('Failed to update message');
+    }
+  };
+
+  const handleEditMessageCancel = () => {
+    setEditDialogOpen(false);
+    setEditingMessageId(null);
+    setEditMessageContent('');
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      await messagingService.deleteMessage(messageId);
+      setMessagesByConversation((prev) => ({
+        ...prev,
+        [selectedConversationId]: (prev[selectedConversationId] || []).filter((msg) => msg.id !== messageId),
+      }));
+      toast.success('Message deleted');
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      toast.error('Failed to delete message');
+    }
+  };
+
   const renderMessageRow = (message: Message, previous: Message | null) => {
     const isMine = message.senderId === recruiterId;
     const currentDate = new Date(message.createdAt);
     const previousDate = previous ? new Date(previous.createdAt) : null;
     const showDateSeparator = !previousDate || !isSameDay(previousDate, currentDate);
+    const senderChanged = !previous || previous.senderId !== message.senderId;
+    const spacingGap = senderChanged ? 1.2 : 0.6;
 
     return (
       <React.Fragment key={message.id}>
         {showDateSeparator && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 1 }}>
-            <Chip size="small" label={format(currentDate, 'dd MMM yyyy')} />
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 1.5 }}>
+            <Chip size="small" label={format(currentDate, 'dd MMM yyyy')} sx={{ fontSize: '0.75rem' }} />
           </Box>
         )}
-        <Box sx={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', mb: 0.75 }}>
+        <Box
+          onMouseEnter={() => setHoveredMessageId(message.id)}
+          onMouseLeave={() => setHoveredMessageId(null)}
+          sx={{
+            display: 'flex',
+            justifyContent: isMine ? 'flex-end' : 'flex-start',
+            mb: spacingGap,
+          }}
+        >
           <Box
             sx={{
-              maxWidth: '78%',
-              bgcolor: isMine ? `${themeColors.primary}` : '#F3F4F6',
-              color: isMine ? '#fff' : themeColors.text.primary,
-              borderRadius: 1.5,
-              p: 1,
-              border: isMine ? 'none' : `1px solid ${themeColors.border}`,
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: 0.75,
+              width: 'fit-content',
+              maxWidth: { xs: '88%', sm: '75%', md: '68%' },
             }}
           >
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{message.content}</Typography>
-            {message.attachments && message.attachments.length > 0 && (
-              <Stack spacing={0.5} sx={{ mt: 0.75 }}>
-                {message.attachments.map((attachment, idx) => (
-                  <Typography key={`${message.id}-attachment-${idx}`} variant="caption">
-                    <a href={attachment} target="_blank" rel="noreferrer" style={{ color: isMine ? '#fff' : themeColors.primary }}>
-                      Attachment {idx + 1}
-                    </a>
-                  </Typography>
-                ))}
-              </Stack>
+            {isMine && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  minWidth: 'fit-content',
+                  px: 0.5,
+                  opacity: hoveredMessageId === message.id ? 1 : 0,
+                  transition: 'opacity 0.2s ease',
+                  cursor: 'pointer',
+                  pointerEvents: hoveredMessageId === message.id ? 'auto' : 'none',
+                }}
+              >
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteMessage(message.id)}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    color: '#ef4444',
+                    '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.08)' },
+                  }}
+                  title="Delete message"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => handleEditMessageClick(message)}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    color: '#2563eb',
+                    '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.08)' },
+                  }}
+                  title="Edit message"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Box>
             )}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mt: 0.5 }}>
-              <Typography variant="caption" sx={{ opacity: 0.85 }}>{format(currentDate, 'hh:mm a')}</Typography>
-              {isMine && (
-                <Typography variant="caption" sx={{ opacity: 0.85 }}>
-                  {message.isRead ? 'Read' : 'Sent'}
+            <Box
+              sx={{
+                flex: 1,
+                p: '10px 14px',
+                borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                background: isMine
+                  ? themeColors.primary
+                  : '#f1f5f9',
+                color: isMine ? '#fff' : themeColors.text.primary,
+                boxShadow: isMine
+                  ? `0 4px 12px ${themeColors.primary}20`
+                  : '0 2px 8px rgba(15, 23, 42, 0.04)',
+                border: isMine ? 'none' : `1px solid ${themeColors.border}`,
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {message.content && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.95rem',
+                    lineHeight: 1.5,
+                    mb: message.attachments?.length ? 1 : 0,
+                  }}
+                >
+                  {message.content}
                 </Typography>
               )}
+
+              {message.attachments && message.attachments.length > 0 && (
+                <Stack spacing={0.75} sx={{ mb: 0.75 }}>
+                  {message.attachments.map((attach, idx) => {
+                    const fileName = attach.split('/').pop() || `Attachment ${idx + 1}`;
+                    const fileExt = fileName.split('.').pop()?.toLowerCase() || 'file';
+                    let fileType = 'File';
+                    let icon = '📄';
+
+                    if (['pdf'].includes(fileExt)) {
+                      fileType = 'PDF';
+                      icon = '📄';
+                    } else if (['doc', 'docx'].includes(fileExt)) {
+                      fileType = 'Document';
+                      icon = '📝';
+                    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                      fileType = 'Image';
+                      icon = '🖼️';
+                    } else if (['zip', 'rar', '7z'].includes(fileExt)) {
+                      fileType = 'Archive';
+                      icon = '📦';
+                    }
+
+                    return (
+                      <Box
+                        key={`${message.id}-attachment-${idx}`}
+                        component="a"
+                        href={attach}
+                        target="_blank"
+                        rel="noreferrer"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          p: '8px 12px',
+                          borderRadius: '10px',
+                          background: isMine
+                            ? 'rgba(255, 255, 255, 0.15)'
+                            : 'rgba(37, 99, 235, 0.08)',
+                          border: isMine
+                            ? '1px solid rgba(255, 255, 255, 0.25)'
+                            : '1px solid rgba(37, 99, 235, 0.2)',
+                          color: isMine ? '#fff' : '#2563eb',
+                          textDecoration: 'none',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            background: isMine
+                              ? 'rgba(255, 255, 255, 0.25)'
+                              : 'rgba(37, 99, 235, 0.15)',
+                            transform: 'translateY(-1px)',
+                          },
+                        }}
+                      >
+                        <Box sx={{ fontSize: '1rem', flexShrink: 0 }}>{icon}</Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              fontWeight: 600,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              fontSize: '0.8rem',
+                            }}
+                          >
+                            {fileName}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              opacity: 0.8,
+                              fontSize: '0.7rem',
+                            }}
+                          >
+                            {fileType}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ fontSize: '0.95rem', flexShrink: 0 }}>↓</Box>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              )}
+
+              <Box
+                sx={{
+                  mt: message.content || message.attachments?.length ? 0.5 : 0,
+                  fontSize: '0.75rem',
+                  opacity: isMine ? 0.7 : 0.6,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                  fontWeight: 500,
+                }}
+              >
+                <span>{format(currentDate, 'hh:mm a')}</span>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25 }}>
+                  {isMine && <span>{message.isRead ? 'Read' : 'Sent'}</span>}
+                  {message.updatedAt && message.updatedAt !== message.createdAt && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: '0.65rem',
+                        opacity: 0.7,
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      (edited)
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             </Box>
+
+            {!isMine && <Box sx={{ width: 20, flexShrink: 0 }} />}
           </Box>
         </Box>
       </React.Fragment>
@@ -1816,6 +2076,20 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
 
                 {/* Row 2: Primary action buttons — all same height, no wrap */}
                 <Box sx={{ display: 'flex', gap: 0.75, mb: 1, flexWrap: 'nowrap', overflowX: 'auto', pb: 0.25 }}>
+                  <Button
+                    size="small"
+                    variant={selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'contained' : 'outlined'}
+                    color="error"
+                    startIcon={<BlockIcon sx={{ fontSize: '0.85rem !important' }} />}
+                    onClick={async () => {
+                      if (!selectedConversation) return;
+                      const action = selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'unblock' : 'block';
+                      await handleConversationAction(action, selectedConversation);
+                    }}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                  >
+                    {selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'Unblock Candidate' : 'Block Candidate'}
+                  </Button>
                   <Button size="small" variant="outlined" startIcon={<PersonIcon sx={{ fontSize: '0.85rem !important' }} />}
                     sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
                     onClick={() => { if (!candidateContext) { toast.error('Candidate profile unavailable'); return; } toast.success(`${candidateContext.candidateName}${candidateContext.headline ? ` · ${candidateContext.headline}` : ''}`); }}>
@@ -1876,7 +2150,7 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 </Box>
               </Box>
 
-              <Box sx={{ flex: 1, overflowY: 'auto', p: 2, bgcolor: '#fafafa', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Box sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.5, sm: 2.5 }, py: 2, bgcolor: '#fafafa', display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                 {loadingMessages && <LinearProgress sx={{ mb: 1, borderRadius: 1 }} />}
                 {!loadingMessages && selectedMessages.length === 0 && (
                   <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', py: 8 }}>
@@ -1886,7 +2160,7 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                   </Box>
                 )}
                 {selectedMessages.map((message, idx) => renderMessageRow(message, idx > 0 ? selectedMessages[idx - 1] : null))}
-                {typing && <Typography variant="caption" sx={{ color: '#94a3b8', px: 1 }}>typing...</Typography>}
+                {typing && <Typography variant="caption" sx={{ color: '#94a3b8', px: 1, fontSize: '0.75rem' }}>typing...</Typography>}
                 <div ref={messagesEndRef} />
               </Box>
 
@@ -1905,10 +2179,11 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 <Box sx={{ px: 2, pt: 1.25 }}>
                   <TextField
                     fullWidth multiline minRows={2} maxRows={5}
-                    placeholder="Type your message…"
+                    placeholder={selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'This conversation is blocked' : 'Type your message…'}
                     value={composerText}
+                    disabled={!!(selectedConversation?.isBlocked || selectedConversation?.meta.blocked)}
                     onChange={(event) => { setComposerText(event.target.value); setTyping(event.target.value.trim().length > 0); }}
-                    onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }}
+                    onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (!(selectedConversation?.isBlocked || selectedConversation?.meta.blocked)) void sendMessage(); } }}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: '#f8fafc', fontSize: '0.9rem' } }}
                   />
                 </Box>
@@ -1927,7 +2202,7 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                     <Typography variant="caption" sx={{ color: '#cbd5e1', lineHeight: '34px' }}>PDF, DOC, Images, ZIP ≤ {MAX_FILE_MB}MB</Typography>
                   </Stack>
                   <Button variant="contained" endIcon={<SendIcon />}
-                    disabled={(!composerText.trim() && composerAttachments.length === 0) || uploading}
+                    disabled={!!(selectedConversation?.isBlocked || selectedConversation?.meta.blocked) || (!composerText.trim() && composerAttachments.length === 0) || uploading}
                     onClick={() => void sendMessage()}
                     sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 700, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, px: 2.5 }}>
                     Send
@@ -1982,9 +2257,12 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 }}><MarkEmailUnreadIcon fontSize="small" sx={{ mr: 1 }} />Mark Unread</MenuItem>
                 <MenuItem onClick={async () => {
                   const row = conversations.find((item) => item.id === conversationMenuId);
-                  if (row) await handleConversationAction('block', row);
+                  if (row) {
+                    const action = row.isBlocked || row.meta.blocked ? 'unblock' : 'block';
+                    await handleConversationAction(action, row);
+                  }
                   setConversationMenuAnchor(null);
-                }}><BlockIcon fontSize="small" sx={{ mr: 1 }} />Block Candidate</MenuItem>
+                }}><BlockIcon fontSize="small" sx={{ mr: 1 }} />{conversations.find((item) => item.id === conversationMenuId)?.isBlocked || conversations.find((item) => item.id === conversationMenuId)?.meta.blocked ? 'Unblock Candidate' : 'Block Candidate'}</MenuItem>
                 <MenuItem onClick={async () => {
                   const row = conversations.find((item) => item.id === conversationMenuId);
                   if (row) await handleConversationAction('delete', row);
@@ -2153,14 +2431,16 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
               </Stack>
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: 'auto', p: 2, bgcolor: '#FAFAFC' }}>
+            <Box sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.5, sm: 2.5 }, py: 2, bgcolor: '#FAFAFC', display: 'flex', flexDirection: 'column', gap: 0.75 }}>
               {selectedMessages.length === 0 && (
-                <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>No messages yet.</Typography>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>No messages yet.</Typography>
+                </Box>
               )}
               {selectedMessages.map((message, idx) => renderMessageRow(message, idx > 0 ? selectedMessages[idx - 1] : null))}
               {typing && (
-                <Typography variant="caption" sx={{ color: themeColors.text.secondary }}>
-                  Typing indicator: composing message...
+                <Typography variant="caption" sx={{ color: themeColors.text.secondary, fontSize: '0.75rem' }}>
+                  Typing...
                 </Typography>
               )}
               <div ref={messagesEndRef} />
@@ -2224,6 +2504,71 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
             </Box>
           </Box>
         </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleEditMessageCancel}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: '#0f172a', pb: 1.5 }}>
+          Edit Message
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            value={editMessageContent}
+            onChange={(e) => setEditMessageContent(e.target.value)}
+            placeholder="Edit your message..."
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1.5,
+                '&:hover fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={handleEditMessageCancel}
+            variant="outlined"
+            sx={{
+              color: '#475569',
+              borderColor: 'rgba(148, 163, 184, 0.3)',
+              '&:hover': {
+                borderColor: '#2563eb',
+                bgcolor: 'rgba(37, 99, 235, 0.04)',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditMessageSubmit}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+              color: '#fff',
+              fontWeight: 600,
+              '&:hover': {
+                opacity: 0.9,
+              },
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Dialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} fullWidth maxWidth="sm">

@@ -7,6 +7,7 @@ export interface Message {
   content: string;
   attachments?: string[];
   createdAt: string;
+  updatedAt?: string;
   isRead: boolean;
 }
 
@@ -20,6 +21,7 @@ export interface Conversation {
   lastMessageTime: string;
   unreadCount: number;
   isInitiatedByRecruiter: boolean;
+  isBlocked?: boolean;
 }
 
 const isGenericDisplayName = (value: unknown): boolean => {
@@ -123,6 +125,11 @@ export const messagingService = {
         throw new Error('Unable to resolve conversation id');
       }
 
+      const isBlocked = await this.getConversationBlockStatus(conversation.id);
+      if (isBlocked) {
+        throw new Error('This conversation is blocked and cannot receive new messages');
+      }
+
       console.log('Inserting message with conversation_id', conversation.id);
       const { data, error } = await supabase
         .from('messages')
@@ -145,6 +152,93 @@ export const messagingService = {
       console.error('Send message error:', error);
       throw error;
     }
+  },
+
+  async getConversationBlockStatus(conversationId: string) {
+    if (!conversationId) return false;
+    try {
+      const { data, error } = await supabase
+        .from('conversation_blocks')
+        .select('id')
+        .eq('conversation_id', conversationId)
+        .eq('active', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Failed to load conversation block status', error);
+        return false;
+      }
+
+      return !!data?.id;
+    } catch (error) {
+      console.warn('Failed to check conversation block status', error);
+      return false;
+    }
+  },
+
+  async blockConversation(recruiterId: string, conversationId: string, reason?: string) {
+    const currentRecruiterId = String(recruiterId || '').trim();
+    if (!currentRecruiterId || !conversationId) {
+      throw new Error('Recruiter and conversation are required to block a candidate');
+    }
+
+    const { data: conversation, error: conversationError } = await supabase
+      .from('conversations')
+      .select('id, recruiter_id')
+      .eq('id', conversationId)
+      .eq('recruiter_id', currentRecruiterId)
+      .maybeSingle();
+
+    if (conversationError) throw conversationError;
+    if (!conversation?.id) {
+      throw new Error('You can only block candidates from conversations you manage');
+    }
+
+    const { data, error } = await supabase
+      .from('conversation_blocks')
+      .upsert(
+        {
+          conversation_id: conversationId,
+          blocked_by: currentRecruiterId,
+          active: true,
+          reason: reason || 'Recruiter blocked candidate from messaging',
+          blocked_at: new Date().toISOString(),
+        },
+        { onConflict: 'conversation_id' }
+      )
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async unblockConversation(recruiterId: string, conversationId: string) {
+    const currentRecruiterId = String(recruiterId || '').trim();
+    if (!currentRecruiterId || !conversationId) {
+      throw new Error('Recruiter and conversation are required to unblock a candidate');
+    }
+
+    const { data: conversation, error: conversationError } = await supabase
+      .from('conversations')
+      .select('id, recruiter_id')
+      .eq('id', conversationId)
+      .eq('recruiter_id', currentRecruiterId)
+      .maybeSingle();
+
+    if (conversationError) throw conversationError;
+    if (!conversation?.id) {
+      throw new Error('You can only unblock candidates from conversations you manage');
+    }
+
+    const { error } = await supabase
+      .from('conversation_blocks')
+      .delete()
+      .eq('conversation_id', conversationId)
+      .eq('blocked_by', currentRecruiterId);
+
+    if (error) throw error;
   },
 
   // Get conversation between two users
@@ -317,6 +411,8 @@ export const messagingService = {
 
           const lastMessageTime = lastMsg?.created_at || conv.created_at || new Date().toISOString();
 
+          const isBlocked = await this.getConversationBlockStatus(conv.id);
+
           return {
             id: conv.id,
             participantId,
@@ -327,6 +423,7 @@ export const messagingService = {
             lastMessageTime,
             unreadCount,
             isInitiatedByRecruiter: conv.initiated_by_recruiter,
+            isBlocked,
           };
         })
       );
@@ -357,6 +454,7 @@ export const messagingService = {
         content: m.content,
         attachments: m.attachments || [],
         createdAt: m.created_at,
+        updatedAt: m.updated_at,
         isRead: !!m.is_read,
       }));
     } catch (error) {
@@ -390,6 +488,35 @@ export const messagingService = {
       if (error) throw error;
     } catch (error) {
       console.error('Delete message error:', error);
+      throw error;
+    }
+  },
+
+  // Edit message
+  async editMessage(messageId: string, newContent: string) {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .update({ content: newContent })
+        .eq('id', messageId)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      
+      // Return normalized message
+      return {
+        id: data.id,
+        senderId: data.sender_id,
+        receiverId: data.receiver_id,
+        content: data.content,
+        attachments: data.attachments || [],
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        isRead: !!data.is_read,
+      };
+    } catch (error) {
+      console.error('Edit message error:', error);
       throw error;
     }
   },
@@ -442,7 +569,10 @@ export const messagingService = {
   },
 
   // Subscribe to real-time messages
-  subscribeToMessages(conversationId: string, callback: (message: Message) => void) {
+  subscribeToMessages(
+    conversationId: string,
+    callback: (message: Message, event?: 'INSERT' | 'UPDATE' | 'DELETE') => void
+  ) {
     const subscription = supabase
       .channel(`messages:${conversationId}`)
       .on(
@@ -457,9 +587,46 @@ export const messagingService = {
             content: m.content,
             attachments: m.attachments || [],
             createdAt: m.created_at,
+            updatedAt: m.updated_at,
             isRead: !!m.is_read,
           };
-          callback(normalized);
+          callback(normalized, 'INSERT');
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          const m = payload.new as any;
+          const normalized: Message = {
+            id: m.id,
+            senderId: m.sender_id,
+            receiverId: m.receiver_id,
+            content: m.content,
+            attachments: m.attachments || [],
+            createdAt: m.created_at,
+            updatedAt: m.updated_at,
+            isRead: !!m.is_read,
+          };
+          callback(normalized, 'UPDATE');
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          const m = payload.old as any;
+          const normalized: Message = {
+            id: m.id,
+            senderId: m.sender_id,
+            receiverId: m.receiver_id,
+            content: m.content,
+            attachments: m.attachments || [],
+            createdAt: m.created_at,
+            updatedAt: m.updated_at,
+            isRead: !!m.is_read,
+          };
+          callback(normalized, 'DELETE');
         }
       )
       .subscribe();
@@ -480,7 +647,15 @@ export const messagingService = {
 
       if (error) throw error;
 
-      // Get public URL
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from('attachments')
+        .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+      if (!signedError && signedData?.signedUrl) {
+        return signedData.signedUrl;
+      }
+
+      // Fallback for buckets that are intentionally public.
       const { data: publicData } = supabase.storage
         .from('attachments')
         .getPublicUrl(filePath);

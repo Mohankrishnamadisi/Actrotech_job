@@ -6,9 +6,16 @@ import {
   Box,
   IconButton,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { messagingService, Message, Conversation } from '@services/messaging';
 import ComposeMessage from './ComposeMessage';
@@ -39,12 +46,38 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadMessages();
-    const subscription = messagingService.subscribeToMessages(conversation.id, (newMsg) => {
-      setMessages((prev) => [...prev, newMsg]);
+    const subscription = messagingService.subscribeToMessages(conversation.id, (newMsg, event) => {
+      setMessages((prev) => {
+        if (event === 'DELETE') {
+          return prev.filter((msg) => msg.id !== newMsg.id);
+        }
+
+        if (event === 'UPDATE') {
+          return prev.map((msg) => (msg.id === newMsg.id ? newMsg : msg));
+        }
+
+        if (prev.some((msg) => msg.id === newMsg.id)) {
+          return prev.map((msg) => (msg.id === newMsg.id ? newMsg : msg));
+        }
+
+        // Only auto-scroll for new messages (INSERT event)
+        if (event === 'INSERT') {
+          setShouldAutoScroll(true);
+        }
+
+        return [...prev, newMsg];
+      });
+
+      if (event === 'DELETE') return;
       if (newMsg.receiverId === userId) {
         messagingService.markAsRead(newMsg.id);
       }
@@ -56,8 +89,12 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
   }, [conversation.id]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only auto-scroll if we should and not on initial load (initial load handled by loadMessages)
+    if (shouldAutoScroll) {
+      scrollToBottom();
+      setShouldAutoScroll(false);
+    }
+  }, [shouldAutoScroll, messages]);
 
   const loadMessages = async () => {
     try {
@@ -70,6 +107,9 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
           messagingService.markAsRead(msg.id);
         }
       });
+
+      // Auto-scroll to bottom after initial load
+      setTimeout(() => scrollToBottom(), 100);
     } catch (error) {
       console.error('Failed to load messages:', error);
     } finally {
@@ -83,11 +123,62 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
 
   const handleSendMessage = async (content: string, attachments?: string[]) => {
     try {
+      if (conversation.isBlocked) {
+        Swal.fire({
+          title: 'Conversation blocked',
+          text: 'This conversation is blocked and cannot receive new messages.',
+          icon: 'info',
+          confirmButtonText: 'Okay',
+        });
+        return;
+      }
+
       await messagingService.sendMessage(userId, conversation.participantId, content, attachments, userRole);
       loadMessages();
     } catch (error) {
       console.error('Failed to send message:', error);
+      Swal.fire({
+        title: 'Failed to send message',
+        text: error instanceof Error ? error.message : 'Please try again.',
+        icon: 'error',
+      });
     }
+  };
+
+  const handleEditClick = (msg: Message) => {
+    setEditingId(msg.id);
+    setEditContent(msg.content);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingId || !editContent.trim()) {
+      setEditDialogOpen(false);
+      return;
+    }
+
+    try {
+      const updatedMessage = await messagingService.editMessage(editingId, editContent.trim());
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === editingId ? updatedMessage : msg))
+      );
+      setEditDialogOpen(false);
+      setEditingId(null);
+      setEditContent('');
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      Swal.fire({
+        title: 'Failed to edit message',
+        text: 'Unable to update the message. Please try again.',
+        icon: 'error',
+      });
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditDialogOpen(false);
+    setEditingId(null);
+    setEditContent('');
   };
 
   return (
@@ -145,47 +236,77 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
         sx={{
           flex: 1,
           overflowY: 'auto',
-          px: 2,
+          px: { xs: 1.5, sm: 2.5 },
           py: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 1.5,
+          gap: { xs: 1, sm: 1.2 },
           background: 'linear-gradient(180deg, rgba(248,250,252,0.6), rgba(255,255,255,0.7))',
         }}
       >
         {loading && <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 2 }}>Loading messages...</Typography>}
 
-        {messages.map((msg) => {
+        {conversation.isBlocked && (
+          <Box sx={{ mb: 1, p: 1.25, borderRadius: 2, border: '1px solid rgba(148, 163, 184, 0.2)', background: 'rgba(148,163,184,0.06)', color: '#475569' }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: '#475569' }}>
+              Messaging is blocked for this conversation.
+            </Typography>
+          </Box>
+        )}
+
+        {messages.map((msg, idx) => {
           const isOutgoing = msg.senderId === userId;
+          const prevMsg = idx > 0 ? messages[idx - 1] : null;
+          const senderChanged = !prevMsg || prevMsg.senderId !== msg.senderId;
+          const spacingGap = senderChanged ? 1.2 : 0.6;
+          const isHovered = hoveredMessageId === msg.id;
 
           return (
-            <motion.div
+            <Box
               key={msg.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                alignSelf: isOutgoing ? 'flex-end' : 'flex-start',
-                maxWidth: '72%',
+              onMouseEnter={() => setHoveredMessageId(msg.id)}
+              onMouseLeave={() => setHoveredMessageId(null)}
+              sx={{
+                display: 'flex',
+                justifyContent: isOutgoing ? 'flex-end' : 'flex-start',
+                mb: spacingGap,
+                mt: idx === 0 ? 0 : 0,
               }}
             >
-              <Box
-                sx={{
-                  p: '12px 14px',
-                  borderRadius: isOutgoing ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
-                  background: isOutgoing
-                    ? 'linear-gradient(135deg, #2563eb, #4f46e5)'
-                    : '#f8fafc',
-                  color: isOutgoing ? '#fff' : '#0f172a',
-                  boxShadow: '0 8px 18px rgba(15, 23, 42, 0.06)',
-                  border: isOutgoing ? 'none' : '1px solid rgba(148, 163, 184, 0.12)',
-                  wordBreak: 'break-word',
-                  whiteSpace: 'pre-wrap',
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: isOutgoing ? 'flex-end' : 'flex-start',
                 }}
               >
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                  <Box sx={{ flex: 1, fontSize: 14, lineHeight: 1.6 }}>{msg.content}</Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    gap: 0.75,
+                    width: 'fit-content',
+                    maxWidth: { xs: '90%', sm: '75%', md: '68%' },
+                  }}
+                >
                   {isOutgoing && (
-                    <Box sx={{ mt: 0.25, opacity: 0.8 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        alignSelf: 'stretch',
+                        gap: 0.5,
+                        minWidth: 'fit-content',
+                        px: 0.5,
+                        opacity: isHovered ? 1 : 0,
+                        transition: 'opacity 0.2s ease',
+                        cursor: 'pointer',
+                        pointerEvents: isHovered ? 'auto' : 'none',
+                      }}
+                    >
                       <DeleteActionButton
                         onClick={async () => {
                           const result = await Swal.fire({
@@ -212,42 +333,172 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
                         }}
                         ariaLabel="delete message"
                       />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditClick(msg)}
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          color: '#2563eb',
+                          '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.08)' },
+                        }}
+                        title="Edit message"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
                     </Box>
                   )}
-                </Box>
 
-                {msg.attachments && msg.attachments.length > 0 && (
-                  <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {msg.attachments.map((attach, idx) => (
-                      <a
-                        key={idx}
-                        href={attach}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          fontSize: 12,
-                          textDecoration: 'underline',
-                          color: isOutgoing ? '#e0e7ff' : '#2563eb',
+                  <Box
+                    sx={{
+                      flex: 1,
+                      p: '10px 14px',
+                      borderRadius: isOutgoing ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      background: isOutgoing
+                        ? 'linear-gradient(135deg, #2563eb, #4f46e5)'
+                        : '#f1f5f9',
+                      color: isOutgoing ? '#fff' : '#1f2937',
+                      boxShadow: isOutgoing
+                        ? '0 4px 12px rgba(37, 99, 235, 0.12)'
+                        : '0 2px 8px rgba(15, 23, 42, 0.04)',
+                      border: isOutgoing ? 'none' : '1px solid rgba(148, 163, 184, 0.15)',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {msg.content && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontSize: '0.95rem',
+                          lineHeight: 1.5,
+                          mb: msg.attachments?.length ? 1 : 0,
                         }}
                       >
-                        📎 Attachment {idx + 1}
-                      </a>
-                    ))}
-                  </Box>
-                )}
+                        {msg.content}
+                      </Typography>
+                    )}
 
-                <Box
-                  sx={{
-                    mt: 0.75,
-                    fontSize: 11,
-                    opacity: 0.75,
-                    textAlign: 'right',
-                  }}
-                >
-                  {formatMessageTime(msg.createdAt)}
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mb: 0.75 }}>
+                        {msg.attachments.map((attach, aidx) => {
+                          const fileName = attach.split('/').pop() || `Attachment ${aidx + 1}`;
+                          const fileExt = fileName.split('.').pop()?.toLowerCase() || 'file';
+                          let fileType = 'File';
+                          let icon = '📄';
+
+                          if (['pdf'].includes(fileExt)) {
+                            fileType = 'PDF';
+                            icon = '📄';
+                          } else if (['doc', 'docx'].includes(fileExt)) {
+                            fileType = 'Document';
+                            icon = '📝';
+                          } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                            fileType = 'Image';
+                            icon = '🖼️';
+                          } else if (['zip', 'rar', '7z'].includes(fileExt)) {
+                            fileType = 'Archive';
+                            icon = '📦';
+                          }
+
+                          return (
+                            <Box
+                              key={`${msg.id}-attachment-${aidx}`}
+                              component="a"
+                              href={attach}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                p: '8px 12px',
+                                borderRadius: '10px',
+                                background: isOutgoing
+                                  ? 'rgba(255, 255, 255, 0.15)'
+                                  : 'rgba(37, 99, 235, 0.08)',
+                                border: isOutgoing
+                                  ? '1px solid rgba(255, 255, 255, 0.25)'
+                                  : '1px solid rgba(37, 99, 235, 0.2)',
+                                color: isOutgoing ? '#fff' : '#2563eb',
+                                textDecoration: 'none',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer',
+                                '&:hover': {
+                                  background: isOutgoing
+                                    ? 'rgba(255, 255, 255, 0.25)'
+                                    : 'rgba(37, 99, 235, 0.15)',
+                                  transform: 'translateY(-1px)',
+                                },
+                              }}
+                            >
+                              <Box sx={{ fontSize: '1.1rem', flexShrink: 0 }}>{icon}</Box>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    display: 'block',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    fontSize: '0.8rem',
+                                  }}
+                                >
+                                  {fileName}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    display: 'block',
+                                    opacity: 0.8,
+                                    fontSize: '0.7rem',
+                                  }}
+                                >
+                                  {fileType}
+                                </Typography>
+                              </Box>
+                              <Box sx={{ fontSize: '1rem', flexShrink: 0 }}>↓</Box>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    )}
+
+                    <Box
+                      sx={{
+                        mt: msg.content || msg.attachments?.length ? 0.5 : 0,
+                        fontSize: '0.75rem',
+                        opacity: isOutgoing ? 0.7 : 0.6,
+                        textAlign: 'right',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {formatMessageTime(msg.createdAt)}
+                      {msg.updatedAt && msg.updatedAt !== msg.createdAt && (
+                        <Typography
+                          component="span"
+                          sx={{
+                            display: 'block',
+                            fontSize: '0.65rem',
+                            opacity: 0.7,
+                            fontStyle: 'italic',
+                            mt: 0.25,
+                          }}
+                        >
+                          (edited)
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {!isOutgoing && (
+                    <Box sx={{ width: 24, flexShrink: 0 }} />
+                  )}
                 </Box>
-              </Box>
-            </motion.div>
+              </motion.div>
+            </Box>
           );
         })}
 
@@ -255,8 +506,73 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
       </Box>
 
       <Box sx={{ borderTop: '1px solid rgba(148, 163, 184, 0.18)', p: 2, background: 'rgba(248,250,252,0.9)' }}>
-        <ComposeMessage conversationId={conversation.id} onSend={handleSendMessage} />
+        <ComposeMessage conversationId={conversation.id} onSend={handleSendMessage} disabled={!!conversation.isBlocked} />
       </Box>
+
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleEditCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: '#0f172a', pb: 1.5 }}>
+          Edit Message
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            placeholder="Edit your message..."
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1.5,
+                '&:hover fieldset': {
+                  borderColor: '#2563eb',
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={handleEditCancel}
+            variant="outlined"
+            sx={{
+              color: '#475569',
+              borderColor: 'rgba(148, 163, 184, 0.3)',
+              '&:hover': {
+                borderColor: '#2563eb',
+                bgcolor: 'rgba(37, 99, 235, 0.04)',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditSubmit}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+              color: '#fff',
+              fontWeight: 600,
+              '&:hover': {
+                opacity: 0.9,
+              },
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
