@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -12,6 +12,7 @@ import {
   Divider,
   Avatar,
   Typography,
+  Badge,
 } from '@mui/material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -39,7 +40,7 @@ import { useTheme } from '@mui/material/styles';
 import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
-import { recruiterService } from '@services/api';
+import { notificationService, recruiterService } from '@services/api';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
@@ -54,6 +55,7 @@ export const MobileNavbar: React.FC = () => {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [recruiterAvatar, setRecruiterAvatar] = useState('');
+  const [notificationCount, setNotificationCount] = useState(0);
   const isDarkMode = theme.palette.mode === 'dark';
   const showPremiumThemeToggle = Boolean(
     user
@@ -61,11 +63,17 @@ export const MobileNavbar: React.FC = () => {
       && subscription
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!user?.id) {
+      setNotificationCount(0);
+      setRecruiterAvatar('');
+      return undefined;
+    }
+
     let mounted = true;
     const loadRecruiterAvatar = async () => {
-      if (!user?.id || user.role !== USER_ROLES.RECRUITER) {
-        setRecruiterAvatar('');
+      if (user.role !== USER_ROLES.RECRUITER) {
+        if (mounted) setRecruiterAvatar('');
         return;
       }
       try {
@@ -77,9 +85,27 @@ export const MobileNavbar: React.FC = () => {
       }
     };
 
+    const refreshUnreadNotifications = async () => {
+      try {
+        const unread = await notificationService.getUnreadNotifications(user.id);
+        if (!mounted) return;
+        setNotificationCount((unread || []).length);
+      } catch {
+        if (mounted) setNotificationCount(0);
+      }
+    };
+
     loadRecruiterAvatar();
+    refreshUnreadNotifications();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadNotifications();
+      }
+    }, 30000);
+
     return () => {
       mounted = false;
+      window.clearInterval(interval);
     };
   }, [user?.id, user?.role]);
 
@@ -89,6 +115,11 @@ export const MobileNavbar: React.FC = () => {
 
   const handleMenuClose = () => {
     setDrawerOpen(false);
+  };
+
+  const handleNotificationsClick = () => {
+    if (!user) return;
+    navigate(ROUTES.DASHBOARD_NOTIFICATIONS);
   };
 
   const handleLogout = async () => {
@@ -345,6 +376,40 @@ export const MobileNavbar: React.FC = () => {
             {isDarkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
           </IconButton>
         ) : null}
+        {user && (
+          <IconButton
+            onClick={handleNotificationsClick}
+            aria-label="Notifications"
+            sx={{
+              color: isDarkMode ? '#E2E8F0' : '#0F172A',
+              mr: 0.5,
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.82)' : 'rgba(248, 250, 252, 0.96)',
+              border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.35)' : '1px solid rgba(148, 163, 184, 0.25)',
+              '&:hover': {
+                bgcolor: isDarkMode ? 'rgba(51, 65, 85, 0.86)' : 'rgba(241, 245, 249, 1)',
+              },
+            }}
+          >
+            <Badge
+              badgeContent={notificationCount > 0 ? notificationCount : 0}
+              color="error"
+              overlap="circular"
+              invisible={notificationCount <= 0}
+              sx={{
+                '& .MuiBadge-badge': {
+                  fontSize: 10,
+                  minWidth: 18,
+                  height: 18,
+                  padding: '0 4px',
+                  borderRadius: 999,
+                  fontWeight: 700,
+                },
+              }}
+            >
+              <NotificationsIcon fontSize="small" />
+            </Badge>
+          </IconButton>
+        )}
         <IconButton
           onClick={handleDrawerToggle}
           sx={{ color: 'text.primary' }}

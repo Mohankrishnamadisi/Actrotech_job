@@ -27,13 +27,15 @@ import {
   Apartment as ApartmentIcon,
   TravelExplore as TravelExploreIcon,
   AutoAwesome as AutoAwesomeIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
+import { Badge } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import Swal from '@utils/sweetAlert';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
-import { recruiterService } from '@services/api';
+import { notificationService, recruiterService } from '@services/api';
 import { ROUTES, USER_ROLES } from '@constants/index';
 import { generateInitials } from '@utils/index';
 import { Logo } from '@components/common/Logo';
@@ -66,15 +68,47 @@ export const Navbar: React.FC<{ backTo?: string }> = ({ backTo }) => {
   const [exploreAnchor, setExploreAnchor] = useState<null | HTMLElement>(null);
   const [supportOpen, setSupportOpen] = useState(false);
   const [ticketNotifCount, setTicketNotifCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [recruiterAvatar, setRecruiterAvatar] = useState('');
 
   useEffect(() => {
     if (!user?.id) {
       setTicketNotifCount(0);
+      setNotificationCount(0);
       return;
     }
     supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => setTicketNotifCount(0));
   }, [user?.id, supportOpen]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setNotificationCount(0);
+      return undefined;
+    }
+
+    let mounted = true;
+    const refreshUnreadNotifications = async () => {
+      try {
+        const unread = await notificationService.getUnreadNotifications(user.id);
+        if (!mounted) return;
+        setNotificationCount((unread || []).length);
+      } catch {
+        if (mounted) setNotificationCount(0);
+      }
+    };
+
+    refreshUnreadNotifications();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadNotifications();
+      }
+    }, 30000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -220,6 +254,11 @@ export const Navbar: React.FC<{ backTo?: string }> = ({ backTo }) => {
     const hash = window.location.hash || '';
     const route = hash.startsWith('#') ? hash.slice(1) : hash;
     return route || '/';
+  };
+
+  const handleNotificationsClick = () => {
+    if (!user) return;
+    navigate(ROUTES.DASHBOARD_NOTIFICATIONS);
   };
 
   const handleBackNavigation = () => {
@@ -602,6 +641,40 @@ export const Navbar: React.FC<{ backTo?: string }> = ({ backTo }) => {
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                <IconButton
+                  onClick={handleNotificationsClick}
+                  aria-label="Notifications"
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    color: isDarkMode ? '#E2E8F0' : '#0F172A',
+                    background: isDarkMode ? 'rgba(30, 41, 59, 0.82)' : 'rgba(248, 250, 252, 0.96)',
+                    border: isDarkMode ? '1px solid rgba(148, 163, 184, 0.35)' : '1px solid rgba(148, 163, 184, 0.25)',
+                    '&:hover': {
+                      background: isDarkMode ? 'rgba(51, 65, 85, 0.86)' : 'rgba(241, 245, 249, 1)',
+                    },
+                  }}
+                >
+                  <Badge
+                    badgeContent={notificationCount > 0 ? notificationCount : 0}
+                    color="error"
+                    overlap="circular"
+                    invisible={notificationCount <= 0}
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        fontSize: 10,
+                        minWidth: 18,
+                        height: 18,
+                        padding: '0 4px',
+                        borderRadius: 999,
+                        fontWeight: 700,
+                      },
+                    }}
+                  >
+                    <NotificationsIcon fontSize="small" />
+                  </Badge>
+                </IconButton>
                 <button
                   className="navbar-premium-btn"
                   onClick={() => navigate(user?.role === USER_ROLES.RECRUITER ? ROUTES.RECRUITER_SUBSCRIPTION : ROUTES.PRICING)}
