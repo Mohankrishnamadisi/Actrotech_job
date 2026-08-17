@@ -192,7 +192,7 @@ export const PremiumDashboard: React.FC = () => {
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recentApplications, setRecentApplications] = useState<RecentApplication[]>([]);
-  const [selectedSection, setSelectedSection] = useState<PremiumSectionKey>('dailyBrief');
+  const [selectedSection, setSelectedSection] = useState<PremiumSectionKey>('premiumTools');
   const [selectedRoleModel, setSelectedRoleModel] = useState('General');
   const [roleWeightMap, setRoleWeightMap] = useState<Record<string, DemandWeights>>({});
   const [weeklyTargets, setWeeklyTargets] = useState<WeeklyGoalTargets>({ applications: 6, interactions: 10, pipeline: 4 });
