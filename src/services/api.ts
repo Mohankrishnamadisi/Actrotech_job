@@ -542,35 +542,31 @@ export const jobService = {
 
     try {
       if (createdJob?.id) {
-        const { data: activeSubs, error: subsError } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('status', 'active');
-
-        if (subsError) {
-          throw subsError;
-        }
-
-        const notifications = (activeSubs || [])
-          .filter((sub) => sub?.user_id)
-          .map((sub) => ({
-            user_id: sub.user_id,
-            type: 'new_job',
-            title: 'New premium job posted',
-            message: `${createdJob.title} at ${createdJob.company_name} is now live. Apply now to secure your next role.`,
-            data: { jobId: createdJob.id },
-            read: false,
-          }));
-
-        if (notifications.length > 0) {
-          const { error: notifError } = await supabase.from('notifications').insert(notifications);
-          if (notifError) {
-            throw notifError;
-          }
-        }
+        // Trigger priority job match notifications via Edge Function
+        // The Edge Function will:
+        // 1. Verify the caller is the job owner (authorization)
+        // 2. Evaluate the new job against all candidate profiles
+        // 3. Create job_match_notifications for matches
+        // 4. Deliver premium notifications immediately
+        // 5. Schedule normal notifications for 4-hour delay
+        console.log(`[createJob] Triggering Edge Function for job match evaluation: ${createdJob.id}`);
+        
+        // Call the Edge Function asynchronously (non-blocking)
+        // This ensures the recruiter's job creation completes immediately
+        // Using supabase.functions.invoke() ensures proper routing and auth context
+        supabase.functions
+          .invoke('process-job-matches', {
+            body: { jobId: createdJob.id },
+          })
+          .then((data) => {
+            console.log(`[createJob] Job match processing complete:`, data);
+          })
+          .catch((error) => {
+            console.error('Error triggering job match Edge Function:', error);
+          });
       }
     } catch (notificationError) {
-      console.error('Failed to notify subscribers of new job:', notificationError);
+      console.error('Error in job creation notification handling:', notificationError);
     }
 
     return createdJob;

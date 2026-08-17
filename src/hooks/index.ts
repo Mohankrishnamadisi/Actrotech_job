@@ -144,3 +144,4 @@ export { useMobileDetect } from './useMobileDetect';
 export { useNotificationAlerts } from './useNotificationAlerts';
 export { useTalentPool } from './useTalentPool';
 export { usePWA, usePWAInstall } from './usePWA';
+export { useJobMatchNotifications, useNotificationBadge, useJobForNotification } from './useJobMatchNotifications';

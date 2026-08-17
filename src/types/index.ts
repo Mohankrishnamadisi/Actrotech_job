@@ -250,12 +250,36 @@ export interface Payment {
 export interface Notification {
   id: string;
   userId: string;
+  user_id?: string;
   type: 'job_match' | 'application_status' | 'new_job' | 'subscription';
   title: string;
   message: string;
   read: boolean;
   data?: Record<string, unknown>;
   createdAt: string;
+  created_at?: string;
+  scheduled_for?: string | null; // ISO timestamp for delayed notifications
+  notification_metadata?: Record<string, unknown>; // Match metadata for job_match type
+}
+
+export interface JobMatchNotification {
+  id: string;
+  job_id: string;
+  candidate_id: string;
+  match_type: 'skill' | 'designation' | 'both';
+  matched_skills: string[];
+  matched_titles: string[];
+  match_score: number;
+  notification_tier: 'premium' | 'normal';
+  scheduled_for: string | null; // ISO timestamp, null = immediate
+  is_delivered: boolean;
+  notification_id?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Joined data
+  jobs?: Partial<Job>;
+  profiles?: Partial<JobSeeker>;
 }
 
 export interface Message {

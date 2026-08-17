@@ -1,0 +1,37 @@
+# Supabase Edge Functions Configuration
+# This file defines runtime settings for all Edge Functions in this project
+
+# ============================================================================
+# deliver-scheduled-notifications
+# ============================================================================
+# Purpose: Cron-triggered function to deliver scheduled job match notifications
+# 
+# Authentication:
+# - Accepts service-to-service calls (from Cron)
+# - Uses apikey header (current Supabase recommendation)
+# - Falls back to Authorization: Bearer for compatibility
+#
+# verify_jwt = false means:
+# - The platform will NOT verify a JWT from the Authorization header
+# - The function will instead check for apikey header
+# - Using @supabase/server with auth: 'secret' pattern
+
+[functions.deliver-scheduled-notifications]
+verify_jwt = false
+
+# ============================================================================
+# process-job-matches
+# ============================================================================
+# Purpose: User-triggered function to process job matches when job published
+# 
+# Authentication:
+# - Called by authenticated recruiter from frontend (via supabase.functions.invoke)
+# - Uses user JWT from Authorization header
+# - verify_jwt = true (default) means platform validates JWT before handler runs
+# - Using @supabase/server with auth: 'user' pattern
+#
+# Note: verify_jwt = true is the DEFAULT, so this is optional.
+# Included for explicit documentation only.
+
+[functions.process-job-matches]
+verify_jwt = true
