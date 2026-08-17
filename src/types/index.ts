@@ -112,7 +112,8 @@ export interface JobSeeker extends User {
   certifications?: Certification[];
   projects?: Project[];
   socialLinks?: SocialLinks;
-  subscriptionPlan?: 'basic' | 'premium' | 'pro';
+  // New plan IDs first, then legacy for backward compatibility
+  subscriptionPlan?: 'premium_monthly' | 'premium_3_month' | 'free' | 'basic' | 'premium' | 'pro' | 'enterprise';
   subscriptionExpiry?: string;
 }
 
@@ -147,6 +148,7 @@ export interface Recruiter extends User {
   hrEmail?: string;
   hrPhone?: string;
   employeeCount?: string;
+  // Recruiter plans remain unchanged from business model
   subscriptionPlan?: 'basic' | 'premium' | 'pro';
   subscriptionExpiry?: string;
 }
@@ -225,14 +227,21 @@ export interface JobApplication {
 export interface Subscription {
   id: string;
   userId: string;
-  plan: 'free' | 'basic' | 'premium' | 'pro' | 'enterprise';
+  user_id?: string;
+  // New plan IDs first, then legacy for backward compatibility
+  plan: 'premium_monthly' | 'premium_3_month' | 'free' | 'basic' | 'premium' | 'pro' | 'enterprise';
   status: 'active' | 'expired' | 'cancelled';
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  start_date?: string;
+  endDate?: string;
+  end_date?: string;
   paymentId?: string;
+  payment_id?: string;
   amount?: number;
   autoRenew?: boolean;
-  createdAt: string;
+  auto_renew?: boolean;
+  createdAt?: string;
+  created_at?: string;
 }
 
 export interface Payment {

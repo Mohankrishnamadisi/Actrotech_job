@@ -6,8 +6,13 @@ import { notificationService } from './api';
  * 
  * Handles creating actual notifications from job_match_notifications records
  * Manages the flow:
- * 1. Premium candidates: Create notification immediately
- * 2. Normal candidates: Create notification after 4-hour delay
+ * 1. Premium candidates (new: premium_monthly, premium_3_month; legacy: premium, pro): Immediate notification
+ * 2. Normal/Free candidates: Create notification after 4-hour delay
+ * 
+ * The isPremium flag is set by jobMatchService.isPremiumCandidate() which checks:
+ * - New plans: premium_monthly, premium_3_month
+ * - Legacy plans: premium, pro, enterprise (during migration)
+ * - Subscription must be active (end_date not expired)
  */
 
 export interface NotificationDeliveryPayload {

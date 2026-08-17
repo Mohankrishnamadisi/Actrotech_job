@@ -78,6 +78,129 @@ export const SUBSCRIPTION_PLANS = [
   },
 ];
 
+/**
+ * NEW CANDIDATE SUBSCRIPTION PLANS - 2-Plan Model
+ * Both plans have IDENTICAL premium features (no feature difference)
+ * Only difference: monthly vs. 3-month commitment with savings
+ */
+export const CANDIDATE_SUBSCRIPTION_PLANS = [
+  {
+    id: 'premium_monthly',
+    name: 'Actro Premium',
+    planType: 'Monthly',
+    durationLabel: 'Monthly',
+    basePriceInr: 149,
+    price: 149,
+    durationMonths: 1,
+    period: 'month',
+    gstPercent: 18,
+    grossPriceInr: 175.82, // 149 + 18% GST
+    description: 'Flexible monthly access to premium features',
+    badge: null,
+    savings: null,
+    features: [
+      // Job Access
+      'Access to all Onsite jobs',
+      'Access to Remote & Hybrid jobs',
+      'Early access to new jobs',
+      
+      // Job Matching & Recommendations
+      'AI-powered job matching',
+      'Personalized job recommendations',
+      'Priority job alerts',
+      
+      // Applications
+      'Save unlimited jobs',
+      'Apply without resume upload',
+      'Priority application processing',
+      
+      // AI Career Tools
+      'AI Career Hub access',
+      'AI Daily Career Brief',
+      'AI Match Center',
+      'Mock interview sessions',
+      
+      // Premium Dashboard
+      'Remote Hub access',
+      'Premium Command Deck',
+      'Premium Intelligence Center',
+      'Profile visibility boost',
+      
+      // Communication & Insights
+      'Weekly job digest',
+      'Direct recruiter messaging',
+      'Recruiter activity insights',
+      'Profile view analytics',
+      
+      // Additional Benefits
+      'Skill assessments',
+      'Community access',
+      'Referral program',
+      'Priority support',
+    ],
+    cta: 'Get Premium',
+    recommended: false,
+  },
+  {
+    id: 'premium_3_month',
+    name: 'Actro Premium',
+    planType: '3 Months',
+    durationLabel: '3 Months',
+    basePriceInr: 399,
+    price: 399,
+    durationMonths: 3,
+    period: '3 months',
+    gstPercent: 18,
+    grossPriceInr: 470.82, // 399 + 18% GST
+    monthlyEquivalent: 157, // Approximate (156.94)
+    description: 'Best value - Save ₹48 compared to monthly',
+    badge: 'BEST VALUE',
+    savings: 48, // (149*3) - 399 = 48
+    features: [
+      // Job Access (IDENTICAL to monthly)
+      'Access to all Onsite jobs',
+      'Access to Remote & Hybrid jobs',
+      'Early access to new jobs',
+      
+      // Job Matching & Recommendations
+      'AI-powered job matching',
+      'Personalized job recommendations',
+      'Priority job alerts',
+      
+      // Applications
+      'Save unlimited jobs',
+      'Apply without resume upload',
+      'Priority application processing',
+      
+      // AI Career Tools
+      'AI Career Hub access',
+      'AI Daily Career Brief',
+      'AI Match Center',
+      'Mock interview sessions',
+      
+      // Premium Dashboard
+      'Remote Hub access',
+      'Premium Command Deck',
+      'Premium Intelligence Center',
+      'Profile visibility boost',
+      
+      // Communication & Insights
+      'Weekly job digest',
+      'Direct recruiter messaging',
+      'Recruiter activity insights',
+      'Profile view analytics',
+      
+      // Additional Benefits
+      'Skill assessments',
+      'Community access',
+      'Referral program',
+      'Priority support',
+    ],
+    cta: 'Get 3 Months',
+    recommended: true,
+  },
+];
+
 export const SUBSCRIPTION_GATEWAY_FEE_PERCENT = 2;
 export const SUBSCRIPTION_GST_PERCENT = 18;
 

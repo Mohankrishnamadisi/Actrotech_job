@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
 import type { Job } from '@types';
 import { normalizeSkills, calculateSkillMatchScore, calculateTitleMatchScore } from '@utils/matchScore';
 
@@ -136,6 +136,11 @@ export function checkDesignationMatch(
 /**
  * Check if a candidate is premium (has active premium subscription)
  * This determines if they get immediate notification or +4 hour delay
+ * 
+ * Checks for:
+ * - New plans: premium_monthly, premium_3_month
+ * - Legacy plans: premium, pro, enterprise (during migration)
+ * - Must have active status and valid end_date
  */
 export async function isPremiumCandidate(candidateId: string): Promise<boolean> {
   try {
@@ -153,7 +158,7 @@ export async function isPremiumCandidate(candidateId: string): Promise<boolean> 
     // Check if they have an active premium subscription
     const { data: subscription, error: subsError } = await supabase
       .from('subscriptions')
-      .select('plan, status')
+      .select('plan, status, end_date')
       .eq('user_id', profile.user_id)
       .eq('status', 'active')
       .maybeSingle();
@@ -162,9 +167,11 @@ export async function isPremiumCandidate(candidateId: string): Promise<boolean> 
       return false;
     }
 
-    // Check if plan is a premium plan
-    const plan = String(subscription.plan || '').toLowerCase();
-    return ['premium', 'pro', 'enterprise'].includes(plan);
+    // Check if plan is premium AND subscription is not expired
+    const isPremium = isCandidatePremium(subscription.plan);
+    const isActive = isSubscriptionActive(subscription.end_date);
+
+    return isPremium && isActive;
   } catch (error) {
     console.error('Error checking premium status:', error);
     return false;

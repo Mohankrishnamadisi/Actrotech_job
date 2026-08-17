@@ -1,6 +1,7 @@
 import { format, addDays } from 'date-fns';
 import { applicationService, jobService, notificationService, savedService, subscriptionService, userService } from '@services/api';
 import { messagingService } from '@services/messaging';
+import { isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
 
 export type CareerPlanWindow = '3m' | '6m' | '1y' | '2y' | '5y';
 export type CoverLetterTone = 'professional' | 'friendly' | 'executive';
@@ -240,12 +241,23 @@ const profileCompletion = (profile: any): number => {
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 };
 
-const subscriptionPlan = async (userId: string): Promise<string> => {
+const subscriptionPlan = async (userId: string): Promise<{ plan: string; endDate?: string }> => {
   const sub = await subscriptionService.getUserSubscription(userId).catch(() => null);
-  return String(sub?.plan || 'free').toLowerCase();
+  return {
+    plan: String(sub?.plan || 'free').toLowerCase(),
+    endDate: sub?.end_date,
+  };
 };
 
-const isPremiumPlan = (plan: string): boolean => ['premium', 'pro', 'enterprise'].includes(plan.toLowerCase());
+const isPremiumPlan = (plan: string, endDate?: string | null): boolean => {
+  // Check both new and legacy premium plans
+  const isPremium = isCandidatePremium(plan);
+  // Also verify subscription is not expired
+  if (endDate) {
+    return isPremium && isSubscriptionActive(endDate);
+  }
+  return isPremium;
+};
 
 const ensureUsage = (store: CareerHubStore, userId: string): { day: string; requests: number } => {
   const day = format(new Date(), 'yyyy-MM-dd');
@@ -404,14 +416,14 @@ export const aiCareerHubService = {
     isPremium: boolean;
     remainingDailyRequests: number | null;
   }> {
-    const plan = await subscriptionPlan(userId);
-    const premium = isPremiumPlan(plan);
+    const subscription = await subscriptionPlan(userId);
+    const premium = isPremiumPlan(subscription.plan, subscription.endDate);
     const store = readStore();
     const usage = ensureUsage(store, userId);
     writeStore(store);
 
     return {
-      plan,
+      plan: subscription.plan,
       isPremium: premium,
       remainingDailyRequests: premium ? null : Math.max(0, FREE_DAILY_LIMIT - usage.requests),
     };

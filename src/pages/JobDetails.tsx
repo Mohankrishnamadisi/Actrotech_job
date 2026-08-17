@@ -37,6 +37,7 @@ import {
 import { Layout } from '@components/layout/Layout';
 import { Loading } from '@components/common/Loading';
 import { jobService, userService, applicationService, savedService, chatService } from '@services/api';
+import { isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
 import { useAuthStore } from '@store/index';
 import { USER_ROLES } from '@constants/index';
 import { useSubscription } from '@hooks/index';
@@ -723,7 +724,7 @@ export const JobDetails: React.FC = () => {
                   {hasApplied ? 'Already Applied' : 'Apply Now'}
                 </Button>
 
-                {subscription && ['premium', 'pro'].includes(String(subscription.plan || '').toLowerCase() as any) && (
+                {subscription && isCandidatePremium(subscription.plan) && isSubscriptionActive(subscription.end_date) && (
                   <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.4 }}>
                     <Chip
                       icon={<BoltIcon sx={{ color: '#fff !important' }} />}

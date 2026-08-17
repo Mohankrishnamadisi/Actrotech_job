@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { JobSeeker, Recruiter, Job } from '../types';
 import { getFreshnessDate, diversifyJobsByCompany } from '@utils/index';
+import { isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
 
 const normalizeJob = (job: Record<string, any>): Job => ({
   ...job,
@@ -725,7 +726,8 @@ export const applicationService = {
       const sub = await subscriptionService.getUserSubscription(userId);
       const plan = String(sub?.plan || '').toLowerCase();
       const status = String(sub?.status || '').toLowerCase();
-      isPriority = status === 'active' && ['premium', 'pro', 'enterprise'].includes(plan);
+      // Check if candidate has active premium subscription (new or legacy plans)
+      isPriority = status === 'active' && isCandidatePremium(plan) && isSubscriptionActive(sub?.end_date);
       console.log('Subscription for candidate', userId, { plan, status, sub });
       console.log('Priority Application flag for candidate', userId, isPriority);
     } catch (err) {
@@ -940,8 +942,12 @@ export const subscriptionService = {
       .select();
     if (error) throw error;
 
+    // Only apply recruiter credits for legacy recruiter plans (premium, pro, enterprise)
+    // NOT for new candidate plans (premium_monthly, premium_3_month)
     const lowerPlan = plan.toLowerCase();
-    if (['premium', 'pro', 'enterprise'].includes(lowerPlan)) {
+    const isLegacyRecruiterPlan = ['premium', 'pro', 'enterprise'].includes(lowerPlan);
+    
+    if (isLegacyRecruiterPlan) {
       const { data: creditsData, error: creditsError } = await supabase
         .from('recruiter_credits')
         .select('*')
@@ -1218,7 +1224,14 @@ const buildSubscriptionMap = async (userIds: string[]) => {
   }, {});
 };
 
-const isPremiumPlan = (plan?: string) => ['premium', 'pro', 'enterprise'].includes(String(plan || 'free').toLowerCase());
+// Candidate subscription check - uses centralized helper
+const isPremiumPlan = (plan?: string, endDate?: string | null): boolean => {
+  const isPremium = isCandidatePremium(plan);
+  if (endDate) {
+    return isPremium && isSubscriptionActive(endDate);
+  }
+  return isPremium;
+};
 
 // Candidate search operations
 export const candidateService = {

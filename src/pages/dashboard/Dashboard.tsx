@@ -78,6 +78,7 @@ import { authService } from '@services/supabase';
 import { applicationService, jobService, notificationService, savedService, userService, recruiterService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { formatDate } from '@utils/index';
+import { getPlanDisplayName, isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
 import {
   getCandidateProfileViewCount,
   getCandidateProfileViewRecruiters,
@@ -598,7 +599,11 @@ export const Dashboard: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.6, mb: 1.2, pl: { xs: 0, md: 0 } }}>
                           <Avatar sx={{ width: 44, height: 44, bgcolor: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.14)', fontWeight: 800, fontSize: 18 }}>{(user?.name || 'U').charAt(0).toUpperCase()}</Avatar>
                           <Box>
-                            <Chip label={subscription?.plan ? `Premium • ${subscription.plan}` : 'Basic'} size="small" sx={{ mb: 0.6, bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', borderRadius: 999, fontWeight: 700, border: '1px solid rgba(255,255,255,0.14)' }} />
+                            <Chip 
+                              label={isCandidatePremium(subscription?.plan) && isSubscriptionActive(subscription?.end_date) ? `Premium • ${getPlanDisplayName(subscription?.plan)}` : 'Free'} 
+                              size="small" 
+                              sx={{ mb: 0.6, bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', borderRadius: 999, fontWeight: 700, border: '1px solid rgba(255,255,255,0.14)' }} 
+                            />
                             <Typography sx={{ color: '#fff', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.06, fontSize: 20 }}>
                               {getGreeting()}, {user?.name || 'Candidate'} 👋
                             </Typography>
