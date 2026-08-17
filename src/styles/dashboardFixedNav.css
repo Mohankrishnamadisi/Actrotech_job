@@ -74,3 +74,35 @@ body.nav-expanded .dashboard-content {
     width: 100%;
   }
 }
+
+/* Sidebar scrollbar behavior: hide when collapsed, show when expanded */
+.dash-nav-scroll {
+  scrollbar-width: none; /* Firefox */
+}
+
+.dash-nav-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
+
+/* Show scrollbar when sidebar is expanded */
+body.nav-expanded .dash-nav-scroll {
+  scrollbar-width: auto; /* Firefox */
+}
+
+body.nav-expanded .dash-nav-scroll::-webkit-scrollbar {
+  display: block; /* Chrome, Edge, Safari */
+  width: 8px;
+}
+
+body.nav-expanded .dash-nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.nav-expanded .dash-nav-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+
+body.nav-expanded .dash-nav-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}

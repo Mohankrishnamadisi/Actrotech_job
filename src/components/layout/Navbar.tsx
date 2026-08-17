@@ -46,7 +46,7 @@ import '../../styles/navbarPremiumButton.css';
 
 const MotionBox = motion(Box);
 
-export const Navbar: React.FC = () => {
+export const Navbar: React.FC<{ backTo?: string }> = ({ backTo }) => {
   const { user, logout } = useAuthStore();
   const { subscription } = useSubscription(user?.id || null);
   const { setThemeMode } = useThemeMode();
@@ -223,6 +223,12 @@ export const Navbar: React.FC = () => {
   };
 
   const handleBackNavigation = () => {
+    // If a specific back destination is provided, navigate directly to it
+    if (backTo) {
+      navigate(backTo, { replace: true });
+      return;
+    }
+
     const fallbackRoute = user ? dashboardRoute : ROUTES.HOME;
 
     if (window.history.length > 1) {

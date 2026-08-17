@@ -4,6 +4,7 @@ import { Layout } from '@components/layout/Layout';
 import { useAuthStore } from '@store/index';
 import { notificationService } from '@services/api';
 import { formatDate } from '@utils/index';
+import { ROUTES } from '@constants/index';
 
 export const NotificationsPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -28,7 +29,7 @@ export const NotificationsPage: React.FC = () => {
   }, [user?.id]);
 
   return (
-    <Layout>
+    <Layout backTo={ROUTES.DASHBOARD}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>

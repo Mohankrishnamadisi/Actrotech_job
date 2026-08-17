@@ -7,9 +7,10 @@ import { useTheme } from '@mui/material/styles';
 interface LayoutProps {
   children: React.ReactNode;
   footer?: boolean;
+  backTo?: string;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, footer = true }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, footer = true, backTo }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
 
@@ -25,7 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, footer = true }) => {
         overflowX: 'hidden',
       }}
     >
-      <Navbar />
+      <Navbar backTo={backTo} />
       <Toolbar sx={{ minHeight: { xs: 64, sm: 68 } }} />
       <Box component="main" sx={{ flex: 1, pt: 0, pb: { xs: 2, md: 4 }, position: 'relative', zIndex: 1 }}>
         {children}

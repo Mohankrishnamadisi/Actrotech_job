@@ -484,6 +484,7 @@ export const Dashboard: React.FC = () => {
     >
       <Box className="dash-nav-inner">
       <Box
+        className="dash-nav-scroll"
         sx={{
           width: '100%',
           minWidth: 0,
@@ -500,10 +501,7 @@ export const Dashboard: React.FC = () => {
           border: { xs: 'none', lg: '1px solid rgba(148,163,184,0.12)' },
         }}
       >
-      <Box sx={{ px: 2.2, py: 1.4, mb: 0.8 }} />
-
-      <Box sx={{ px: 2.2, py: 1 }}>
-        <Typography className="sidebar-section-title" sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Dashboard</Typography>
+      <Box sx={{ px: 2.2 }}>
         <Stack spacing={0.8}>
           {sidebarItems.map(({ label, icon: Icon, to, active, badge }) => (
             <Button
@@ -535,8 +533,7 @@ export const Dashboard: React.FC = () => {
         </Stack>
       </Box>
 
-      <Box sx={{ px: 2.2, py: 2 }}>
-        <Typography sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Profile</Typography>
+      <Box sx={{ px: 2.2, mt: 1 }}>
         <Stack spacing={0.8}>
           {profileItems.map(({ label, icon: Icon, to }) => (
             <Button key={label} className="dash-nav-button" component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>
@@ -546,8 +543,7 @@ export const Dashboard: React.FC = () => {
         </Stack>
       </Box>
 
-      <Box sx={{ px: 2.2, py: 2 }}>
-        <Typography className="sidebar-section-title" sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Career Tools</Typography>
+      <Box sx={{ px: 2.2, mt: 1 }}>
         <Stack spacing={0.8}>
           {toolsItems.map(({ label, icon: Icon, to }) => (
             <Button key={label} className="dash-nav-button" component={RouterLink} to={to} startIcon={<Icon fontSize="small" />} sx={{ justifyContent: 'flex-start', gap: 1.3, borderRadius: 3, px: 1.2, py: 1.1, color: '#1e293b', fontWeight: 700, textTransform: 'none', minHeight: 46, '&:hover': { background: '#f8fafc' } }}>
@@ -557,8 +553,7 @@ export const Dashboard: React.FC = () => {
         </Stack>
       </Box>
 
-      <Box sx={{ px: 2.2, py: 2, mt: 'auto' }}>
-        <Typography className="sidebar-section-title" sx={{ fontSize: 12, letterSpacing: 1.5, color: '#64748B', textTransform: 'uppercase', fontWeight: 800, mb: 1.4 }}>Other</Typography>
+      <Box sx={{ px: 2.2, mt: 'auto' }}>
         <Stack spacing={0.8}>
           {otherItems.map(({ label, icon: Icon, to, action }) => (
             <Button
