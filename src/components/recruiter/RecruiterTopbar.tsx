@@ -126,32 +126,6 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
 
           {/* Right Side - Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {/* Credits Badge */}
-            {credits > 0 && !isMobile && (
-              <MotionBox
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Chip
-                  icon={<CreditScoreIcon sx={{ fontSize: '1rem !important' }} />}
-                  label={`${credits} Credits`}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    borderColor: themeColors.primary,
-                    color: themeColors.primary,
-                    fontWeight: 600,
-                    fontSize: '0.75rem',
-                    '& .MuiChip-icon': {
-                      color: themeColors.primary + ' !important',
-                    },
-                  }}
-                />
-              </MotionBox>
-            )}
-
-            {/* Plan Badge */}
             {!isMobile && (
               <Chip
                 label={planName}

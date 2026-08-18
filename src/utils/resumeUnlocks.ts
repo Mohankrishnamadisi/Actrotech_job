@@ -7,6 +7,11 @@ import type {
   ResumeUnlockResult,
   Subscription,
 } from '@types';
+import {
+  ensureRecruiterWelcomeBenefit,
+  reserveRecruiterWelcomeResumeView,
+  restoreRecruiterWelcomeResumeView,
+} from '@utils/recruiterWelcomeBenefits';
 
 const DEFAULT_CREDITS = 100;
 
@@ -300,8 +305,51 @@ export async function getResumeUnlockContext(
 
 export async function unlockCandidateContact(
   candidateId: string,
-  jobId?: string | null
+  jobId?: string | null,
+  recruiterIdOverride?: string | null
 ): Promise<ResumeUnlockResult> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const recruiterId = recruiterIdOverride || userData?.user?.id || null;
+
+  if (!recruiterId) {
+    throw new Error('Recruiter session is required to unlock contact details.');
+  }
+
+  const activeSub = await getActiveRecruiterSubscription(recruiterId).catch(() => null);
+  const isUnlimited = isUnlimitedPlan(activeSub?.plan);
+
+  if (!isUnlimited) {
+    const benefit = await ensureRecruiterWelcomeBenefit(recruiterId).catch(() => null);
+    const freeViewsRemaining = benefit ? Math.max(0, Number(benefit.free_resume_views_total || 0) - Number(benefit.free_resume_views_used || 0)) : 0;
+
+    if (benefit && freeViewsRemaining > 0) {
+      const reservation = await reserveRecruiterWelcomeResumeView(recruiterId);
+      if (!reservation.allowed) {
+        throw new Error('Your complimentary resume access has been used.');
+      }
+
+      try {
+        const { data, error } = await supabase.rpc('unlock_candidate_contact', {
+          p_candidate_id: candidateId,
+          p_job_id: jobId || null,
+        });
+        if (error) {
+          await restoreRecruiterWelcomeResumeView(recruiterId, 1).catch(() => undefined);
+          throw error;
+        }
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) {
+          await restoreRecruiterWelcomeResumeView(recruiterId, 1).catch(() => undefined);
+          throw new Error('Resume unlock failed.');
+        }
+        return row as ResumeUnlockResult;
+      } catch (error) {
+        await restoreRecruiterWelcomeResumeView(recruiterId, 1).catch(() => undefined);
+        throw error;
+      }
+    }
+  }
+
   const { data, error } = await supabase.rpc('unlock_candidate_contact', {
     p_candidate_id: candidateId,
     p_job_id: jobId || null,

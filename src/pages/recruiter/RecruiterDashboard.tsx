@@ -24,6 +24,7 @@ import { ROUTES } from '@constants/index';
 import { recruiterService, statsService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import { billingSubscriptionService } from '@services/billingSubscription';
+import { getRecruiterWelcomeUsage } from '@utils/recruiterWelcomeBenefits';
 import toast from 'react-hot-toast';
 import type { Job } from '@types';
 import { themeColors } from '@styles/recruiterTheme';
@@ -134,6 +135,8 @@ export const RecruiterDashboard: React.FC = () => {
   const [recommendedJobId, setRecommendedJobId] = useState('');
   const [pipelineJobId, setPipelineJobId] = useState('');
   const [pendingChatTarget, setPendingChatTarget] = useState<PendingRecruiterChatTarget | null>(null);
+  const [welcomeBenefit, setWelcomeBenefit] = useState<any>(null);
+  const [welcomeBannerDismissed, setWelcomeBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -194,7 +197,7 @@ export const RecruiterDashboard: React.FC = () => {
       const recruiterId = user?.id || '';
       billingSubscriptionService.initialize(recruiterId, recruiterId);
 
-      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, billingOverview] =
+      const [statsData, profileData, unreadNotif, conversations, recruiterJobs, billingOverview, onboarding] =
         await Promise.all([
           statsService.getRecruiterStats(recruiterId),
           recruiterService.getRecruiterProfile(recruiterId),
@@ -202,6 +205,7 @@ export const RecruiterDashboard: React.FC = () => {
           messagingService.getConversations(recruiterId),
           jobService.getRecruiterJobs(recruiterId),
           billingSubscriptionService.getBillingOverview(recruiterId, recruiterId),
+          getRecruiterWelcomeUsage(recruiterId).catch(() => null),
         ]);
 
       setStats((previous) => ({
@@ -217,6 +221,7 @@ export const RecruiterDashboard: React.FC = () => {
       );
       setLayoutCredits(Number(billingOverview?.creditsRemaining || 0));
       setLayoutPlanName(String(billingOverview?.currentPlan || 'Free'));
+      setWelcomeBenefit(onboarding || null);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -238,6 +243,16 @@ export const RecruiterDashboard: React.FC = () => {
       action,
     });
     setCurrentTab('messages');
+  };
+
+  const welcomeUsage = welcomeBenefit || {
+    freeJobPostsRemaining: 0,
+    freeResumeViewsRemaining: 0,
+    freeJobPostsUsed: 0,
+    freeResumeViewsUsed: 0,
+    freeJobPostsTotal: 15,
+    freeResumeViewsTotal: 150,
+    claimed: false,
   };
 
   if (loading) {
@@ -266,6 +281,64 @@ export const RecruiterDashboard: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
+            {!welcomeBannerDismissed && welcomeUsage.claimed && (
+              <Card
+                sx={{ mb: 3, borderRadius: 3, border: '1px solid rgba(59,130,246,0.18)', background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(168,85,247,0.06))' }}
+              >
+                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: themeColors.text.primary }}>🎉 Welcome to Actro Jobs</Typography>
+                    <Typography variant="body2" sx={{ color: themeColors.text.secondary, mt: 0.5 }}>
+                      You have received 15 Free Job Posts and 150 Free Resume Views. Start hiring today — no subscription required.
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Button variant="contained" size="small" onClick={() => setJobPostingFormOpen(true)} sx={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', fontWeight: 700 }}>
+                      Post Your First Job
+                    </Button>
+                    <Button variant="text" size="small" onClick={() => setWelcomeBannerDismissed(true)} sx={{ color: themeColors.text.secondary }}>
+                      Dismiss
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+
+            {welcomeUsage.claimed && (
+              <Card sx={{ mb: 3, borderRadius: 3, border: `1px solid ${themeColors.border}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96))' }}>
+                <CardContent>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: themeColors.text.primary }}>Welcome to Actro Jobs</Typography>
+                  <Typography variant="body2" sx={{ color: themeColors.text.secondary, mb: 2 }}>
+                    Start hiring with your complimentary recruiter benefits.
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))', border: '1px solid rgba(16,185,129,0.2)' }}>
+                        <CardContent>
+                          <Typography variant="h4" sx={{ fontWeight: 900, color: '#065F46' }}>🎁 15</Typography>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Free Job Posts</Typography>
+                          <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>
+                            {welcomeUsage.freeJobPostsUsed} / {welcomeUsage.freeJobPostsTotal} used · {welcomeUsage.freeJobPostsRemaining} remaining
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))', border: '1px solid rgba(59,130,246,0.2)' }}>
+                        <CardContent>
+                          <Typography variant="h4" sx={{ fontWeight: 900, color: '#1D4ED8' }}>📄 150</Typography>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Free Resume Views</Typography>
+                          <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>
+                            {welcomeUsage.freeResumeViewsUsed} / {welcomeUsage.freeResumeViewsTotal} used · {welcomeUsage.freeResumeViewsRemaining} remaining
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            )}
+
             <DashboardOverview
               activeJobs={stats.active_jobs}
               totalApplicants={stats.total_applicants}

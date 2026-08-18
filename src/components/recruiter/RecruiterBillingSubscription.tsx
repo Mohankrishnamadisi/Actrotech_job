@@ -1,573 +1,1035 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  FormControl,
+  Container,
+  Divider,
   Grid,
-  InputLabel,
-  MenuItem,
+  LinearProgress,
   Paper,
-  Select,
   Stack,
-  Switch,
   Tab,
+  Tabs,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
-  Tabs,
-  TextField,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import {
-  Autorenew as RenewIcon,
-  Download as DownloadIcon,
-  ReceiptLong as InvoiceIcon,
-  Payments as PaymentIcon,
-  Upgrade as UpgradeIcon,
+  CheckCircle as CheckCircleIcon,
+  Security as SecurityIcon,
+  WorkspacePremium as WorkspacePremiumIcon,
+  TrendingUp as TrendingUpIcon,
+  ElectricBolt as ZapIcon,
+  ChatBubble as MessageSquareIcon,
+  Work as BriefcaseIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
-import { format } from 'date-fns';
-import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { themeColors } from '@styles/recruiterTheme';
-import {
-  billingSubscriptionService,
-  type BillingCycle,
-  type CreditWalletType,
-  type PaymentMethod,
-  type PlanId,
-} from '@services/billingSubscription';
+import toast from 'react-hot-toast';
+import { subscriptionService } from '@services/api';
+import { billingSubscriptionService, type RecruiterPlanDuration } from '@services/billingSubscription';
+import { getRecruiterWelcomeUsage } from '@utils/recruiterWelcomeBenefits';
 
 interface RecruiterBillingSubscriptionProps {
   ownerId: string;
   currentUserId: string;
 }
 
-type BillingTab =
-  | 'overview'
-  | 'plans'
-  | 'subscription'
-  | 'credits'
-  | 'purchase'
-  | 'payments'
-  | 'invoices'
-  | 'usage';
-
 const MotionBox = motion(Box);
+const MotionCard = motion(Card);
 
-const paymentMethodOptions: Array<{ value: PaymentMethod; label: string }> = [
-  { value: 'credit_debit_card', label: 'Credit/Debit Card' },
-  { value: 'upi', label: 'UPI' },
-  { value: 'net_banking', label: 'Net Banking' },
-  { value: 'wallet', label: 'Wallet' },
-  { value: 'razorpay', label: 'Razorpay' },
-  { value: 'stripe', label: 'Stripe (future ready)' },
-  { value: 'manual_invoice', label: 'Manual Invoice (Enterprise)' },
+const formatMoney = (value: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+
+const PRICING_DATA = [
+  { duration: 1 as RecruiterPlanDuration, price: 999, teamLimit: 10, savings: null },
+  { duration: 3 as RecruiterPlanDuration, price: 2499, teamLimit: 10, savings: 498 },
+  { duration: 6 as RecruiterPlanDuration, price: 4499, teamLimit: 10, savings: 1495 },
+  { duration: 12 as RecruiterPlanDuration, price: 7999, teamLimit: 15, savings: 3989, isBestValue: true },
 ];
 
-const formatDate = (value?: string): string => {
-  if (!value) return '-';
-  try {
-    return format(new Date(value), 'dd MMM yyyy');
-  } catch {
-    return '-';
+const PRO_FEATURES = [
+  {
+    icon: TrendingUpIcon,
+    category: 'HIRING',
+    features: ['Unlimited Job Posts', 'Unlimited Active Jobs', 'Unlimited Candidate Search', 'Priority Job Placement'],
+  },
+  {
+    icon: MessageSquareIcon,
+    category: 'CANDIDATE ACCESS',
+    features: ['Unlimited Resume Access', 'Unlimited Resume Unlocks', 'Talent Pool', 'Candidate Tags & Notes'],
+  },
+  {
+    icon: ZapIcon,
+    category: 'AI & ANALYTICS',
+    features: ['AI Recommended Candidates', 'AI Candidate Matching', 'AI Hiring Assistant', 'Analytics & Reports'],
+  },
+  {
+    icon: BriefcaseIcon,
+    category: 'WORKFLOW',
+    features: ['Unlimited Messaging', 'Interview Management', 'ATS Pipeline', 'Priority Support'],
+  },
+];
+
+interface UsageData {
+  jobPostsUsed: number;
+  jobPostsTotal: number;
+  jobPostsRemaining: number;
+  resumeUnlocksUsed: number;
+  resumeUnlocksTotal: number;
+  resumeUnlocksRemaining: number;
+  isFree: boolean;
+}
+
+const getUsageWarningLevel = (used: number, total: number): 'normal' | 'running_low' | 'almost_exhausted' | 'limit_reached' => {
+  if (total === 0) return 'normal';
+  const percentage = (used / total) * 100;
+  if (percentage >= 100) return 'limit_reached';
+  if (percentage >= 90) return 'almost_exhausted';
+  if (percentage >= 70) return 'running_low';
+  return 'normal';
+};
+
+const UsageCard: React.FC<{
+  label: string;
+  emoji?: string;
+  used: number;
+  total: number;
+  remaining: number;
+}> = ({ label, emoji = '📊', used, total, remaining }) => {
+  const warningLevel = getUsageWarningLevel(used, total);
+  const percentage = total > 0 ? (used / total) * 100 : 0;
+
+  let warningText = '';
+  let warningColor = 'transparent';
+
+  if (warningLevel === 'running_low') {
+    warningText = "You're running low";
+    warningColor = 'rgba(217, 119, 6, 0.08)';
+  } else if (warningLevel === 'almost_exhausted') {
+    warningText = 'Almost exhausted';
+    warningColor = 'rgba(220, 38, 38, 0.08)';
+  } else if (warningLevel === 'limit_reached') {
+    warningText = 'Limit reached';
+    warningColor = 'rgba(220, 38, 38, 0.12)';
   }
-};
 
-const downloadText = (filename: string, content: string): void => {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
-
-const usageBar = (label: string, value: number, maxValue: number, color: string) => {
-  const pct = maxValue > 0 ? Math.min(100, Math.round((value / maxValue) * 100)) : 0;
   return (
-    <Box sx={{ mb: 1.2 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.4 }}>
-        <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>{label}</Typography>
-        <Typography variant="body2" sx={{ fontWeight: 700 }}>{value}</Typography>
-      </Stack>
-      <Box sx={{ height: 8, borderRadius: 999, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
-        <Box sx={{ width: `${pct}%`, height: '100%', backgroundColor: color }} />
-      </Box>
-    </Box>
+    <Card
+      sx={{
+        borderRadius: 3,
+        border: '1px solid #E5E7EB',
+        background: warningColor || 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)',
+        height: '100%',
+      }}
+    >
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography sx={{ fontSize: 24 }}>{emoji}</Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1F2937' }}>
+              {label}
+            </Typography>
+          </Box>
+          {warningText && (
+            <Chip
+              label={warningText}
+              size="small"
+              variant="filled"
+              sx={{
+                backgroundColor:
+                  warningLevel === 'limit_reached'
+                    ? '#DC2626'
+                    : warningLevel === 'almost_exhausted'
+                      ? '#F97316'
+                      : '#D97706',
+                color: 'white',
+                fontWeight: 700,
+                height: 24,
+                fontSize: '0.65rem',
+              }}
+            />
+          )}
+        </Box>
+
+        <Grid container spacing={1} sx={{ mb: 1.5 }}>
+          <Grid item xs={6}>
+            <Typography variant="caption" sx={{ color: '#6B7280', display: 'block' }}>
+              Used
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 800, color: '#1F2937' }}>
+              {used.toLocaleString()}
+            </Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography variant="caption" sx={{ color: '#6B7280', display: 'block' }}>
+              Remaining
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 800, color: '#10B981' }}>
+              {Math.max(remaining, 0).toLocaleString()}
+            </Typography>
+          </Grid>
+        </Grid>
+
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="caption" sx={{ color: '#6B7280' }}>
+              {used} / {total}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 700 }}>
+              {Math.round(percentage)}%
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={Math.min(percentage, 100)}
+            sx={{
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: '#E5E7EB',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3,
+                background:
+                  warningLevel === 'limit_reached'
+                    ? '#DC2626'
+                    : warningLevel === 'almost_exhausted'
+                      ? '#F97316'
+                      : warningLevel === 'running_low'
+                        ? '#D97706'
+                        : 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
+              },
+            }}
+          />
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 
-const statCard = (title: string, value: string | number, color = '#1D4ED8') => (
-  <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-    <CardContent>
-      <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>{title}</Typography>
-      <Typography variant="h6" sx={{ mt: 0.6, fontWeight: 800, color }}>{value}</Typography>
-    </CardContent>
-  </Card>
-);
-
-export const RecruiterBillingSubscription: React.FC<RecruiterBillingSubscriptionProps> = ({ ownerId, currentUserId }) => {
-  const theme = useTheme();
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
-
-  const [tab, setTab] = useState<BillingTab>('overview');
-
-  const [loading, setLoading] = useState(true);
-  const [overview, setOverview] = useState<any>(null);
-  const [usage, setUsage] = useState<any>(null);
-
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>('starter');
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
-
-  const [couponCode, setCouponCode] = useState('');
-  const [purchaseWalletType, setPurchaseWalletType] = useState<CreditWalletType>('ai');
-  const [purchasePackageId, setPurchasePackageId] = useState('ai_100');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('razorpay');
-
-  const plans = billingSubscriptionService.getPlanCatalog();
-  const canManageBilling = billingSubscriptionService.canManageBilling(ownerId, currentUserId);
-
-  const subscription = billingSubscriptionService.getSubscription(ownerId);
-  const currentPlan = billingSubscriptionService.getPlan(subscription.planId);
-  const wallets = billingSubscriptionService.getWallets(ownerId, currentUserId);
-  const ownerWallets = billingSubscriptionService.getWallets(ownerId, ownerId);
-  const walletLabelMap = billingSubscriptionService.getWalletLabelMap();
-
-  const packagesForType = billingSubscriptionService.getCreditPackages(purchaseWalletType);
-  const invoices = billingSubscriptionService.getInvoices(ownerId);
-  const payments = billingSubscriptionService.getPayments(ownerId);
-
-  const purchasePreview = useMemo(() => {
-    try {
-      return billingSubscriptionService.calculatePurchasePreview(ownerId, purchasePackageId, couponCode || undefined);
-    } catch {
-      return {
-        subTotal: 0,
-        discount: 0,
-        taxableAmount: 0,
-        taxAmount: 0,
-        total: 0,
-        currency: 'INR',
-      };
-    }
-  }, [ownerId, purchasePackageId, couponCode]);
+export const RecruiterBillingSubscription: React.FC<RecruiterBillingSubscriptionProps> = ({
+  ownerId,
+}) => {
+  const [selectedDuration, setSelectedDuration] = useState<RecruiterPlanDuration>(3);
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'billing-history' | 'current-subscription' | 'usage-analytics' | 'invoices'>('overview');
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+  const [billingOverview, setBillingOverview] = useState<any>(null);
+  const [invoiceList, setInvoiceList] = useState<any[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [usageSnapshot, setUsageSnapshot] = useState<any>(null);
+  const [generatedInvoice, setGeneratedInvoice] = useState<any>(null);
+  const [usage, setUsage] = useState<UsageData>({
+    jobPostsUsed: 0,
+    jobPostsTotal: 15,
+    jobPostsRemaining: 15,
+    resumeUnlocksUsed: 0,
+    resumeUnlocksTotal: 150,
+    resumeUnlocksRemaining: 150,
+    isFree: true,
+  });
+  const [loadingDuration, setLoadingDuration] = useState<RecruiterPlanDuration | null>(null);
 
   useEffect(() => {
-    billingSubscriptionService.initialize(ownerId, currentUserId);
-  }, [ownerId, currentUserId]);
+    const loadData = async () => {
+      try {
+        const [sub, welcomeUsage, overview, snapshot, invoices, payments] = await Promise.all([
+          subscriptionService.getUserSubscription(ownerId),
+          getRecruiterWelcomeUsage(ownerId).catch(() => null),
+          billingSubscriptionService.getBillingOverview(ownerId, ownerId).catch(() => null),
+          billingSubscriptionService.getUsageSnapshot(ownerId).catch(() => null),
+          Promise.resolve(billingSubscriptionService.getInvoices(ownerId)),
+          Promise.resolve(billingSubscriptionService.getPayments(ownerId)),
+        ]);
 
-  const refreshUsage = async (): Promise<void> => {
-    setLoading(true);
+        setCurrentSubscription(sub);
+        setBillingOverview(overview);
+        setUsageSnapshot(snapshot);
+        setInvoiceList(invoices || []);
+        setPaymentHistory(payments || []);
+
+        if (welcomeUsage) {
+          setUsage({
+            jobPostsUsed: welcomeUsage.freeJobPostsUsed || 0,
+            jobPostsTotal: welcomeUsage.freeJobPostsTotal || 15,
+            jobPostsRemaining: welcomeUsage.freeJobPostsRemaining || 15,
+            resumeUnlocksUsed: welcomeUsage.freeResumeViewsUsed || 0,
+            resumeUnlocksTotal: welcomeUsage.freeResumeViewsTotal || 150,
+            resumeUnlocksRemaining: welcomeUsage.freeResumeViewsRemaining || 150,
+            isFree: true,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load billing data:', error);
+      }
+    };
+
+    loadData();
+  }, [ownerId]);
+
+  const isFreeRecruiter = currentSubscription?.plan === 'free' || !currentSubscription?.plan;
+
+  const currentPlanLabel = currentSubscription?.plan === 'actro_recruiter_pro' ? 'Actro Recruiter Pro' : 'Free Onboarding';
+  const planAmount = currentSubscription?.amount || billingOverview?.monthlySpend || 0;
+  const planStart = currentSubscription?.start_date || currentSubscription?.created_at || new Date().toISOString();
+  const planExpiry = currentSubscription?.end_date || currentSubscription?.expiry_date || billingOverview?.nextBillingDate || 'Not set';
+  const nextBillingDate = billingOverview?.nextBillingDate || planExpiry;
+
+  const handleGenerateInvoice = () => {
+    const generated = {
+      invoiceNumber: `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`,
+      date: new Date().toISOString(),
+      amount: planAmount,
+      status: 'Generated',
+      plan: currentPlanLabel,
+      dueDate: planExpiry,
+      lineItems: [
+        { label: currentPlanLabel, amount: planAmount },
+        { label: 'GST / Taxes', amount: Math.round(planAmount * 0.05) },
+      ],
+    };
+    setGeneratedInvoice(generated);
+    toast.success('Invoice generated successfully');
+  };
+
+  const handleUpgradePlan = async (duration: RecruiterPlanDuration) => {
+    if (!ownerId) {
+      toast.error('Please sign in to upgrade.');
+      return;
+    }
+
     try {
-      const [ov, usg] = await Promise.all([
-        billingSubscriptionService.getBillingOverview(ownerId, currentUserId),
-        billingSubscriptionService.getUsageSnapshot(ownerId),
-      ]);
-      setOverview(ov);
-      setUsage(usg);
+      setLoadingDuration(duration);
+      const pricing = billingSubscriptionService.getRecruiterPlanPricing(duration);
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + duration);
+
+      await subscriptionService.createSubscription(
+        ownerId,
+        'actro_recruiter_pro',
+        expiryDate.toISOString(),
+        pricing.price,
+        `razorpay_placeholder_${Date.now()}`
+      );
+
+      toast.success('✨ Actro Recruiter Pro activated! Unlimited hiring awaits.');
+
+      const updated = await subscriptionService.getUserSubscription(ownerId);
+      setCurrentSubscription(updated);
     } catch (error) {
-      console.error('billing refresh failed', error);
-      toast.error('Failed to load billing data');
+      console.error('Upgrade failed:', error);
+      toast.error('Failed to activate plan. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingDuration(null);
     }
   };
 
-  useEffect(() => {
-    refreshUsage();
-  }, [ownerId, currentUserId]);
+  const renderOverviewTab = () => (
+    <Grid container spacing={2.5}>
+      <Grid item xs={12} sm={6} md={3}>
+        <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #E5E7EB', height: '100%' }}>
+          <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', mb: 1 }}>Current Plan</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827' }}>{currentPlanLabel}</Typography>
+          <Typography variant="body2" sx={{ color: '#4B5563', mt: 0.5 }}>{currentSubscription?.status || 'active'}</Typography>
+        </Paper>
+      </Grid>
+      <Grid item xs={12} sm={6} md={3}>
+        <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #E5E7EB', height: '100%' }}>
+          <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', mb: 1 }}>Monthly Spend</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827' }}>{formatMoney(billingOverview?.monthlySpend || planAmount)}</Typography>
+          <Typography variant="body2" sx={{ color: '#4B5563', mt: 0.5 }}>This month</Typography>
+        </Paper>
+      </Grid>
+      <Grid item xs={12} sm={6} md={3}>
+        <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #E5E7EB', height: '100%' }}>
+          <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', mb: 1 }}>Next Billing</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827' }}>{nextBillingDate}</Typography>
+          <Typography variant="body2" sx={{ color: '#4B5563', mt: 0.5 }}>Auto-renewal</Typography>
+        </Paper>
+      </Grid>
+      <Grid item xs={12} sm={6} md={3}>
+        <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #E5E7EB', height: '100%' }}>
+          <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', mb: 1 }}>Available Balance</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827' }}>{billingOverview?.creditsRemaining ?? 0}</Typography>
+          <Typography variant="body2" sx={{ color: '#4B5563', mt: 0.5 }}>Credits left</Typography>
+        </Paper>
+      </Grid>
 
-  const ensureManage = (): boolean => {
-    if (canManageBilling) return true;
-    toast.error('Only Company Owner and Billing Admin can manage billing actions');
-    return false;
-  };
+      <Grid item xs={12} md={8}>
+        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Billing Summary</Typography>
+          <Stack spacing={2}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>Plan Value</Typography><Typography sx={{ fontWeight: 700 }}>{formatMoney(planAmount)}</Typography></Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>Resume Unlocks Used</Typography><Typography sx={{ fontWeight: 700 }}>{billingOverview?.resumeUnlocks ?? usage.resumeUnlocksUsed}</Typography></Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>Jobs Posted</Typography><Typography sx={{ fontWeight: 700 }}>{billingOverview?.jobsPosted ?? usage.jobPostsUsed}</Typography></Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>AI Requests</Typography><Typography sx={{ fontWeight: 700 }}>{billingOverview?.aiRequestsUsed ?? usageSnapshot?.aiUsage ?? 0}</Typography></Box>
+          </Stack>
+        </Paper>
+      </Grid>
 
-  const runPlanChange = (action: 'upgrade' | 'downgrade') => {
-    if (!ensureManage()) return;
-    billingSubscriptionService.updateSubscription(ownerId, action, {
-      planId: selectedPlan,
-      billingCycle,
-      autoRenewal: true,
-    });
-    toast.success(`Subscription ${action} successful`);
-    refreshUsage();
-  };
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Usage Highlights</Typography>
+          <Stack spacing={1.5}>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#6B7280' }}>Job Posts</Typography>
+              <LinearProgress variant="determinate" value={Math.min((usage.jobPostsUsed / usage.jobPostsTotal) * 100, 100)} sx={{ mt: 0.5, height: 8, borderRadius: 99 }} />
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#6B7280' }}>Resume Unlocks</Typography>
+              <LinearProgress variant="determinate" value={Math.min((usage.resumeUnlocksUsed / usage.resumeUnlocksTotal) * 100, 100)} sx={{ mt: 0.5, height: 8, borderRadius: 99, '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #10B981 0%, #14B8A6 100%)' } }} />
+            </Box>
+          </Stack>
+        </Paper>
+      </Grid>
+    </Grid>
+  );
 
-  const runSubscriptionAction = (action: 'cancel' | 'pause' | 'resume') => {
-    if (!ensureManage()) return;
-    billingSubscriptionService.updateSubscription(ownerId, action);
-    toast.success(`Subscription ${action} successful`);
-    refreshUsage();
-  };
+  const renderHistoryTab = () => (
+    <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+      <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Billing History</Typography>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Payment</TableCell>
+            <TableCell>Date</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell align="right">Amount</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {(paymentHistory.length ? paymentHistory : [{ id: 'n/a', transactionId: 'No payment history yet', date: new Date().toISOString(), status: 'pending', amount: 0 }]).map((payment) => (
+            <TableRow key={payment.id || payment.transactionId}>
+              <TableCell>{payment.transactionId || 'Payment'}</TableCell>
+              <TableCell>{new Date(payment.date || Date.now()).toLocaleDateString()}</TableCell>
+              <TableCell>{payment.status || 'pending'}</TableCell>
+              <TableCell align="right">{formatMoney(Number(payment.amount || 0))}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Paper>
+  );
 
-  const buyCredits = () => {
-    if (!ensureManage()) return;
-    try {
-      billingSubscriptionService.purchaseCredits(ownerId, ownerId, {
-        packageId: purchasePackageId,
-        method: paymentMethod,
-        couponCode: couponCode || undefined,
-      });
-      toast.success('Credit purchase successful');
-      refreshUsage();
-    } catch (error: any) {
-      toast.error(error?.message || 'Purchase failed');
-    }
-  };
+  const renderSubscriptionTab = () => (
+    <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+      <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Current Subscription</Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Box sx={{ p: 2.5, borderRadius: 3, background: '#F8FAFC', border: '1px solid #E5E7EB' }}>
+            <Typography variant="caption" sx={{ color: '#6B7280' }}>Plan</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, mt: 0.5 }}>{currentPlanLabel}</Typography>
+            <Typography variant="body2" sx={{ color: '#4B5563', mt: 1 }}>
+              Status: {currentSubscription?.status || 'active'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#4B5563', mt: 0.5 }}>
+              Amount: {formatMoney(planAmount)}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Box sx={{ p: 2.5, borderRadius: 3, background: '#F8FAFC', border: '1px solid #E5E7EB' }}>
+            <Typography variant="caption" sx={{ color: '#6B7280' }}>Validity</Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, color: '#111827' }}><strong>Started:</strong> {new Date(planStart).toLocaleDateString()}</Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, color: '#111827' }}><strong>Expires:</strong> {String(planExpiry).includes('Invalid') ? 'Not available' : new Date(planExpiry).toLocaleDateString()}</Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, color: '#111827' }}><strong>Next billing:</strong> {new Date(nextBillingDate).toLocaleDateString()}</Typography>
+          </Box>
+        </Grid>
+      </Grid>
+    </Paper>
+  );
 
-  if (loading || !overview || !usage) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>Loading billing dashboard...</Typography>
+  const renderUsageTab = () => (
+    <Grid container spacing={2.5}>
+      <Grid item xs={12} md={6}>
+        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Recruiter Usage Analytics</Typography>
+          <Stack spacing={2}>
+            <Box><Typography variant="caption">Jobs Posted</Typography><Typography variant="h5" sx={{ fontWeight: 800 }}>{usageSnapshot?.jobsPosted ?? usage.jobPostsUsed}</Typography></Box>
+            <Box><Typography variant="caption">Applications Received</Typography><Typography variant="h5" sx={{ fontWeight: 800 }}>{usageSnapshot?.applicationsReceived ?? 0}</Typography></Box>
+            <Box><Typography variant="caption">Resume Unlocks</Typography><Typography variant="h5" sx={{ fontWeight: 800 }}>{usageSnapshot?.resumeUnlocks ?? usage.resumeUnlocksUsed}</Typography></Box>
+            <Box><Typography variant="caption">AI Requests</Typography><Typography variant="h5" sx={{ fontWeight: 800 }}>{usageSnapshot?.aiUsage ?? 0}</Typography></Box>
+          </Stack>
+        </Paper>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>Usage Breakdown</Typography>
+          <Stack spacing={2}>
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>Job Posts</Typography><Typography>{usage.jobPostsUsed}/{usage.jobPostsTotal}</Typography></Box>
+              <LinearProgress variant="determinate" value={Math.min((usage.jobPostsUsed / usage.jobPostsTotal) * 100, 100)} sx={{ mt: 0.5, height: 8, borderRadius: 99 }} />
+            </Box>
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>Resume Unlocks</Typography><Typography>{usage.resumeUnlocksUsed}/{usage.resumeUnlocksTotal}</Typography></Box>
+              <LinearProgress variant="determinate" value={Math.min((usage.resumeUnlocksUsed / usage.resumeUnlocksTotal) * 100, 100)} sx={{ mt: 0.5, height: 8, borderRadius: 99, '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #14B8A6 0%, #10B981 100%)' } }} />
+            </Box>
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography>Automation Runs</Typography><Typography>{usageSnapshot?.automationUsage ?? 0}</Typography></Box>
+              <LinearProgress variant="determinate" value={Math.min(((usageSnapshot?.automationUsage ?? 0) / 20) * 100, 100)} sx={{ mt: 0.5, height: 8, borderRadius: 99 }} />
+            </Box>
+          </Stack>
+        </Paper>
+      </Grid>
+    </Grid>
+  );
+
+  const renderInvoicesTab = () => (
+    <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #E5E7EB' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>Invoices</Typography>
+        <Button variant="contained" onClick={handleGenerateInvoice}>Generate Invoice</Button>
       </Box>
-    );
-  }
+
+      {generatedInvoice && (
+        <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #dbeafe', background: '#f8fbff', mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Latest Generated Invoice</Typography>
+          <Typography variant="body2">Invoice #: {generatedInvoice.invoiceNumber}</Typography>
+          <Typography variant="body2">Plan: {generatedInvoice.plan}</Typography>
+          <Typography variant="body2">Amount: {formatMoney(generatedInvoice.amount)}</Typography>
+          <Typography variant="body2">Due: {new Date(generatedInvoice.dueDate).toLocaleDateString()}</Typography>
+        </Paper>
+      )}
+
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Invoice #</TableCell>
+            <TableCell>Date</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell align="right">Amount</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {(invoiceList.length ? invoiceList : [{ id: 'draft', invoiceNumber: generatedInvoice?.invoiceNumber || 'INV-DRAFT', date: new Date().toISOString(), status: 'paid', amount: planAmount }]).map((invoice) => (
+            <TableRow key={invoice.id || invoice.invoiceNumber}>
+              <TableCell>{invoice.invoiceNumber || 'INV-DRAFT'}</TableCell>
+              <TableCell>{new Date(invoice.date || Date.now()).toLocaleDateString()}</TableCell>
+              <TableCell>{invoice.status || 'paid'}</TableCell>
+              <TableCell align="right">{formatMoney(Number(invoice.amount || 0))}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Paper>
+  );
+
+  const renderTabContent = () => {
+    switch (selectedTab) {
+      case 'overview':
+        return renderOverviewTab();
+      case 'billing-history':
+        return renderHistoryTab();
+      case 'current-subscription':
+        return renderSubscriptionTab();
+      case 'usage-analytics':
+        return renderUsageTab();
+      case 'invoices':
+        return renderInvoicesTab();
+      default:
+        return renderOverviewTab();
+    }
+  };
 
   return (
     <MotionBox initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap', mb: 2 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: themeColors.text.primary }}>Billing, Subscription, Credits & Invoice Management</Typography>
-          <Typography variant="body2" sx={{ color: themeColors.text.secondary, mt: 0.5 }}>
-            Unified billing for plans, wallets, invoices, payments, usage analytics, organization controls, and enterprise workflows.
+      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+        {/* Hero Section */}
+        <Paper
+          sx={{
+            mb: 4,
+            p: { xs: 2.5, md: 4 },
+            borderRadius: 4,
+            border: '1px solid',
+            borderColor: 'divider',
+            background:
+              'radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.15), transparent 40%), radial-gradient(circle at 85% 18%, rgba(14, 165, 233, 0.15), transparent 42%), linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97))',
+            color: '#F8FAFC',
+            boxShadow: '0 25px 60px rgba(15, 23, 42, 0.18)',
+          }}
+        >
+          <Grid container spacing={3} alignItems="flex-start">
+            <Grid item xs={12} md={8}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                <WorkspacePremiumIcon sx={{ color: '#6EE7B7', fontSize: 28 }} />
+                <Typography
+                  variant="overline"
+                  sx={{ color: 'rgba(209, 250, 229, 0.95)', letterSpacing: 1.2, fontWeight: 800 }}
+                >
+                  Recruiter Billing Console
+                </Typography>
+              </Box>
+              <Typography variant="h3" sx={{ fontWeight: 900, fontSize: { xs: '1.8rem', md: '2.5rem' }, mb: 1.5 }}>
+                Billing & Subscription
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'rgba(226, 232, 240, 0.9)', maxWidth: 600, lineHeight: 1.6 }}>
+                Simple, transparent recruiter plans built for every hiring stage. Start free with 15 job posts and
+                150 resume unlocks, then upgrade to unlimited when you're ready.
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Paper
+                sx={{
+                  p: 2.5,
+                  borderRadius: 3,
+                  bgcolor: 'rgba(15, 23, 42, 0.4)',
+                  border: '1px solid rgba(148, 163, 184, 0.3)',
+                  backdropFilter: 'blur(10px)',
+                }}
+              >
+                <Typography variant="overline" sx={{ color: 'rgba(209, 250, 229, 0.9)', fontWeight: 800 }}>
+                  Current Plan
+                </Typography>
+                <Typography
+                  variant="h5"
+                  sx={{ fontWeight: 900, mb: 0.5, color: isFreeRecruiter ? '#6EE7B7' : '#60A5FA' }}
+                >
+                  {isFreeRecruiter ? 'FREE' : 'ACTRO RECRUITER PRO'}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.85)' }}>
+                  {isFreeRecruiter
+                    ? 'Welcome benefits active'
+                    : `Active until ${new Date(currentSubscription?.expiry_date || Date.now()).toLocaleDateString()}`}
+                </Typography>
+                {!isFreeRecruiter && currentSubscription?.team_member_limit && (
+                  <Typography variant="caption" sx={{ color: 'rgba(226, 232, 240, 0.8)', display: 'block', mt: 1 }}>
+                    {currentSubscription.team_member_limit} Team Members Included
+                  </Typography>
+                )}
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        <Paper sx={{ mb: 4, borderRadius: 3, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+          <Tabs
+            value={selectedTab}
+            onChange={(_, value) => setSelectedTab(value)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              borderBottom: '1px solid #E5E7EB',
+              background: '#F8FAFC',
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 700,
+                minHeight: 52,
+              },
+            }}
+          >
+            <Tab label="Overview" value="overview" />
+            <Tab label="Billing History" value="billing-history" />
+            <Tab label="Current Subscription" value="current-subscription" />
+            <Tab label="Usage Analytics" value="usage-analytics" />
+            <Tab label="Invoices" value="invoices" />
+          </Tabs>
+          <Box sx={{ p: 3 }}>{renderTabContent()}</Box>
+        </Paper>
+
+        {/* FREE Plan Status Section */}
+        {isFreeRecruiter && (
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Paper
+              sx={{
+                mb: 4,
+                p: { xs: 2.5, md: 3 },
+                borderRadius: 4,
+                border: '2px solid rgba(16, 185, 129, 0.3)',
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 165, 233, 0.06) 100%)',
+              }}
+            >
+              <Grid container spacing={2} alignItems="flex-start">
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <Typography sx={{ fontSize: 26, lineHeight: 1 }}>🎁</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: '#065F46', lineHeight: 1.2 }}>
+                      Welcome Hiring Benefits
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: '#374151',
+                      maxWidth: 680,
+                      lineHeight: 1.5,
+                      fontWeight: 500,
+                    }}
+                  >
+                    You received complimentary hiring benefits to get started. These are available one-time only.
+                  </Typography>
+                </Grid>
+
+                <Grid
+                  item
+                  xs={12}
+                  md={4}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: { xs: 'flex-start', md: 'flex-end' },
+                    pt: { xs: 0, md: 1.5 },
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#374151',
+                      fontWeight: 500,
+                      textAlign: { xs: 'left', md: 'right' },
+                      lineHeight: 1.4,
+                      maxWidth: 280,
+                    }}
+                  >
+                    Upgrade to Recruiter Pro and get
+                    <Box component="span" sx={{ display: 'block' }}>
+                      unlimited everything
+                    </Box>
+                  </Typography>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <UsageCard
+                        label="Free Job Posts"
+                        emoji="📝"
+                        used={usage.jobPostsUsed}
+                        total={usage.jobPostsTotal}
+                        remaining={usage.jobPostsRemaining}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <UsageCard
+                        label="Resume Unlocks"
+                        emoji="📄"
+                        used={usage.resumeUnlocksUsed}
+                        total={usage.resumeUnlocksTotal}
+                        remaining={usage.resumeUnlocksRemaining}
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Paper>
+          </MotionBox>
+        )}
+
+        {/* Paid Plans Section */}
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              mb: 1,
+              color: '#1F2937',
+            }}
+          >
+            Actro Recruiter Pro
           </Typography>
-        </Box>
-        <Chip color={canManageBilling ? 'success' : 'warning'} label={canManageBilling ? 'Billing Admin' : 'View Access'} />
-      </Box>
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#6B7280',
+              mb: 3,
+            }}
+          >
+            Choose your billing duration
+          </Typography>
 
-      {!canManageBilling && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          You have view-only access. Only the Company Owner or Billing Admin can purchase credits, manage subscriptions, or download invoices.
-        </Alert>
-      )}
+          {/* Pricing Cards Grid */}
+          <Grid container spacing={2.5} sx={{ mb: 4 }}>
+            {PRICING_DATA.map((pricing, idx) => (
+              <Grid item xs={12} sm={6} md={3} key={pricing.duration}>
+                <MotionCard
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 + idx * 0.08 }}
+                  whileHover={{ y: -8 }}
+                  onClick={() => setSelectedDuration(pricing.duration)}
+                  sx={{
+                    height: '100%',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    border:
+                      pricing.isBestValue && selectedDuration === pricing.duration
+                        ? '2px solid #10B981'
+                        : pricing.isBestValue
+                          ? '1px solid rgba(16, 185, 129, 0.5)'
+                          : selectedDuration === pricing.duration
+                            ? '2px solid #2563EB'
+                            : '1px solid #E5E7EB',
+                    background:
+                      pricing.isBestValue
+                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)'
+                        : selectedDuration === pricing.duration
+                          ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)'
+                          : '#FFFFFF',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      boxShadow: pricing.isBestValue
+                        ? '0 20px 40px rgba(16, 185, 129, 0.15)'
+                        : '0 16px 32px rgba(37, 99, 235, 0.12)',
+                    },
+                  }}
+                >
+                  {pricing.isBestValue && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 4,
+                        background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
+                      }}
+                    />
+                  )}
 
-      <Paper sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, mb: 2 }}>
-        <Tabs value={tab} onChange={(_, value: BillingTab) => setTab(value)} variant={isTablet ? 'scrollable' : 'scrollable'} scrollButtons="auto" allowScrollButtonsMobile sx={{ minHeight: 54, px: 0.5, '& .MuiTabs-scroller': { overflowX: 'auto !important' }, '& .MuiTabs-scrollButtons': { width: 34, borderRadius: 1, mx: 0.5 }, '& .MuiTab-root': { textTransform: 'none', whiteSpace: 'nowrap', minHeight: 54, minWidth: 'max-content', px: 1.8, fontWeight: 700, fontSize: '0.82rem' } }}>
-          <Tab value="overview" label="Overview" />
-          <Tab value="plans" label="Plans" />
-          <Tab value="subscription" label="Subscription" />
-          <Tab value="credits" label="Credits" />
-          <Tab value="purchase" label="Purchase Credits" />
-          <Tab value="payments" label="Payment Methods" />
-          <Tab value="invoices" label="Invoices" />
-          <Tab value="usage" label="Usage Analytics" />
-        </Tabs>
-      </Paper>
+                  <CardContent
+                    sx={{
+                      p: 2.5,
+                      pb: 2.5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                    }}
+                  >
+                    {pricing.isBestValue && (
+                      <Box sx={{ mb: 1.5 }}>
+                        <Chip
+                          icon={<StarIcon />}
+                          label="BEST VALUE"
+                          size="small"
+                          sx={{
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            color: 'white',
+                            fontWeight: 800,
+                            fontSize: '0.7rem',
+                            height: 28,
+                          }}
+                        />
+                      </Box>
+                    )}
 
-      {tab === 'overview' && (
-        <Grid container spacing={1.5}>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Current Plan', overview.currentPlan, '#1D4ED8')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Subscription Status', overview.subscriptionStatus, '#0F766E')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Credits Remaining', overview.creditsRemaining, '#7C3AED')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Credits Used This Month', overview.creditsUsedThisMonth, '#D97706')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Jobs Posted', overview.jobsPosted, '#0369A1')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Resume Unlocks', overview.resumeUnlocks, '#C2410C')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('AI Requests Used', overview.aiRequestsUsed, '#7C2D12')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Automation Runs', overview.automationRuns, '#0E7490')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Next Billing Date', overview.nextBillingDate, '#2563EB')}</Grid>
-          <Grid item xs={12} sm={6} md={4}>{statCard('Monthly Spend', `INR ${overview.monthlySpend}`, '#DC2626')}</Grid>
-        </Grid>
-      )}
+                    <Typography variant="overline" sx={{ color: '#6B7280', fontWeight: 700 }}>
+                      ACTRO RECRUITER PRO
+                    </Typography>
 
-      {tab === 'plans' && (
-        <Grid container spacing={1.3}>
-          {plans.map((plan) => (
-            <Grid item xs={12} md={6} lg={4} key={plan.id}>
-              <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}`, height: '100%' }}>
-                <CardContent>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{plan.name}</Typography>
-                    {subscription.planId === plan.id && <Chip size="small" color="success" label="Current" />}
-                  </Stack>
-                  <Typography variant="body2" sx={{ color: themeColors.text.secondary }}>Monthly: INR {plan.priceMonthly} | Yearly: INR {plan.priceYearly}</Typography>
-                  <Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 700 }}>Limits</Typography>
-                  <Typography variant="caption" display="block">Jobs: {plan.limits.jobs}</Typography>
-                  <Typography variant="caption" display="block">Recruiters: {plan.limits.recruiters}</Typography>
-                  <Typography variant="caption" display="block">AI Requests: {plan.limits.aiRequests}</Typography>
-                  <Typography variant="caption" display="block">Resume Unlock Credits: {plan.limits.resumeUnlockCredits}</Typography>
-                  <Typography variant="caption" display="block">Automation Rules: {plan.limits.automationRules}</Typography>
-                  <Typography variant="caption" display="block">Storage: {plan.limits.storageGb} GB</Typography>
-                  <Typography variant="caption" display="block">Integrations: {plan.limits.integrations}</Typography>
-                  <Typography variant="caption" display="block">Analytics: {plan.limits.analytics}</Typography>
-                  <Typography variant="caption" display="block">Support: {plan.limits.support}</Typography>
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        fontWeight: 900,
+                        mt: 1,
+                        mb: 0.5,
+                        color: '#1F2937',
+                      }}
+                    >
+                      ₹{pricing.price.toLocaleString()}
+                    </Typography>
 
-                  <Stack direction="row" spacing={0.7} sx={{ mt: 1.2, flexWrap: 'wrap' }}>
-                    {plan.features.map((feature) => <Chip key={feature} size="small" label={feature} />)}
-                  </Stack>
+                    <Typography variant="body2" sx={{ color: '#6B7280', mb: 1.5 }}>
+                      {pricing.duration} month{pricing.duration > 1 ? 's' : ''}
+                    </Typography>
 
-                  <Stack direction="row" spacing={0.7} sx={{ mt: 1.2 }}>
-                    <Button size="small" variant="contained" startIcon={<UpgradeIcon />} onClick={() => { setSelectedPlan(plan.id); runPlanChange(plan.priceMonthly >= currentPlan.priceMonthly ? 'upgrade' : 'downgrade'); }} disabled={!canManageBilling}>Select</Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+                    {pricing.savings && (
+                      <Chip
+                        label={`Save ₹${pricing.savings.toLocaleString()}`}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                          color: '#22C55E',
+                          fontWeight: 700,
+                          mb: 1.5,
+                        }}
+                      />
+                    )}
 
-      {tab === 'subscription' && (
-        <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Current Subscription</Typography>
-            <Grid container spacing={1.2}>
-              <Grid item xs={12} md={4}>{statCard('Plan Name', currentPlan.name)}</Grid>
-              <Grid item xs={12} md={4}>{statCard('Status', subscription.status)}</Grid>
-              <Grid item xs={12} md={4}>{statCard('Billing Cycle', subscription.billingCycle)}</Grid>
-              <Grid item xs={12} md={4}>{statCard('Start Date', formatDate(subscription.startDate))}</Grid>
-              <Grid item xs={12} md={4}>{statCard('Renewal Date', formatDate(subscription.renewalDate))}</Grid>
-              <Grid item xs={12} md={4}>{statCard('Auto Renewal', subscription.autoRenewal ? 'Enabled' : 'Disabled')}</Grid>
+                    <Divider sx={{ my: 1.5 }} />
 
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Target Plan</InputLabel>
-                  <Select value={selectedPlan} label="Target Plan" onChange={(event) => setSelectedPlan(event.target.value as PlanId)}>
-                    {plans.map((plan) => <MenuItem key={plan.id} value={plan.id}>{plan.name}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Billing Cycle</InputLabel>
-                  <Select value={billingCycle} label="Billing Cycle" onChange={(event) => setBillingCycle(event.target.value as BillingCycle)}>
-                    <MenuItem value="monthly">Monthly</MenuItem>
-                    <MenuItem value="quarterly">Quarterly</MenuItem>
-                    <MenuItem value="yearly">Yearly</MenuItem>
-                    <MenuItem value="annual_contract">Annual Contract</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ height: '100%' }}>
-                  <Typography variant="body2">Auto Renewal</Typography>
-                  <Switch checked={subscription.autoRenewal} onChange={(event) => {
-                    if (!ensureManage()) return;
-                    billingSubscriptionService.updateSubscription(ownerId, 'resume', { autoRenewal: event.target.checked });
-                    refreshUsage();
-                  }} disabled={!canManageBilling} />
-                </Stack>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Button variant="contained" onClick={() => runPlanChange('upgrade')} startIcon={<UpgradeIcon />} disabled={!canManageBilling}>Upgrade</Button>
-                  <Button variant="outlined" onClick={() => runPlanChange('downgrade')} disabled={!canManageBilling}>Downgrade</Button>
-                  <Button variant="outlined" color="warning" onClick={() => runSubscriptionAction('pause')} disabled={!canManageBilling}>Pause</Button>
-                  <Button variant="outlined" color="success" onClick={() => runSubscriptionAction('resume')} startIcon={<RenewIcon />} disabled={!canManageBilling}>Resume</Button>
-                  <Button variant="outlined" color="error" onClick={() => runSubscriptionAction('cancel')} disabled={!canManageBilling}>Cancel</Button>
-                </Stack>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      )}
-
-      {tab === 'credits' && (
-        <Grid container spacing={1.2}>
-          {(canManageBilling ? ownerWallets : wallets).map((wallet) => (
-            <Grid item xs={12} sm={6} md={4} key={wallet.id}>
-              <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-                <CardContent>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{walletLabelMap[wallet.type]}</Typography>
-                  <Typography variant="body2">Available: <b>{wallet.available}</b></Typography>
-                  <Typography variant="body2">Used: {wallet.used}</Typography>
-                  <Typography variant="body2">Purchased: {wallet.purchased}</Typography>
-                  <Typography variant="body2">Expired: {wallet.expired}</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      {tab === 'purchase' && (
-        <Grid container spacing={1.2}>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Purchase Credits</Typography>
-                <Stack spacing={1}>
-                  <FormControl fullWidth>
-                    <InputLabel>Credit Type</InputLabel>
-                    <Select value={purchaseWalletType} label="Credit Type" onChange={(event) => {
-                      const nextType = event.target.value as CreditWalletType;
-                      setPurchaseWalletType(nextType);
-                      const first = billingSubscriptionService.getCreditPackages(nextType)[0];
-                      setPurchasePackageId(first?.id || '');
-                    }}>
-                      {(Object.keys(walletLabelMap) as CreditWalletType[]).map((type) => <MenuItem key={type} value={type}>{walletLabelMap[type]}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth>
-                    <InputLabel>Package</InputLabel>
-                    <Select value={purchasePackageId} label="Package" onChange={(event) => setPurchasePackageId(event.target.value)}>
-                      {packagesForType.map((item) => <MenuItem key={item.id} value={item.id}>{item.name} - {item.credits} credits</MenuItem>)}
-                    </Select>
-                  </FormControl>
-
-                  <TextField label="Coupon Code" value={couponCode} onChange={(event) => setCouponCode(event.target.value.toUpperCase())} fullWidth />
-
-                  <FormControl fullWidth>
-                    <InputLabel>Payment Method</InputLabel>
-                    <Select value={paymentMethod} label="Payment Method" onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}>
-                      {paymentMethodOptions.map((item) => <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-
-                  <Card sx={{ borderRadius: 1.5, border: `1px solid ${themeColors.border}` }}>
-                    <CardContent>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total Preview</Typography>
-                      <Typography variant="body2">Subtotal: {purchasePreview.currency} {purchasePreview.subTotal}</Typography>
-                      <Typography variant="body2">Discount: -{purchasePreview.currency} {purchasePreview.discount}</Typography>
-                      <Typography variant="body2">Tax: +{purchasePreview.currency} {purchasePreview.taxAmount}</Typography>
-                      <Typography variant="h6" sx={{ mt: 0.4, fontWeight: 800 }}>Total: {purchasePreview.currency} {purchasePreview.total}</Typography>
-                    </CardContent>
-                  </Card>
-
-                  <Button variant="contained" startIcon={<PaymentIcon />} onClick={buyCredits} disabled={!canManageBilling}>Proceed to Payment</Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Payment Methods Supported</Typography>
-                <Stack spacing={0.7}>
-                  {paymentMethodOptions.map((method) => (
-                    <Chip key={method.value} icon={<PaymentIcon />} label={method.label} />
-                  ))}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {tab === 'payments' && (
-        <TableContainer component={Paper} sx={{ border: `1px solid ${themeColors.border}`, borderRadius: 2 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Transaction ID</TableCell>
-                <TableCell>Payment Method</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Credits Purchased</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Invoice</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {payments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell>{payment.transactionId}</TableCell>
-                  <TableCell>{payment.method}</TableCell>
-                  <TableCell>{payment.amount}</TableCell>
-                  <TableCell>{payment.creditsPurchased}</TableCell>
-                  <TableCell><Chip size="small" label={payment.status} color={payment.status === 'success' ? 'success' : payment.status === 'failed' ? 'error' : 'warning'} /></TableCell>
-                  <TableCell>{formatDate(payment.date)}</TableCell>
-                  <TableCell>{invoices.find((item) => item.id === payment.invoiceId)?.invoiceNumber || '-'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      {tab === 'invoices' && (
-        <TableContainer component={Paper} sx={{ border: `1px solid ${themeColors.border}`, borderRadius: 2 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Invoice Number</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Tax</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{formatDate(invoice.date)}</TableCell>
-                  <TableCell>{invoice.amount}</TableCell>
-                  <TableCell>{invoice.tax}</TableCell>
-                  <TableCell><Chip size="small" label={invoice.status} color={invoice.status === 'paid' ? 'success' : invoice.status === 'failed' ? 'error' : 'warning'} /></TableCell>
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={0.6} justifyContent="flex-end">
-                      <Button size="small" variant="outlined" startIcon={<DownloadIcon />} onClick={() => {
-                        if (!ensureManage()) return;
-                        const text = billingSubscriptionService.downloadInvoiceText(ownerId, invoice.id);
-                        downloadText(`${invoice.invoiceNumber}.txt`, text);
-                      }}>Download PDF</Button>
-                      <Button size="small" variant="outlined" startIcon={<InvoiceIcon />} onClick={() => {
-                        if (!ensureManage()) return;
-                        billingSubscriptionService.emailInvoice(ownerId, invoice.id);
-                        toast.success('Invoice emailed');
-                      }}>Email Invoice</Button>
+                    <Stack spacing={0.8} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: '#10B981', flexShrink: 0 }} />
+                        <Typography variant="caption" sx={{ color: '#374151' }}>
+                          Unlimited Job Posts
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: '#10B981', flexShrink: 0 }} />
+                        <Typography variant="caption" sx={{ color: '#374151' }}>
+                          Unlimited Resume Access
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: '#10B981', flexShrink: 0 }} />
+                        <Typography variant="caption" sx={{ color: '#374151' }}>
+                          AI Hiring Tools
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: '#10B981', flexShrink: 0 }} />
+                        <Typography variant="caption" sx={{ color: '#374151' }}>
+                          {pricing.teamLimit} Team Members
+                        </Typography>
+                      </Box>
                     </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
 
-      {tab === 'usage' && (
-        <Grid container spacing={1.2}>
-          <Grid item xs={12} md={7}>
-            <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Usage Analytics</Typography>
-                {usageBar('Jobs Posted', usage.jobsPosted, Math.max(1, currentPlan.limits.jobs), '#1D4ED8')}
-                {usageBar('Applications Received', usage.applicationsReceived, Math.max(1, usage.applicationsReceived + 10), '#0F766E')}
-                {usageBar('Resume Unlocks', usage.resumeUnlocks, Math.max(1, currentPlan.limits.resumeUnlockCredits), '#C2410C')}
-                {usageBar('AI Usage', usage.aiUsage, Math.max(1, currentPlan.limits.aiRequests), '#7C3AED')}
-                {usageBar('Interview Usage', usage.interviewUsage, Math.max(1, usage.interviewUsage + 10), '#0E7490')}
-                {usageBar('Automation Usage', usage.automationUsage, Math.max(1, currentPlan.limits.automationRules), '#D97706')}
-                {usageBar('API Calls', usage.apiCalls, Math.max(1, currentPlan.limits.aiRequests * 5), '#9333EA')}
-                {usageBar('Storage Used (GB)', usage.storageUsedGb, Math.max(1, currentPlan.limits.storageGb), '#0369A1')}
-              </CardContent>
-            </Card>
+                    <Divider sx={{ my: 1.5 }} />
+
+                    <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'block', mb: 1.5 }}>
+                      ₹{Math.round(pricing.price / pricing.duration)}/month
+                    </Typography>
+
+                    <Button
+                      fullWidth
+                      variant={selectedDuration === pricing.duration ? 'contained' : 'outlined'}
+                      onClick={() => handleUpgradePlan(pricing.duration)}
+                      disabled={loadingDuration === pricing.duration}
+                      sx={{
+                        mt: 'auto',
+                        height: 48,
+                        fontWeight: 700,
+                        borderRadius: 2,
+                        fontSize: '1rem',
+                        textTransform: 'none',
+                        background:
+                          selectedDuration === pricing.duration
+                            ? 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)'
+                            : 'transparent',
+                        '&:hover': {
+                          background:
+                            selectedDuration === pricing.duration
+                              ? 'linear-gradient(135deg, #1D4ED8 0%, #6D28D9 100%)'
+                              : 'rgba(37, 99, 235, 0.04)',
+                        },
+                      }}
+                    >
+                      {loadingDuration === pricing.duration
+                        ? 'Processing...'
+                        : `Choose ${pricing.duration} ${pricing.duration === 1 ? 'Month' : 'Months'}`}
+                    </Button>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            ))}
           </Grid>
 
-          <Grid item xs={12} md={5}>
-            <Card sx={{ borderRadius: 2, border: `1px solid ${themeColors.border}` }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Monthly Usage Graph</Typography>
-                <Stack spacing={0.6}>
-                  <Chip label="Credit consumption tracked" color="success" />
-                  <Chip label="Resume unlock usage tracked" color="success" />
-                  <Chip label="AI usage monitored" color="success" />
-                  <Chip label="Job posting usage tracked" color="success" />
-                  <Chip label="Automation runs tracked" color="success" />
-                  <Chip label="Interview credits tracked" color="success" />
-                  <Chip label="API usage tracked" color="success" />
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
+          <Paper
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              border: '1px solid #E5E7EB',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%)',
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 800,
+                mb: 3,
+                color: '#1F2937',
+                textAlign: 'center',
+              }}
+            >
+              Everything Included in Recruiter Pro
+            </Typography>
 
+            <Grid container spacing={3}>
+              {PRO_FEATURES.map((featureGroup) => {
+                const IconComponent = featureGroup.icon;
+                return (
+                  <Grid item xs={12} sm={6} md={3} key={featureGroup.category}>
+                    <Card
+                      sx={{
+                        borderRadius: 3,
+                        border: '1px solid #E5E7EB',
+                        height: '100%',
+                        '&:hover': {
+                          boxShadow: '0 8px 16px rgba(37, 99, 235, 0.08)',
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                          <IconComponent sx={{ fontSize: 20, color: '#2563EB' }} />
+                          <Typography
+                            variant="overline"
+                            sx={{
+                              fontWeight: 800,
+                              color: '#2563EB',
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            {featureGroup.category}
+                          </Typography>
+                        </Box>
+
+                        <Stack spacing={1}>
+                          {featureGroup.features.map((feature) => (
+                            <Box key={feature} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                              <CheckCircleIcon
+                                sx={{
+                                  fontSize: 16,
+                                  color: '#10B981',
+                                  mt: 0.5,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ color: '#4B5563' }}>
+                                {feature}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Paper>
+
+          <Box
+            sx={{
+              mt: 4,
+              p: 2.5,
+              borderRadius: 3,
+              background: 'rgba(59, 130, 246, 0.05)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 2,
+            }}
+          >
+            <SecurityIcon sx={{ color: '#2563EB', mt: 0.5, flexShrink: 0 }} />
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1F2937', mb: 0.5 }}>
+                Secure & Transparent Billing
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                All payments are processed securely. No hidden fees. Cancel anytime. Our billing is audited and transparent.
+              </Typography>
+            </Box>
+          </Box>
+        </MotionBox>
+      </Container>
     </MotionBox>
   );
 };

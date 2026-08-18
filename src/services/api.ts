@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { JobSeeker, Recruiter, Job } from '../types';
 import { getFreshnessDate, diversifyJobsByCompany } from '@utils/index';
 import { isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
+import { ensureRecruiterWelcomeBenefit, restoreRecruiterWelcomeJobPost, reserveRecruiterWelcomeJobPost } from '@utils/recruiterWelcomeBenefits';
 
 const normalizeJob = (job: Record<string, any>): Job => ({
   ...job,
@@ -103,8 +104,10 @@ export const userService = {
           .select()
           .single();
         if (error) throw error;
+        await ensureRecruiterWelcomeBenefit(userId).catch(() => undefined);
         return data;
       }
+      await ensureRecruiterWelcomeBenefit(userId).catch(() => undefined);
       return existing;
     }
 
@@ -136,6 +139,7 @@ export const userService = {
 
     const { data, error } = await supabase.from('profiles').insert([payload]).select().single();
     if (error) throw error;
+    await ensureRecruiterWelcomeBenefit(userId).catch(() => undefined);
     return data;
   },
 
@@ -463,6 +467,62 @@ export const jobService = {
 
   async createJob(userId: string, jobData: Partial<Job>) {
     if (!userId) throw new Error('Missing userId for createJob');
+
+    const { data: subscriptionData, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan, status')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const hasUnlimitedRecruiterPlan = !subscriptionError && subscriptionData && ['premium', 'pro', 'enterprise'].includes(String(subscriptionData.plan || '').toLowerCase());
+
+    if (!hasUnlimitedRecruiterPlan) {
+      try {
+        const welcomeCheck = await ensureRecruiterWelcomeBenefit(userId);
+        if ((welcomeCheck.free_job_posts_total - welcomeCheck.free_job_posts_used) <= 0) {
+          throw new Error('Your free job posting allowance has been used.');
+        }
+      } catch (welcomeError) {
+        if (welcomeError instanceof Error && welcomeError.message.includes('free job posting allowance')) {
+          throw welcomeError;
+        }
+      }
+
+      try {
+        const reservation = await reserveRecruiterWelcomeJobPost(userId);
+        if (!reservation.allowed) {
+          throw new Error('Your free job posting allowance has been used.');
+        }
+
+        try {
+          // insert the job only after the free allowance is reserved
+          const { data, error } = await supabase
+            .from('jobs')
+            .insert([{
+              ...jobData,
+              posted_by: userId,
+              status: 'published',
+            }])
+            .select();
+          if (error) {
+            await restoreRecruiterWelcomeJobPost(userId, 1).catch(() => undefined);
+            throw error;
+          }
+          return data?.[0] ? normalizeJob(data[0]) : null;
+        } catch (jobError) {
+          await restoreRecruiterWelcomeJobPost(userId, 1).catch(() => undefined);
+          throw jobError;
+        }
+      } catch (reservationError) {
+        if (reservationError instanceof Error && reservationError.message.includes('free job posting allowance')) {
+          throw reservationError;
+        }
+        throw reservationError;
+      }
+    }
 
     // List of ALL camelCase properties to EXCLUDE from the payload
     // These should NEVER be sent to Supabase as they are not actual database columns

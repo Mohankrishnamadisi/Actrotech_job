@@ -7,9 +7,11 @@ import { integrationsHubService } from '@services/integrationsHub';
 import { teamManagementService } from '@services/teamManagement';
 import { supabase } from '@services/supabase';
 
-export type PlanId = 'free' | 'starter' | 'professional' | 'business' | 'enterprise';
+export const RECRUITER_PLAN_DURATIONS = [1, 3, 6, 12] as const;
+export type RecruiterPlanDuration = (typeof RECRUITER_PLAN_DURATIONS)[number];
+export type PlanId = 'free' | 'actro_recruiter_pro';
 export type SubscriptionStatus = 'active' | 'trial' | 'paused' | 'cancelled' | 'expired';
-export type BillingCycle = 'monthly' | 'quarterly' | 'yearly' | 'annual_contract';
+export type BillingCycle = 'monthly' | 'quarterly' | 'half_yearly' | 'yearly' | 'annual_contract';
 export type CreditWalletType =
   | 'resume_unlock'
   | 'ai'
@@ -268,96 +270,56 @@ const walletLabelMap: Record<CreditWalletType, string> = {
   api: 'API Credits',
 };
 
+export const RECRUITER_PLAN_PRICING: Record<RecruiterPlanDuration, number> = {
+  1: 999,
+  3: 2499,
+  6: 4499,
+  12: 7999,
+};
+
+export const RECRUITER_TEAM_LIMITS: Record<RecruiterPlanDuration, number> = {
+  1: 10,
+  3: 10,
+  6: 10,
+  12: 15,
+};
+
 const planCatalog: SubscriptionPlan[] = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'FREE',
     priceMonthly: 0,
     priceYearly: 0,
     limits: {
-      jobs: 3,
+      jobs: 15,
       recruiters: 1,
       aiRequests: 30,
-      resumeUnlockCredits: 20,
+      resumeUnlockCredits: 150,
       automationRules: 2,
       storageGb: 1,
       integrations: 1,
       analytics: 'basic',
       support: 'community',
     },
-    features: ['Basic dashboard', 'Limited ATS', 'Email support'],
+    features: ['15 free job posts', '150 free resume views', 'One-time onboarding benefit', 'Basic dashboard access'],
   },
   {
-    id: 'starter',
-    name: 'Starter',
-    priceMonthly: 1499,
-    priceYearly: 14990,
+    id: 'actro_recruiter_pro',
+    name: 'ACTRO RECRUITER PRO',
+    priceMonthly: 999,
+    priceYearly: 7999,
     limits: {
-      jobs: 15,
-      recruiters: 3,
-      aiRequests: 300,
-      resumeUnlockCredits: 200,
-      automationRules: 10,
-      storageGb: 10,
-      integrations: 5,
-      analytics: 'basic',
-      support: 'priority',
-    },
-    features: ['Job sync', 'Team access', 'Starter automation'],
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    priceMonthly: 3999,
-    priceYearly: 39990,
-    limits: {
-      jobs: 60,
-      recruiters: 10,
-      aiRequests: 1800,
-      resumeUnlockCredits: 1200,
-      automationRules: 50,
-      storageGb: 80,
-      integrations: 20,
-      analytics: 'advanced',
-      support: 'priority',
-    },
-    features: ['Advanced analytics', 'AI workflows', 'API access'],
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    priceMonthly: 9999,
-    priceYearly: 99990,
-    limits: {
-      jobs: 200,
-      recruiters: 30,
-      aiRequests: 8000,
-      resumeUnlockCredits: 5000,
-      automationRules: 200,
-      storageGb: 300,
-      integrations: 60,
-      analytics: 'advanced',
-      support: 'dedicated',
-    },
-    features: ['Enterprise controls', 'Billing allocations', 'Priority SLA'],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    priceMonthly: 0,
-    priceYearly: 0,
-    limits: {
-      jobs: 99999,
-      recruiters: 99999,
-      aiRequests: 999999,
-      resumeUnlockCredits: 999999,
-      automationRules: 99999,
-      storageGb: 2048,
+      jobs: 9999,
+      recruiters: 15,
+      aiRequests: 9999,
+      resumeUnlockCredits: 9999,
+      automationRules: 9999,
+      storageGb: 999,
       integrations: 999,
-      analytics: 'enterprise',
-      support: 'dedicated',
+      analytics: 'advanced',
+      support: 'priority',
     },
-    features: ['Custom pricing', 'Annual contracts', 'PO/manual invoices', 'Dedicated account manager'],
+    features: ['Unlimited job posting', 'Priority candidate access', 'Team member management', 'Advanced recruiter suite'],
   },
 ];
 
@@ -497,6 +459,20 @@ const formatInvoiceNo = (idx: number): string => `INV-${format(new Date(), 'yyyy
 export const billingSubscriptionService = {
   getPlanCatalog(): SubscriptionPlan[] {
     return [...planCatalog];
+  },
+
+  getRecruiterPlanCatalog(): SubscriptionPlan[] {
+    return [...planCatalog];
+  },
+
+  getRecruiterPlanPricing(duration: RecruiterPlanDuration): { price: number; teamMemberLimit: number; label: string } {
+    const price = RECRUITER_PLAN_PRICING[duration];
+    const teamMemberLimit = RECRUITER_TEAM_LIMITS[duration];
+    return {
+      price,
+      teamMemberLimit,
+      label: `${duration} Month${duration > 1 ? 's' : ''}`,
+    };
   },
 
   getCreditPackages(type?: CreditWalletType): CreditPackage[] {

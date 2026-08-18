@@ -226,7 +226,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
-                    secondary={item.id === 'billing-subscription' ? `${credits} Credits • ${planName}` : undefined}
+                    secondary={item.id === 'billing-subscription' ? `${planName}` : undefined}
                     primaryTypographyProps={{
                       fontSize: '0.875rem',
                       fontWeight: isActive ? 600 : 500,
