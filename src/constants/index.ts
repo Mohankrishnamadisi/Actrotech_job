@@ -821,6 +821,7 @@ export const ROUTES = {
   DASHBOARD_MENTORSHIP: '/dashboard/mentorship',
   DASHBOARD_EVENTS: '/dashboard/events',
   DASHBOARD_AI_CAREER_HUB: '/dashboard/ai-career-hub',
+  DASHBOARD_LEARNING: '/dashboard/learning',
   DASHBOARD_FREE_NOTES: '/dashboard/free-notes',
   DASHBOARD_SETTINGS: '/dashboard/settings',
   DASHBOARD_SETTINGS_ACCOUNT: '/dashboard/settings/account',

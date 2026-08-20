@@ -161,11 +161,13 @@ export const Navbar: React.FC<{ backTo?: string }> = ({ backTo }) => {
   const mobileNavItems = [
     { label: 'Home', to: ROUTES.HOME },
     { label: 'Jobs', to: ROUTES.JOBS },
+    { label: 'Learning', to: ROUTES.DASHBOARD_LEARNING },
   ];
 
   const desktopNavItems = [
     { label: 'Home', to: ROUTES.HOME },
     { label: 'Jobs', to: ROUTES.JOBS },
+    { label: 'Learning', to: ROUTES.DASHBOARD_LEARNING },
   ];
 
   const featuredCompanies = [
@@ -192,6 +194,7 @@ export const Navbar: React.FC<{ backTo?: string }> = ({ backTo }) => {
     { label: 'Events', to: ROUTES.DASHBOARD_EVENTS },
     { label: 'Assessments', to: ROUTES.DASHBOARD_ASSESSMENTS },
     { label: 'AI Career Hub', to: ROUTES.DASHBOARD_AI_CAREER_HUB },
+    { label: 'Learning', to: ROUTES.DASHBOARD_LEARNING },
     { label: 'Recommended Jobs', to: '/dashboard/recommended-jobs' },
     { label: 'Remote Dashboard', to: '/dashboard/remote-jobs' },
     { label: 'Mock Interviews', to: '/dashboard/mock-interviews' },

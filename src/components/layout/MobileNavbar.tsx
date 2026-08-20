@@ -179,6 +179,7 @@ export const MobileNavbar: React.FC = () => {
     { label: 'Mentorship', to: ROUTES.DASHBOARD_MENTORSHIP, icon: MentorIcon },
     { label: 'Events', to: ROUTES.DASHBOARD_EVENTS, icon: EventIcon },
     { label: 'AI Career Hub', to: ROUTES.DASHBOARD_AI_CAREER_HUB, icon: AiCareerHubIcon },
+    { label: 'Learning', to: ROUTES.DASHBOARD_LEARNING, icon: AssessmentsIcon },
     { label: 'Notifications', to: ROUTES.DASHBOARD_NOTIFICATIONS, icon: NotificationsIcon },
     { label: 'Profile', to: ROUTES.DASHBOARD_PROFILE, icon: PersonIcon },
     { label: 'Settings', to: ROUTES.DASHBOARD_SETTINGS_ACCOUNT, icon: SettingsIcon },

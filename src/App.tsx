@@ -50,6 +50,7 @@ import FreeNotesPage from '@pages/dashboard/tools/FreeNotes';
 import AiCareerHub from '@pages/dashboard/AiCareerHub';
 import AssessmentsPage from '@pages/dashboard/Assessments';
 import CommunityNetworkingHub from '@pages/dashboard/CommunityNetworkingHub';
+import LearningPage from '@pages/dashboard/Learning';
 import MessagingPage from '@pages/Messaging';
 import { CompanyCareerPage } from '@pages/CompanyCareerPage';
 import AdminLayout from './admin/AdminLayout';
@@ -290,6 +291,10 @@ const AnimatedRoutes: React.FC = () => {
               <AiCareerHub />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path={ROUTES.DASHBOARD_LEARNING}
+          element={<LearningPage />}
         />
         <Route
           path={ROUTES.DASHBOARD_FREE_NOTES}
