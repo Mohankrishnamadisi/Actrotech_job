@@ -2,19 +2,19 @@
 :root {
   --dash-collapsed: 80px;
   --dash-expanded: 300px;
-  --dash-gap: 130px;
+  --dash-gap: 24px;
+  --dash-left: 16px;
   --sidebar-width: var(--dash-collapsed);
 }
 
 body.nav-expanded {
   --sidebar-width: var(--dash-expanded);
-  --dash-gap: 38px;
 }
 
 .dash-nav__cont {
   position: fixed;
   top: 80px;
-  left: 16px;
+  left: var(--dash-left);
   width: var(--dash-collapsed);
   height: calc(100vh - 96px);
   background: rgba(255,255,255,0.96);
@@ -34,16 +34,12 @@ body.nav-expanded .dash-nav__cont {
   overflow-y: auto;
 }
 
+/* Content follows the rail width so the expanded menu never covers it */
 .dashboard-content {
   transition: margin-left .28s ease, width .28s ease;
-  margin-left: calc(var(--sidebar-width) + var(--dash-gap));
-  width: calc(100% - var(--sidebar-width) - var(--dash-gap));
+  margin-left: calc(var(--dash-left) + var(--sidebar-width) + var(--dash-gap));
+  width: calc(100% - var(--dash-left) - var(--sidebar-width) - var(--dash-gap));
   box-sizing: border-box;
-}
-
-body.nav-expanded .dashboard-content {
-  margin-left: calc(var(--sidebar-width) + var(--dash-gap));
-  width: calc(100% - var(--sidebar-width) - var(--dash-gap));
 }
 
 .footer-visible .dash-nav__cont {
@@ -66,10 +62,6 @@ body.nav-expanded .dashboard-content {
 
 @media (max-width: 1200px) {
   .dashboard-content {
-    margin-left: 0;
-    width: 100%;
-  }
-  body.nav-expanded .dashboard-content {
     margin-left: 0;
     width: 100%;
   }

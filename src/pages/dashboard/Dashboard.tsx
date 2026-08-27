@@ -4,14 +4,17 @@ import {
   Badge,
   Box,
   Button,
+  ButtonBase,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Container,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
   Drawer,
   Grid,
   IconButton,
@@ -20,8 +23,12 @@ import {
   Menu,
   MenuItem,
   ListItem,
+  ListItemAvatar,
+  ListItemButton,
   ListItemText,
+  Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -31,6 +38,7 @@ import {
   AttachMoney as AttachMoneyIcon,
   AutoAwesome as AutoAwesomeIcon,
   Bookmark as BookmarkIcon,
+  BookmarkBorder as BookmarkBorderIcon,
   ChatBubbleOutline as ChatIcon,
   CheckCircle as CheckCircleIcon,
   Dashboard as DashboardIcon,
@@ -77,6 +85,7 @@ import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
 import { applicationService, jobService, notificationService, savedService, userService, recruiterService } from '@services/api';
 import { messagingService } from '@services/messaging';
+import Swal from '@utils/sweetAlert';
 import { formatDate } from '@utils/index';
 import { getPlanDisplayName, isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
 import {
@@ -99,6 +108,8 @@ type RecentApplication = {
 
 type SavedJobItem = {
   id: string;
+  job_id?: string;
+  created_at?: string;
   jobs?: {
     id?: string;
     title?: string;
@@ -157,9 +168,11 @@ export const Dashboard: React.FC = () => {
   const [selectedRecruiterProfile, setSelectedRecruiterProfile] = useState<any | null>(null);
   const [selectedRecruiterJobs, setSelectedRecruiterJobs] = useState<any[] | null>(null);
   const [recruiterModalOpen, setRecruiterModalOpen] = useState(false);
-  const [activeRecruiterFilter, setActiveRecruiterFilter] = useState<'all' | 'actions' | 'search'>('all');
+  const [recruiterDetailsLoading, setRecruiterDetailsLoading] = useState(false);
+  const [activeRecruiterFilter, setActiveRecruiterFilter] = useState<'all' | 'views' | 'resume'>('all');
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
+  const [savingJobId, setSavingJobId] = useState<string | null>(null);
 
   const sidebarItems = useMemo(
     () => [
@@ -346,15 +359,73 @@ export const Dashboard: React.FC = () => {
     [profileViewCount, recentApplications.length, resumeDownloadCount, savedCount],
   );
 
-  const activityItems = useMemo(
-    () => [
-      { title: 'Recruiter viewed your profile', subtitle: 'Google · Hiring for Sr. Frontend Engineer', time: '2 hours ago', status: 'New', icon: VisibilityIcon, tone: 'primary' },
-      { title: 'Resume downloaded', subtitle: 'Microsoft · Design systems team', time: '5 hours ago', status: 'Saved', icon: DownloadIcon, tone: 'success' },
-      { title: 'Interview invite', subtitle: 'Cognizant · Product analyst panel', time: 'Yesterday', status: 'Priority', icon: EventAvailableIcon, tone: 'warning' },
-      { title: 'Application shortlisted', subtitle: 'Amazon · Full-stack developer', time: '2 days ago', status: 'Shortlisted', icon: AssignmentTurnedInIcon, tone: 'success' },
-    ],
-    [],
-  );
+  /** Real timeline built from recruiter signals, applications and saved jobs. */
+  const activityItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      title: string;
+      subtitle: string;
+      timestamp: number;
+      status: string;
+      icon: typeof VisibilityIcon;
+      tone: 'primary' | 'success' | 'warning' | 'info';
+      to?: string;
+    }> = [];
+
+    (profileViewRecruiters || []).forEach((item: any) => {
+      items.push({
+        id: `view-${item.recruiter_id}`,
+        title: 'Recruiter viewed your profile',
+        subtitle: `${item.company_name || item.recruiter_name || 'A recruiter'}${item.total_views > 1 ? ` · ${item.total_views} views` : ''}`,
+        timestamp: new Date(item.last_viewed_at || 0).getTime(),
+        status: 'Viewed',
+        icon: VisibilityIcon,
+        tone: 'primary',
+      });
+    });
+
+    (resumeUnlockRecruiters || []).forEach((item: any) => {
+      items.push({
+        id: `unlock-${item.recruiter_id}`,
+        title: 'Resume downloaded',
+        subtitle: `${item.company_name || item.recruiter_name || 'A recruiter'} accessed your resume`,
+        timestamp: new Date(item.last_unlocked_at || 0).getTime(),
+        status: 'Resume',
+        icon: DownloadIcon,
+        tone: 'info',
+      });
+    });
+
+    (recentApplications || []).forEach((application: any) => {
+      const status = String(application.status || 'applied').toLowerCase();
+      const isPositive = ['shortlisted', 'interview', 'selected', 'offer', 'hired'].includes(status);
+      items.push({
+        id: `app-${application.id}`,
+        title: isPositive ? `Application ${status}` : `Applied to ${application.jobs?.title || 'a job'}`,
+        subtitle: [application.jobs?.company_name, application.jobs?.title].filter(Boolean).join(' · ') || 'Job application',
+        timestamp: new Date(application.applied_at || 0).getTime(),
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        icon: isPositive ? AssignmentTurnedInIcon : WorkIcon,
+        tone: isPositive ? 'success' : 'warning',
+        to: ROUTES.DASHBOARD_APPLICATIONS,
+      });
+    });
+
+    (savedJobs || []).slice(0, 4).forEach((item: any) => {
+      items.push({
+        id: `saved-${item.id}`,
+        title: `Saved ${item.jobs?.title || 'a job'}`,
+        subtitle: item.jobs?.company_name || 'Saved for later',
+        timestamp: new Date(item.created_at || 0).getTime(),
+        status: 'Saved',
+        icon: BookmarkIcon,
+        tone: 'success',
+        to: ROUTES.DASHBOARD_SAVED_JOBS,
+      });
+    });
+
+    return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, 6);
+  }, [profileViewRecruiters, resumeUnlockRecruiters, recentApplications, savedJobs]);
 
   const recruiterActionCount = Math.max(0, (profileViewCount ?? 0) + (resumeDownloadCount ?? 0));
   const searchAppearanceCount = Math.max(0, profileViewCount ?? 0);
@@ -363,69 +434,120 @@ export const Dashboard: React.FC = () => {
     const feed = [
       ...(profileViewRecruiters || []).map((item: any) => ({
         id: `view-${item.recruiter_id}`,
+        recruiterId: String(item.recruiter_id || ''),
         company: item.company_name || item.recruiter_name || 'Company',
         recruiter: item.recruiter_name || 'Recruiter',
+        logo: item.company_logo_url || item.logo_url || '',
         action: 'Viewed your profile',
-        type: 'actions' as const,
+        type: 'views' as const,
         count: item.total_views || 1,
         timestamp: item.last_viewed_at || null,
       })),
       ...(resumeUnlockRecruiters || []).map((item: any) => ({
         id: `unlock-${item.recruiter_id}`,
+        recruiterId: String(item.recruiter_id || ''),
         company: item.company_name || item.recruiter_name || 'Company',
         recruiter: item.recruiter_name || 'Recruiter',
+        logo: item.company_logo_url || item.logo_url || '',
         action: 'Downloaded your resume',
-        type: 'search' as const,
+        type: 'resume' as const,
         count: item.total_unlocks || 1,
         timestamp: item.last_unlocked_at || null,
       })),
     ];
 
-    return feed
-      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
-      .slice(0, 6);
+    return feed.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }, [profileViewRecruiters, resumeUnlockRecruiters]);
 
   const visibleRecruiterInsights = useMemo(() => {
-    if (activeRecruiterFilter === 'actions') {
-      return recruiterInsightFeed.filter((item) => item.type === 'actions');
-    }
-    if (activeRecruiterFilter === 'search') {
-      return recruiterInsightFeed.filter((item) => item.type === 'search');
-    }
-    return recruiterInsightFeed;
+    if (activeRecruiterFilter === 'all') return recruiterInsightFeed.slice(0, 9);
+    return recruiterInsightFeed.filter((item) => item.type === activeRecruiterFilter).slice(0, 9);
   }, [activeRecruiterFilter, recruiterInsightFeed]);
 
-  useEffect(() => {
-    if (recruiterInsightFeed && recruiterInsightFeed.length > 0 && !selectedRecruiterInsight) {
-      setSelectedRecruiterInsight(recruiterInsightFeed[0]);
-    }
-  }, [recruiterInsightFeed, selectedRecruiterInsight]);
+  const recruiterViewCount = useMemo(
+    () => recruiterInsightFeed.filter((item) => item.type === 'views').reduce((sum, item) => sum + item.count, 0),
+    [recruiterInsightFeed]
+  );
 
-  useEffect(() => {
-    if (!selectedRecruiterInsight) return;
-    let mounted = true;
-    const loadDetails = async () => {
+  const recruiterResumeCount = useMemo(
+    () => recruiterInsightFeed.filter((item) => item.type === 'resume').reduce((sum, item) => sum + item.count, 0),
+    [recruiterInsightFeed]
+  );
+
+  const companiesEngagedCount = useMemo(
+    () => new Set(recruiterInsightFeed.map((item) => item.company.toLowerCase())).size,
+    [recruiterInsightFeed]
+  );
+
+  const savedJobIds = useMemo(
+    () => new Set((savedJobs || []).map((item: any) => String(item.job_id || item.jobs?.id || '')).filter(Boolean)),
+    [savedJobs]
+  );
+
+  const handleToggleSaveJob = React.useCallback(
+    async (job: any) => {
+      if (!user?.id || !job?.id) return;
+      const jobId = String(job.id);
+      const wasSaved = savedJobIds.has(jobId);
+
+      setSavingJobId(jobId);
       try {
-        const recruiterId = selectedRecruiterInsight?.id?.split('-')?.[1];
-        if (!recruiterId) return;
-        const [profile, jobs] = await Promise.all([
-          recruiterService.getRecruiterProfile(recruiterId).catch(() => null),
-          jobService.getRecruiterJobs(recruiterId).catch(() => []),
-        ]);
-        if (!mounted) return;
-        setSelectedRecruiterProfile(profile);
-        setSelectedRecruiterJobs(jobs || []);
-        setRecruiterModalOpen(true);
-      } catch (err) {
-        // noop
+        if (wasSaved) {
+          await savedService.unsaveJob(user.id, jobId);
+          setSavedJobs((prev) => prev.filter((item: any) => String(item.job_id || item.jobs?.id || '') !== jobId));
+        } else {
+          await savedService.saveJob(user.id, jobId);
+          setSavedJobs((prev) => [
+            { id: `saved-${jobId}`, job_id: jobId, jobs: job, created_at: new Date().toISOString() } as SavedJobItem,
+            ...prev,
+          ]);
+        }
+        void Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: wasSaved ? 'Removed from saved jobs' : 'Job saved',
+          showConfirmButton: false,
+          timer: 1600,
+        });
+      } catch {
+        void Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Could not update saved jobs',
+          showConfirmButton: false,
+          timer: 2000,
+        });
+      } finally {
+        setSavingJobId(null);
       }
-    };
+    },
+    [user?.id, savedJobIds]
+  );
 
-    loadDetails();
+  // Details are fetched on demand so the dialog never opens by itself
+  const openRecruiterInsight = React.useCallback(async (insight: any) => {
+    setSelectedRecruiterInsight(insight);
+    setSelectedRecruiterProfile(null);
+    setSelectedRecruiterJobs(null);
+    setRecruiterModalOpen(true);
 
-    return () => { mounted = false; };
-  }, [selectedRecruiterInsight]);
+    const recruiterId = insight?.recruiterId;
+    if (!recruiterId) return;
+
+    setRecruiterDetailsLoading(true);
+    try {
+      const [profile, jobs] = await Promise.all([
+        recruiterService.getRecruiterProfile(recruiterId).catch(() => null),
+        jobService.getRecruiterJobs(recruiterId).catch(() => []),
+      ]);
+      setSelectedRecruiterProfile(profile);
+      setSelectedRecruiterJobs(jobs || []);
+    } finally {
+      setRecruiterDetailsLoading(false);
+    }
+  }, []);
 
   const pipeline = [
     { label: 'Applied', value: recentApplications.length || 0 },
@@ -587,8 +709,8 @@ export const Dashboard: React.FC = () => {
         {!isMobile && renderSidebar()}
 
         <Box className="dashboard-content">
-          <Box sx={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-start' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'stretch' }}>
+            <Box sx={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: 'easeOut' }}>
                 <Card sx={{ position: 'relative', overflow: 'hidden', borderRadius: 4.5, background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 34%, #4f46e5 66%, #7c3aed 100%)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 32px 60px rgba(79,70,229,0.24)' }}>
                   <Box sx={{ position: 'absolute', width: 280, height: 280, right: -60, top: -80, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.08) 35%, transparent 70%)' }} />
@@ -712,139 +834,359 @@ export const Dashboard: React.FC = () => {
 
               <Grid container spacing={2.5} sx={{ mb: 0.5 }}>
                 <Grid item xs={12}>
-                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)' }}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
+                    <Box sx={{ height: 4, background: 'linear-gradient(90deg, #2563eb 0%, #7c3aed 55%, #ec4899 100%)' }} />
                     <CardContent sx={{ p: { xs: 2.1, md: 2.5 } }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.5, mb: 2.2 }}>
-                        <Box>
-                          <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em' }}>Recruiter Actions & Search Appearances</Typography>
-                          <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.35 }}>See which recruiters discovered your profile and what they did</Typography>
+                        <Box sx={{ display: 'flex', gap: 1.4, alignItems: 'center' }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2.4,
+                              display: 'grid',
+                              placeItems: 'center',
+                              color: '#fff',
+                              background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                              boxShadow: '0 10px 22px rgba(37,99,235,0.32)',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <TimelineIcon />
+                          </Box>
+                          <Box>
+                            <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em' }}>Recruiter Insights</Typography>
+                            <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.2 }}>See which recruiters discovered your profile and what they did</Typography>
+                          </Box>
                         </Box>
-                        <Chip label="Live recruiter activity" sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 800 }} />
+
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                          <Chip
+                            size="small"
+                            icon={<SearchIcon sx={{ fontSize: 15 }} />}
+                            label={`${searchAppearanceCount} search appearances`}
+                            sx={{ bgcolor: '#f1f5f9', color: '#334155', fontWeight: 700 }}
+                          />
+                          <Chip
+                            size="small"
+                            label={
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.7 }}>
+                                <Box
+                                  sx={{
+                                    width: 7,
+                                    height: 7,
+                                    borderRadius: '50%',
+                                    bgcolor: '#22c55e',
+                                    animation: 'recruiterPulse 1.6s ease-in-out infinite',
+                                    '@keyframes recruiterPulse': {
+                                      '0%, 100%': { opacity: 1, boxShadow: '0 0 0 0 rgba(34,197,94,0.5)' },
+                                      '50%': { opacity: 0.6, boxShadow: '0 0 0 5px rgba(34,197,94,0)' },
+                                    },
+                                  }}
+                                />
+                                Live
+                              </Box>
+                            }
+                            sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 800 }}
+                          />
+                        </Stack>
                       </Box>
 
-                      <Grid container spacing={1.6} sx={{ mb: 2 }}>
+                      <Grid container spacing={1.6} sx={{ mb: 2.2 }}>
                         {[
-                          { key: 'actions', label: 'Recruiter Actions', value: recruiterActionCount, subtitle: 'Views + resume access' },
-                          { key: 'search', label: 'Search Appearances', value: searchAppearanceCount, subtitle: 'Profile seen in recruiter search' },
-                          { key: 'companies', label: 'Companies Engaged', value: recruiterInsightFeed.length, subtitle: 'Recruiters following up' },
-                        ].map((item) => (
-                          <Grid item xs={12} md={4} key={item.key}>
-                            <Button
-                              onClick={() => setActiveRecruiterFilter(item.key as 'actions' | 'search' | 'all')}
-                              variant={activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? 'contained' : 'outlined'}
-                              sx={{
-                                width: '100%',
-                                justifyContent: 'flex-start',
-                                borderRadius: 3,
-                                px: 1.5,
-                                py: 1.2,
-                                textTransform: 'none',
-                                color: activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? '#fff' : '#0f172a',
-                                background: activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#fff',
-                                borderColor: 'rgba(148,163,184,0.24)',
-                                '&:hover': { background: activeRecruiterFilter === item.key || (item.key === 'companies' && activeRecruiterFilter === 'all') ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#f8fafc' },
-                              }}
-                            >
-                              <Box sx={{ textAlign: 'left' }}>
-                                <Typography sx={{ fontWeight: 800, fontSize: 14 }}>{item.label}</Typography>
-                                <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.2 }}>{item.value}</Typography>
-                                <Typography sx={{ fontSize: 12, opacity: 0.85 }}>{item.subtitle}</Typography>
-                              </Box>
-                            </Button>
-                          </Grid>
-                        ))}
+                          {
+                            key: 'all' as const,
+                            label: 'Recruiter Actions',
+                            value: recruiterActionCount,
+                            subtitle: `${companiesEngagedCount} compan${companiesEngagedCount === 1 ? 'y' : 'ies'} engaged`,
+                            icon: TrendingUpIcon,
+                            accent: '#2563eb',
+                          },
+                          {
+                            key: 'views' as const,
+                            label: 'Profile Views',
+                            value: recruiterViewCount,
+                            subtitle: 'Recruiters opened your profile',
+                            icon: VisibilityIcon,
+                            accent: '#7c3aed',
+                          },
+                          {
+                            key: 'resume' as const,
+                            label: 'Resume Downloads',
+                            value: recruiterResumeCount,
+                            subtitle: 'Resume accessed by recruiters',
+                            icon: DownloadIcon,
+                            accent: '#0ea5e9',
+                          },
+                        ].map((item) => {
+                          const isActive = activeRecruiterFilter === item.key;
+                          return (
+                            <Grid item xs={12} sm={6} md={4} key={item.key}>
+                              <ButtonBase
+                                onClick={() => setActiveRecruiterFilter(item.key)}
+                                aria-pressed={isActive}
+                                sx={{
+                                  width: '100%',
+                                  textAlign: 'left',
+                                  justifyContent: 'flex-start',
+                                  borderRadius: 3,
+                                  p: 1.6,
+                                  border: '1px solid',
+                                  borderColor: isActive ? 'transparent' : 'rgba(148,163,184,0.24)',
+                                  color: isActive ? '#fff' : '#0f172a',
+                                  background: isActive ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : '#fff',
+                                  boxShadow: isActive ? '0 14px 26px rgba(37,99,235,0.28)' : 'none',
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': {
+                                    background: isActive ? 'linear-gradient(135deg, #1d4ed8, #6d28d9)' : '#f8fafc',
+                                    borderColor: isActive ? 'transparent' : item.accent,
+                                    transform: 'translateY(-2px)',
+                                  },
+                                }}
+                              >
+                                <Box sx={{ width: '100%' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                                    <Typography sx={{ fontWeight: 800, fontSize: 13.5 }}>{item.label}</Typography>
+                                    <Box
+                                      sx={{
+                                        width: 30,
+                                        height: 30,
+                                        borderRadius: 2,
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                        bgcolor: isActive ? 'rgba(255,255,255,0.2)' : `${item.accent}14`,
+                                        color: isActive ? '#fff' : item.accent,
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <item.icon sx={{ fontSize: 17 }} />
+                                    </Box>
+                                  </Box>
+                                  <Typography sx={{ fontSize: 26, fontWeight: 800, lineHeight: 1.15, mt: 0.4 }}>{item.value}</Typography>
+                                  <Typography sx={{ fontSize: 12, opacity: isActive ? 0.88 : 1, color: isActive ? '#fff' : '#64748B', fontWeight: 600 }}>
+                                    {item.subtitle}
+                                  </Typography>
+                                </Box>
+                              </ButtonBase>
+                            </Grid>
+                          );
+                        })}
                       </Grid>
 
                       <Box>
                         {visibleRecruiterInsights.length > 0 ? (
                           <Grid container spacing={1.2}>
-                            {visibleRecruiterInsights.map((item) => {
-                              const isSelected = selectedRecruiterInsight?.id === item.id;
-                              return (
-                                <Grid item xs={12} sm={6} md={4} key={item.id}>
-                                  <Box
-                                    onClick={() => setSelectedRecruiterInsight(item)}
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: 1.2,
-                                      p: 1.1,
-                                      borderRadius: 2.2,
-                                      border: isSelected ? '1px solid rgba(37,99,235,0.18)' : '1px solid rgba(148,163,184,0.12)',
-                                      background: isSelected ? 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.06))' : '#fff',
-                                      cursor: 'pointer',
-                                      '&:hover': { boxShadow: '0 12px 20px rgba(15,23,42,0.04)' },
-                                    }}
-                                  >
-                                    <Box sx={{ width: 44, height: 44, borderRadius: 1.6, overflow: 'hidden', display: 'grid', placeItems: 'center', bgcolor: '#f1f5f9', fontWeight: 800 }}>
-                                      {selectedRecruiterProfile?.company_logo_url && selectedRecruiterProfile?.company_logo_url === item.company ? (
-                                        <img src={selectedRecruiterProfile.company_logo_url} alt={item.company} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                      ) : (
-                                        String(item.company || 'C').charAt(0)
-                                      )}
-                                    </Box>
+                            {visibleRecruiterInsights.map((item) => (
+                              <Grid item xs={12} sm={6} lg={4} key={item.id}>
+                                <ListItemButton
+                                  onClick={() => void openRecruiterInsight(item)}
+                                  sx={{
+                                    borderRadius: 2.4,
+                                    border: '1px solid rgba(148,163,184,0.2)',
+                                    p: 1.2,
+                                    gap: 1.2,
+                                    alignItems: 'center',
+                                    transition: 'all 0.18s ease',
+                                    '&:hover': {
+                                      borderColor: 'rgba(37,99,235,0.5)',
+                                      boxShadow: '0 12px 22px rgba(15,23,42,0.07)',
+                                      transform: 'translateY(-2px)',
+                                      bgcolor: '#fff',
+                                    },
+                                  }}
+                                >
+                                  <ListItemAvatar sx={{ minWidth: 0 }}>
+                                    <Badge
+                                      overlap="circular"
+                                      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                      badgeContent={
+                                        <Box
+                                          sx={{
+                                            width: 18,
+                                            height: 18,
+                                            borderRadius: '50%',
+                                            display: 'grid',
+                                            placeItems: 'center',
+                                            bgcolor: item.type === 'views' ? '#7c3aed' : '#0ea5e9',
+                                            color: '#fff',
+                                            border: '2px solid #fff',
+                                          }}
+                                        >
+                                          {item.type === 'views' ? (
+                                            <VisibilityIcon sx={{ fontSize: 10 }} />
+                                          ) : (
+                                            <DownloadIcon sx={{ fontSize: 10 }} />
+                                          )}
+                                        </Box>
+                                      }
+                                    >
+                                      <Avatar
+                                        src={item.logo || undefined}
+                                        sx={{ width: 44, height: 44, bgcolor: '#eef2ff', color: '#4338ca', fontWeight: 800 }}
+                                      >
+                                        {String(item.company || 'C').charAt(0).toUpperCase()}
+                                      </Avatar>
+                                    </Badge>
+                                  </ListItemAvatar>
 
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                      <Typography sx={{ fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.company}</Typography>
-                                      <Typography sx={{ fontSize: 13, color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.recruiter} • {item.action}</Typography>
-                                    </Box>
+                                  <ListItemText
+                                    sx={{ my: 0, minWidth: 0 }}
+                                    primary={
+                                      <Typography noWrap sx={{ fontWeight: 800, fontSize: 14, color: '#0f172a' }}>
+                                        {item.company}
+                                      </Typography>
+                                    }
+                                    secondary={
+                                      <Typography noWrap sx={{ fontSize: 12.5, color: '#64748B' }}>
+                                        {item.recruiter} • {item.action}
+                                      </Typography>
+                                    }
+                                  />
 
-                                    <Box sx={{ textAlign: 'right', minWidth: 72 }}>
-                                      <Typography sx={{ fontWeight: 800 }}>{item.count}</Typography>
-                                      <Typography sx={{ fontSize: 12, color: '#94A3B8' }}>{item.timestamp ? formatDate(item.timestamp) : ''}</Typography>
-                                    </Box>
+                                  <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                                    <Chip
+                                      size="small"
+                                      label={`${item.count}x`}
+                                      sx={{ height: 20, fontWeight: 800, fontSize: 11, bgcolor: '#eff6ff', color: '#1d4ed8' }}
+                                    />
+                                    <Typography sx={{ fontSize: 11, color: '#94A3B8', mt: 0.3 }}>
+                                      {item.timestamp ? formatDate(item.timestamp) : ''}
+                                    </Typography>
                                   </Box>
-                                </Grid>
-                              );
-                            })}
+                                </ListItemButton>
+                              </Grid>
+                            ))}
                           </Grid>
                         ) : (
-                          <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 2.5, textAlign: 'center', background: 'linear-gradient(135deg, rgba(248,250,252,0.9), rgba(239,246,255,0.8))' }}>
-                            <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>No recruiter activity yet</Typography>
-                            <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.5 }}>Complete your profile and keep applying to see more recruiter signals.</Typography>
+                          <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 3, textAlign: 'center', background: 'linear-gradient(135deg, rgba(248,250,252,0.9), rgba(239,246,255,0.8))' }}>
+                            <Box sx={{ display: 'grid', placeItems: 'center', mb: 1 }}>
+                              <Avatar sx={{ bgcolor: '#e0e7ff', color: '#4338ca', width: 46, height: 46 }}>
+                                <TimelineIcon />
+                              </Avatar>
+                            </Box>
+                            <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>
+                              {activeRecruiterFilter === 'all' ? 'No recruiter activity yet' : 'Nothing in this filter yet'}
+                            </Typography>
+                            <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.5 }}>
+                              Complete your profile and keep applying to see more recruiter signals.
+                            </Typography>
+                            <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 1.8 }}>
+                              {activeRecruiterFilter !== 'all' && (
+                                <Button size="small" variant="outlined" onClick={() => setActiveRecruiterFilter('all')} sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                  Show all activity
+                                </Button>
+                              )}
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}
+                                sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                              >
+                                Improve profile
+                              </Button>
+                            </Stack>
                           </Box>
                         )}
                       </Box>
 
-                      {selectedRecruiterInsight && (
-                        <Box sx={{ mt: 2.2, borderRadius: 3, border: '1px solid rgba(37,99,235,0.14)', background: 'linear-gradient(135deg, rgba(239,246,255,0.8), rgba(255,255,255,0.95))', p: 2 }}>
-                          <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>Selected recruiter activity</Typography>
-                          <Typography sx={{ color: '#1d4ed8', fontWeight: 700, mt: 0.5 }}>{selectedRecruiterInsight.company}</Typography>
-                          <Typography sx={{ color: '#334155', fontSize: 14, mt: 0.4 }}>{selectedRecruiterInsight.recruiter}</Typography>
-                          <Typography sx={{ color: '#475569', fontSize: 13, mt: 0.8 }}>{selectedRecruiterInsight.action} • {selectedRecruiterInsight.count} interaction{selectedRecruiterInsight.count > 1 ? 's' : ''}</Typography>
-                          <Typography sx={{ color: '#64748B', fontSize: 12, mt: 0.4 }}>{selectedRecruiterInsight.timestamp ? formatDate(selectedRecruiterInsight.timestamp) : 'Recent recruiter activity'}</Typography>
-                        </Box>
-                      )}
-                      <Dialog open={recruiterModalOpen} onClose={() => setRecruiterModalOpen(false)} fullWidth maxWidth="md">
-                        <DialogTitle>Recruiter Details</DialogTitle>
-                        <DialogContent>
-                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 1.5 }}>
-                            <Box sx={{ width: 64, height: 64, borderRadius: 1.6, background: '#f1f5f9', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{(selectedRecruiterProfile?.company_name || selectedRecruiterInsight?.company || 'C').charAt(0)}</Box>
-                            <Box>
-                              <Typography sx={{ fontWeight: 800 }}>{selectedRecruiterProfile?.company_name || selectedRecruiterInsight?.company}</Typography>
-                              <Typography sx={{ color: '#64748B' }}>{selectedRecruiterProfile?.hr_name || selectedRecruiterInsight?.recruiter}</Typography>
-                              <Typography sx={{ color: '#475569', fontSize: 13, mt: 0.6 }}>{selectedRecruiterInsight?.action} • {selectedRecruiterInsight?.count} interaction{selectedRecruiterInsight?.count > 1 ? 's' : ''}</Typography>
+                      <Dialog
+                        open={recruiterModalOpen}
+                        onClose={() => setRecruiterModalOpen(false)}
+                        fullWidth
+                        maxWidth="sm"
+                        slotProps={{ paper: { sx: { borderRadius: 3, overflow: 'hidden' } } }}
+                      >
+                        <Box sx={{ height: 4, background: 'linear-gradient(90deg, #2563eb, #7c3aed)' }} />
+                        <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>Recruiter details</DialogTitle>
+                        <DialogContent dividers>
+                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+                            <Avatar
+                              src={selectedRecruiterProfile?.company_logo_url || selectedRecruiterInsight?.logo || undefined}
+                              sx={{ width: 60, height: 60, bgcolor: '#eef2ff', color: '#4338ca', fontWeight: 800, fontSize: 22 }}
+                            >
+                              {(selectedRecruiterProfile?.company_name || selectedRecruiterInsight?.company || 'C').charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography sx={{ fontWeight: 800, fontSize: 17 }}>
+                                {selectedRecruiterProfile?.company_name || selectedRecruiterInsight?.company}
+                              </Typography>
+                              <Typography sx={{ color: '#64748B', fontSize: 14 }}>
+                                {selectedRecruiterProfile?.hr_name || selectedRecruiterInsight?.recruiter}
+                              </Typography>
+                              <Stack direction="row" spacing={0.8} sx={{ mt: 0.8 }} flexWrap="wrap" useFlexGap>
+                                <Chip size="small" label={selectedRecruiterInsight?.action} sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }} />
+                                <Chip
+                                  size="small"
+                                  label={`${selectedRecruiterInsight?.count || 0} interaction${(selectedRecruiterInsight?.count || 0) > 1 ? 's' : ''}`}
+                                  sx={{ bgcolor: '#f1f5f9', color: '#334155', fontWeight: 700 }}
+                                />
+                                {selectedRecruiterInsight?.timestamp && (
+                                  <Chip size="small" label={formatDate(selectedRecruiterInsight.timestamp)} sx={{ bgcolor: '#f1f5f9', color: '#334155', fontWeight: 700 }} />
+                                )}
+                              </Stack>
                             </Box>
                           </Box>
 
-                          <Box sx={{ mt: 1 }}>
-                            <Typography sx={{ fontWeight: 800, mb: 1 }}>Recent Jobs from this company</Typography>
-                            {selectedRecruiterJobs && selectedRecruiterJobs.length > 0 ? (
-                              <List>
-                                {selectedRecruiterJobs.slice(0, 6).map((job) => (
-                                  <ListItem key={job.id} secondaryAction={<Button size="small" onClick={() => navigate(ROUTES.JOB_DETAILS.replace(':id', String(job.id)))}>View</Button>}>
-                                    <ListItemText primary={job.title} secondary={job.company_name} />
-                                  </ListItem>
-                                ))}
-                              </List>
-                            ) : (
-                              <Typography sx={{ color: '#64748B' }}>No public job postings found for this company.</Typography>
-                            )}
-                          </Box>
+                          <Divider sx={{ mb: 1.5 }} />
+
+                          <Typography sx={{ fontWeight: 800, mb: 1, fontSize: 14 }}>Recent jobs from this company</Typography>
+
+                          {recruiterDetailsLoading ? (
+                            <Stack spacing={1}>
+                              {[0, 1, 2].map((row) => (
+                                <Skeleton key={row} variant="rounded" height={52} />
+                              ))}
+                            </Stack>
+                          ) : selectedRecruiterJobs && selectedRecruiterJobs.length > 0 ? (
+                            <List disablePadding>
+                              {selectedRecruiterJobs.slice(0, 6).map((job) => (
+                                <ListItem
+                                  key={job.id}
+                                  disableGutters
+                                  secondaryAction={
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      onClick={() => navigate(ROUTES.JOB_DETAILS.replace(':id', String(job.id)))}
+                                      sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                                    >
+                                      View
+                                    </Button>
+                                  }
+                                >
+                                  <ListItemText
+                                    primary={<Typography sx={{ fontWeight: 700, fontSize: 14 }}>{job.title}</Typography>}
+                                    secondary={job.location || job.company_name}
+                                  />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : (
+                            <Typography sx={{ color: '#64748B', fontSize: 14 }}>No public job postings found for this company.</Typography>
+                          )}
                         </DialogContent>
-                        <DialogActions>
-                          <Button onClick={() => setRecruiterModalOpen(false)}>Close</Button>
-                          <Button onClick={() => { setRecruiterModalOpen(false); if (selectedRecruiterProfile?.company_name) navigate(ROUTES.COMPANY_CAREER_PAGE.replace(':slug', String(selectedRecruiterProfile?.company_name).toLowerCase().replace(/\s+/g, '-'))); }}>View company</Button>
+                        <DialogActions sx={{ px: 2.5, py: 1.6 }}>
+                          <Button onClick={() => setRecruiterModalOpen(false)} sx={{ textTransform: 'none', fontWeight: 700 }}>
+                            Close
+                          </Button>
+                          <Button
+                            variant="contained"
+                            disabled={!selectedRecruiterProfile?.company_name}
+                            onClick={() => {
+                              setRecruiterModalOpen(false);
+                              if (selectedRecruiterProfile?.company_name) {
+                                navigate(
+                                  ROUTES.COMPANY_CAREER_PAGE.replace(
+                                    ':slug',
+                                    String(selectedRecruiterProfile.company_name).toLowerCase().replace(/\s+/g, '-')
+                                  )
+                                );
+                              }
+                            }}
+                            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                          >
+                            View company
+                          </Button>
                         </DialogActions>
                       </Dialog>
                     </CardContent>
@@ -854,56 +1196,256 @@ export const Dashboard: React.FC = () => {
 
               <Grid container spacing={3}>
                 <Grid item xs={12} lg={8}>
-                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%' }}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%', overflow: 'hidden' }}>
+                    <Box sx={{ height: 4, background: 'linear-gradient(90deg, #2563eb 0%, #7c3aed 100%)' }} />
                     <CardContent sx={{ p: 2.5 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.2 }}>
-                        <Box>
-                          <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.04em' }}>Recommended Jobs for You</Typography>
-                          <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.35 }}>Based on your skills and preferences</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, flexWrap: 'wrap', mb: 2.2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.4 }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2.4,
+                              display: 'grid',
+                              placeItems: 'center',
+                              color: '#fff',
+                              background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                              boxShadow: '0 10px 22px rgba(37,99,235,0.32)',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <AutoAwesomeIcon />
+                          </Box>
+                          <Box>
+                            <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em' }}>Recommended Jobs for You</Typography>
+                            <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.2 }}>Matched to your skills, role and preferences</Typography>
+                          </Box>
                         </Box>
-                        <Button component={RouterLink} to="/dashboard/recommended-jobs" sx={{ textTransform: 'none', fontWeight: 700, color: '#1d4ed8' }}>View all</Button>
+                        <Button
+                          component={RouterLink}
+                          to="/dashboard/recommended-jobs"
+                          endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                          sx={{ textTransform: 'none', fontWeight: 700, color: '#1d4ed8', borderRadius: 2 }}
+                        >
+                          View all
+                        </Button>
                       </Box>
 
                       {recommendedLoading ? (
-                        <LinearProgress />
+                        <Stack spacing={1.4}>
+                          {[0, 1, 2].map((row) => (
+                            <Skeleton key={row} variant="rounded" height={132} sx={{ borderRadius: 3 }} />
+                          ))}
+                        </Stack>
                       ) : (
-                        <Stack spacing={1}
->
-                          {recommendedJobs.length > 0 ? recommendedJobs.slice(0, 3).map((job, index) => (
-                            <Box key={job.id || index} sx={{ border: '1px solid rgba(148,163,184,0.14)', borderRadius: 2.4, p: 1.2, background: '#fff', transition: 'all 0.16s ease', '&:hover': { boxShadow: '0 12px 20px rgba(15,23,42,0.04)' } }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.2, alignItems: 'flex-start' }}>
-                                <Box sx={{ display: 'flex', gap: 1.1, alignItems: 'center' }}>
-                                  <Box sx={{ width: 36, height: 36, borderRadius: 1.6, background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.06))', display: 'grid', placeItems: 'center', fontWeight: 800, color: '#1d4ed8', fontSize: 14 }}>{String(job.company_name || 'C').charAt(0).toUpperCase()}</Box>
-                                  <Box>
-                                    <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>{job.company_name || 'Company'}</Typography>
-                                    <Typography sx={{ color: '#0f172a', fontWeight: 700, fontSize: 13 }}>{job.title || 'Job Title'}</Typography>
+                        <Stack spacing={1.4}>
+                          {recommendedJobs.length > 0 ? recommendedJobs.slice(0, 3).map((job, index) => {
+                            const jobId = String(job.id ?? index);
+                            const isSaved = savedJobIds.has(jobId);
+                            const matchScore = Math.round(
+                              Number(job.match_score ?? job.matchScore ?? Math.min(99, Math.max(60, 90 - index * 4)))
+                            );
+                            const skills: string[] = Array.isArray(job.skills) ? job.skills.filter(Boolean) : [];
+                            const goToJob = () => navigate(ROUTES.JOB_DETAILS.replace(':id', jobId));
+
+                            return (
+                              <Box
+                                key={job.id || index}
+                                onClick={goToJob}
+                                sx={{
+                                  position: 'relative',
+                                  border: '1px solid rgba(148,163,184,0.2)',
+                                  borderRadius: 3,
+                                  p: 1.8,
+                                  background: '#fff',
+                                  cursor: 'pointer',
+                                  overflow: 'hidden',
+                                  transition: 'all 0.2s ease',
+                                  '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: 3,
+                                    background: 'linear-gradient(180deg, #2563eb, #7c3aed)',
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s ease',
+                                  },
+                                  '&:hover': {
+                                    borderColor: 'rgba(37,99,235,0.45)',
+                                    boxShadow: '0 14px 28px rgba(15,23,42,0.08)',
+                                    transform: 'translateY(-2px)',
+                                  },
+                                  '&:hover::before': { opacity: 1 },
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', gap: 1.4, alignItems: 'flex-start' }}>
+                                  <Avatar
+                                    src={job.company_logo_url || job.company_logo || undefined}
+                                    variant="rounded"
+                                    sx={{
+                                      width: 46,
+                                      height: 46,
+                                      fontWeight: 800,
+                                      fontSize: 17,
+                                      color: '#4338ca',
+                                      bgcolor: '#eef2ff',
+                                      borderRadius: 2,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {String(job.company_name || 'C').charAt(0).toUpperCase()}
+                                  </Avatar>
+
+                                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: 15, lineHeight: 1.3 }}>
+                                      {job.title || 'Job Title'}
+                                    </Typography>
+                                    <Typography sx={{ color: '#64748B', fontWeight: 600, fontSize: 13, mt: 0.15 }}>
+                                      {job.company_name || 'Company'}
+                                    </Typography>
                                   </Box>
+
+                                  <Tooltip title={`${matchScore}% profile match`}>
+                                    <Box sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+                                      <CircularProgress
+                                        variant="determinate"
+                                        value={100}
+                                        size={44}
+                                        thickness={4}
+                                        sx={{ color: 'rgba(148,163,184,0.22)' }}
+                                      />
+                                      <CircularProgress
+                                        variant="determinate"
+                                        value={matchScore}
+                                        size={44}
+                                        thickness={4}
+                                        sx={{
+                                          position: 'absolute',
+                                          left: 0,
+                                          color: matchScore >= 85 ? '#16a34a' : matchScore >= 70 ? '#2563eb' : '#f59e0b',
+                                          '& .MuiCircularProgress-circle': { strokeLinecap: 'round' },
+                                        }}
+                                      />
+                                      <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+                                        <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#0f172a' }}>{matchScore}%</Typography>
+                                      </Box>
+                                    </Box>
+                                  </Tooltip>
                                 </Box>
-                                <Chip label={`${Math.min(99, Math.max(60, 90 - index * 4))}%`} sx={{ bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 800, height: 28 }} />
-                              </Box>
-                              
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.8, color: '#475569', fontSize: 12 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><LocationOnIcon sx={{ fontSize: 14 }} /> {job.location || 'Remote'}</Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><AttachMoneyIcon sx={{ fontSize: 14 }} /> {job.salary || 'Competitive'}</Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><WorkIcon sx={{ fontSize: 14 }} /> {job.work_mode || job.job_type || 'Full-time'}</Box>
-                              </Box>
 
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, mt: 0.8 }}>
-                                {(job.skills || ['React', 'TypeScript', 'Next.js']).slice(0, 3).map((skill: string, idx: number) => (
-                                  <Chip key={`${skill}-${idx}`} label={skill} size="small" sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 700, height: 26 }} />
-                                ))}
-                              </Box>
+                                <Stack direction="row" spacing={1.4} sx={{ mt: 1.2, flexWrap: 'wrap', rowGap: 0.6, color: '#475569', fontSize: 12.5 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <LocationOnIcon sx={{ fontSize: 15, color: '#94a3b8' }} /> {job.location || 'Remote'}
+                                  </Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <AttachMoneyIcon sx={{ fontSize: 15, color: '#94a3b8' }} /> {job.salary || 'Competitive'}
+                                  </Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <WorkIcon sx={{ fontSize: 15, color: '#94a3b8' }} /> {job.work_mode || job.job_type || 'Full-time'}
+                                  </Box>
+                                  {(job.created_at || job.posted_at) && (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      <ScheduleIcon sx={{ fontSize: 15, color: '#94a3b8' }} /> {formatDate(job.created_at || job.posted_at)}
+                                    </Box>
+                                  )}
+                                </Stack>
 
-                              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
-                                <Button variant="outlined" onClick={() => navigate(`${ROUTES.JOB_DETAILS.replace(':id', String(job.id))}`)} sx={{ borderRadius: 999, textTransform: 'none', fontWeight: 700, fontSize: 13, px: 1.2 }}>Apply</Button>
-                                <Button variant="contained" onClick={() => navigate(`${ROUTES.JOB_DETAILS.replace(':id', String(job.id))}`)} sx={{ borderRadius: 999, background: '#1d4ed8', textTransform: 'none', fontWeight: 700, fontSize: 13, px: 1.2 }}>Save</Button>
+                                {skills.length > 0 && (
+                                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, mt: 1.1 }}>
+                                    {skills.slice(0, 4).map((skill: string, idx: number) => (
+                                      <Chip
+                                        key={`${skill}-${idx}`}
+                                        label={skill}
+                                        size="small"
+                                        sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 700, height: 24, fontSize: 11.5 }}
+                                      />
+                                    ))}
+                                    {skills.length > 4 && (
+                                      <Chip
+                                        label={`+${skills.length - 4}`}
+                                        size="small"
+                                        sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 700, height: 24, fontSize: 11.5 }}
+                                      />
+                                    )}
+                                  </Box>
+                                )}
+
+                                <Divider sx={{ my: 1.3 }} />
+
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                                  <Tooltip title={isSaved ? 'Remove from saved jobs' : 'Save this job'}>
+                                    <span>
+                                      <IconButton
+                                        size="small"
+                                        aria-label={isSaved ? 'Remove from saved jobs' : 'Save this job'}
+                                        disabled={savingJobId === jobId}
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          void handleToggleSaveJob(job);
+                                        }}
+                                        sx={{
+                                          border: '1px solid',
+                                          borderColor: isSaved ? 'rgba(37,99,235,0.4)' : 'rgba(148,163,184,0.35)',
+                                          borderRadius: 2,
+                                          color: isSaved ? '#1d4ed8' : '#64748B',
+                                          bgcolor: isSaved ? 'rgba(37,99,235,0.08)' : 'transparent',
+                                          '&:hover': { borderColor: '#1d4ed8', color: '#1d4ed8' },
+                                        }}
+                                      >
+                                        {isSaved ? <BookmarkIcon sx={{ fontSize: 18 }} /> : <BookmarkBorderIcon sx={{ fontSize: 18 }} />}
+                                      </IconButton>
+                                    </span>
+                                  </Tooltip>
+
+                                  <Stack direction="row" spacing={1}>
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        goToJob();
+                                      }}
+                                      sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, fontSize: 13, px: 1.6 }}
+                                    >
+                                      View details
+                                    </Button>
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      endIcon={<ArrowForwardIcon sx={{ fontSize: 15 }} />}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        goToJob();
+                                      }}
+                                      sx={{
+                                        borderRadius: 2,
+                                        textTransform: 'none',
+                                        fontWeight: 800,
+                                        fontSize: 13,
+                                        px: 1.8,
+                                        background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                                        boxShadow: '0 8px 18px rgba(37,99,235,0.3)',
+                                      }}
+                                    >
+                                      Apply
+                                    </Button>
+                                  </Stack>
+                                </Box>
                               </Box>
-                            </Box>
-                          )) : (
-                            <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 2.2, textAlign: 'center', background: 'linear-gradient(135deg, rgba(255,255,255,0.7), rgba(239,246,255,0.9))' }}>
-                              <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: 18, mb: 0.6 }}>Your next opportunity is waiting</Typography>
-                              <Typography sx={{ color: '#475569', maxWidth: 420, mx: 'auto', mb: 1.2 }}>Complete your profile and add skills to unlock better matches.</Typography>
-                              <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" sx={{ borderRadius: 999, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', textTransform: 'none', fontWeight: 800, fontSize: 14, px: 1.6 }}>Improve Profile</Button>
+                            );
+                          }) : (
+                            <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 3, textAlign: 'center', background: 'linear-gradient(135deg, rgba(255,255,255,0.7), rgba(239,246,255,0.9))' }}>
+                              <Avatar sx={{ bgcolor: '#e0e7ff', color: '#4338ca', width: 46, height: 46, mx: 'auto', mb: 1.2 }}>
+                                <AutoAwesomeIcon />
+                              </Avatar>
+                              <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: 17, mb: 0.6 }}>Your next opportunity is waiting</Typography>
+                              <Typography sx={{ color: '#475569', maxWidth: 420, mx: 'auto', mb: 1.6, fontSize: 13.5 }}>Complete your profile and add skills to unlock better matches.</Typography>
+                              <Stack direction="row" spacing={1} justifyContent="center">
+                                <Button component={RouterLink} to={ROUTES.JOBS} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>Browse jobs</Button>
+                                <Button component={RouterLink} to={ROUTES.DASHBOARD_PROFILE} variant="contained" sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', textTransform: 'none', fontWeight: 800 }}>Improve profile</Button>
+                              </Stack>
                             </Box>
                           )}
                         </Stack>
@@ -940,24 +1482,143 @@ export const Dashboard: React.FC = () => {
 
               <Grid container spacing={3}>
                 <Grid item xs={12} lg={7}>
-                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%' }}>
+                  <Card sx={{ borderRadius: 4, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 18px 34px rgba(15,23,42,0.04)', height: '100%', overflow: 'hidden' }}>
+                    <Box sx={{ height: 4, background: 'linear-gradient(90deg, #0ea5e9 0%, #2563eb 55%, #7c3aed 100%)' }} />
                     <CardContent sx={{ p: 2.5 }}>
-                      <Typography sx={{ fontSize: 24, fontWeight: 800, color: '#0F172A', mb: 2, letterSpacing: '-0.04em' }}>Recent Activity</Typography>
-                      <Stack spacing={2}>
-                        {activityItems.map(({ title, subtitle, time, status, icon: Icon, tone }) => (
-                          <Box key={title} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, border: '1px solid rgba(148,163,184,0.12)', borderRadius: 3, p: 1.5 }}>
-                            <Box sx={{ width: 38, height: 38, borderRadius: 2.2, display: 'grid', placeItems: 'center', background: tone === 'primary' ? '#dbeafe' : tone === 'success' ? '#dcfce7' : '#fef3c7', color: tone === 'primary' ? '#1d4ed8' : tone === 'success' ? '#15803d' : '#b45309' }}><Icon sx={{ fontSize: 18 }} /></Box>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center' }}>
-                                <Typography sx={{ fontWeight: 700, color: '#0f172a' }}>{title}</Typography>
-                                <Chip label={status} size="small" sx={{ bgcolor: tone === 'primary' ? '#dbeafe' : tone === 'success' ? '#dcfce7' : '#fef3c7', color: tone === 'primary' ? '#1d4ed8' : tone === 'success' ? '#15803d' : '#b45309', fontWeight: 700 }} />
-                              </Box>
-                              <Typography sx={{ color: '#475569', fontSize: 13, mt: 0.3 }}>{subtitle}</Typography>
-                              <Typography sx={{ color: '#64748B', fontSize: 12, mt: 0.5 }}>{time}</Typography>
-                            </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, flexWrap: 'wrap', mb: 2.2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.4 }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2.4,
+                              display: 'grid',
+                              placeItems: 'center',
+                              color: '#fff',
+                              background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+                              boxShadow: '0 10px 22px rgba(14,165,233,0.3)',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <ScheduleIcon />
                           </Box>
-                        ))}
-                      </Stack>
+                          <Box>
+                            <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em' }}>Recent Activity</Typography>
+                            <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.2 }}>Everything happening on your profile</Typography>
+                          </Box>
+                        </Box>
+                        <Button
+                          onClick={() => navigate(ROUTES.DASHBOARD_NOTIFICATIONS)}
+                          endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                          sx={{ textTransform: 'none', fontWeight: 700, color: '#1d4ed8', borderRadius: 2 }}
+                        >
+                          View all
+                        </Button>
+                      </Box>
+
+                      {activityItems.length === 0 ? (
+                        <Box sx={{ border: '1px dashed rgba(148,163,184,0.32)', borderRadius: 3, p: 3, textAlign: 'center', background: 'linear-gradient(135deg, rgba(248,250,252,0.9), rgba(239,246,255,0.8))' }}>
+                          <Avatar sx={{ bgcolor: '#e0f2fe', color: '#0369a1', width: 46, height: 46, mx: 'auto', mb: 1.2 }}>
+                            <ScheduleIcon />
+                          </Avatar>
+                          <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>No activity yet</Typography>
+                          <Typography sx={{ color: '#64748B', fontSize: 13, mt: 0.5, mb: 1.6 }}>
+                            Apply to jobs and complete your profile to start building your activity feed.
+                          </Typography>
+                          <Button
+                            component={RouterLink}
+                            to={ROUTES.JOBS}
+                            variant="contained"
+                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800, background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}
+                          >
+                            Browse jobs
+                          </Button>
+                        </Box>
+                      ) : (
+                        <Box sx={{ position: 'relative' }}>
+                          {/* Vertical timeline rail */}
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              left: 19,
+                              top: 14,
+                              bottom: 14,
+                              width: 2,
+                              borderRadius: 1,
+                              background: 'linear-gradient(180deg, rgba(37,99,235,0.28), rgba(124,58,237,0.08))',
+                              display: { xs: 'none', sm: 'block' },
+                            }}
+                          />
+
+                          <Stack spacing={1.2}>
+                            {activityItems.map(({ id, title, subtitle, timestamp, status, icon: Icon, tone, to }) => {
+                              const palette = {
+                                primary: { bg: '#dbeafe', fg: '#1d4ed8' },
+                                success: { bg: '#dcfce7', fg: '#15803d' },
+                                warning: { bg: '#fef3c7', fg: '#b45309' },
+                                info: { bg: '#e0f2fe', fg: '#0369a1' },
+                              }[tone];
+
+                              return (
+                                <ListItemButton
+                                  key={id}
+                                  disabled={!to}
+                                  onClick={() => to && navigate(to)}
+                                  sx={{
+                                    alignItems: 'flex-start',
+                                    gap: 1.5,
+                                    p: 1.5,
+                                    borderRadius: 3,
+                                    border: '1px solid rgba(148,163,184,0.18)',
+                                    bgcolor: '#fff',
+                                    transition: 'all 0.18s ease',
+                                    '&.Mui-disabled': { opacity: 1 },
+                                    '&:hover': {
+                                      borderColor: 'rgba(37,99,235,0.4)',
+                                      boxShadow: '0 12px 22px rgba(15,23,42,0.06)',
+                                      transform: 'translateX(2px)',
+                                    },
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 38,
+                                      height: 38,
+                                      borderRadius: 2.2,
+                                      display: 'grid',
+                                      placeItems: 'center',
+                                      bgcolor: palette.bg,
+                                      color: palette.fg,
+                                      flexShrink: 0,
+                                      border: '2px solid #fff',
+                                      zIndex: 1,
+                                    }}
+                                  >
+                                    <Icon sx={{ fontSize: 18 }} />
+                                  </Box>
+
+                                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center' }}>
+                                      <Typography sx={{ fontWeight: 700, color: '#0f172a', fontSize: 14.5 }}>{title}</Typography>
+                                      <Chip
+                                        label={status}
+                                        size="small"
+                                        sx={{ bgcolor: palette.bg, color: palette.fg, fontWeight: 700, height: 22, fontSize: 11 }}
+                                      />
+                                    </Box>
+                                    <Typography noWrap sx={{ color: '#475569', fontSize: 13, mt: 0.3 }}>
+                                      {subtitle}
+                                    </Typography>
+                                    <Typography sx={{ color: '#94a3b8', fontSize: 11.5, mt: 0.5, fontWeight: 600 }}>
+                                      {timestamp ? formatDate(new Date(timestamp).toISOString()) : 'Recently'}
+                                    </Typography>
+                                  </Box>
+                                </ListItemButton>
+                              );
+                            })}
+                          </Stack>
+                        </Box>
+                      )}
                     </CardContent>
                   </Card>
                 </Grid>

@@ -61,6 +61,7 @@ export const freeNotesService = {
       .from('free_notes')
       .select('*')
       .eq('user_id', userId)
+      .not('tags', 'cs', '{learning_library}')
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
