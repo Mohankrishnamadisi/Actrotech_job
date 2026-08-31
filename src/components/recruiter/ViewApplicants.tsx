@@ -27,6 +27,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  Avatar,
 } from '@mui/material';
 import {
   Block as BlockIcon,
@@ -36,6 +37,7 @@ import {
   Search as SearchIcon,
   Visibility as ViewIcon,
   Star as StarIcon,
+  People as PeopleIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -465,6 +467,52 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
     >
       <Box
         sx={{
+          background: 'linear-gradient(135deg, rgba(91,140,255,0.08), rgba(139,92,246,0.07), rgba(255,255,255,0.8))',
+          borderRadius: 4,
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)',
+          p: { xs: 1.5, md: 2 },
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1.25, mb: 1.5 }}>
+          <Box>
+            <Typography variant="overline" sx={{ color: '#4465F2', fontWeight: 800, letterSpacing: '0.12em' }}>Recruiting pipeline</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 900, fontSize: '1.7rem', color: '#0f172a', lineHeight: 1.1 }}>Applicants</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Chip label={`${totalApplicants} total`} color="primary" sx={{ fontWeight: 700, fontSize: '0.72rem' }} />
+            <Chip label={selectedJob?.title || 'Selected job'} variant="outlined" sx={{ fontWeight: 700, fontSize: '0.72rem' }} />
+          </Box>
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' }, gap: 1.25 }}>
+          {[
+            { label: 'Total applicants', value: totalApplicants || activeApplicants.length, accent: '#4465F2' },
+            { label: 'Shortlisted', value: statusCounts.shortlisted, accent: '#10B981' },
+            { label: 'Under review', value: statusCounts.under_review, accent: '#F59E0B' },
+            { label: 'Rejected', value: statusCounts.rejected, accent: '#EF4444' },
+          ].map((item, index) => (
+            <motion.div key={item.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
+              <Paper
+                sx={{
+                  p: 1.5,
+                  borderRadius: 3,
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,255,0.92))',
+                  border: '1px solid rgba(148,163,184,0.18)',
+                  boxShadow: '0 14px 30px rgba(15,23,42,0.05)',
+                }}
+              >
+                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.66rem' }}>{item.label}</Typography>
+                <Typography variant="h5" sx={{ mt: 0.7, fontWeight: 800, fontSize: '1.3rem', color: item.accent }}>{item.value}</Typography>
+              </Paper>
+            </motion.div>
+          ))}
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '280px minmax(0, 1fr)' },
           gap: { xs: 1.5, lg: 2 },
@@ -488,40 +536,42 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
             top: { lg: 96 },
           }}
         >
-          <Card
-            sx={{
-              flex: '0 0 auto',
-              mb: 1.25,
-              borderRadius: 2,
-              border: '1px solid rgba(148, 163, 184, 0.22)',
-              boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)',
-              background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
-            }}
-          >
-            <CardContent sx={{ p: 1.5 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 0.5, color: '#0f172a' }}>
-                Job Openings
-              </Typography>
-              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1.25 }}>
-                Ordered by latest posting date
-              </Typography>
-              <TextField
-                placeholder="Search jobs"
-                size="small"
-                fullWidth
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1.5,
-                    bgcolor: '#fff',
-                    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)',
-                  },
-                }}
-              />
-            </CardContent>
-          </Card>
+          <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}>
+            <Card
+              sx={{
+                flex: '0 0 auto',
+                mb: 1.25,
+                borderRadius: 3,
+                border: '1px solid rgba(148, 163, 184, 0.22)',
+                boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)',
+                background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+              }}
+            >
+              <CardContent sx={{ p: 1.5 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 0.5, color: '#0f172a' }}>
+                  Job Openings
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1.25 }}>
+                  Ordered by latest posting date
+                </Typography>
+                <TextField
+                  placeholder="Search jobs"
+                  size="small"
+                  fullWidth
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      bgcolor: '#fff',
+                      boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)',
+                    },
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
 
           <Card
             sx={{
@@ -529,9 +579,10 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
               overflow: 'hidden',
               width: '100%',
               minHeight: { xs: 360, lg: 0 },
-              borderRadius: 2,
+              borderRadius: 3,
               border: '1px solid rgba(148, 163, 184, 0.22)',
               boxShadow: '0 24px 70px rgba(15, 23, 42, 0.08)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(245,249,255,0.96))',
             }}
           >
             <CardContent sx={{ height: '100%', p: 0.75 }}>
@@ -547,34 +598,38 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
               >
                 <Box sx={{ display: 'grid', gap: 0.9 }}>
                   {filteredJobs.map((job) => (
-                    <Box
+                    <motion.div
                       key={job.id}
-                      onClick={() => setSelectedJobId(job.id)}
-                      sx={{
-                        p: 1.35,
-                        minHeight: 74,
-                        borderRadius: 1.5,
-                        cursor: 'pointer',
-                        border: selectedJobId === job.id ? '1px solid #0A66C2' : '1px solid rgba(148, 163, 184, 0.22)',
-                        background: selectedJobId === job.id
-                          ? 'linear-gradient(135deg, rgba(10,102,194,0.13), rgba(14,165,233,0.08))'
-                          : '#fff',
-                        boxShadow: selectedJobId === job.id
-                          ? '0 16px 36px rgba(10, 102, 194, 0.15)'
-                          : '0 10px 28px rgba(15, 23, 42, 0.04)',
-                        transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 18px 40px rgba(15,23,42,0.09)',
-                          borderColor: 'rgba(10,102,194,0.45)',
-                        },
-                      }}
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.18 }}
                     >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5, color: '#020617' }}>{job.title}</Typography>
-                      <Typography variant="caption" sx={{ color: '#475569', fontWeight: 600 }}>
-                        Posted {job.created_at ? format(new Date(job.created_at as string), 'dd MMM yyyy') : 'Unknown'}
-                      </Typography>
-                    </Box>
+                      <Box
+                        onClick={() => setSelectedJobId(job.id)}
+                        sx={{
+                          p: 1.35,
+                          minHeight: 74,
+                          borderRadius: 2,
+                          cursor: 'pointer',
+                          border: selectedJobId === job.id ? '1px solid rgba(68,101,242,0.45)' : '1px solid rgba(148, 163, 184, 0.22)',
+                          background: selectedJobId === job.id
+                            ? 'linear-gradient(135deg, rgba(68,101,242,0.12), rgba(14,165,233,0.08))'
+                            : '#fff',
+                          boxShadow: selectedJobId === job.id
+                            ? '0 20px 40px rgba(68, 101, 242, 0.14)'
+                            : '0 10px 28px rgba(15, 23, 42, 0.04)',
+                          transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
+                          '&:hover': {
+                            boxShadow: '0 18px 40px rgba(15,23,42,0.09)',
+                            borderColor: 'rgba(68,101,242,0.55)',
+                          },
+                        }}
+                      >
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5, color: '#020617' }}>{job.title}</Typography>
+                        <Typography variant="caption" sx={{ color: '#475569', fontWeight: 600 }}>
+                          Posted {job.created_at ? format(new Date(job.created_at as string), 'dd MMM yyyy') : 'Unknown'}
+                        </Typography>
+                      </Box>
+                    </motion.div>
                   ))}
                 </Box>
               </Box>
@@ -583,93 +638,105 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
         </Box>
 
         <Box sx={{ width: '100%', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
-          <Card
-            sx={{
-              mb: 1.25,
-              borderRadius: 2,
-              border: '1px solid rgba(148, 163, 184, 0.22)',
-              boxShadow: '0 20px 60px rgba(15, 23, 42, 0.06)',
-              background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
-              overflow: 'hidden',
-            }}
-          >
-            <CardContent sx={{ p: { xs: 1.5, md: 1.75 } }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.25, mb: 0.75 }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="overline" sx={{ color: '#0A66C2', fontWeight: 900, letterSpacing: 0, lineHeight: 1 }}>Selected job</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#020617', lineHeight: 1.15 }}>{selectedJob.title}</Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {selectedJob.status ? `${selectedJob.status} - ` : ''}
-                    Posted {selectedJob.created_at ? format(new Date(selectedJob.created_at as string), 'dd MMM yyyy') : 'Unknown'} - {totalApplicants} applicant(s)
-                  </Typography>
+          <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }}>
+            <Card
+              sx={{
+                mb: 1.25,
+                borderRadius: 3,
+                border: '1px solid rgba(96, 165, 250, 0.28)',
+                boxShadow: '0 20px 60px rgba(30, 64, 175, 0.1)',
+                background: 'linear-gradient(145deg, #ffffff 0%, #F5F9FF 58%, #EEF4FF 100%)',
+                overflow: 'hidden',
+              }}
+            >
+              <CardContent sx={{ p: { xs: 1.5, md: 1.75 } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1.25, mb: 1.25, pb: 1.25, borderBottom: '1px solid rgba(148,163,184,0.2)' }}>
+                  <Box sx={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 1.1 }}>
+                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#DCEBFF', color: '#1D4B86', fontWeight: 900 }}>
+                      {String(selectedJob.title || 'J').charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="overline" sx={{ color: '#0A66C2', fontWeight: 900, letterSpacing: '0.08em', lineHeight: 1 }}>Selected job</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#020617', lineHeight: 1.15 }} noWrap>{selectedJob.title}</Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {selectedJob.status ? `${selectedJob.status} - ` : ''}
+                        Posted {selectedJob.created_at ? format(new Date(selectedJob.created_at as string), 'dd MMM yyyy') : 'Unknown'} - {totalApplicants} applicant(s)
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Chip label={`${totalApplicants} applicants`} sx={{ fontWeight: 800, color: '#28508A', bgcolor: '#E7F0FF', border: '1px solid #C7DBFF' }} />
+                    {selectedIds.size > 0 && <Chip color="primary" label={selectedText(selectedIds.size)} sx={{ fontWeight: 800, borderRadius: 1 }} />}
+                  </Box>
                 </Box>
-                {selectedIds.size > 0 && <Chip color="primary" label={selectedText(selectedIds.size)} sx={{ fontWeight: 800, borderRadius: 1 }} />}
-              </Box>
 
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(5, minmax(110px, 1fr))' }, gap: 0.8, my: 1.25 }}>
-                {Object.entries(statusCounts).map(([status, count]) => (
-                  <Paper
-                    key={status}
-                    variant="outlined"
-                    sx={{
-                      p: 1,
-                      borderRadius: 1.5,
-                      bgcolor: '#fff',
-                      borderColor: 'rgba(148, 163, 184, 0.25)',
-                      boxShadow: '0 10px 30px rgba(15, 23, 42, 0.04)',
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{labelize(status)}</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>{count}</Typography>
-                  </Paper>
-                ))}
-              </Box>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(5, minmax(110px, 1fr))' }, gap: 0.8, my: 1.25 }}>
+                  {Object.entries(statusCounts).map(([status, count], index) => (
+                    <Paper
+                      key={status}
+                      variant="outlined"
+                      sx={{
+                        p: 1.1,
+                        borderRadius: 2,
+                        bgcolor: 'rgba(255,255,255,0.82)',
+                        borderColor: ['#BBD7FF', '#F5D58A', '#B7E9DA', '#FECACA', '#C4B5FD'][index] || '#DCE6F2',
+                        boxShadow: '0 8px 20px rgba(15, 23, 42, 0.04)',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{labelize(status)}</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>{count}</Typography>
+                    </Paper>
+                  ))}
+                </Box>
 
-              <Tabs value={statusFilter} onChange={(_, value) => setStatusFilter(value)} sx={{ mb: 0, borderBottom: '1px solid #e0e0e0' }} variant="scrollable">
-                <Tab label={`All (${activeApplicants.length})`} value="all" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
-                <Tab label={`Applied (${statusCounts.applied})`} value="applied" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
-                <Tab label={`Under Review (${statusCounts.under_review})`} value="under_review" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
-                <Tab label={`Shortlisted (${statusCounts.shortlisted})`} value="shortlisted" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
-                <Tab label={`Rejected (${statusCounts.rejected})`} value="rejected" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
-              </Tabs>
+                <Tabs value={statusFilter} onChange={(_, value) => setStatusFilter(value)} sx={{ mb: 0, borderBottom: '1px solid #e0e0e0' }} variant="scrollable">
+                  <Tab label={`All (${activeApplicants.length})`} value="all" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                  <Tab label={`Applied (${statusCounts.applied})`} value="applied" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                  <Tab label={`Under Review (${statusCounts.under_review})`} value="under_review" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                  <Tab label={`Shortlisted (${statusCounts.shortlisted})`} value="shortlisted" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                  <Tab label={`Rejected (${statusCounts.rejected})`} value="rejected" sx={{ textTransform: 'none', minHeight: 38, py: 0.75 }} />
+                </Tabs>
 
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.25 }}>
-                <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
-                  <InputLabel>Sort By Match Score</InputLabel>
-                  <Select value={sortMode} label="Sort By Match Score" onChange={(event) => setSortMode(event.target.value as SortMode)}>
-                    <MenuItem value="applied_desc">Newest Applied</MenuItem>
-                    <MenuItem value="match_desc">Match Score: High to Low</MenuItem>
-                    <MenuItem value="match_asc">Match Score: Low to High</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
-                  <InputLabel>Filter By Match Score</InputLabel>
-                  <Select value={matchScoreFilter} label="Filter By Match Score" onChange={(event) => setMatchScoreFilter(event.target.value as MatchScoreFilter)}>
-                    <MenuItem value="all">All Scores</MenuItem>
-                    <MenuItem value="90_plus">90+ Green</MenuItem>
-                    <MenuItem value="70_89">70-89 Orange</MenuItem>
-                    <MenuItem value="below_70">Below 70 Red</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
-                  <InputLabel>Filter By Featured</InputLabel>
-                  <Select value={priorityFilter} label="Filter By Featured" onChange={(event) => setPriorityFilter(event.target.value as 'all' | 'priority')}>
-                    <MenuItem value="all">All Applicants</MenuItem>
-                    <MenuItem value="priority">Top Applicants Only</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </CardContent>
-          </Card>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.25, pt: 1.1, borderTop: '1px solid rgba(148,163,184,0.14)' }}>
+                  <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
+                    <InputLabel>Sort By Match Score</InputLabel>
+                    <Select value={sortMode} label="Sort By Match Score" onChange={(event) => setSortMode(event.target.value as SortMode)}>
+                      <MenuItem value="applied_desc">Newest Applied</MenuItem>
+                      <MenuItem value="match_desc">Match Score: High to Low</MenuItem>
+                      <MenuItem value="match_asc">Match Score: Low to High</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
+                    <InputLabel>Filter By Match Score</InputLabel>
+                    <Select value={matchScoreFilter} label="Filter By Match Score" onChange={(event) => setMatchScoreFilter(event.target.value as MatchScoreFilter)}>
+                      <MenuItem value="all">All Scores</MenuItem>
+                      <MenuItem value="90_plus">90+ Green</MenuItem>
+                      <MenuItem value="70_89">70-89 Orange</MenuItem>
+                      <MenuItem value="below_70">Below 70 Red</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl size="small" sx={{ width: { xs: '100%', sm: 190 } }}>
+                    <InputLabel>Filter By Featured</InputLabel>
+                    <Select value={priorityFilter} label="Filter By Featured" onChange={(event) => setPriorityFilter(event.target.value as 'all' | 'priority')}>
+                      <MenuItem value="all">All Applicants</MenuItem>
+                      <MenuItem value="priority">Top Applicants Only</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <BulkActionsToolbar
-            selectedCount={selectedIds.size}
-            availableTags={availableTags}
-            availablePools={availablePools}
-            processing={processing}
-            onAction={handleToolbarAction}
-            onClear={() => setSelectedIds(new Set())}
-          />
+          <Box sx={{ mb: 1.25 }}>
+            <BulkActionsToolbar
+              selectedCount={selectedIds.size}
+              availableTags={availableTags}
+              availablePools={availablePools}
+              processing={processing}
+              onAction={handleToolbarAction}
+              onClear={() => setSelectedIds(new Set())}
+            />
+          </Box>
 
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
@@ -682,7 +749,13 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
               {applicantsError}
             </Alert>
           ) : visibleApplicants.length === 0 ? (
-            <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', py: 4 }}>No applicants match the selected filters.</Typography>
+            <Paper sx={{ minHeight: 260, display: 'grid', placeItems: 'center', textAlign: 'center', p: 3, borderRadius: 3, border: '1px dashed #B8C9E2', background: 'linear-gradient(145deg, rgba(255,255,255,0.82), rgba(239,246,255,0.82))' }}>
+              <Box>
+                <Avatar sx={{ width: 52, height: 52, mx: 'auto', mb: 1.2, bgcolor: '#DCEBFF', color: '#28508A' }}><PeopleIcon /></Avatar>
+                <Typography variant="h6" sx={{ fontWeight: 850, color: '#16325C', mb: 0.5 }}>Your candidate space is ready</Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', maxWidth: 360 }}>Applicants for this job will appear here as soon as candidates apply. Adjust the filters if you expect existing candidates.</Typography>
+              </Box>
+            </Paper>
           ) : (
             <Paper
               sx={{
@@ -691,7 +764,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                 minWidth: 0,
                 overflow: 'hidden',
                 border: '1px solid rgba(148, 163, 184, 0.24)',
-                borderRadius: 2,
+                borderRadius: 3,
                 boxShadow: '0 24px 70px rgba(15, 23, 42, 0.08)',
                 bgcolor: '#fff',
               }}
@@ -701,7 +774,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   width: '100%',
                   maxWidth: '100%',
                   maxHeight: 'calc(100vh - 280px)',
-                  overflowX: 'hidden',
+                  overflowX: 'auto',
                   overflowY: 'auto',
                   scrollbarWidth: 'thin',
                   '&::-webkit-scrollbar': { height: 10, width: 10 },
@@ -713,8 +786,9 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
                   stickyHeader
                   size="small"
                   sx={{
-                    width: '100%',
-                    tableLayout: 'fixed',
+                    width: { xs: 1080, lg: '100%' },
+                    minWidth: 1080,
+                    tableLayout: 'auto',
                     '& .MuiTableCell-root': {
                       px: 0.75,
                       py: 0.55,

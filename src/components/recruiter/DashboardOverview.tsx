@@ -1,11 +1,14 @@
 import React from 'react';
-import { Box, Grid, Card, CardContent, Typography, Button, Icon } from '@mui/material';
+import { Box, Grid, Card, CardContent, Typography, Button } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
   People as PeopleIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Bolt as LightningIcon,
+  ArrowForward as ArrowForwardIcon,
+  WorkOutline as WorkOutlineIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { themeColors } from '@styles/recruiterTheme';
@@ -18,6 +21,7 @@ interface DashboardOverviewProps {
   priorityCandidates?: number;
   onViewJobs?: () => void;
   onViewApplicants?: () => void;
+  onPostJob?: () => void;
 }
 
 const MotionCard = motion(Card);
@@ -35,33 +39,40 @@ const StatCard: React.FC<{
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.45, delay: index * 0.08 }}
-    whileHover={{ y: -8, scale: 1.02, boxShadow: '0 18px 44px rgba(15, 23, 42, 0.14)' }}
+    whileHover={{ y: -8, scale: 1.02, boxShadow: '0 22px 44px rgba(27, 52, 102, 0.16)' }}
     onClick={onClick}
     sx={{
       cursor: onClick ? 'pointer' : 'default',
-      borderRadius: '20px',
-      border: `1px solid ${themeColors.border}`,
-      background: `linear-gradient(180deg, ${color}0D 0%, ${color}08 40%, transparent 100%)`,
-      backdropFilter: 'blur(18px)',
-      minHeight: 180,
+      borderRadius: '16px',
+      border: `1px solid rgba(148, 163, 184, 0.22)`,
+      background: '#FFFFFF',
+      minHeight: 148,
       display: 'flex',
       transition: 'all 0.25s ease-in-out',
+      position: 'relative',
+      overflow: 'hidden',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        inset: 0,
+        background: `linear-gradient(135deg, ${color}0D 0%, transparent 62%)`,
+      },
       '&:hover': {
-        borderColor: color,
+        borderColor: `${color}88`,
       },
     }}
   >
-    <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5 }}>
+    <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, position: 'relative', zIndex: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
         <Box>
           <Typography
             variant="caption"
             sx={{
-              fontSize: '0.78rem',
-              fontWeight: 700,
+              fontSize: '0.67rem',
+              fontWeight: 800,
               color: themeColors.text.secondary,
               textTransform: 'uppercase',
-              letterSpacing: '0.18em',
+              letterSpacing: '0.1em',
               mb: 0.75,
             }}
           >
@@ -70,7 +81,7 @@ const StatCard: React.FC<{
           <Typography
             variant="h3"
             sx={{
-              fontSize: '2.2rem',
+              fontSize: '1.7rem',
               fontWeight: 800,
               color: themeColors.text.primary,
               lineHeight: 1,
@@ -81,27 +92,27 @@ const StatCard: React.FC<{
         </Box>
         <Box
           sx={{
-            width: 44,
-            height: 44,
+            width: 38,
+            height: 38,
             borderRadius: 2,
-            backgroundColor: `${color}1A`,
+            background: `linear-gradient(135deg, ${color}20 0%, ${color}48 100%)`,
             color: color,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: `0 14px 28px ${color}14`,
+            boxShadow: `0 12px 24px ${color}26`,
           }}
         >
-          {icon}
+          {React.cloneElement(icon as React.ReactElement, { sx: { fontSize: '1.25rem' } })}
         </Box>
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1 }}>
         <Typography variant="body2" sx={{ color: themeColors.text.tertiary, fontSize: '0.85rem' }}>
-          Live recruitment insight
+          Updated just now
         </Typography>
         {trend ? (
-          <Typography variant="caption" sx={{ color, fontWeight: 700, textTransform: 'uppercase' }}>
+          <Typography variant="caption" sx={{ color, fontWeight: 800, textTransform: 'uppercase' }}>
             {trend}
           </Typography>
         ) : null}
@@ -118,36 +129,59 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   priorityCandidates = 0,
   onViewJobs,
   onViewApplicants,
+  onPostJob,
 }) => {
   return (
-    <Box sx={{ mb: 4 }}>
-      {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Box sx={{ mb: 3 }}>
+      <Card
+        sx={{
+          mb: 2.25,
+          overflow: 'hidden',
+          border: 'none',
+          borderRadius: '18px',
+          color: '#FFFFFF',
+          background: 'linear-gradient(115deg, #091324 0%, #12294D 55%, #24518B 100%)',
+          position: 'relative',
+          boxShadow: '0 18px 34px rgba(9, 19, 36, 0.2)',
+        }}
+      >
+        <Box sx={{ position: 'absolute', width: 250, height: 250, right: -70, top: -100, borderRadius: '50%', border: '1px solid rgba(125,211,252,0.22)', boxShadow: '0 0 0 24px rgba(125,211,252,0.04), 0 0 0 48px rgba(125,211,252,0.025)' }} />
+        <CardContent sx={{ p: { xs: 2.2, md: 2.8 }, position: 'relative' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2, flexWrap: 'wrap' }}>
+            <Box>
+              <Typography sx={{ color: '#7DD3FC', fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', mb: 0.7 }}>
+                Recruiter workspace
+              </Typography>
+              <Typography variant="h4" sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: { xs: '1.35rem', md: '1.6rem' }, mb: 0.6 }}>
+                Your hiring, at a glance.
+              </Typography>
+              <Typography sx={{ color: 'rgba(226,232,240,0.76)', fontSize: '0.8rem', maxWidth: 500 }}>
+                Track momentum, spot priority candidates, and move your strongest applicants forward.
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button onClick={onViewJobs} variant="outlined" endIcon={<ArrowForwardIcon />} sx={{ color: '#E0F2FE', borderColor: 'rgba(186,230,253,0.45)', backgroundColor: 'rgba(255,255,255,0.06)', '&:hover': { borderColor: '#7DD3FC', backgroundColor: 'rgba(125,211,252,0.12)' } }}>
+                View workspace
+              </Button>
+              <Button onClick={onPostJob} variant="contained" startIcon={<WorkOutlineIcon />} sx={{ background: '#7DD3FC', color: '#091324', '&:hover': { background: '#BAE6FD' } }}>
+                Post a job
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.25 }}>
         <Box>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              color: themeColors.text.primary,
-              mb: 0.5,
-            }}
-          >
-            Overview
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: themeColors.text.secondary,
-              fontSize: '0.875rem',
-            }}
-          >
-            Your recruitment metrics at a glance
-          </Typography>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: themeColors.text.primary, fontSize: '1.05rem' }}>Hiring pulse</Typography>
+          <Typography variant="body2" sx={{ color: themeColors.text.secondary, fontSize: '0.76rem' }}>Live signals from your recruitment pipeline</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, color: themeColors.success, fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase' }}>
+          <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: themeColors.success, boxShadow: `0 0 0 4px ${themeColors.success}22` }} /> Live
         </Box>
       </Box>
 
-      {/* Stats Grid */}
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Active Jobs"
@@ -202,43 +236,54 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </Grid>
 
         <Grid item xs={12} sm={6} md={4}>
-          <Card
-            sx={{
-              borderRadius: '16px',
-              border: `1px dashed ${themeColors.border}`,
-              background: `linear-gradient(135deg, ${themeColors.primaryLight} 0%, transparent 100%)`,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '180px',
-              p: 2,
-            }}
+          <motion.div
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.2 }}
+            style={{ height: '100%' }}
           >
-            <CardContent sx={{ textAlign: 'center', p: 0 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: themeColors.text.secondary,
-                  mb: 1.5,
-                  fontSize: '0.875rem',
-                }}
-              >
-                Need more applicants?
-              </Typography>
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  background: `linear-gradient(135deg, ${themeColors.primary} 0%, #7C3AED 100%)`,
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                }}
-              >
-                Promote Job
-              </Button>
-            </CardContent>
-          </Card>
+            <Card
+              sx={{
+                borderRadius: '16px',
+                border: `1px dashed ${themeColors.borderDark}`,
+                background: 'linear-gradient(135deg, #F0F7FF 0%, #F7FBFF 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '148px',
+                p: 1.5,
+                boxShadow: '0 10px 22px rgba(37,99,235,0.07)',
+              }}
+            >
+              <CardContent sx={{ textAlign: 'center', p: 0 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: themeColors.text.secondary,
+                    mb: 1.2,
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  Need more applicants?
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={onViewApplicants}
+                  sx={{
+                    background: 'linear-gradient(135deg, #0B1325 0%, #28508A 100%)',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    px: 1.8,
+                    boxShadow: '0 10px 20px rgba(11,19,37,0.18)',
+                  }}
+                >
+                  Explore candidates
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         </Grid>
       </Grid>
     </Box>

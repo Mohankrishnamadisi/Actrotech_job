@@ -115,6 +115,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
   const formatAppliedDate = appliedDate ? appliedDate.toLocaleString() : 'Unknown';
 
   const resumeUrl = profile?.resume_url || applicant?.resume_url || '';
+  const resumeIsPdf = /\.pdf(?:$|[?#])/i.test(String(resumeUrl));
   const atsStage = applicant ? getApplicantStage(applicant) : 'Applied';
   const applicantTags = applicant ? getApplicantTags(applicant) : [];
   const applicantPools = applicant ? getApplicantTalentPools(applicant) : [];
@@ -194,7 +195,8 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 3,
-          boxShadow: '0 28px 70px rgba(15, 23, 42, 0.15)',
+          overflow: 'hidden',
+          boxShadow: '0 28px 70px rgba(9, 19, 36, 0.3)',
         },
       }}
     >
@@ -204,17 +206,18 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           pb: 2,
-          background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(245,158,11,0.1))',
-          borderBottom: '1px solid rgba(0,0,0,0.08)',
+          background: 'linear-gradient(115deg, #091324 0%, #16335F 58%, #28508A 100%)',
+          color: '#FFFFFF',
+          borderBottom: '1px solid rgba(125,211,252,0.28)',
         }}
       >
-        <Typography component="div" variant="h6" sx={{ fontWeight: 700 }}>
-          Applicant Details
+          <Typography component="div" variant="h6" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
+            Applicant Details
         </Typography>
         <CloseIcon sx={{ cursor: 'pointer' }} onClick={onClose} />
       </DialogTitle>
 
-      <DialogContent dividers sx={{ py: 3 }}>
+      <DialogContent dividers sx={{ py: { xs: 2, md: 2.5 }, px: { xs: 1.5, md: 2.5 }, bgcolor: '#F2F7FC' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
@@ -224,7 +227,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
             {/* Candidate Header */}
             <Grid item xs={12}>
               <MotionCard initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <CardContent>
+                    <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                     <Avatar
                       src={profileAvatarUrl || undefined}
@@ -294,7 +297,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
             {matchScore && (
               <Grid item xs={12}>
                 <MotionCard initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <CardContent>
+                  <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 2 }}>
                       <Box>
                         <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -672,7 +675,7 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
               <Grid item xs={12}>
                 <MotionCard initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 1.5, flexWrap: 'wrap', mb: 1.5 }}>
                       <Box>
                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
                           Resume
@@ -698,6 +701,21 @@ export const ApplicantDetailsModal: React.FC<ApplicantDetailsModalProps> = ({
                           </Button>
                         </span>
                       </Tooltip>
+                    </Box>
+                    <Box sx={{ border: '1px solid #D7E3EF', borderRadius: 2, overflow: 'hidden', bgcolor: '#FFFFFF', minHeight: 180, display: 'grid', placeItems: 'center' }}>
+                      {contactUnlocked && resumeIsPdf ? (
+                        <Box component="iframe" src={String(resumeUrl)} title="Candidate resume preview" sx={{ width: '100%', height: 420, border: 0, display: 'block' }} />
+                      ) : contactUnlocked ? (
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <Typography variant="body2" sx={{ color: '#49627F', mb: 0.5 }}>Preview is available for PDF resumes.</Typography>
+                          <Typography variant="caption" sx={{ color: '#8090A5' }}>Use View Resume to open this file in a new tab.</Typography>
+                        </Box>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <LockIcon sx={{ color: '#28508A', fontSize: 30, mb: 0.5 }} />
+                          <Typography variant="body2" sx={{ color: '#49627F' }}>Unlock the candidate to preview the resume.</Typography>
+                        </Box>
+                      )}
                     </Box>
                   </CardContent>
                 </MotionCard>

@@ -22,6 +22,7 @@ import {
   Help as HelpIcon,
   Logout as LogoutIcon,
   CreditScore as CreditScoreIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { themeColors } from '@styles/recruiterTheme';
@@ -32,6 +33,7 @@ import { supportService } from '@services/support';
 
 interface RecruiterTopbarProps {
   recruiterLogo?: string;
+  companyName?: string;
   notificationCount?: number;
   unreadMessagesCount?: number;
   credits?: number;
@@ -47,6 +49,7 @@ const MotionBox = motion(Box);
 
 export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
   recruiterLogo,
+  companyName = 'Actro Jobs',
   notificationCount = 0,
   unreadMessagesCount = 0,
   credits = 0,
@@ -95,9 +98,10 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
         position="sticky"
         elevation={0}
         sx={{
-          background: 'rgba(255,255,255,0.9)',
-          backdropFilter: 'blur(16px)',
+          background: 'rgba(255,255,255,0.78)',
+          backdropFilter: 'blur(18px)',
           borderBottom: '1px solid rgba(148,163,184,0.18)',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)',
           zIndex: theme.zIndex.drawer + 1,
         }}
       >
@@ -111,22 +115,51 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
             minHeight: 'auto',
           }}
         >
-          {/* Left Side - Search/Info */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.3 }}>
-            <Box sx={{ width: 34, height: 34, borderRadius: 1.5, display: 'grid', placeItems: 'center', color: '#0F766E', bgcolor: 'rgba(20,184,166,0.12)', fontWeight: 900, fontSize: 14 }}>A</Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.1, minWidth: 0 }}>
+            <MotionBox
+              component="button"
+              type="button"
+              onClick={() => navigate('/')}
+              aria-label="Go to home"
+              animate={{ rotate: [0, 8, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              sx={{
+                width: 38,
+                height: 38,
+                flexShrink: 0,
+                borderRadius: 1.8,
+                display: 'grid',
+                placeItems: 'center',
+                border: '1px solid rgba(91,140,255,0.28)',
+                overflow: 'hidden',
+                p: 0,
+                cursor: 'pointer',
+                bgcolor: '#FFFFFF',
+                '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 24px rgba(91,140,255,0.22)' },
+                background: 'linear-gradient(135deg, #5B8CFF 0%, #8B5CF6 100%)',
+                boxShadow: '0 10px 24px rgba(91,140,255,0.26)',
+              }}
+            >
+              <Avatar src={recruiterLogo} alt={`${companyName} logo`} sx={{ width: '100%', height: '100%', bgcolor: 'transparent', color: '#FFFFFF', fontWeight: 900, fontSize: 14 }}>
+                {companyName.charAt(0).toUpperCase()}
+              </Avatar>
+            </MotionBox>
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 700,
+                fontWeight: 800,
                 color: themeColors.text.primary,
                 fontSize: '1rem',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
+              {companyName} - {' '}
               Dashboard
             </Typography>
           </Box>
 
-          {/* Right Side - Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             {!isMobile && (
               <Chip
@@ -134,22 +167,41 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
                 variant="filled"
                 size="small"
                 sx={{
-                  background: 'linear-gradient(135deg, #0F766E 0%, #0891B2 100%)',
+                  background: 'linear-gradient(135deg, #5B8CFF 0%, #8B5CF6 100%)',
                   color: '#FFFFFF',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   fontSize: '0.75rem',
                   px: 1.1,
+                  boxShadow: '0 10px 24px rgba(91,140,255,0.18)',
                 }}
               />
             )}
 
-            {/* Notifications */}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <IconButton
+                onClick={() => navigate('/')}
+                aria-label="Go to home"
+                sx={{
+                  color: themeColors.text.secondary,
+                  border: '1px solid rgba(148,163,184,0.18)',
+                  bgcolor: '#FFFFFF',
+                  boxShadow: '0 8px 20px rgba(15, 23, 42, 0.04)',
+                  '&:hover': { color: '#4F8CFF', bgcolor: 'rgba(91,140,255,0.06)' },
+                }}
+              >
+                <HomeIcon sx={{ fontSize: '1.25rem' }} />
+              </IconButton>
+            </motion.div>
+
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <IconButton
                 onClick={onNotificationsClick}
                 sx={{
-                  color: themeColors.text.secondary, border: '1px solid rgba(148,163,184,0.18)', bgcolor: '#fff',
-                  '&:hover': { color: '#0F766E', bgcolor: 'rgba(20,184,166,0.06)' },
+                  color: themeColors.text.secondary,
+                  border: '1px solid rgba(148,163,184,0.18)',
+                  bgcolor: '#FFFFFF',
+                  boxShadow: '0 8px 20px rgba(15, 23, 42, 0.04)',
+                  '&:hover': { color: '#4F8CFF', bgcolor: 'rgba(91,140,255,0.06)' },
                 }}
               >
                 <Badge badgeContent={notificationCount} color="error">
@@ -158,13 +210,15 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
               </IconButton>
             </motion.div>
 
-            {/* Messages */}
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <IconButton
                 onClick={onMessagesClick}
                 sx={{
-                  color: themeColors.text.secondary, border: '1px solid rgba(148,163,184,0.18)', bgcolor: '#fff',
-                  '&:hover': { color: '#0F766E', bgcolor: 'rgba(20,184,166,0.06)' },
+                  color: themeColors.text.secondary,
+                  border: '1px solid rgba(148,163,184,0.18)',
+                  bgcolor: '#FFFFFF',
+                  boxShadow: '0 8px 20px rgba(15, 23, 42, 0.04)',
+                  '&:hover': { color: '#8B5CF6', bgcolor: 'rgba(139,92,246,0.06)' },
                 }}
               >
                 <Badge badgeContent={unreadMessagesCount} color="error">
@@ -173,19 +227,20 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
               </IconButton>
             </motion.div>
 
-            {/* Help */}
             {!isMobile && (
               <IconButton
                 sx={{
-                  color: themeColors.text.secondary, border: '1px solid rgba(148,163,184,0.18)', bgcolor: '#fff',
-                  '&:hover': { color: '#0F766E', bgcolor: 'rgba(20,184,166,0.06)' },
+                  color: themeColors.text.secondary,
+                  border: '1px solid rgba(148,163,184,0.18)',
+                  bgcolor: '#fff',
+                  boxShadow: '0 8px 20px rgba(15, 23, 42, 0.04)',
+                  '&:hover': { color: '#0F172A', bgcolor: 'rgba(15,23,42,0.02)' },
                 }}
               >
                 <HelpIcon sx={{ fontSize: '1.25rem' }} />
               </IconButton>
             )}
 
-            {/* Profile Menu */}
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <IconButton
                 onClick={handleMenuOpen}
@@ -197,16 +252,17 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
                 <Avatar
                   src={recruiterLogo || user?.avatar}
                   sx={{
-                    width: 36,
-                    height: 36,
-                    background: 'linear-gradient(135deg, #0F766E 0%, #0891B2 100%)',
-                    fontWeight: 700,
+                    width: 38,
+                    height: 38,
+                    background: 'linear-gradient(135deg, #5B8CFF 0%, #8B5CF6 100%)',
+                    fontWeight: 800,
                     fontSize: '0.875rem',
                     cursor: 'pointer',
-                    border: '2px solid rgba(20,184,166,0.26)',
+                    border: '2px solid rgba(91,140,255,0.26)',
+                    boxShadow: '0 14px 28px rgba(91,140,255,0.24)',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      borderColor: '#14B8A6',
+                      borderColor: '#8B5CF6',
                     },
                   }}
                 >

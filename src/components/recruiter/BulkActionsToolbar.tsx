@@ -81,42 +81,51 @@ export const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
         width: '100%',
         maxWidth: '100%',
         minWidth: 0,
-        border: '1px solid rgba(14, 116, 144, 0.14)',
-        borderRadius: 2,
+        border: '1px solid rgba(96, 165, 250, 0.26)',
+        borderRadius: 2.5,
         overflow: 'visible',
-        boxShadow: '0 14px 38px rgba(15, 23, 42, 0.09)',
-        background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+        boxShadow: '0 16px 38px rgba(15, 45, 85, 0.1)',
+        background: 'linear-gradient(145deg, #ffffff 0%, #F4F8FF 100%)',
       }}
     >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, px: { xs: 1.25, md: 1.5 }, py: 1, borderBottom: '1px solid #E4ECF6', background: 'linear-gradient(90deg, rgba(220,235,255,0.62), rgba(255,255,255,0.5))', borderRadius: '10px 10px 0 0' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+          <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: selectedCount > 0 ? '#0E9F8E' : '#94A3B8', boxShadow: selectedCount > 0 ? '0 0 0 4px rgba(14,159,142,0.12)' : 'none' }} />
+          <Typography sx={{ color: '#16325C', fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Candidate actions</Typography>
+        </Box>
+        <Typography sx={{ color: '#71839B', fontSize: '0.68rem' }}>{selectedCount > 0 ? 'Choose an action for selected candidates' : 'Select candidates to enable actions'}</Typography>
+      </Box>
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: {
             xs: 'minmax(0, 1fr)',
             sm: 'repeat(2, minmax(0, 1fr))',
-            md: 'repeat(6, minmax(72px, 1fr))',
-            lg: 'repeat(8, minmax(68px, 1fr))',
-            xl: 'repeat(10, minmax(68px, 1fr))',
+            md: 'repeat(4, minmax(120px, 1fr))',
+            lg: 'repeat(6, minmax(120px, 1fr))',
           },
           alignItems: 'center',
           gap: 0.75,
           p: { xs: 1, md: 1 },
           minWidth: 0,
           '& .MuiButton-root': {
-            minHeight: 32,
-            py: 0.4,
-            px: 0.8,
-            fontSize: 12,
+            minHeight: 36,
+            py: 0.55,
+            px: 1,
+            fontSize: 11,
             lineHeight: 1.15,
             whiteSpace: 'nowrap',
+            borderRadius: 1.5,
+            borderColor: '#C9D8EA',
           },
           '& .MuiButton-startIcon': {
             mr: 0.5,
             '& svg': { fontSize: 16 },
           },
           '& .MuiInputBase-root': {
-            minHeight: 32,
-            fontSize: 12,
+            minHeight: 36,
+            fontSize: 11,
+            borderRadius: 1.5,
           },
           '& .MuiInputBase-input': {
             py: 0.6,
@@ -124,12 +133,31 @@ export const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
           '& .MuiInputLabel-root': {
             fontSize: 12,
           },
+          '& .MuiButton-outlined': {
+            color: '#28508A',
+            backgroundColor: '#FFFFFF',
+            '&:hover': { backgroundColor: '#EAF3FF', borderColor: '#5B8CFF' },
+          },
+          '& .MuiButton-text': {
+            color: '#54708F',
+            '&:hover': { backgroundColor: '#EAF3FF', color: '#28508A' },
+          },
+          '& .MuiButton-root.Mui-disabled': {
+            color: '#9AA8B8',
+            borderColor: '#D9E2EC',
+            backgroundColor: '#F8FAFC',
+            opacity: 1,
+          },
+          '& .MuiInputBase-root.Mui-disabled': {
+            color: '#8A99AA',
+            backgroundColor: '#F8FAFC',
+          },
         }}
       >
         <Chip
           color="primary"
           label={`${selectedCount} ${selectedCount === 1 ? 'Candidate' : 'Candidates'} Selected`}
-          sx={{ fontWeight: 900, borderRadius: 1, height: 32, width: '100%', '& .MuiChip-label': { px: 1, fontSize: 12 } }}
+          sx={{ fontWeight: 900, borderRadius: 1.5, height: 36, width: '100%', '& .MuiChip-label': { px: 1, fontSize: 11 } }}
         />
         <Tooltip title="Shortlist selected candidates">
           <span>

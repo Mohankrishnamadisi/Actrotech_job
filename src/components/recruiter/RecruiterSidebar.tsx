@@ -8,14 +8,12 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Avatar,
   Typography,
   IconButton,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
 import {
-  Home as HomeIcon,
   Dashboard as DashboardIcon,
   Work as WorkIcon,
   Event as EventIcon,
@@ -84,7 +82,6 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
 
   const menuSections = [
     { label: 'Workspace', items: [
-      { id: 'home', label: 'Home', icon: HomeIcon, external: true },
       { id: 'overview', label: 'Overview', icon: DashboardIcon },
       { id: 'jobs', label: 'Jobs', icon: WorkIcon },
       { id: 'applicants', label: 'Applicants', icon: PeopleIcon },
@@ -148,51 +145,64 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',
-        background: 'linear-gradient(180deg, #0B1730 0%, #102448 52%, #0A1C39 100%)',
-        borderRight: '1px solid rgba(148,163,184,0.18)',
+        background: 'linear-gradient(180deg, #0B1325 0%, #121E37 30%, #0D1730 100%)',
+        borderRight: '1px solid rgba(125, 146, 180, 0.24)',
+        boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.08), 18px 0 40px rgba(15, 23, 42, 0.18)',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at top right, rgba(91,140,255,0.22), transparent 25%), radial-gradient(circle at bottom left, rgba(139,92,246,0.2), transparent 30%)',
+          pointerEvents: 'none',
+        },
       }}
     >
-      {/* Header */}
-      <Box sx={{ p: 2.5, borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          {companyLogo ? (
-            <Avatar src={companyLogo} sx={{ width: 44, height: 44, border: '2px solid rgba(94,234,212,0.65)' }} />
-          ) : (
-            <Avatar
-              sx={{
-                width: 44,
-                height: 44,
-                background: 'linear-gradient(135deg, #14B8A6 0%, #0EA5E9 100%)',
-                fontWeight: 700,
-              }}
-            >
-              {companyName.charAt(0).toUpperCase()}
-            </Avatar>
-          )}
-          <Typography
-            variant="h6"
+      <Box sx={{ px: 2.5, py: 1.75, borderBottom: '1px solid rgba(255,255,255,0.09)', position: 'relative', zIndex: 1 }}>
+        <Box
+          component="button"
+          type="button"
+          onClick={() => navigate('/')}
+          aria-label="Go to Actro home"
+          title="Go to Actro home"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            minHeight: 38,
+            p: 0,
+            border: 0,
+            background: 'transparent',
+            cursor: 'pointer',
+            textAlign: 'left',
+            '&:hover img': { transform: 'scale(1.03)', filter: 'drop-shadow(0 8px 16px rgba(94,234,212,0.28))' },
+          }}
+        >
+          <Box
+            component="img"
+            src="/white actro.png.png"
+            alt="Actro"
             sx={{
-              fontSize: '0.95rem',
-              fontWeight: 700,
-              color: '#F8FAFC',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              display: 'block',
+              width: 'auto',
+              maxWidth: '100%',
+              height: 'auto',
+              maxHeight: 38,
+              objectFit: 'contain',
+              objectPosition: 'left center',
+              transition: 'transform 0.2s ease, filter 0.2s ease',
             }}
-          >
-            {companyName}
-          </Typography>
+          />
         </Box>
         <Typography
           variant="caption"
-          sx={{ color: 'rgba(191,219,254,0.72)', fontSize: '0.68rem', letterSpacing: 0.7, textTransform: 'uppercase' }}
+          sx={{ display: 'block', mt: 1, color: 'rgba(191,219,254,0.72)', fontSize: '0.68rem', letterSpacing: 0.9, textTransform: 'uppercase' }}
         >
           Recruiter Dashboard
         </Typography>
       </Box>
 
-      {/* Navigation Items */}
-      <List sx={{ flex: 1, minHeight: 0, py: 1.5, overflowY: 'auto', '&::-webkit-scrollbar': { width: 5 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(148,163,184,0.34)', borderRadius: 99 } }}>
+      <List sx={{ flex: 1, minHeight: 0, py: 1.5, overflowY: 'auto', position: 'relative', zIndex: 1, '&::-webkit-scrollbar': { width: 5 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(148,163,184,0.34)', borderRadius: 99 } }}>
         {menuSections.map((section, sectionIndex) => (
           <Box key={section.label} sx={{ mb: 1.5 }}>
             <Typography sx={{ px: 2.5, pt: sectionIndex ? 1 : 0.35, pb: 0.7, color: 'rgba(191,219,254,0.52)', fontSize: 10, fontWeight: 800, letterSpacing: 1.1, textTransform: 'uppercase' }}>{section.label}</Typography>
@@ -200,55 +210,61 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
               const Icon = item.icon;
               const isActive = currentTab === item.id && !item.external;
               return (
-              <motion.div key={item.id} initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.22, delay: Math.min(0.3, sectionIndex * 0.04 + itemIndex * 0.018) }}>
-              <ListItem disablePadding sx={{ mb: 0.2 }}>
-                <ListItemButton
-                  onClick={() => handleMenuClick(item.id)}
-                  sx={{
-                    mx: 1.25, minHeight: 40, px: 1.25, borderRadius: 2,
-                    background: isActive ? 'linear-gradient(90deg, rgba(45,212,191,0.22), rgba(56,189,248,0.1))' : 'transparent',
-                    color: isActive ? '#FFFFFF' : 'rgba(226,232,240,0.7)',
-                    borderLeft: isActive ? '3px solid #5EEAD4' : '3px solid transparent',
-                    transition: 'background 0.2s ease, color 0.2s ease, transform 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(148,163,184,0.13)', color: '#FFFFFF', transform: 'translateX(3px)',
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 34,
-                      color: isActive ? '#5EEAD4' : 'rgba(191,219,254,0.68)',
-                    }}
-                  >
-                    <Icon sx={{ fontSize: '1.25rem' }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    secondary={item.id === 'billing-subscription' ? `${planName}` : undefined}
-                    primaryTypographyProps={{
-                      fontSize: '0.81rem', fontWeight: isActive ? 750 : 550,
-                    }}
-                    secondaryTypographyProps={{
-                      fontSize: '0.72rem',
-                      color: isActive ? '#99F6E4' : 'rgba(191,219,254,0.5)',
-                      sx: { mt: 0.1, lineHeight: 1.2 },
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-              </motion.div>
+                <motion.div key={item.id} initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.22, delay: Math.min(0.3, sectionIndex * 0.04 + itemIndex * 0.018) }}>
+                  <ListItem disablePadding sx={{ mb: 0.1 }}>
+                    <ListItemButton
+                      onClick={() => handleMenuClick(item.id)}
+                      sx={{
+                        mx: 1.1,
+                        minHeight: 46,
+                        px: 1.25,
+                        borderRadius: 2.2,
+                        background: isActive ? 'linear-gradient(90deg, rgba(91,140,255,0.22), rgba(139,92,246,0.12))' : 'transparent',
+                        color: isActive ? '#FFFFFF' : 'rgba(226,232,240,0.76)',
+                        borderLeft: isActive ? '3px solid #7DD3FC' : '3px solid transparent',
+                        boxShadow: isActive ? '0 12px 28px rgba(91,140,255,0.2)' : 'none',
+                        transition: 'all 0.2s ease, transform 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: 'rgba(148,163,184,0.12)',
+                          color: '#FFFFFF',
+                          transform: 'translateX(2px)',
+                        },
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 36,
+                          color: isActive ? '#7DD3FC' : 'rgba(191,219,254,0.72)',
+                        }}
+                      >
+                        <Icon sx={{ fontSize: '1.2rem' }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.label}
+                        secondary={item.id === 'billing-subscription' ? `${planName}` : undefined}
+                        primaryTypographyProps={{
+                          fontSize: '0.82rem',
+                          fontWeight: isActive ? 800 : 600,
+                        }}
+                        secondaryTypographyProps={{
+                          fontSize: '0.72rem',
+                          color: isActive ? '#BEE3FF' : 'rgba(191,219,254,0.54)',
+                          sx: { mt: 0.1, lineHeight: 1.2 },
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                </motion.div>
               );
             })}
           </Box>
         ))}
       </List>
 
-      <Box sx={{ mx: 1.5, mb: 1.5, p: 1.4, borderRadius: 2, bgcolor: 'rgba(45,212,191,0.1)', border: '1px solid rgba(94,234,212,0.16)' }}>
+      <Box sx={{ mx: 1.5, mb: 1.5, p: 1.4, borderRadius: 2.2, bgcolor: 'rgba(91,140,255,0.12)', border: '1px solid rgba(125, 211, 252, 0.22)', boxShadow: '0 12px 28px rgba(91,140,255,0.12)', position: 'relative', zIndex: 1 }}>
         <Typography sx={{ color: '#99F6E4', fontSize: 10, fontWeight: 800, letterSpacing: 0.8, textTransform: 'uppercase' }}>{planName} workspace</Typography>
-        <Typography sx={{ color: 'rgba(226,232,240,0.68)', fontSize: 11, mt: 0.35 }}>{credits.toLocaleString()} credits available</Typography>
+        <Typography sx={{ color: 'rgba(226,232,240,0.72)', fontSize: 11, mt: 0.35 }}>{credits.toLocaleString()} credits available</Typography>
       </Box>
-
     </MotionBox>
   );
 

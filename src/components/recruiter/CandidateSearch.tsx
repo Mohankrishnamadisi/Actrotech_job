@@ -98,6 +98,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
   const [unlockedCandidates, setUnlockedCandidates] = useState<Record<string, boolean>>({});
   const [blockedCandidateIds, setBlockedCandidateIds] = useState<Set<string>>(new Set());
   const [blockedCandidateEmails, setBlockedCandidateEmails] = useState<Set<string>>(new Set());
+  const [resumePreviewFailed, setResumePreviewFailed] = useState(false);
 
   const [filters, setFilters] = useState({
     title: '',
@@ -166,6 +167,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
         source: 'candidate_search',
       });
       setSelectedCandidate(profile as Candidate);
+      setResumePreviewFailed(false);
       setViewDialogOpen(true);
     } catch (err) {
       console.error('Error loading candidate profile:', err);
@@ -225,6 +227,15 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
     '';
   const resumeUrl = selectedCandidate?.resume_url || '';
   const isProfileUnlocked = Boolean(selectedCandidate && unlockedCandidates[selectedCandidate.id]);
+
+  const openResumeInNewTab = () => {
+    if (!resumeUrl) {
+      toast.error('Resume not available');
+      return;
+    }
+    const resumeWindow = window.open(resumeUrl, '_blank', 'noopener,noreferrer');
+    if (!resumeWindow) toast.error('Please allow pop-ups to open the resume');
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -442,7 +453,9 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+            overflow: 'hidden',
+            boxShadow: '0 28px 70px rgba(9,19,36,0.3)',
+            border: '1px solid rgba(125,211,252,0.22)',
           }
         }}
       >
@@ -450,9 +463,9 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
           {selectedCandidate && (
             <Box
               sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(115deg, #091324 0%, #16335F 58%, #28508A 100%)',
                 color: 'white',
-                p: 3,
+                p: { xs: 2, md: 2.5 },
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -463,14 +476,14 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                 <Avatar
                   src={selectedCandidate.avatar_url || selectedCandidate.profile_image_url || undefined}
                   sx={{
-                    width: 70,
-                    height: 70,
-                    border: '4px solid white',
+                    width: 54,
+                    height: 54,
+                    border: '3px solid rgba(186,230,253,0.85)',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                   }}
                 />
                 <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: 20 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: { xs: 17, md: 19 } }}>
                     {selectedCandidate.name}
                   </Typography>
                   <Typography sx={{ opacity: 0.9, fontSize: 14 }}>
@@ -494,10 +507,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
               <Grid item xs={12} lg={6}>
                 <Box sx={{ display: 'grid', gap: 2 }}>
                   <Box sx={{ p: 2.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                      <Avatar src={profileAvatarUrl || undefined} sx={{ width: 58, height: 58 }}>
-                        {selectedCandidate.name?.charAt(0)?.toUpperCase() || 'C'}
-                      </Avatar>
+                    <Box sx={{ mb: 1.5 }}>
                       <Box>
                         <Typography sx={{ fontWeight: 800 }}>{selectedCandidate.name}</Typography>
                         <Typography variant="body2" color="text.secondary">{selectedCandidate.headline || 'Profile headline not provided'}</Typography>
@@ -623,7 +633,7 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
 
               <Grid item xs={12} lg={6}>
                 <Box sx={{ display: 'grid', gap: 2 }}>
-                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                  <Box sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'white', borderRadius: 2, border: '1px solid #D7E3EF', boxShadow: '0 8px 20px rgba(15,39,75,0.04)' }}>
                     <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
                       Resume Preview
                     </Typography>
@@ -640,17 +650,25 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                               bgcolor: '#fff',
                             }}
                           >
-                            <iframe
+                              {resumePreviewFailed ? (
+                                <Box sx={{ height: '100%', display: 'grid', placeItems: 'center', textAlign: 'center', p: 2 }}>
+                                  <Box>
+                                    <Typography variant="body2" sx={{ color: '#49627F', mb: 1 }}>Preview is unavailable for this file format.</Typography>
+                                    <Button size="small" variant="outlined" onClick={openResumeInNewTab} startIcon={<OpenInNewIcon />}>Open Resume</Button>
+                                  </Box>
+                                </Box>
+                              ) : <iframe
                               title="Candidate Resume"
                               src={resumeUrl}
+                              onError={() => setResumePreviewFailed(true)}
                               style={{ width: '100%', height: '100%', border: 'none' }}
-                            />
+                            />}
                           </Box>
                           <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
-                            <Button href={resumeUrl} target="_blank" rel="noopener noreferrer" startIcon={<OpenInNewIcon />}>
+                            <Button onClick={openResumeInNewTab} startIcon={<OpenInNewIcon />}>
                               Open Full Resume
                             </Button>
-                            <Button href={resumeUrl} target="_blank" rel="noopener noreferrer" startIcon={<DownloadIcon />}>
+                            <Button onClick={openResumeInNewTab} startIcon={<DownloadIcon />}>
                               Download
                             </Button>
                           </Box>
@@ -811,9 +829,12 @@ export const CandidateSearch: React.FC<CandidateSearchProps> = ({ recruiterId, o
                 }}
                 startIcon={<MessageIcon />}
                 sx={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'linear-gradient(135deg, #091324 0%, #28508A 100%)',
+                  color: '#FFFFFF',
                   textTransform: 'none',
                   fontWeight: 600,
+                  '& .MuiButton-startIcon': { color: '#FFFFFF' },
+                  '&:hover': { background: 'linear-gradient(135deg, #16335F 0%, #3567A2 100%)' },
                 }}
               >
                 Send Message

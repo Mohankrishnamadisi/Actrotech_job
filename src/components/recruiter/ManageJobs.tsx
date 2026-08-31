@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -24,10 +24,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Pagination,
+  InputAdornment,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   SettingsSuggest as SettingsSuggestIcon,
+  Search as SearchIcon,
+  FilterList as FilterListIcon,
+  LocationOn as LocationOnIcon,
+  WorkOutline as WorkOutlineIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
@@ -52,6 +58,10 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
   const [editFormData, setEditFormData] = useState<Partial<Job>>({});
   const [automationDialogOpen, setAutomationDialogOpen] = useState(false);
   const [automationJob, setAutomationJob] = useState<Job | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const jobsPerPage = 8;
 
   useEffect(() => {
     fetchJobs();
@@ -114,6 +124,31 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
     }
   };
 
+  const filteredJobs = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return jobs.filter((job) => {
+      const matchesQuery = !query || [job.title, job.location, job.job_type, job.work_mode]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+      const matchesStatus = statusFilter === 'all' || String(job.status).toLowerCase() === statusFilter;
+      return matchesQuery && matchesStatus;
+    });
+  }, [jobs, searchQuery, statusFilter]);
+
+  const paginatedJobs = useMemo(
+    () => filteredJobs.slice((page - 1) * jobsPerPage, page * jobsPerPage),
+    [filteredJobs, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter]);
+
+  useEffect(() => {
+    const pageCount = Math.max(1, Math.ceil(filteredJobs.length / jobsPerPage));
+    if (page > pageCount) setPage(pageCount);
+  }, [filteredJobs.length, page]);
+
   if (loading) {
     return (
       <Card>
@@ -138,38 +173,86 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-            Manage Posted Jobs ({jobs.length})
-          </Typography>
+      <Box sx={{ mb: 2, p: { xs: 2, md: 2.5 }, borderRadius: 3, color: '#fff', background: 'linear-gradient(120deg, #091324 0%, #16335F 58%, #28508A 100%)', position: 'relative', overflow: 'hidden', boxShadow: '0 14px 30px rgba(9,19,36,0.16)' }}>
+        <Box sx={{ position: 'absolute', right: -30, top: -65, width: 190, height: 190, borderRadius: '50%', border: '1px solid rgba(125,211,252,0.25)', boxShadow: '0 0 0 20px rgba(125,211,252,0.04), 0 0 0 40px rgba(125,211,252,0.025)' }} />
+        <Typography variant="overline" sx={{ color: '#7DD3FC', fontWeight: 800, letterSpacing: '0.12em', position: 'relative' }}>Job board</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 900, fontSize: { xs: '1.35rem', md: '1.6rem' }, color: '#fff', position: 'relative' }}>Manage your hiring pipeline</Typography>
+        <Typography variant="body2" sx={{ mt: 0.4, color: 'rgba(226,232,240,0.76)', position: 'relative' }}>
+          {jobs.length} posted roles · {jobs.filter((job) => job.status === 'published').length} currently live
+        </Typography>
+      </Box>
 
-          <TableContainer component={Paper}>
+      <Card sx={{ borderRadius: 3, border: '1px solid rgba(148,163,184,0.18)', boxShadow: '0 20px 50px rgba(15,23,42,0.06)' }}>
+        <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', mb: 1.5 }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 850, color: '#0f172a' }}>Posted roles</Typography>
+              <Typography variant="body2" sx={{ color: '#64748B' }}>Showing {filteredJobs.length ? (page - 1) * jobsPerPage + 1 : 0}-{Math.min(page * jobsPerPage, filteredJobs.length)} of {filteredJobs.length}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', md: 'auto' }, flexWrap: 'wrap' }}>
+              <TextField
+                size="small"
+                placeholder="Search jobs"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                sx={{ minWidth: { xs: 0, md: 240 }, flex: { xs: 1, md: 'initial' }, '& .MuiOutlinedInput-root': { bgcolor: '#F8FAFC' } }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: '#64748B' }} /></InputAdornment> }}
+              />
+              <FormControl size="small" sx={{ minWidth: 145 }}>
+                <InputLabel id="job-status-filter-label"><FilterListIcon sx={{ fontSize: 15, verticalAlign: 'middle', mr: 0.4 }} />Status</InputLabel>
+                <Select labelId="job-status-filter-label" value={statusFilter} label="Status" onChange={(event) => setStatusFilter(event.target.value)}>
+                  <MenuItem value="all">All statuses</MenuItem>
+                  <MenuItem value="published">Published</MenuItem>
+                  <MenuItem value="draft">Draft</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+          <TableContainer component={Paper} sx={{ borderRadius: 2.5, overflowX: 'auto', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell sx={{ fontWeight: 600 }}>Job Title</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Location</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Posted</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }} align="right">
-                    Actions
-                  </TableCell>
+                <TableRow sx={{ background: 'linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%)' }}>
+                  <TableCell sx={{ fontWeight: 800, width: '30%' }}>Job Title</TableCell>
+                  <TableCell sx={{ fontWeight: 800, width: '16%' }}>Location</TableCell>
+                  <TableCell sx={{ fontWeight: 800, width: '18%' }}>Type</TableCell>
+                  <TableCell sx={{ fontWeight: 800, width: '13%' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 800, width: '13%' }}>Posted</TableCell>
+                  <TableCell sx={{ fontWeight: 800, width: '10%' }} align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {jobs.map((job) => (
-                  <TableRow key={job.id} hover>
-                    <TableCell>
-                      <Typography sx={{ fontWeight: 500 }}>{job.title}</Typography>
+                {paginatedJobs.map((job) => (
+                  <TableRow
+                    key={job.id}
+                    hover
+                    sx={{
+                      '&:nth-of-type(even)': { backgroundColor: '#FBFDFF' },
+                      '&:hover': { backgroundColor: '#F1F7FF !important' },
+                      '& td': { borderBottomColor: '#E7EEF7' },
+                    }}
+                  >
+                    <TableCell sx={{ borderLeft: '3px solid transparent', '&:hover': { borderLeftColor: '#28508A' } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                        <Box sx={{ width: 34, height: 34, flexShrink: 0, display: 'grid', placeItems: 'center', borderRadius: 1.5, color: '#1D4B86', background: 'linear-gradient(135deg, #DCEBFF, #BBD7FF)', fontWeight: 900, fontSize: '0.82rem' }}>
+                          {String(job.title || 'J').charAt(0).toUpperCase()}
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ fontWeight: 800, color: '#102A50', fontSize: '0.84rem', lineHeight: 1.25 }} noWrap>{job.title}</Typography>
+                          <Typography sx={{ color: '#8090A5', fontSize: '0.67rem', mt: 0.3 }}>Hiring role</Typography>
+                        </Box>
+                      </Box>
                     </TableCell>
-                    <TableCell>{job.location}</TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        <Chip label={job.job_type} size="small" variant="outlined" />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.55, color: '#49627F', fontSize: '0.76rem' }}>
+                        <LocationOnIcon sx={{ fontSize: 16, color: '#5B8CFF' }} />
+                        <span>{job.location || 'Not specified'}</span>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.45 }}>
+                        <Chip icon={<WorkOutlineIcon sx={{ fontSize: '14px !important' }} />} label={job.job_type} size="small" variant="outlined" sx={{ minWidth: 102, height: 25, borderColor: '#C8D8EA', color: '#294A72', bgcolor: '#F8FBFF', fontSize: '0.68rem', fontWeight: 800, '& .MuiChip-label': { px: 0.8 } }} />
                         {job.work_mode && (
-                          <Chip label={job.work_mode} size="small" variant="outlined" color="secondary" />
+                          <Chip label={job.work_mode} size="small" variant="outlined" sx={{ minWidth: 102, height: 25, borderColor: '#D3E5E3', color: '#087F73', bgcolor: '#F3FCFA', fontSize: '0.68rem', fontWeight: 800, '& .MuiChip-label': { px: 0.8 } }} />
                         )}
                       </Box>
                     </TableCell>
@@ -178,15 +261,20 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
                         label={job.status}
                         size="small"
                         color={job.status === 'published' ? 'success' : 'warning'}
-                        variant={job.status === 'published' ? 'filled' : 'outlined'}
+                        variant="filled"
+                        sx={{ fontWeight: 800, textTransform: 'capitalize', bgcolor: job.status === 'published' ? '#E2F7F1' : '#FFF4D8', color: job.status === 'published' ? '#087F73' : '#9A6700', border: '1px solid', borderColor: job.status === 'published' ? '#B7E9DA' : '#F5D58A' }}
                       />
                     </TableCell>
-                    <TableCell>{format(new Date(job.created_at ?? job.createdAt ?? new Date().toISOString()), 'dd MMM yyyy')}</TableCell>
-                    <TableCell align="right">
+                    <TableCell sx={{ color: '#49627F', fontSize: '0.74rem', whiteSpace: 'nowrap' }}>
+                      {format(new Date(job.created_at ?? job.createdAt ?? new Date().toISOString()), 'dd MMM yyyy')}
+                    </TableCell>
+                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.35, p: 0.35, borderRadius: 1.5, bgcolor: '#F4F7FB', border: '1px solid #E4EBF4' }}>
                       <IconButton
                         size="small"
                         onClick={() => handleEditClick(job)}
                         title="Edit job"
+                        sx={{ color: '#28508A', transition: 'transform 0.2s ease, background-color 0.2s ease', '&:hover': { bgcolor: '#DCEBFF', transform: 'translateY(-2px) scale(1.08)' } }}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
@@ -194,19 +282,33 @@ export const ManageJobs: React.FC<ManageJobsProps> = ({ recruiterId, onJobsChang
                         size="small"
                         onClick={() => handleAutomationClick(job)}
                         title="Job automations"
+                        sx={{ color: '#087F73', transition: 'transform 0.2s ease, background-color 0.2s ease', '&:hover': { bgcolor: '#DDF7F0', transform: 'translateY(-2px) scale(1.08)' } }}
                       >
                         <SettingsSuggestIcon fontSize="small" />
                       </IconButton>
-                      <DeleteActionButton
-                        onClick={() => handleDeleteClick(job.id)}
-                        ariaLabel="Delete job"
-                      />
+                      <Box sx={{ '& button': { width: 32, height: 32, bgcolor: 'transparent', color: '#C2414C', '&:hover': { bgcolor: '#FDE7E9' } } }}>
+                        <DeleteActionButton onClick={() => handleDeleteClick(job.id)} ariaLabel="Delete job" />
+                      </Box>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
+                {paginatedJobs.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} sx={{ py: 6, textAlign: 'center' }}>
+                      <SearchIcon sx={{ fontSize: 34, color: '#94A3B8', mb: 0.5 }} />
+                      <Typography variant="body2" sx={{ color: '#64748B' }}>No jobs match your search or filter.</Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
+          {filteredJobs.length > jobsPerPage && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination count={Math.ceil(filteredJobs.length / jobsPerPage)} page={page} onChange={(_, value) => setPage(value)} color="primary" shape="rounded" size="small" />
+            </Box>
+          )}
         </CardContent>
       </Card>
 

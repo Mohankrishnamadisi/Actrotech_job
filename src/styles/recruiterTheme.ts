@@ -1,25 +1,30 @@
 import { createTheme } from '@mui/material/styles';
 
 const colors = {
-  primary: '#0066FF', // Vibrant blue - modern SaaS color
-  primaryDark: '#0052CC',
-  primaryLight: '#E8F0FF',
-  secondary: '#7C3AED', // Purple accent
-  success: '#10B981', // Green
-  danger: '#EF4444', // Red
-  warning: '#F59E0B', // Amber
-  info: '#06B6D4', // Cyan
-  background: '#FFFFFF',
-  backgroundAlt: '#F9FAFB', // Light gray
+  primary: '#5B8CFF',
+  primaryDark: '#3C63E6',
+  primaryLight: '#DDEBFF',
+  secondary: '#8B5CF6',
+  secondarySoft: '#F0E8FF',
+  accent: '#22C55E',
+  success: '#10B981',
+  danger: '#F56565',
+  warning: '#F59E0B',
+  info: '#06B6D4',
+  midnight: '#091324',
+  midnightAlt: '#0E1B34',
+  slate: '#101A2D',
+  background: '#F6F8FF',
+  backgroundAlt: '#EEF3FF',
   surface: '#FFFFFF',
-  border: '#E5E7EB', // Light border
-  borderDark: '#D1D5DB',
+  border: '#DDE6F7',
+  borderDark: '#B8C5E2',
   text: {
-    primary: '#111827', // Dark gray/black
-    secondary: '#6B7280', // Medium gray
-    tertiary: '#9CA3AF', // Light gray
+    primary: '#111827',
+    secondary: '#58657A',
+    tertiary: '#7B8798',
   },
-  hover: '#F3F4F6',
+  hover: '#EDF3FF',
 };
 
 export const recruiterTheme = createTheme({
@@ -60,54 +65,54 @@ export const recruiterTheme = createTheme({
   typography: {
     fontFamily: '"Inter", "Segoe UI", "Roboto", sans-serif',
     h1: {
-      fontSize: '2.5rem',
+      fontSize: '2.1rem',
       fontWeight: 700,
       lineHeight: 1.2,
       letterSpacing: '-0.02em',
     },
     h2: {
-      fontSize: '2rem',
+      fontSize: '1.8rem',
       fontWeight: 700,
       lineHeight: 1.3,
       letterSpacing: '-0.01em',
     },
     h3: {
-      fontSize: '1.5rem',
+      fontSize: '1.45rem',
       fontWeight: 700,
-      lineHeight: 1.4,
+      lineHeight: 1.35,
     },
     h4: {
-      fontSize: '1.25rem',
+      fontSize: '1.2rem',
       fontWeight: 600,
       lineHeight: 1.4,
     },
     h5: {
-      fontSize: '1.125rem',
+      fontSize: '1.05rem',
       fontWeight: 600,
       lineHeight: 1.4,
     },
     h6: {
-      fontSize: '1rem',
+      fontSize: '0.96rem',
       fontWeight: 600,
       lineHeight: 1.5,
     },
     body1: {
-      fontSize: '1rem',
+      fontSize: '0.96rem',
       lineHeight: 1.5,
       fontWeight: 400,
     },
     body2: {
-      fontSize: '0.875rem',
+      fontSize: '0.82rem',
       lineHeight: 1.5,
       fontWeight: 400,
     },
     button: {
       textTransform: 'none',
       fontWeight: 600,
-      fontSize: '0.875rem',
+      fontSize: '0.8rem',
     },
     caption: {
-      fontSize: '0.75rem',
+      fontSize: '0.72rem',
       lineHeight: 1.5,
       color: colors.text.secondary,
     },
@@ -119,8 +124,8 @@ export const recruiterTheme = createTheme({
           borderRadius: '8px',
           textTransform: 'none',
           fontWeight: 600,
-          fontSize: '0.875rem',
-          padding: '10px 16px',
+          fontSize: '0.8rem',
+          padding: '8px 14px',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
             transform: 'translateY(-2px)',

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -125,6 +125,10 @@ export const RecruiterDeveloperApiCenter: React.FC<RecruiterDeveloperApiCenterPr
 
   const [explorerResult, setExplorerResult] = useState<any>(null);
   const [mutableSettings, setMutableSettings] = useState(orgSettings);
+
+  useEffect(() => {
+    setTab(initialTabFromMode(mode));
+  }, [mode]);
 
   return (
     <Box>

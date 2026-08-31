@@ -21,6 +21,7 @@ import {
   LinearProgress,
   Menu,
   MenuItem,
+  Pagination,
   Select,
   Stack,
   Tab,
@@ -455,6 +456,8 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
   const [leftFilter, setLeftFilter] = useState<FilterPreset>('all');
   const [filterJob, setFilterJob] = useState('all');
   const [filterAtsStage, setFilterAtsStage] = useState('all');
+  const [conversationPage, setConversationPage] = useState(1);
+  const conversationsPerPage = 30;
 
   const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(new Set());
 
@@ -1474,6 +1477,20 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
       });
   }, [conversations, searchText, leftFilter, filterJob, filterAtsStage]);
 
+  const paginatedConversations = useMemo(
+    () => filteredConversations.slice((conversationPage - 1) * conversationsPerPage, conversationPage * conversationsPerPage),
+    [filteredConversations, conversationPage]
+  );
+
+  useEffect(() => {
+    setConversationPage(1);
+  }, [searchText, leftFilter, filterJob, filterAtsStage]);
+
+  useEffect(() => {
+    const pageCount = Math.max(1, Math.ceil(filteredConversations.length / conversationsPerPage));
+    if (conversationPage > pageCount) setConversationPage(pageCount);
+  }, [conversationPage, filteredConversations.length]);
+
   const summary = useMemo(() => {
     const unread = conversations.reduce((sum, row) => sum + (row.unreadCount > 0 || row.meta.markedUnread ? 1 : 0), 0);
     const archived = conversations.filter((row) => row.meta.archived).length;
@@ -1887,11 +1904,11 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
   };
 
   const renderCenter = () => (
-    <Box sx={{ bgcolor: '#f1f5f9', borderRadius: 3, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+    <Box sx={{ bgcolor: '#EAF1FA', borderRadius: 3.5, overflow: 'hidden', border: '1px solid #CBDCEC', boxShadow: '0 18px 48px rgba(15,39,75,0.1)' }}>
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '280px 340px minmax(0, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', lg: '300px 370px minmax(440px, 1fr)' },
           height: isMobile ? 'auto' : 'calc(100vh - 200px)',
           minHeight: 640,
           alignItems: 'stretch',
@@ -1899,16 +1916,22 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
       >
         <Box
           sx={{
-            borderRight: '1px solid #e2e8f0',
-            p: 2,
-            bgcolor: '#fff',
+            borderRight: '1px solid #dbe7f3',
+            p: { xs: 1.5, md: 1.75 },
+            bgcolor: '#F8FBFF',
             minHeight: { xs: 'auto', lg: 0 },
             display: 'flex',
             flexDirection: 'column',
-            gap: 1.5,
+            gap: 1.25,
           }}
         >
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.7rem' }}>Conversations</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#16325C', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.72rem' }}>Conversations</Typography>
+              <Typography sx={{ color: '#8090A5', fontSize: '0.68rem', mt: 0.25 }}>Keep every candidate thread within reach</Typography>
+            </Box>
+            <Box sx={{ width: 30, height: 30, display: 'grid', placeItems: 'center', borderRadius: 1.5, bgcolor: '#E7F0FF', color: '#28508A' }}><MailIcon sx={{ fontSize: 16 }} /></Box>
+          </Box>
 
           <TextField
             fullWidth
@@ -1917,10 +1940,12 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: '#94a3b8' }} /></InputAdornment> }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: '#f8fafc' } }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: '#FFFFFF', boxShadow: '0 5px 14px rgba(15,39,75,0.04)' } }}
           />
 
-          <Stack direction="row" spacing={0.75} sx={{ mt: 1.25, flexWrap: 'wrap' }}>
+          <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#FFFFFF', border: '1px solid #E1EAF4', boxShadow: '0 5px 14px rgba(15,39,75,0.035)' }}>
+          <Typography sx={{ color: '#8090A5', fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', mb: 0.75 }}>View</Typography>
+          <Stack direction="row" spacing={0.55} useFlexGap sx={{ flexWrap: 'wrap', rowGap: 0.55 }}>
             {['all', 'unread', 'archived', 'starred', 'recent', 'interview', 'offer'].map((preset) => (
               <Chip
                 key={preset}
@@ -1928,12 +1953,15 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 size="small"
                 color={leftFilter === preset ? 'primary' : 'default'}
                 onClick={() => setLeftFilter(preset as FilterPreset)}
-                sx={{ mb: 0.5 }}
+                sx={{ mb: 0, height: 28, borderRadius: 1.5, fontSize: '0.68rem', fontWeight: 750 }}
               />
             ))}
           </Stack>
+          </Box>
 
-          <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+          <Box sx={{ display: 'grid', gap: 1.35, p: 1, borderRadius: 2, bgcolor: '#F4F8FE', border: '1px solid #E1EAF4' }}>
+          <Typography sx={{ color: '#8090A5', fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Narrow inbox</Typography>
+          <FormControl fullWidth size="small">
             <InputLabel>Job</InputLabel>
             <Select value={filterJob} label="Job" onChange={(event) => setFilterJob(event.target.value)}>
               <MenuItem value="all">All Jobs</MenuItem>
@@ -1941,20 +1969,21 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+          <FormControl fullWidth size="small">
             <InputLabel>ATS Stage</InputLabel>
             <Select value={filterAtsStage} label="ATS Stage" onChange={(event) => setFilterAtsStage(event.target.value)}>
               <MenuItem value="all">All Stages</MenuItem>
               {ATS_STAGE_OPTIONS.map((stage) => <MenuItem key={stage} value={stage}>{stage}</MenuItem>)}
             </Select>
           </FormControl>
+          </Box>
 
           <Divider sx={{ my: 0.5 }} />
 
           {/* Bulk actions as compact icon row */}
-          <Box>
-            <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>Bulk Actions</Typography>
-            <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+          <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#FFFFFF', border: '1px solid #E1EAF4' }}>
+            <Typography variant="caption" sx={{ color: '#8090A5', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.64rem', letterSpacing: '0.08em' }}>Bulk Actions</Typography>
+            <Stack direction="row" spacing={0.5} useFlexGap sx={{ mt: 0.85, flexWrap: 'wrap', rowGap: 0.55 }}>
               <Tooltip title="Bulk Archive">
                 <IconButton size="small" onClick={() => runBulkAction('archive')} sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 1.5 }}><ArchiveIcon fontSize="small" /></IconButton>
               </Tooltip>
@@ -1977,26 +2006,32 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
           </Box>
         </Box>
 
-        <Box sx={{ borderRight: '1px solid #e2e8f0', overflow: 'hidden', bgcolor: '#fff', display: 'flex', flexDirection: 'column', minHeight: { xs: 320, lg: 0 } }}>
-          <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#fafafa' }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a' }}>Inbox</Typography>
+          <Box sx={{ borderRight: '1px solid #dbe7f3', overflow: 'hidden', bgcolor: '#FFFFFF', display: 'flex', flexDirection: 'column', minHeight: { xs: 320, lg: 0 } }}>
+          <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #dbe7f3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#F4F8FE', background: 'linear-gradient(135deg, #F4F8FE 0%, #EAF3FF 100%)' }}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#16325C' }}>Inbox</Typography>
+              <Typography sx={{ color: '#8090A5', fontSize: '0.68rem' }}>{filteredConversations.length.toLocaleString()} conversations</Typography>
+            </Box>
             {loadingConversations && <LinearProgress sx={{ width: 60, borderRadius: 1 }} />}
           </Box>
-          <Box sx={{ flex: 1, overflowY: 'auto' }}>
-            {filteredConversations.map((row) => {
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 1, bgcolor: '#F8FBFF', scrollbarWidth: 'thin', '&::-webkit-scrollbar': { width: 7 }, '&::-webkit-scrollbar-thumb': { bgcolor: '#B8C9DF', borderRadius: 99 } }}>
+            {paginatedConversations.map((row) => {
               const selected = selectedConversationId === row.id;
               const unread = row.unreadCount > 0 || row.meta.markedUnread;
               return (
                 <Box
                   key={row.id}
                   sx={{
-                    px: 2, py: 1.5,
-                    borderBottom: '1px solid #f8fafc',
-                    bgcolor: selected ? '#f5f3ff' : unread ? '#fffbf0' : '#fff',
-                    borderLeft: selected ? '3px solid #6366f1' : '3px solid transparent',
+                    px: 1.25, py: 1.25,
+                    mb: 0.75,
+                    border: selected ? '1px solid #9EBFFF' : unread ? '1px solid #F4D58C' : '1px solid #E3ECF5',
+                    borderLeft: selected ? '4px solid #5B6CFF' : unread ? '4px solid #F59E0B' : '1px solid #E3ECF5',
+                    borderRadius: 2,
+                    bgcolor: selected ? '#F2F4FF' : unread ? '#FFFDF5' : '#FFFFFF',
+                    boxShadow: selected ? '0 8px 20px rgba(91,108,255,0.12)' : '0 4px 12px rgba(15,39,75,0.04)',
                     cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    '&:hover': { bgcolor: selected ? '#f5f3ff' : '#f8fafc' },
+                    transition: 'all 0.18s ease',
+                    '&:hover': { bgcolor: selected ? '#F2F4FF' : '#F1F7FF', borderColor: selected ? '#809AFF' : '#B8D0EC', transform: 'translateY(-1px)', boxShadow: '0 8px 18px rgba(15,39,75,0.08)' },
                   }}
                   onClick={() => { setSelectedConversationId(row.id); setDraftTarget(null); }}
                 >
@@ -2015,16 +2050,16 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                       sx={{ p: 0, mt: 0.5 }}
                     />
                     <Box sx={{ position: 'relative' }}>
-                      <Avatar src={row.participantAvatar} sx={{ width: 40, height: 40, fontSize: '0.95rem', bgcolor: '#6366f1' }}>{row.participantName.charAt(0).toUpperCase()}</Avatar>
+                      <Avatar src={row.participantAvatar} sx={{ width: 42, height: 42, fontSize: '0.95rem', bgcolor: '#6366f1', border: selected ? '2px solid #AFC3FF' : '2px solid #FFFFFF', boxShadow: '0 4px 10px rgba(15,39,75,0.12)' }}>{row.participantName.charAt(0).toUpperCase()}</Avatar>
                       <Box sx={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', bgcolor: row.status === 'online' ? '#22c55e' : '#d1d5db', border: '2px solid #fff' }} />
                     </Box>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.25 }}>
-                        <Typography variant="body2" sx={{ fontWeight: unread ? 800 : 600, color: '#0f172a', fontSize: '0.875rem' }} noWrap>{row.participantName}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: unread ? 850 : 650, color: '#16325C', fontSize: '0.84rem' }} noWrap>{row.participantName}</Typography>
                         <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem', flexShrink: 0, ml: 1 }}>{formatTimeAgo(row.lastMessageTime)}</Typography>
                       </Box>
-                      <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontWeight: 500 }} noWrap>{row.jobTitle || 'No job linked'}</Typography>
-                      <Typography variant="caption" sx={{ color: '#94a3b8' }} noWrap>{row.lastMessage || 'No messages yet'}</Typography>
+                      <Typography variant="caption" sx={{ color: '#49627F', display: 'block', fontWeight: 650 }} noWrap>{row.jobTitle || 'No job linked'}</Typography>
+                      <Typography variant="caption" sx={{ color: unread ? '#5A6F8D' : '#94A3B8' }} noWrap>{row.lastMessage || 'No messages yet'}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
                       {unread && <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f59e0b' }} />}
@@ -2048,22 +2083,36 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 <Typography variant="body2">No conversations found</Typography>
               </Box>
             )}
+            {filteredConversations.length > conversationsPerPage && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.25, borderTop: '1px solid #EEF3F8', bgcolor: '#FBFDFF' }}>
+                <Pagination
+                  count={Math.ceil(filteredConversations.length / conversationsPerPage)}
+                  page={conversationPage}
+                  onChange={(_, value) => setConversationPage(value)}
+                  size="small"
+                  shape="rounded"
+                  color="primary"
+                  siblingCount={0}
+                  boundaryCount={1}
+                />
+              </Box>
+            )}
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: { xs: 480, lg: 0 }, bgcolor: '#fff', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: { xs: 480, lg: 0 }, bgcolor: '#FFFFFF', overflow: 'hidden' }}>
           {selectedConversation || draftTarget ? (
             <>
               {/* Chat header */}
-              <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #f1f5f9', bgcolor: '#fafafa' }}>
+              <Box sx={{ px: { xs: 1.25, md: 1.75 }, py: 1.25, borderBottom: '1px solid #dbe7f3', background: 'linear-gradient(100deg, #F8FBFF 0%, #EEF5FF 100%)', overflow: 'visible', '& .MuiButton-root:hover': { transform: 'none' }, '& .MuiButton-root': { fontSize: '0.58rem !important', lineHeight: 1, minHeight: 26 }, '& .MuiSelect-select': { fontSize: '0.58rem !important', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}>
 
                 {/* Row 1: Avatar + name */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.25 }}>
-                  <Avatar src={selectedConversation?.participantAvatar} sx={{ width: 40, height: 40, bgcolor: '#6366f1', fontWeight: 800, flexShrink: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Avatar src={selectedConversation?.participantAvatar} sx={{ width: 36, height: 36, bgcolor: '#28508A', fontWeight: 800, flexShrink: 0, boxShadow: '0 5px 12px rgba(40,80,138,0.18)' }}>
                     {(selectedConversation?.participantName || draftTarget?.candidateName || 'C').charAt(0).toUpperCase()}
                   </Avatar>
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0f172a', lineHeight: 1.2, fontSize: '0.95rem' }} noWrap>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 850, color: '#16325C', lineHeight: 1.2, fontSize: '0.88rem' }} noWrap>
                       {selectedConversation?.participantName || draftTarget?.candidateName}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.25 }}>
@@ -2075,7 +2124,7 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 </Box>
 
                 {/* Row 2: Primary action buttons — all same height, no wrap */}
-                <Box sx={{ display: 'flex', gap: 0.75, mb: 1, flexWrap: 'nowrap', overflowX: 'auto', pb: 0.25 }}>
+                <Box sx={{ display: 'flex', gap: 0.4, mb: 0.85, flexWrap: 'nowrap', alignItems: 'center', overflow: 'visible', minWidth: 0, position: 'relative', zIndex: 2 }}>
                   <Button
                     size="small"
                     variant={selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'contained' : 'outlined'}
@@ -2086,34 +2135,34 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                       const action = selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'unblock' : 'block';
                       await handleConversationAction(action, selectedConversation);
                     }}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 27, px: 0.65, '& .MuiButton-startIcon': { mr: 0.25, '& svg': { fontSize: '0.75rem !important' } } }}
                   >
                     {selectedConversation?.isBlocked || selectedConversation?.meta.blocked ? 'Unblock Candidate' : 'Block Candidate'}
                   </Button>
                   <Button size="small" variant="outlined" startIcon={<PersonIcon sx={{ fontSize: '0.85rem !important' }} />}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 27, px: 0.65, '& .MuiButton-startIcon': { mr: 0.25, '& svg': { fontSize: '0.75rem !important' } } }}
                     onClick={() => { if (!candidateContext) { toast.error('Candidate profile unavailable'); return; } toast.success(`${candidateContext.candidateName}${candidateContext.headline ? ` · ${candidateContext.headline}` : ''}`); }}>
                     Profile
                   </Button>
                   <Button size="small" variant="outlined"
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 27, px: 0.65 }}
                     onClick={() => { if (!candidateContext?.resumeUrl) { toast.error('Resume not available'); return; } window.open(candidateContext.resumeUrl, '_blank', 'noopener,noreferrer'); }}>
                     Resume
                   </Button>
                   <Button size="small" variant="outlined" startIcon={<EventIcon sx={{ fontSize: '0.85rem !important' }} />}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32 }}
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 27, px: 0.65, '& .MuiButton-startIcon': { mr: 0.25, '& svg': { fontSize: '0.75rem !important' } } }}
                     onClick={() => { const name = selectedConversation?.participantName || draftTarget?.candidateName || 'Candidate'; const id = selectedConversation?.participantId || draftTarget?.candidateId || ''; onOpenInterviewManagement?.({ candidateId: id, candidateName: name, jobId: candidateContext?.jobId, jobTitle: candidateContext?.jobTitle }); }}>
                     Interview
                   </Button>
                   <Button size="small" variant="contained" startIcon={<OpenInNewIcon sx={{ fontSize: '0.85rem !important' }} />}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.78rem', whiteSpace: 'nowrap', flexShrink: 0, height: 32, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 27, px: 0.65, bgcolor: '#16325C', '&:hover': { bgcolor: '#28508A' }, '& .MuiButton-startIcon': { mr: 0.25, '& svg': { fontSize: '0.75rem !important' } } }}
                     onClick={() => setChatWindowOpen(true)}>
                     Chat Window
                   </Button>
-                  <FormControl size="small" sx={{ flexShrink: 0, minWidth: 120, height: 32 }}>
-                    <Select value={candidateContext?.atsStage || ''} displayEmpty
-                      sx={{ borderRadius: 2, fontSize: '0.78rem', height: 32 }}
-                      onChange={(event) => { const stage = event.target.value; if (stage) void moveAtsStage(stage); }}
+                  <FormControl size="small" sx={{ flexShrink: 1, minWidth: 82, width: 96, height: 27, minHeight: 0, '& .MuiInputBase-root': { height: 27, minHeight: '0 !important' } }}>
+                    <Select value={ATS_STAGE_OPTIONS.includes(candidateContext?.atsStage as any) ? candidateContext?.atsStage : ''} displayEmpty
+                      sx={{ borderRadius: 1.25, fontSize: '0.6rem', height: 27, minHeight: '0 !important', '& .MuiSelect-select': { px: 0.75, py: 0.45, minHeight: '0 !important', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}
+                      onChange={(event) => { const stage = String(event.target.value); if (ATS_STAGE_OPTIONS.includes(stage as any)) void moveAtsStage(stage); }}
                       renderValue={(value) => value || 'Move Stage'}>
                       <MenuItem value="" disabled>Move Stage</MenuItem>
                       {ATS_STAGE_OPTIONS.map((stage) => <MenuItem key={stage} value={stage} sx={{ fontSize: '0.8rem' }}>{stage}</MenuItem>)}
@@ -2122,27 +2171,27 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                 </Box>
 
                 {/* Row 3: Quick action buttons */}
-                <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'nowrap', overflowX: 'auto', pb: 0.25 }}>
+                <Box sx={{ display: 'flex', gap: 0.4, flexWrap: 'nowrap', alignItems: 'center', overflow: 'visible', minWidth: 0, position: 'relative', zIndex: 1 }}>
                   <Button size="small" onClick={sendResumeRequest}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, color: '#475569', border: '1px solid #e2e8f0', px: 1.25 }}>
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.58rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 26, color: '#28508A', border: '1px solid #C9D8EA', px: 0.6 }}>
                     Request Resume
                   </Button>
                   <Button size="small" onClick={sendInterviewInvite}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, color: '#475569', border: '1px solid #e2e8f0', px: 1.25 }}>
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.58rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 26, color: '#28508A', border: '1px solid #C9D8EA', px: 0.6 }}>
                     Interview Invite
                   </Button>
                   <Button size="small" onClick={openOfferDialog}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, color: '#16a34a', border: '1px solid #bbf7d0', px: 1.25 }}>
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.58rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 26, color: '#087F73', border: '1px solid #B7E9DA', px: 0.6 }}>
                     Offer Letter
                   </Button>
                   <Button size="small" color="error" onClick={sendRejectTemplate}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.72rem', whiteSpace: 'nowrap', flexShrink: 0, height: 28, border: '1px solid #fecaca', px: 1.25 }}>
+                    sx={{ borderRadius: 1.25, textTransform: 'none', fontSize: '0.58rem', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0, height: 26, border: '1px solid #FECACA', px: 0.6 }}>
                     Reject
                   </Button>
-                  <FormControl size="small" sx={{ flexShrink: 0, minWidth: 140, height: 28 }}>
+                  <FormControl size="small" sx={{ flexShrink: 0, minWidth: 108, width: 118, height: 26, minHeight: 0, '& .MuiInputBase-root': { height: 26, minHeight: '0 !important' } }}>
                     <Select value="" displayEmpty
-                      sx={{ borderRadius: 2, fontSize: '0.72rem', height: 28, color: '#64748b' }}
-                      onChange={(event) => { const t = templates.find((item) => item.id === event.target.value); if (t) applyTemplateToComposer(t); }}
+                      sx={{ borderRadius: 1.25, fontSize: '0.58rem', height: 26, minHeight: '0 !important', color: '#49627F', '& .MuiSelect-select': { px: 0.7, py: 0.4, minHeight: '0 !important', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}
+                      onChange={(event) => { const templateId = String(event.target.value); const t = templates.find((item) => item.id === templateId); if (t) applyTemplateToComposer(t); }}
                       renderValue={() => 'Use Template'}>
                       {templates.map((template) => <MenuItem key={template.id} value={template.id} sx={{ fontSize: '0.8rem' }}>{template.title}</MenuItem>)}
                     </Select>
@@ -2187,8 +2236,8 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: '#f8fafc', fontSize: '0.9rem' } }}
                   />
                 </Box>
-                <Box sx={{ px: 2, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Stack direction="row" spacing={0.5}>
+                <Box sx={{ px: { xs: 1.25, sm: 2 }, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, minWidth: 0 }}>
+                  <Stack direction="row" spacing={0.5} sx={{ minWidth: 0, flex: 1, overflow: 'hidden', alignItems: 'center' }}>
                     <Tooltip title="Emoji">
                       <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={(event) => setEmojiAnchorEl(event.currentTarget)}>😊</IconButton>
                     </Tooltip>
@@ -2199,12 +2248,12 @@ export const RecruiterMessagingCenter: React.FC<RecruiterMessagingCenterProps> =
                       <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={() => fileInputRef.current?.click()} disabled={!selectedConversation || uploading}><FileUploadIcon fontSize="small" /></IconButton>
                     </Tooltip>
                     <input ref={fileInputRef} type="file" hidden multiple onChange={onFilePick} accept={ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(',')} />
-                    <Typography variant="caption" sx={{ color: '#cbd5e1', lineHeight: '34px' }}>PDF, DOC, Images, ZIP ≤ {MAX_FILE_MB}MB</Typography>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', lineHeight: '34px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: { xs: 'none', sm: 'block' } }}>PDF, DOC, Images, ZIP ≤ {MAX_FILE_MB}MB</Typography>
                   </Stack>
                   <Button variant="contained" endIcon={<SendIcon />}
                     disabled={!!(selectedConversation?.isBlocked || selectedConversation?.meta.blocked) || (!composerText.trim() && composerAttachments.length === 0) || uploading}
                     onClick={() => void sendMessage()}
-                    sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 700, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, px: 2.5 }}>
+                    sx={{ flexShrink: 0, minWidth: 82, height: 38, borderRadius: 2.5, textTransform: 'none', fontWeight: 700, color: '#FFFFFF', bgcolor: '#28508A', '& .MuiButton-endIcon, & .MuiButton-startIcon': { color: '#FFFFFF' }, '&:hover': { bgcolor: '#16325C', color: '#FFFFFF' }, '&.Mui-disabled': { color: '#FFFFFF', '& .MuiButton-endIcon, & .MuiButton-startIcon': { color: '#FFFFFF' } }, px: { xs: 1.5, sm: 2.5 } }}>
                     Send
                   </Button>
                 </Box>

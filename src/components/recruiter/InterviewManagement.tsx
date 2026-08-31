@@ -23,6 +23,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Tabs,
   Tab,
   TextField,
@@ -49,7 +50,7 @@ import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
-import { format, isToday, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
+import { format, isToday, isSameMonth, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addDays, addMonths, addWeeks, subDays, subMonths, subWeeks } from 'date-fns';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { themeColors } from '@styles/recruiterTheme';
@@ -246,6 +247,8 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
   const [interviewerFilter, setInterviewerFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [listPage, setListPage] = useState(0);
+  const [listRowsPerPage, setListRowsPerPage] = useState(25);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -345,6 +348,20 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
       })
       .sort((a, b) => interviewDateTime(a) - interviewDateTime(b));
   }, [interviews, search, statusFilter, typeFilter, jobFilter, interviewerFilter, dateFrom, dateTo]);
+
+  const paginatedInterviews = useMemo(
+    () => filteredInterviews.slice(listPage * listRowsPerPage, listPage * listRowsPerPage + listRowsPerPage),
+    [filteredInterviews, listPage, listRowsPerPage]
+  );
+
+  useEffect(() => {
+    setListPage(0);
+  }, [search, statusFilter, typeFilter, jobFilter, interviewerFilter, dateFrom, dateTo]);
+
+  useEffect(() => {
+    const pageCount = Math.max(1, Math.ceil(filteredInterviews.length / listRowsPerPage));
+    if (listPage >= pageCount) setListPage(pageCount - 1);
+  }, [filteredInterviews.length, listPage, listRowsPerPage]);
 
   const summary = useMemo(() => {
     const now = Date.now();
@@ -581,8 +598,8 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
   };
 
   const monthlyDays = useMemo(() => {
-    const start = startOfMonth(calendarDate);
-    const end = endOfMonth(calendarDate);
+    const start = startOfWeek(startOfMonth(calendarDate), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(calendarDate), { weekStartsOn: 1 });
     return eachDayOfInterval({ start, end });
   }, [calendarDate]);
 
@@ -598,6 +615,17 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
       .filter((item) => item.date === dayKey)
       .sort((a, b) => interviewDateTime(a) - interviewDateTime(b));
   }, [filteredInterviews, calendarDate]);
+
+  const moveCalendar = (direction: 'previous' | 'next') => {
+    const amount = direction === 'next' ? 1 : -1;
+    if (calendarMode === 'daily') {
+      setCalendarDate((current) => (amount > 0 ? addDays(current, 1) : subDays(current, 1)));
+    } else if (calendarMode === 'weekly') {
+      setCalendarDate((current) => (amount > 0 ? addWeeks(current, 1) : subWeeks(current, 1)));
+    } else {
+      setCalendarDate((current) => (amount > 0 ? addMonths(current, 1) : subMonths(current, 1)));
+    }
+  };
 
   const renderDashboardView = () => (
     <>
@@ -684,17 +712,25 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
   );
 
   const renderListView = () => (
-    <Card sx={{ borderRadius: 2 }}>
-      <CardContent>
+    <Card sx={{ borderRadius: 3, border: '1px solid rgba(96,165,250,0.24)', background: 'linear-gradient(145deg, #FFFFFF 0%, #F4F8FF 100%)', boxShadow: '0 18px 46px rgba(15,39,75,0.1)', overflow: 'hidden' }}>
+      <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 1, flexWrap: 'wrap' }}>
+          <Box>
+            <Typography variant="h6" sx={{ color: '#16325C', fontWeight: 850 }}>Interview pipeline</Typography>
+            <Typography variant="body2" sx={{ color: '#71839B' }}>{filteredInterviews.length.toLocaleString()} interviews match your current view</Typography>
+          </Box>
+          <Chip label={loading ? 'Syncing...' : 'Live schedule'} color={loading ? 'default' : 'success'} size="small" sx={{ fontWeight: 800 }} />
+        </Box>
         <Stack direction={isMobile ? 'column' : 'row'} spacing={1} sx={{ mb: 1.5 }}>
           <TextField
             fullWidth
             placeholder="Search by candidate, job, interviewer, date, status"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} /> }}
+            InputProps={{ startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: '#5B8CFF' }} /> }}
+            sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#FFFFFF', borderRadius: 2 } }}
           />
-          <Button variant="outlined" startIcon={<FilterAltIcon />} onClick={() => {
+          <Button variant="outlined" size="small" startIcon={<FilterAltIcon />} onClick={() => {
             setStatusFilter('all');
             setTypeFilter('all');
             setJobFilter('all');
@@ -802,8 +838,8 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
           </Box>
         )}
 
-        <TableContainer sx={{ border: `1px solid ${themeColors.border}`, borderRadius: 1.5 }}>
-          <Table size="small">
+        <TableContainer sx={{ border: '1px solid #D8E5F2', borderRadius: 2.5, overflowX: 'auto', bgcolor: '#FFFFFF', boxShadow: '0 8px 20px rgba(15,39,75,0.04)' }}>
+          <Table size="small" sx={{ minWidth: 1060 }}>
             <TableHead>
               <TableRow>
                 <TableCell padding="checkbox">
@@ -826,8 +862,8 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredInterviews.map((item) => (
-                <TableRow key={item.id} hover>
+              {paginatedInterviews.map((item) => (
+                <TableRow key={item.id} hover sx={{ '&:nth-of-type(even)': { bgcolor: '#FBFDFF' }, '&:hover': { bgcolor: '#F1F7FF' } }}>
                   <TableCell padding="checkbox">
                     <Checkbox
                       checked={selectedIds.has(item.id)}
@@ -876,6 +912,20 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          component="div"
+          count={filteredInterviews.length}
+          page={listPage}
+          onPageChange={(_, nextPage) => setListPage(nextPage)}
+          rowsPerPage={listRowsPerPage}
+          rowsPerPageOptions={[25, 50, 100]}
+          onRowsPerPageChange={(event) => {
+            setListRowsPerPage(Number(event.target.value));
+            setListPage(0);
+          }}
+          labelRowsPerPage="Rows"
+          sx={{ border: '1px solid #D8E5F2', borderTop: 0, borderRadius: '0 0 12px 12px', bgcolor: '#FBFDFF' }}
+        />
       </CardContent>
     </Card>
   );
@@ -890,9 +940,9 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
             <Tab value="daily" label="Daily" />
           </Tabs>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" onClick={() => setCalendarDate(subMonths(calendarDate, 1))}>Prev</Button>
+            <Button variant="outlined" onClick={() => moveCalendar('previous')}>Prev</Button>
             <Button variant="outlined" onClick={() => setCalendarDate(new Date())}>Today</Button>
-            <Button variant="outlined" onClick={() => setCalendarDate(addMonths(calendarDate, 1))}>Next</Button>
+            <Button variant="outlined" onClick={() => moveCalendar('next')}>Next</Button>
           </Stack>
         </Box>
 
@@ -917,6 +967,7 @@ export const InterviewManagement: React.FC<InterviewManagementProps> = ({ recrui
                     borderRadius: 1,
                     p: 0.75,
                     bgcolor: isToday(day) ? `${themeColors.primary}08` : '#fff',
+                    opacity: isSameMonth(day, calendarDate) ? 1 : 0.52,
                   }}
                 >
                   <Typography variant="caption" sx={{ fontWeight: 700 }}>{format(day, 'd')}</Typography>

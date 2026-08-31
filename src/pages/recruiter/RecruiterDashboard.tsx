@@ -8,15 +8,20 @@ import {
   Button,
   Dialog,
   CircularProgress,
+  Autocomplete,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  TextField,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
   Add as AddIcon,
   ArrowRight as ArrowRightIcon,
+  Search as SearchIcon,
+  WorkOutline as WorkOutlineIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@store/index';
@@ -342,6 +347,7 @@ export const RecruiterDashboard: React.FC = () => {
               priorityCandidates={stats.priority_applicants}
               onViewJobs={() => setCurrentTab('jobs')}
               onViewApplicants={() => setCurrentTab('applicants')}
+              onPostJob={() => setJobPostingFormOpen(true)}
             />
 
             {/* Quick Actions Section */}
@@ -1007,23 +1013,53 @@ export const RecruiterDashboard: React.FC = () => {
               ATS Pipeline
             </Typography>
             {jobs.length > 0 && (
-              <Card sx={{ mb: 2, borderRadius: '12px', border: `1px solid ${themeColors.border}` }}>
-                <CardContent>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="pipeline-job-label">Pipeline for job</InputLabel>
-                    <Select
-                      labelId="pipeline-job-label"
-                      value={pipelineJobId}
-                      label="Pipeline for job"
-                      onChange={(event) => setPipelineJobId(event.target.value)}
-                    >
-                      {jobs.map((job) => (
-                        <MenuItem key={job.id} value={job.id}>
-                          {job.title} - {job.location}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+              <Card sx={{ mb: 2, borderRadius: 3, border: '1px solid rgba(96,165,250,0.25)', background: 'linear-gradient(145deg, #ffffff 0%, #F2F7FF 100%)', boxShadow: '0 14px 34px rgba(15,39,75,0.08)' }}>
+                <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.2 }}>
+                    <Box sx={{ width: 34, height: 34, borderRadius: 1.5, display: 'grid', placeItems: 'center', color: '#28508A', bgcolor: '#DCEBFF' }}>
+                      <WorkOutlineIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 850, color: '#16325C', lineHeight: 1.2 }}>Choose a job pipeline</Typography>
+                      <Typography variant="caption" sx={{ color: '#71839B' }}>{jobs.length.toLocaleString()} jobs available · search by title or location</Typography>
+                    </Box>
+                  </Box>
+                  <Autocomplete
+                    options={jobs}
+                    value={jobs.find((job) => job.id === pipelineJobId) || null}
+                    onChange={(_, job) => setPipelineJobId(job?.id || '')}
+                    getOptionLabel={(job) => `${job.title} - ${job.location || 'Location not specified'}`}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    autoHighlight
+                    openOnFocus={false}
+                    filterOptions={(options, state) => {
+                      const query = state.inputValue.trim().toLowerCase();
+                      if (!query) return options;
+                      return options.filter((job) => `${job.title} ${job.location || ''} ${job.job_type || ''}`.toLowerCase().includes(query));
+                    }}
+                    renderOption={(props, job) => (
+                      <Box component="li" {...props} key={job.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 1, px: 1.25, borderBottom: '1px solid #EEF3F8' }}>
+                        <Box sx={{ width: 28, height: 28, flexShrink: 0, display: 'grid', placeItems: 'center', borderRadius: 1, color: '#28508A', bgcolor: '#E7F0FF', fontSize: '0.72rem', fontWeight: 900 }}>
+                          {String(job.title || 'J').charAt(0).toUpperCase()}
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ color: '#16325C', fontSize: '0.78rem', fontWeight: 800 }} noWrap>{job.title}</Typography>
+                          <Typography sx={{ color: '#71839B', fontSize: '0.68rem' }} noWrap>{job.location || 'Location not specified'} · {job.job_type || 'Job'}</Typography>
+                        </Box>
+                      </Box>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Pipeline for job"
+                        placeholder="Search 1,000+ jobs..."
+                        InputProps={{ ...params.InputProps, startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#5B8CFF', fontSize: 19 }} /></InputAdornment> }}
+                        sx={{ '& .MuiOutlinedInput-root': { minHeight: 48, borderRadius: 2, bgcolor: '#FFFFFF', '&:hover fieldset': { borderColor: '#5B8CFF' }, '&.Mui-focused fieldset': { borderColor: '#28508A' } } }}
+                      />
+                    )}
+                    noOptionsText="No matching jobs found"
+                    fullWidth
+                  />
                 </CardContent>
               </Card>
             )}

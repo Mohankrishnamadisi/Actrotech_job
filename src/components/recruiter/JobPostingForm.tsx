@@ -18,6 +18,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
+import { WorkOutline as WorkOutlineIcon, AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { jobService } from '@services/api';
 import { validateURL } from '@utils/index';
@@ -221,7 +222,8 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
           height: 'calc(100vh - 80px)',
           overflow: 'hidden',
           background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))',
-          boxShadow: '0 30px 90px rgba(15, 23, 42, 0.12)',
+          boxShadow: '0 30px 90px rgba(9, 19, 36, 0.28)',
+          border: '1px solid rgba(125, 211, 252, 0.2)',
         },
       }}
     >
@@ -233,23 +235,35 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
       >
         <DialogTitle
           sx={{
-            fontWeight: 800,
-            fontSize: 22,
-            background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 45%, #2563EB 100%)',
+            fontWeight: 850,
+            fontSize: { xs: 18, md: 21 },
+            background: 'linear-gradient(115deg, #091324 0%, #16335F 58%, #28508A 100%)',
             color: '#FFFFFF',
-            py: 2,
-            textAlign: 'center',
-            letterSpacing: 0.6,
-            boxShadow: 'inset 0 -4px 0 rgba(255,255,255,0.18)',
+            py: 1.5,
+            px: { xs: 2, md: 3 },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.1,
+            letterSpacing: 0.2,
+            boxShadow: 'inset 0 -1px 0 rgba(125,211,252,0.3)',
           }}
         >
-          Post a Job
+          <Box sx={{ width: 36, height: 36, display: 'grid', placeItems: 'center', borderRadius: 1.5, bgcolor: 'rgba(125,211,252,0.16)', color: '#BAE6FD' }}>
+            <WorkOutlineIcon sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Box component="span" sx={{ display: 'block' }}>Post a Job</Box>
+            <Typography component="span" sx={{ display: 'block', color: 'rgba(226,232,240,0.7)', fontSize: '0.68rem', fontWeight: 500, letterSpacing: 0 }}>
+              Create a clear role and attract the right candidates
+            </Typography>
+          </Box>
         </DialogTitle>
         <DialogContent
           dividers
           sx={{
-            py: 3,
-            background: '#F8FAFC',
+            py: { xs: 2, md: 2.5 },
+            px: { xs: 2, md: 3 },
+            background: 'linear-gradient(145deg, #F7FAFE 0%, #EEF5FC 100%)',
             flex: '1 1 auto',
             minHeight: 0,
             overflowY: 'auto',
@@ -263,9 +277,15 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
               borderRadius: 5,
             },
             '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(100, 116, 139, 0.6)',
+              background: '#8FA8C4',
               borderRadius: 5,
             },
+            '& .MuiGrid-container': { alignItems: 'stretch' },
+            '& .MuiTextField-root, & .MuiFormControl-root': { '& .MuiInputBase-root': { borderRadius: 1.5, bgcolor: '#FFFFFF', fontSize: '0.82rem' }, '& .MuiInputLabel-root': { fontSize: '0.78rem' } },
+            '& .MuiOutlinedInput-root:hover fieldset': { borderColor: '#6D9ED8' },
+            '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#28508A', borderWidth: 1.5 },
+            '& .MuiButton-root': { borderRadius: 1.5, textTransform: 'none', fontWeight: 750 },
+            '& .MuiChip-root': { borderRadius: 1.25, fontSize: '0.72rem' },
           }}
         >
           {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')} />}
@@ -435,6 +455,10 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             </Grid>
 
             <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.7, mb: 0.8, mt: 0.5 }}>
+                <AutoAwesomeIcon sx={{ fontSize: 16, color: '#28508A' }} />
+                <Typography sx={{ color: '#16325C', fontSize: '0.78rem', fontWeight: 850, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Candidate matching</Typography>
+              </Box>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
                 Required Skills
               </Typography>
@@ -470,6 +494,10 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             </Grid>
 
             <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.7, mb: 0.8, mt: 0.5 }}>
+                <AutoAwesomeIcon sx={{ fontSize: 16, color: '#087F73' }} />
+                <Typography sx={{ color: '#16325C', fontSize: '0.78rem', fontWeight: 850, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Screening workflow</Typography>
+              </Box>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
                 Custom Screening Questions
               </Typography>
@@ -528,7 +556,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
           </Grid>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: { xs: 1.5, md: 2 }, borderTop: '1px solid #DCE7F2', bgcolor: '#FFFFFF', gap: 1 }}>
           <Button onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
@@ -536,7 +564,7 @@ export const JobPostingForm: React.FC<JobPostingFormProps> = ({ open, onClose, r
             variant="contained"
             onClick={handleSubmit}
             disabled={loading}
-            sx={{ minWidth: 120 }}
+            sx={{ minWidth: 120, background: 'linear-gradient(135deg, #091324 0%, #28508A 100%)', '&:hover': { background: 'linear-gradient(135deg, #16335F 0%, #3567A2 100%)' } }}
             endIcon={loading ? <CircularProgress size={20} /> : undefined}
           >
             {loading ? 'Posting...' : 'Post Job'}

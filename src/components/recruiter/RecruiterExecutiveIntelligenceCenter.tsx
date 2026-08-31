@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -98,6 +98,10 @@ export const RecruiterExecutiveIntelligenceCenter: React.FC<RecruiterExecutiveIn
 
   const [tab, setTab] = useState<IntelligenceTab>(initialTabFromMode(mode));
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    setTab(initialTabFromMode(mode));
+  }, [mode]);
 
   const [assistantQuery, setAssistantQuery] = useState('Show hiring trend for last six months.');
   const [assistantResult, setAssistantResult] = useState<any>(null);
