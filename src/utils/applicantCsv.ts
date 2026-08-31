@@ -15,7 +15,7 @@ const getExperience = (applicant: BulkApplicant): string => {
   const profile = applicant.profiles;
   if (!profile) return '';
   if (profile.experience_years != null || profile.experience_months != null) {
-    return formatExperienceString(profile.experience_years, profile.experience_months);
+    return formatExperienceString(Number(profile.experience_years) || 0, Number(profile.experience_months) || 0);
   }
   return String(profile.experience || applicant.experience || '');
 };

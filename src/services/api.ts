@@ -367,7 +367,7 @@ export const jobService = {
       );
     }
     if (experienceInput && numericExperienceYears === null) {
-      query = query.ilike('experience', `%${filters.experience}%`);
+      query = query.ilike('experience', `%${experienceInput}%`);
     }
     if (filters?.education) {
       query = query.ilike('education', `%${filters.education}%`);
@@ -943,11 +943,12 @@ export const applicationService = {
     const application = data;
     if (application) {
       try {
+        const applicationJob = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs as any;
         await notificationService.createNotification(
-          application.user_id || application.userId,
+          application.user_id,
           'application_status',
           'Application Update',
-          `HR has marked your application for ${application.jobs?.title || 'the role'} as ${status.replace('_', ' ')}. Check the dashboard for details.`,
+          `HR has marked your application for ${applicationJob?.title || 'the role'} as ${status.replace('_', ' ')}. Check the dashboard for details.`,
           { applicationId, status }
         );
       } catch (notificationError) {
@@ -1246,7 +1247,7 @@ export const statsService = {
 
     const { data: applications, error: appError } = await supabase
       .from('job_applications')
-      .select('id, status')
+      .select('id, status, priority_application')
       .in(
         'job_id',
         jobs?.map((j) => j.id) || []
@@ -1259,6 +1260,7 @@ export const statsService = {
       total_applicants: applications?.length || 0,
       shortlisted: applications?.filter((a) => a.status === 'shortlisted').length || 0,
       rejected: applications?.filter((a) => a.status === 'rejected').length || 0,
+      priority_applicants: applications?.filter((a) => a.priority_application).length || 0,
     };
     return stats;
   },
@@ -1409,8 +1411,9 @@ export const chatService = {
             throw error;
           }
         } else {
-          conversation = data;
-          console.log('Conversation created', conversation.id);
+          if (!data?.id) throw new Error('Conversation creation did not return an id');
+          conversation = { id: data.id, recruiter_id: recruiterId, candidate_id: candidateId };
+          console.log('Conversation created', data.id);
         }
       } else {
         console.log('Conversation found', conversation.id);

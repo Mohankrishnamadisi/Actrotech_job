@@ -433,7 +433,7 @@ class AssessmentPlatformService {
     const assessment = store.library.find((item) => item.id === assessmentId);
     const passed = result.overallScore >= Number(assessment?.passingScore || 65);
 
-    const updatedInvitations = store.invitations.map((inv) => (
+    const updatedInvitations: AssessmentInvitation[] = store.invitations.map((inv) => (
       inv.candidateId === candidateId && inv.assessmentId === assessmentId
         ? { ...inv, status: passed ? 'passed' : 'failed' }
         : inv

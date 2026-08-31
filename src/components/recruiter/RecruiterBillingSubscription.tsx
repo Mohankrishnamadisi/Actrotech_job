@@ -35,6 +35,7 @@ import toast from 'react-hot-toast';
 import { subscriptionService } from '@services/api';
 import { billingSubscriptionService, type RecruiterPlanDuration } from '@services/billingSubscription';
 import { getRecruiterWelcomeUsage } from '@utils/recruiterWelcomeBenefits';
+import { PaymentModal } from '@components/payments/PaymentModal';
 
 interface RecruiterBillingSubscriptionProps {
   ownerId: string;
@@ -237,6 +238,7 @@ export const RecruiterBillingSubscription: React.FC<RecruiterBillingSubscription
     isFree: true,
   });
   const [loadingDuration, setLoadingDuration] = useState<RecruiterPlanDuration | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<{ id: string; name: string; price: number; durationMonths: number; durationLabel: string } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -300,36 +302,19 @@ export const RecruiterBillingSubscription: React.FC<RecruiterBillingSubscription
     toast.success('Invoice generated successfully');
   };
 
-  const handleUpgradePlan = async (duration: RecruiterPlanDuration) => {
+  const handleUpgradePlan = (duration: RecruiterPlanDuration) => {
     if (!ownerId) {
       toast.error('Please sign in to upgrade.');
       return;
     }
-
-    try {
-      setLoadingDuration(duration);
-      const pricing = billingSubscriptionService.getRecruiterPlanPricing(duration);
-      const expiryDate = new Date();
-      expiryDate.setMonth(expiryDate.getMonth() + duration);
-
-      await subscriptionService.createSubscription(
-        ownerId,
-        'actro_recruiter_pro',
-        expiryDate.toISOString(),
-        pricing.price,
-        `razorpay_placeholder_${Date.now()}`
-      );
-
-      toast.success('✨ Actro Recruiter Pro activated! Unlimited hiring awaits.');
-
-      const updated = await subscriptionService.getUserSubscription(ownerId);
-      setCurrentSubscription(updated);
-    } catch (error) {
-      console.error('Upgrade failed:', error);
-      toast.error('Failed to activate plan. Please try again.');
-    } finally {
-      setLoadingDuration(null);
-    }
+    const pricing = billingSubscriptionService.getRecruiterPlanPricing(duration);
+    setCheckoutPlan({
+      id: 'actro_recruiter_pro',
+      name: 'Actro Recruiter Pro',
+      price: pricing.price,
+      durationMonths: duration,
+      durationLabel: `${duration} ${duration === 1 ? 'Month' : 'Months'}`,
+    });
   };
 
   const renderOverviewTab = () => (
@@ -930,6 +915,21 @@ export const RecruiterBillingSubscription: React.FC<RecruiterBillingSubscription
               </Grid>
             ))}
           </Grid>
+
+          {checkoutPlan && (
+            <PaymentModal
+              open={Boolean(checkoutPlan)}
+              plan={checkoutPlan}
+              onClose={() => setCheckoutPlan(null)}
+              onSuccess={async () => {
+                const updated = await subscriptionService.getUserSubscription(ownerId);
+                setCurrentSubscription(updated);
+                setCheckoutPlan(null);
+                toast.success('Actro Recruiter Pro is active.');
+              }}
+              onError={(reason) => toast.error(reason)}
+            />
+          )}
 
           <Paper
             sx={{

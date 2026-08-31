@@ -95,8 +95,9 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
         position="sticky"
         elevation={0}
         sx={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: `1px solid ${themeColors.border}`,
+          background: 'rgba(255,255,255,0.9)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(148,163,184,0.18)',
           zIndex: theme.zIndex.drawer + 1,
         }}
       >
@@ -105,19 +106,20 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            px: 3,
-            py: 1.5,
+            px: { xs: 1.5, md: 3 },
+            py: 1.15,
             minHeight: 'auto',
           }}
         >
           {/* Left Side - Search/Info */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.3 }}>
+            <Box sx={{ width: 34, height: 34, borderRadius: 1.5, display: 'grid', placeItems: 'center', color: '#0F766E', bgcolor: 'rgba(20,184,166,0.12)', fontWeight: 900, fontSize: 14 }}>A</Box>
             <Typography
               variant="h6"
               sx={{
                 fontWeight: 700,
                 color: themeColors.text.primary,
-                fontSize: '1.1rem',
+                fontSize: '1rem',
               }}
             >
               Dashboard
@@ -132,10 +134,11 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
                 variant="filled"
                 size="small"
                 sx={{
-                  background: 'linear-gradient(135deg, #0066FF 0%, #7C3AED 100%)',
+                  background: 'linear-gradient(135deg, #0F766E 0%, #0891B2 100%)',
                   color: '#FFFFFF',
                   fontWeight: 600,
                   fontSize: '0.75rem',
+                  px: 1.1,
                 }}
               />
             )}
@@ -145,8 +148,8 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
               <IconButton
                 onClick={onNotificationsClick}
                 sx={{
-                  color: themeColors.text.secondary,
-                  '&:hover': { color: themeColors.primary },
+                  color: themeColors.text.secondary, border: '1px solid rgba(148,163,184,0.18)', bgcolor: '#fff',
+                  '&:hover': { color: '#0F766E', bgcolor: 'rgba(20,184,166,0.06)' },
                 }}
               >
                 <Badge badgeContent={notificationCount} color="error">
@@ -160,8 +163,8 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
               <IconButton
                 onClick={onMessagesClick}
                 sx={{
-                  color: themeColors.text.secondary,
-                  '&:hover': { color: themeColors.primary },
+                  color: themeColors.text.secondary, border: '1px solid rgba(148,163,184,0.18)', bgcolor: '#fff',
+                  '&:hover': { color: '#0F766E', bgcolor: 'rgba(20,184,166,0.06)' },
                 }}
               >
                 <Badge badgeContent={unreadMessagesCount} color="error">
@@ -174,8 +177,8 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
             {!isMobile && (
               <IconButton
                 sx={{
-                  color: themeColors.text.secondary,
-                  '&:hover': { color: themeColors.primary },
+                  color: themeColors.text.secondary, border: '1px solid rgba(148,163,184,0.18)', bgcolor: '#fff',
+                  '&:hover': { color: '#0F766E', bgcolor: 'rgba(20,184,166,0.06)' },
                 }}
               >
                 <HelpIcon sx={{ fontSize: '1.25rem' }} />
@@ -196,14 +199,14 @@ export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
                   sx={{
                     width: 36,
                     height: 36,
-                    background: 'linear-gradient(135deg, #0066FF 0%, #7C3AED 100%)',
+                    background: 'linear-gradient(135deg, #0F766E 0%, #0891B2 100%)',
                     fontWeight: 700,
                     fontSize: '0.875rem',
                     cursor: 'pointer',
-                    border: `2px solid ${themeColors.border}`,
+                    border: '2px solid rgba(20,184,166,0.26)',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      borderColor: themeColors.primary,
+                      borderColor: '#14B8A6',
                     },
                   }}
                 >

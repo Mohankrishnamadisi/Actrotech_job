@@ -12,7 +12,6 @@ import { ROUTES, USER_ROLES, INDUSTRY_TYPES } from '@constants/index';
 import {
   validateEmail,
   validatePassword,
-  validatePhone,
   validateURL,
   validateGST,
   validateFileSize,
@@ -71,7 +70,7 @@ const FloatingInput: React.FC<FloatingInputProps> = ({
         name={name}
         value={value}
         onChange={onChange}
-        placeholder=" "
+        placeholder={placeholder || ' '}
         required={required}
         aria-required={required}
         className={`
@@ -150,7 +149,7 @@ const FloatingTextarea: React.FC<FloatingTextareaProps> = ({
         name={name}
         value={value}
         onChange={onChange}
-        placeholder=" "
+        placeholder={placeholder || ' '}
         required={required}
         rows={rows}
         aria-required={required}
@@ -242,6 +241,7 @@ const SearchableMultiSelect: React.FC<MultiSelectProps> = ({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
+        id={name}
       >
         <div className="flex-1">
           <label className={`

@@ -1,6 +1,5 @@
 import { format, subDays } from 'date-fns';
 import { jobService } from '@services/api';
-import { messagingService } from '@services/messaging';
 import { listInterviews } from '@services/interviewManagement';
 import { aiHiringAssistantService } from '@services/aiHiringAssistant';
 import { automationCenterService } from '@services/automationCenter';
@@ -716,11 +715,10 @@ export const organizationSaasService = {
     };
   },
 
-  async getStorageStats(tenantId: string, ownerId: string): Promise<StorageStats> {
-    const [jobs, interviews, aiReq, reports] = await Promise.all([
+  async getStorageStats(_tenantId: string, ownerId: string): Promise<StorageStats> {
+    const [jobs, interviews, reports] = await Promise.all([
       jobService.getRecruiterJobs(ownerId).catch(() => []),
       listInterviews(ownerId).catch(() => []),
-      Promise.resolve(aiHiringAssistantService.listRequestHistory(ownerId).length),
       Promise.resolve(securityCenterService.generateReports(ownerId, ownerId)),
     ]);
 
@@ -742,7 +740,7 @@ export const organizationSaasService = {
     };
   },
 
-  async getOrganizationBillingSummary(tenantId: string, ownerId: string): Promise<OrganizationBillingSummary> {
+  async getOrganizationBillingSummary(_tenantId: string, ownerId: string): Promise<OrganizationBillingSummary> {
     const sub = billingSubscriptionService.getSubscription(ownerId);
     const plan = billingSubscriptionService.getPlan(sub.planId);
     const invoices = billingSubscriptionService.getInvoices(ownerId);
@@ -774,8 +772,7 @@ export const organizationSaasService = {
   },
 
   async getOrganizationAnalytics(tenantId: string, ownerId: string): Promise<OrganizationAnalytics> {
-    const [jobs, analytics, interviews, members] = await Promise.all([
-      jobService.getRecruiterJobs(ownerId).catch(() => []),
+    const [analytics, interviews, members] = await Promise.all([
       getRecruiterAnalyticsData(ownerId).catch(() => null),
       listInterviews(ownerId).catch(() => []),
       Promise.resolve(teamManagementService.listMembers(ownerId)),
@@ -783,7 +780,6 @@ export const organizationSaasService = {
 
     const applications = Number((analytics as any)?.summary?.applications || 0);
     const hires = Number((analytics as any)?.summary?.hired || Math.max(1, Math.round(applications * 0.09)));
-    const shortlisted = Number((analytics as any)?.summary?.shortlisted || Math.round(applications * 0.22));
 
     const monthlyHiring = Array.from({ length: 6 }).map((_, idx) => ({
       month: formatMonth(150 - idx * 25),
@@ -1000,7 +996,7 @@ export const organizationSaasService = {
     };
   },
 
-  async getBackupStatus(tenantId: string, ownerId: string): Promise<BackupStatus> {
+  async getBackupStatus(_tenantId: string, ownerId: string): Promise<BackupStatus> {
     const sec = securityCenterService.getBackupRecovery(ownerId);
     return {
       status: sec.backupStatus,

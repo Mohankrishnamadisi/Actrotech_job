@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, D
 import { PipelineEntry, fetchPipelineByJob, moveCandidate, PipelineStage } from '../../services/pipeline';
 import CandidateCard from './CandidateCard';
 import './pipeline.css';
+import toast from 'react-hot-toast';
 
 const STAGES: PipelineStage[] = [
   'Applied',
@@ -96,6 +97,7 @@ export default function PipelineBoard({ jobId }: Props) {
     } catch (err) {
       console.error(err);
       setColumns(prev => ({ ...prev, [fromStage]: originalSource, [toStage]: originalDest }));
+      toast.error('Could not move the candidate. Please try again.');
     }
   };
 

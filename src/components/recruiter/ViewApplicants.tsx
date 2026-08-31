@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Alert,
   Checkbox,
   Chip,
   CircularProgress,
@@ -110,6 +111,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [loading, setLoading] = useState(true);
+  const [applicantsError, setApplicantsError] = useState('');
   const [processing, setProcessing] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<BulkApplicant | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -165,6 +167,7 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
 
   const fetchApplicants = async () => {
     setLoading(true);
+    setApplicantsError('');
     try {
       const result = await getJobApplicantsPaginated(selectedJobId, page + 1, rowsPerPage);
       const normalizedApplicants = (result.data || []).map((applicant) => ({
@@ -199,6 +202,9 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
       }
     } catch (err) {
       console.error('Error fetching applicants:', err);
+      setApplicants([]);
+      setTotalApplicants(0);
+      setApplicantsError('Unable to load applicants. Please try again.');
       toast.error('Failed to fetch applicants');
     } finally {
       setLoading(false);
@@ -667,6 +673,14 @@ export const ViewApplicants: React.FC<ViewApplicantsProps> = ({ recruiterId, onC
 
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
+          ) : applicantsError ? (
+            <Alert
+              severity="error"
+              action={<Button color="inherit" size="small" onClick={fetchApplicants}>Retry</Button>}
+              sx={{ mb: 2 }}
+            >
+              {applicantsError}
+            </Alert>
           ) : visibleApplicants.length === 0 ? (
             <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', py: 4 }}>No applicants match the selected filters.</Typography>
           ) : (

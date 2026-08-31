@@ -13,6 +13,10 @@ const items = [
   { label: 'Support', to: ROUTES.ADMIN_CUSTOMER_CARE },
   { label: 'Communities', to: ROUTES.ADMIN_COMMUNITIES },
   { label: 'Subscriptions', to: ROUTES.ADMIN_SUBSCRIPTIONS },
+  { label: 'Global Settings', to: ROUTES.ADMIN_GLOBAL_SETTINGS },
+  { label: 'Localization', to: ROUTES.ADMIN_LOCALIZATION },
+  { label: 'Compliance', to: ROUTES.ADMIN_COMPLIANCE },
+  { label: 'Regional Management', to: ROUTES.ADMIN_REGIONAL_MANAGEMENT },
   { label: 'Settings', to: ROUTES.ADMIN_SETTINGS },
 ];
 

@@ -223,14 +223,6 @@ const createAppTheme = (themeMode: ThemeMode) => {
           },
         },
       },
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: 'none',
-            color: palette.text.primary,
-          },
-        },
-      },
       MuiTableCell: {
         styleOverrides: {
           root: {

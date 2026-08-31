@@ -1,9 +1,12 @@
 import React from 'react';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
+import { motion } from 'framer-motion';
 import { themeColors } from '@styles/recruiterTheme';
 import { RecruiterSidebar } from './RecruiterSidebar';
 import { RecruiterTopbar } from './RecruiterTopbar';
 import SupportWidget from '@components/common/SupportWidget';
+
+const MotionBox = motion(Box);
 
 interface RecruiterLayoutProps {
   children: React.ReactNode;
@@ -45,7 +48,7 @@ export const RecruiterLayout: React.FC<RecruiterLayoutProps> = ({
       sx={{
         display: 'flex',
         height: '100vh',
-        backgroundColor: themeColors.backgroundAlt,
+        background: 'radial-gradient(circle at 88% 4%, rgba(45,212,191,0.14), transparent 24%), radial-gradient(circle at 38% 100%, rgba(59,130,246,0.1), transparent 28%), #F5F7FB',
         overflow: 'hidden',
       }}
     >
@@ -109,15 +112,20 @@ export const RecruiterLayout: React.FC<RecruiterLayoutProps> = ({
         )}
 
         {/* Page Content */}
-        <Box
+        <MotionBox
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: 'easeOut' }}
           sx={{
             flex: 1,
             overflowY: 'auto',
-            p: 3,
+            p: { xs: 1.5, md: 3 },
+            '&::-webkit-scrollbar': { width: 9 },
+            '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(100,116,139,0.32)', borderRadius: 99, border: '2px solid #F5F7FB' },
           }}
         >
           {children}
-        </Box>
+        </MotionBox>
       </Box>
 
       <SupportWidget

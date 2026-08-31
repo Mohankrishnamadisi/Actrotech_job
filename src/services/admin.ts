@@ -11,10 +11,10 @@ export const adminService = {
     ]).then((res) => res.map((r) => r));
 
     return {
-      totalUsers: usersCount?.count || 0,
-      totalCandidates: candidatesCount?.count || 0,
-      totalRecruiters: recruitersCount?.count || 0,
-      activeJobs: activeJobsCount?.count || 0,
+      totalUsers: usersCount || 0,
+      totalCandidates: candidatesCount || 0,
+      totalRecruiters: recruitersCount || 0,
+      activeJobs: activeJobsCount || 0,
     };
   },
 
@@ -224,11 +224,11 @@ export const adminService = {
     const totalRevenue = (payments.data || []).reduce((total, item) => total + Number(item.amount || 0), 0);
 
     return {
-      totalUsers: usersCount?.count || 0,
-      totalCandidates: candidatesCount?.count || 0,
-      totalRecruiters: recruitersCount?.count || 0,
-      activeJobs: activeJobsCount?.count || 0,
-      totalApplications: applicationsCount?.count || 0,
+      totalUsers: usersCount || 0,
+      totalCandidates: candidatesCount || 0,
+      totalRecruiters: recruitersCount || 0,
+      activeJobs: activeJobsCount || 0,
+      totalApplications: applicationsCount || 0,
       totalRevenue,
     };
   },

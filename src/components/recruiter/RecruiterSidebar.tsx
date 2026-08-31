@@ -50,10 +50,6 @@ import {
   Storage as DataWarehouseIcon,
   Psychology as AiInsightsIcon,
   ShowChart as ForecastingIcon,
-  Public as GlobalSettingsIcon,
-  Translate as LocalizationMenuIcon,
-  Gavel as ComplianceMenuIcon,
-  Language as RegionalManagementIcon,
   ManageAccounts as ManageAccountsIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
@@ -86,44 +82,50 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const menuItems = [
-    { id: 'home', label: 'Home', icon: HomeIcon, color: '#6366F1', external: true },
-    { id: 'overview', label: 'Dashboard', icon: DashboardIcon, color: '#0066FF' },
-    { id: 'jobs', label: 'Jobs', icon: WorkIcon, color: '#7C3AED' },
-    { id: 'applicants', label: 'Applicants', icon: PeopleIcon, color: '#10B981' },
-    { id: 'find-candidates', label: 'Find Candidates', icon: SearchIcon, color: '#14B8A6' },
-    { id: 'talent-pool', label: 'Talent Pool', icon: PoolIcon, color: '#06B6D4' },
-    { id: 'tags', label: 'Tags', icon: TagIcon, color: '#EC4899' },
-    { id: 'ats-pipeline', label: 'ATS Pipeline', icon: AccountTreeIcon, color: '#F97316' },
-    { id: 'messages', label: 'Messages', icon: MailIcon, color: '#10B981' },
-    { id: 'interview-management', label: 'Interview Management', icon: EventIcon, color: '#0EA5E9' },
-    { id: 'analytics', label: 'Analytics', icon: QueryStatsIcon, color: '#2563EB' },
-    { id: 'ai-hiring-assistant', label: 'AI Hiring Assistant', icon: SmartToyIcon, color: '#7C2D12' },
-    { id: 'team-management', label: 'Team Management', icon: GroupIcon, color: '#1D4ED8' },
-    { id: 'integrations', label: 'Integrations', icon: IntegrationInstructionsIcon, color: '#0C4A6E' },
-    { id: 'market-intelligence', label: 'Market Intelligence', icon: MarketIntelligenceIcon, color: '#0E7490' },
-    { id: 'security-center', label: 'Security Center', icon: SecurityCenterIcon, color: '#DC2626' },
-    { id: 'organization', label: 'Organization', icon: OrganizationIcon, color: '#0F766E' },
-    { id: 'assessments', label: 'Assessments', icon: AssessmentsIcon, color: '#2563EB' },
-    { id: 'employee-referrals', label: 'Employee Referrals', icon: EmployeeReferralsIcon, color: '#0E7490' },
-    { id: 'talent-community', label: 'Talent Community', icon: TalentCommunityIcon, color: '#1D4ED8' },
-    { id: 'mobile-pwa', label: 'Mobile & PWA', icon: MobilePwaIcon, color: '#0284C7' },
-    { id: 'developer-portal', label: 'Developer Portal', icon: DeveloperPortalIcon, color: '#1D4ED8' },
-    { id: 'api-management', label: 'API Management', icon: ApiManagementIcon, color: '#0891B2' },
-    { id: 'marketplace', label: 'Marketplace', icon: MarketplaceIcon, color: '#0F766E' },
-    { id: 'webhooks', label: 'Webhooks', icon: WebhooksIcon, color: '#B45309' },
-    { id: 'executive-intelligence', label: 'Executive Intelligence', icon: ExecutiveIntelligenceIcon, color: '#1E3A8A' },
-    { id: 'business-intelligence', label: 'Business Intelligence', icon: BusinessIntelligenceIcon, color: '#0F766E' },
-    { id: 'data-warehouse', label: 'Data Warehouse', icon: DataWarehouseIcon, color: '#334155' },
-    { id: 'ai-insights', label: 'AI Insights', icon: AiInsightsIcon, color: '#0C4A6E' },
-    { id: 'forecasting', label: 'Forecasting', icon: ForecastingIcon, color: '#0E7490' },
-    { id: 'global-settings', label: 'Global Settings', icon: GlobalSettingsIcon, color: '#1E3A8A' },
-    { id: 'localization', label: 'Localization', icon: LocalizationMenuIcon, color: '#0C4A6E' },
-    { id: 'compliance', label: 'Compliance', icon: ComplianceMenuIcon, color: '#166534' },
-    { id: 'regional-management', label: 'Regional Management', icon: RegionalManagementIcon, color: '#0F766E' },
-    { id: 'automation-center', label: 'Automation Center', icon: SettingsSuggestIcon, color: '#0F766E' },
-    { id: 'billing-subscription', label: 'Billing & Subscription', icon: ReceiptIcon, color: '#8B5CF6' },
-    { id: 'my-details', label: 'My Details', icon: ManageAccountsIcon, color: '#0F766E' },
+  const menuSections = [
+    { label: 'Workspace', items: [
+      { id: 'home', label: 'Home', icon: HomeIcon, external: true },
+      { id: 'overview', label: 'Overview', icon: DashboardIcon },
+      { id: 'jobs', label: 'Jobs', icon: WorkIcon },
+      { id: 'applicants', label: 'Applicants', icon: PeopleIcon },
+      { id: 'ats-pipeline', label: 'ATS Pipeline', icon: AccountTreeIcon },
+      { id: 'messages', label: 'Messages', icon: MailIcon },
+      { id: 'interview-management', label: 'Interviews', icon: EventIcon },
+    ] },
+    { label: 'Candidates', items: [
+      { id: 'find-candidates', label: 'Find Candidates', icon: SearchIcon },
+      { id: 'talent-pool', label: 'Talent Pool', icon: PoolIcon },
+      { id: 'tags', label: 'Candidate Tags', icon: TagIcon },
+      { id: 'assessments', label: 'Assessments', icon: AssessmentsIcon },
+      { id: 'employee-referrals', label: 'Referrals', icon: EmployeeReferralsIcon },
+      { id: 'talent-community', label: 'Talent Community', icon: TalentCommunityIcon },
+    ] },
+    { label: 'Intelligence', items: [
+      { id: 'analytics', label: 'Analytics', icon: QueryStatsIcon },
+      { id: 'market-intelligence', label: 'Market Intelligence', icon: MarketIntelligenceIcon },
+      { id: 'ai-hiring-assistant', label: 'AI Hiring Assistant', icon: SmartToyIcon },
+      { id: 'automation-center', label: 'Automation', icon: SettingsSuggestIcon },
+      { id: 'executive-intelligence', label: 'Executive Intelligence', icon: ExecutiveIntelligenceIcon },
+      { id: 'business-intelligence', label: 'Business Intelligence', icon: BusinessIntelligenceIcon },
+      { id: 'data-warehouse', label: 'Data Warehouse', icon: DataWarehouseIcon },
+      { id: 'ai-insights', label: 'AI Insights', icon: AiInsightsIcon },
+      { id: 'forecasting', label: 'Forecasting', icon: ForecastingIcon },
+    ] },
+    { label: 'Company', items: [
+      { id: 'team-management', label: 'Team Management', icon: GroupIcon },
+      { id: 'organization', label: 'Organization', icon: OrganizationIcon },
+      { id: 'integrations', label: 'Integrations', icon: IntegrationInstructionsIcon },
+      { id: 'developer-portal', label: 'Developer Portal', icon: DeveloperPortalIcon },
+      { id: 'api-management', label: 'API Management', icon: ApiManagementIcon },
+      { id: 'marketplace', label: 'Marketplace', icon: MarketplaceIcon },
+      { id: 'webhooks', label: 'Webhooks', icon: WebhooksIcon },
+    ] },
+    { label: 'Account', items: [
+      { id: 'security-center', label: 'Security Center', icon: SecurityCenterIcon },
+      { id: 'mobile-pwa', label: 'Mobile & PWA', icon: MobilePwaIcon },
+      { id: 'billing-subscription', label: 'Billing & Subscription', icon: ReceiptIcon },
+      { id: 'my-details', label: 'My Details', icon: ManageAccountsIcon },
+    ] },
   ];
 
   const handleMenuClick = (itemId: string) => {
@@ -146,21 +148,21 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',
-        backgroundColor: '#FFFFFF',
-        borderRight: `1px solid ${themeColors.border}`,
+        background: 'linear-gradient(180deg, #0B1730 0%, #102448 52%, #0A1C39 100%)',
+        borderRight: '1px solid rgba(148,163,184,0.18)',
       }}
     >
       {/* Header */}
-      <Box sx={{ p: 2.5, borderBottom: `1px solid ${themeColors.border}` }}>
+      <Box sx={{ p: 2.5, borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
           {companyLogo ? (
-            <Avatar src={companyLogo} sx={{ width: 40, height: 40 }} />
+            <Avatar src={companyLogo} sx={{ width: 44, height: 44, border: '2px solid rgba(94,234,212,0.65)' }} />
           ) : (
             <Avatar
               sx={{
-                width: 40,
-                height: 40,
-                background: 'linear-gradient(135deg, #0066FF 0%, #7C3AED 100%)',
+                width: 44,
+                height: 44,
+                background: 'linear-gradient(135deg, #14B8A6 0%, #0EA5E9 100%)',
                 fontWeight: 700,
               }}
             >
@@ -172,7 +174,7 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
             sx={{
               fontSize: '0.95rem',
               fontWeight: 700,
-              color: themeColors.text.primary,
+              color: '#F8FAFC',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -183,43 +185,40 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         </Box>
         <Typography
           variant="caption"
-          sx={{ color: themeColors.text.tertiary, fontSize: '0.7rem', textTransform: 'uppercase' }}
+          sx={{ color: 'rgba(191,219,254,0.72)', fontSize: '0.68rem', letterSpacing: 0.7, textTransform: 'uppercase' }}
         >
           Recruiter Dashboard
         </Typography>
       </Box>
 
       {/* Navigation Items */}
-      <List sx={{ flex: 1, minHeight: 0, py: 1, overflowY: 'auto' }}>
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id && !item.external;
-          return (
-            <motion.div
-              key={item.id}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ListItem disablePadding sx={{ mb: 0.5 }}>
+      <List sx={{ flex: 1, minHeight: 0, py: 1.5, overflowY: 'auto', '&::-webkit-scrollbar': { width: 5 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(148,163,184,0.34)', borderRadius: 99 } }}>
+        {menuSections.map((section, sectionIndex) => (
+          <Box key={section.label} sx={{ mb: 1.5 }}>
+            <Typography sx={{ px: 2.5, pt: sectionIndex ? 1 : 0.35, pb: 0.7, color: 'rgba(191,219,254,0.52)', fontSize: 10, fontWeight: 800, letterSpacing: 1.1, textTransform: 'uppercase' }}>{section.label}</Typography>
+            {section.items.map((item, itemIndex) => {
+              const Icon = item.icon;
+              const isActive = currentTab === item.id && !item.external;
+              return (
+              <motion.div key={item.id} initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.22, delay: Math.min(0.3, sectionIndex * 0.04 + itemIndex * 0.018) }}>
+              <ListItem disablePadding sx={{ mb: 0.2 }}>
                 <ListItemButton
                   onClick={() => handleMenuClick(item.id)}
                   sx={{
-                    mx: 1.5,
-                    borderRadius: '8px',
-                    backgroundColor: isActive ? item.color + '12' : 'transparent',
-                    color: isActive ? item.color : themeColors.text.secondary,
-                    transition: 'all 0.2s ease-in-out',
+                    mx: 1.25, minHeight: 40, px: 1.25, borderRadius: 2,
+                    background: isActive ? 'linear-gradient(90deg, rgba(45,212,191,0.22), rgba(56,189,248,0.1))' : 'transparent',
+                    color: isActive ? '#FFFFFF' : 'rgba(226,232,240,0.7)',
+                    borderLeft: isActive ? '3px solid #5EEAD4' : '3px solid transparent',
+                    transition: 'background 0.2s ease, color 0.2s ease, transform 0.2s ease',
                     '&:hover': {
-                      backgroundColor: item.color + '12',
-                      color: item.color,
+                      backgroundColor: 'rgba(148,163,184,0.13)', color: '#FFFFFF', transform: 'translateX(3px)',
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: 36,
-                      color: isActive ? item.color : themeColors.text.secondary,
+                      minWidth: 34,
+                      color: isActive ? '#5EEAD4' : 'rgba(191,219,254,0.68)',
                     }}
                   >
                     <Icon sx={{ fontSize: '1.25rem' }} />
@@ -228,21 +227,27 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
                     primary={item.label}
                     secondary={item.id === 'billing-subscription' ? `${planName}` : undefined}
                     primaryTypographyProps={{
-                      fontSize: '0.875rem',
-                      fontWeight: isActive ? 600 : 500,
+                      fontSize: '0.81rem', fontWeight: isActive ? 750 : 550,
                     }}
                     secondaryTypographyProps={{
                       fontSize: '0.72rem',
-                      color: isActive ? item.color : themeColors.text.tertiary,
+                      color: isActive ? '#99F6E4' : 'rgba(191,219,254,0.5)',
                       sx: { mt: 0.1, lineHeight: 1.2 },
                     }}
                   />
                 </ListItemButton>
               </ListItem>
-            </motion.div>
-          );
-        })}
+              </motion.div>
+              );
+            })}
+          </Box>
+        ))}
       </List>
+
+      <Box sx={{ mx: 1.5, mb: 1.5, p: 1.4, borderRadius: 2, bgcolor: 'rgba(45,212,191,0.1)', border: '1px solid rgba(94,234,212,0.16)' }}>
+        <Typography sx={{ color: '#99F6E4', fontSize: 10, fontWeight: 800, letterSpacing: 0.8, textTransform: 'uppercase' }}>{planName} workspace</Typography>
+        <Typography sx={{ color: 'rgba(226,232,240,0.68)', fontSize: 11, mt: 0.35 }}>{credits.toLocaleString()} credits available</Typography>
+      </Box>
 
     </MotionBox>
   );

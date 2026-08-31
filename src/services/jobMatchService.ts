@@ -1,6 +1,6 @@
 import { isCandidatePremium, isSubscriptionActive } from '@utils/candidateSubscriptionHelpers';
-import type { Job } from '@types';
 import { normalizeSkills, calculateSkillMatchScore, calculateTitleMatchScore } from '@utils/matchScore';
+import { supabase } from './supabase';
 
 /**
  * Job Match Notification Service
@@ -29,13 +29,6 @@ export interface JobMatchResult {
   matchScore: number;
   isPremium: boolean;
   scheduledFor?: Date;
-}
-
-interface SubscriptionRecord {
-  user_id: string;
-  plan: string;
-  status: string;
-  end_date?: string;
 }
 
 /**
@@ -212,19 +205,19 @@ export async function getCandidatesToEvaluate(jobId: string): Promise<CandidateP
       // Continue anyway with all candidates
     }
 
-    const existingCandidateIds = new Set(existingMatches?.map((m) => m.candidate_id) || []);
+    const existingCandidateIds = new Set(existingMatches?.map((match: any) => match.candidate_id) || []);
 
     return (candidates || [])
-      .filter((c) => !existingCandidateIds.has(c.id))
-      .map((c) => ({
-        id: c.id,
-        user_id: c.user_id,
-        skills: c.skills || [],
-        current_designation: c.current_designation,
-        currentDesignation: c.current_designation,
-        preferred_job_titles: c.preferred_job_titles,
-        preferredJobTitles: c.preferred_job_titles,
-        role: c.role,
+      .filter((candidate: any) => !existingCandidateIds.has(candidate.id))
+      .map((candidate: any) => ({
+        id: candidate.id,
+        user_id: candidate.user_id,
+        skills: candidate.skills || [],
+        current_designation: candidate.current_designation,
+        currentDesignation: candidate.current_designation,
+        preferred_job_titles: candidate.preferred_job_titles,
+        preferredJobTitles: candidate.preferred_job_titles,
+        role: candidate.role,
       }));
   } catch (error) {
     console.error('Error getting candidates to evaluate:', error);
@@ -304,7 +297,7 @@ export async function evaluateJobForMatches(jobId: string): Promise<void> {
 
         // Calculate scheduled delivery time for normal candidates
         const scheduledFor = isPremium
-          ? null
+          ? undefined
           : new Date(new Date(job.created_at).getTime() + 4 * 60 * 60 * 1000); // +4 hours
 
         matchesFound.push({

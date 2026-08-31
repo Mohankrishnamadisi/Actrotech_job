@@ -22,6 +22,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+  import Divider from '@mui/material/Divider';
 import {
   AutoAwesome as AiIcon,
   Groups as CommunityIcon,

@@ -568,6 +568,7 @@ export const Dashboard: React.FC = () => {
   const navBadge = (count: number) => count > 0 ? <Box component="span" sx={{ ml: 'auto', minWidth: 22, height: 22, borderRadius: 999, bgcolor: '#dbeafe', color: '#1d4ed8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{count}</Box> : null;
 
   const heroScore = Math.min(99, Math.max(35, profileCompletion || 0));
+  const profileAvatarUrl = profile?.avatar_url || profile?.profile_image_url || profile?.avatarUrl || profile?.image || profile?.photo || (user as any)?.avatar || (user as any)?.user_metadata?.avatar_url || '';
 
   const coachRecommendations = useMemo(() => {
     const items: string[] = [];
@@ -719,51 +720,55 @@ export const Dashboard: React.FC = () => {
                   <CardContent sx={{ position: 'relative', py: { xs: 1.8, md: 2.6 }, px: { xs: 1.8, md: 4 }, zIndex: 2 }}>
                     <Grid container spacing={2.8} alignItems="center">
                       <Grid item xs={12} md={8}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.6, mb: 1.2, pl: { xs: 0, md: 0 } }}>
-                          <Avatar sx={{ width: 44, height: 44, bgcolor: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.14)', fontWeight: 800, fontSize: 18 }}>{(user?.name || 'U').charAt(0).toUpperCase()}</Avatar>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.7, mb: 2.1 }}>
+                          <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}>
+                            <Avatar src={profileAvatarUrl || undefined} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: { xs: 68, md: 80 }, height: { xs: 68, md: 80 }, bgcolor: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 10px 24px rgba(15,23,42,0.22)', fontWeight: 800, fontSize: 28 }}>
+                              {(user?.name || 'U').charAt(0).toUpperCase()}
+                            </Avatar>
+                          </motion.div>
                           <Box>
                             <Chip 
                               label={isCandidatePremium(subscription?.plan) && isSubscriptionActive(subscription?.end_date) ? `Premium • ${getPlanDisplayName(subscription?.plan)}` : 'Free'} 
                               size="small" 
-                              sx={{ mb: 0.6, bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', borderRadius: 999, fontWeight: 700, border: '1px solid rgba(255,255,255,0.14)' }} 
+                              sx={{ mb: 0.55, height: 24, bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', borderRadius: 999, fontWeight: 700, border: '1px solid rgba(255,255,255,0.18)' }} 
                             />
-                            <Typography sx={{ color: '#fff', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.06, fontSize: 20 }}>
+                            <Typography sx={{ color: '#fff', fontWeight: 800, lineHeight: 1.12, fontSize: { xs: 21, md: 24 } }}>
                               {getGreeting()}, {user?.name || 'Candidate'} 👋
                             </Typography>
-                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', mt: 0.35, fontSize: 13 }}>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.78)', mt: 0.45, fontSize: 13 }}>
                               {(profile?.current_designation || profile?.currentDesignation || 'Professional')} • {(profile?.experience || 'Experience not added')} • {(profile?.location || 'Location not added')}
                             </Typography>
                           </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 1.2, alignItems: 'flex-start', mb: 1.4, flexWrap: 'wrap' }}>
-                          <Box sx={{ minWidth: 220, background: 'rgba(255,255,255,0.08)', borderRadius: 2.2, p: 1.1, border: '1px solid rgba(255,255,255,0.06)' }}>
-                            <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 800, mb: 0.6 }}>Profile performance</Typography>
-                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                              <Box sx={{ flex: 1 }}>
+                        <Grid container spacing={1.4} sx={{ mb: 1.8 }}>
+                          <Grid item xs={12} sm={7}>
+                            <Box sx={{ height: '100%', boxSizing: 'border-box', p: 1.35, borderRadius: 2.4, bgcolor: 'rgba(15,23,42,0.16)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                              <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 14, mb: 0.4 }}>Profile momentum</Typography>
+                              <Typography sx={{ color: 'rgba(255,255,255,0.76)', fontSize: 12, mb: 1.2 }}>Complete your profile to unlock better job opportunities.</Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.1 }}>
+                                <LinearProgress variant="determinate" value={Math.min(100, profileCompletion)} sx={{ flex: 1, height: 7, borderRadius: 999, background: 'rgba(255,255,255,0.16)', '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 } }} />
+                                <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>{Math.min(100, profileCompletion)}%</Typography>
+                              </Box>
+                              <Typography sx={{ color: 'rgba(255,255,255,0.62)', fontSize: 11, mt: 0.85 }}>Updated {profile?.updated_at ? formatDate(profile.updated_at) : 'recently'}</Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={5}>
+                            <Box sx={{ height: '100%', boxSizing: 'border-box', p: 1.35, borderRadius: 2.4, bgcolor: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                              <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.86)', fontWeight: 800, mb: 0.75 }}>Profile performance</Typography>
+                              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 1.5, alignItems: 'start' }}>
+                              <Box sx={{ minWidth: 0 }}>
                                 <Typography sx={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{searchAppearanceCount}</Typography>
                                 <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>Search appearances</Typography>
                               </Box>
-                              <Box sx={{ width: 1, height: 36, bgcolor: 'rgba(255,255,255,0.06)' }} />
-                              <Box sx={{ flex: 1 }}>
+                              <Box sx={{ minWidth: 0 }}>
                                 <Typography sx={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{recruiterActionCount}</Typography>
                                 <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>Recruiter actions</Typography>
                               </Box>
                             </Box>
-                          </Box>
-
-                          <Box sx={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <Typography sx={{ color: 'rgba(255,255,255,0.9)', mb: 0.6, fontWeight: 600, fontSize: 14 }}>Complete your profile to unlock better job opportunities.</Typography>
-                            <Typography sx={{ color: 'rgba(255,255,255,0.72)', fontSize: 13 }}>Profile last updated: {profile?.updated_at ? formatDate(profile.updated_at) : 'Not yet'}</Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.2 }}>
-                          <Box sx={{ flex: 1 }}>
-                            <LinearProgress variant="determinate" value={Math.min(100, profileCompletion)} sx={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.14)', '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 } }} />
-                          </Box>
-                          <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>{Math.min(100, profileCompletion)}%</Typography>
-                        </Box>
+                            </Box>
+                          </Grid>
+                        </Grid>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.2 }}>
                           <Button onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} sx={{ borderRadius: 999, textTransform: 'none', fontWeight: 800, px: 1.6, py: 0.7, color: '#0f172a', background: '#fff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.32)', '&:hover': { background: '#f8fafc', boxShadow: 'none' }, fontSize: 13 }}>
@@ -1694,7 +1699,7 @@ export const Dashboard: React.FC = () => {
                           <Box key={feature} sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#eff6ff', fontWeight: 600 }}><CheckCircleIcon sx={{ color: '#a5b4fc', fontSize: 18 }} /> {feature}</Box>
                         ))}
                       </Stack>
-                      <Button variant="contained" sx={{ mt: 2.2, width: '100%', borderRadius: 999, background: '#fff', color: '#0f172a', textTransform: 'none', fontWeight: 800 }}>Upgrade Now</Button>
+                      <Button onClick={() => navigate(ROUTES.PRICING)} variant="contained" sx={{ mt: 2.2, width: '100%', borderRadius: 999, background: '#fff', color: '#0f172a', textTransform: 'none', fontWeight: 800 }}>Upgrade Now</Button>
                     </CardContent>
                   </Card>
                 </Grid>

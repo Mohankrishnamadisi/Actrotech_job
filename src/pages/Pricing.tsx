@@ -7,27 +7,22 @@ import {
   CardContent,
   Button,
   Typography,
-  Divider,
-  Chip,
 } from '@mui/material';
 import { CheckCircle as CheckCircleIcon, LocalOffer as LocalOfferIcon } from '@mui/icons-material';
 import { Layout } from '@components/layout/Layout';
-import { CANDIDATE_SUBSCRIPTION_PLANS, SUBSCRIPTION_GST_PERCENT } from '@constants/index';
-import { formatCurrency } from '@utils/index';
-import { useAuthStore } from '@store/index';
-import { subscriptionService, paymentService } from '@services/api';
+import { CANDIDATE_SUBSCRIPTION_PLANS } from '@constants/index';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@constants/index';
 import toast from 'react-hot-toast';
-import { PaymentSection } from '@components/payments/PaymentSection';
+import { PaymentModal } from '@components/payments/PaymentModal';
 import { useTheme } from '@mui/material/styles';
 
 export const Pricing: React.FC = () => {
-  const { user } = useAuthStore();
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const [selectedPlanId, setSelectedPlanId] = useState(CANDIDATE_SUBSCRIPTION_PLANS[0]?.id || 'premium_monthly');
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const selectedPlan = useMemo(
     () => CANDIDATE_SUBSCRIPTION_PLANS.find((plan) => plan.id === selectedPlanId) ?? CANDIDATE_SUBSCRIPTION_PLANS[0],
@@ -88,7 +83,7 @@ export const Pricing: React.FC = () => {
         {/* Pricing Cards - Two Column Layout */}
         <Box sx={{ mb: 10 }}>
           <Grid container spacing={4} sx={{ justifyContent: 'center' }}>
-            {CANDIDATE_SUBSCRIPTION_PLANS.map((plan, index) => (
+            {CANDIDATE_SUBSCRIPTION_PLANS.map((plan) => (
               <Grid item xs={12} sm={10} md={6} key={plan.id}>
                 <Card
                   sx={{
@@ -271,7 +266,10 @@ export const Pricing: React.FC = () => {
                     <Button
                       variant={selectedPlanId === plan.id ? 'contained' : 'outlined'}
                       fullWidth
-                      onClick={() => setSelectedPlanId(plan.id)}
+                      onClick={() => {
+                        setSelectedPlanId(plan.id);
+                        setCheckoutOpen(true);
+                      }}
                       size="large"
                       sx={{
                         textTransform: 'none',
@@ -298,38 +296,13 @@ export const Pricing: React.FC = () => {
           </Grid>
         </Box>
 
-        {/* Payment Section */}
-        <Box 
-          sx={{ 
-            mb: 8, 
-            background: isDarkMode ? '#0B0F17' : '#FFFFFF', 
-            color: isDarkMode ? '#FFFFFF' : undefined, 
-            borderRadius: 4, 
-            p: 4, 
-            boxShadow: isDarkMode 
-              ? '0 12px 32px rgba(0,0,0,0.42)' 
-              : '0 12px 32px rgba(15,23,42,0.08)',
-          }}
-        >
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              fontWeight: 700, 
-              mb: 4,
-              textAlign: 'center',
-            }}
-          >
-            Complete Your Purchase
-          </Typography>
-          <PaymentSection
-            plan={selectedPlan}
-            onPaymentSuccess={handlePaymentSuccess}
-            onPaymentError={(error) => {
-              console.error('Payment error:', error);
-              toast.error(error || 'Payment failed. Please try again.');
-            }}
-          />
-        </Box>
+        <PaymentModal
+          open={checkoutOpen}
+          plan={selectedPlan}
+          onClose={() => setCheckoutOpen(false)}
+          onSuccess={handlePaymentSuccess}
+          onError={(error) => toast.error(error || 'Payment failed. Please try again.')}
+        />
 
         {/* Benefits Section */}
         <Box

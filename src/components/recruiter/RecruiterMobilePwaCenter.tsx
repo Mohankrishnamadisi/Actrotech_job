@@ -573,13 +573,13 @@ export const RecruiterMobilePwaCenter: React.FC = () => {
           <Grid item xs={12} md={6}>
             <Card sx={{ border: '1px solid #e2e8f0' }}>
               <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Candidate Quick Actions</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Recruiter Quick Actions</Typography>
                 <Stack spacing={0.8}>
-                  <Button variant="outlined" onClick={() => navigate(ROUTES.JOBS)}>Apply Job</Button>
-                  <Button variant="outlined" onClick={() => navigate(ROUTES.DASHBOARD_SAVED_JOBS)}>Save Job</Button>
-                  <Button variant="outlined" onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}>Upload Resume</Button>
-                  <Button variant="outlined" onClick={() => navigate(ROUTES.DASHBOARD_AI_CAREER_HUB)}>AI Resume Review</Button>
-                  <Button variant="contained" onClick={() => navigate('/dashboard/mock-interviews')}>Mock Interview</Button>
+                  <Button variant="outlined" onClick={() => navigate(ROUTES.RECRUITER_DASHBOARD, { state: { tab: 'find-candidates' } })}>Find Candidates</Button>
+                  <Button variant="outlined" onClick={() => navigate(ROUTES.RECRUITER_DASHBOARD, { state: { tab: 'talent-pool' } })}>Talent Pool</Button>
+                  <Button variant="outlined" onClick={() => navigate(ROUTES.RECRUITER_DASHBOARD, { state: { tab: 'jobs' } })}>Manage Jobs</Button>
+                  <Button variant="outlined" onClick={() => navigate(ROUTES.RECRUITER_DASHBOARD, { state: { tab: 'interview-management' } })}>Interview Management</Button>
+                  <Button variant="contained" startIcon={<SmartToyIcon />} onClick={() => navigate(ROUTES.RECRUITER_DASHBOARD, { state: { tab: 'ai-hiring-assistant' } })}>AI Hiring Assistant</Button>
                 </Stack>
               </CardContent>
             </Card>

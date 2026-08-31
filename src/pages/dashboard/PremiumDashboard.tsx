@@ -99,6 +99,7 @@ const AiDailyCareerBrief = React.lazy(() => import('@components/dashboard/AiDail
 const AiMatchCenter = React.lazy(() => import('@components/dashboard/AiMatchCenter'));
 
 type RecentApplication = {
+  id: string;
   status: string;
   applied_at?: string;
   jobs?: {
@@ -147,6 +148,10 @@ type DashboardOption = {
 };
 
 type PremiumSectionKey =
+  | 'applications'
+  | 'savedJobs'
+  | 'resumeDownloads'
+  | 'profileViews'
   | 'dailyBrief'
   | 'intelligence'
   | 'remoteHub'
@@ -964,7 +969,7 @@ export const PremiumDashboard: React.FC = () => {
                     {stat.value}
                   </Typography>
                   <Typography variant="caption" sx={{ color: isDarkMode ? '#FFFFFF' : '#64748B', fontWeight: 600 }}>
-                    {stat.subtext}
+                    {stat.description}
                   </Typography>
                 </CardContent>
               </MotionCard>

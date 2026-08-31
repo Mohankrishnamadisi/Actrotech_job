@@ -313,10 +313,6 @@ const actionEffects = async (
     return { messages: 0, interviews: 1, offers: 0 };
   }
 
-  if (action.type === 'offer_sent') {
-    return { messages: 0, interviews: 0, offers: 1 };
-  }
-
   return { messages: 0, interviews: 0, offers: 0 };
 };
 

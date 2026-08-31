@@ -1005,18 +1005,18 @@ export const aiCareerHubService = {
       this.getJobTracker(userId),
     ]);
 
-    const generated: Array<{ id: string; type: string; message: string; at: string }> = [];
+    const generated: Array<{ id: string; userId: string; type: string; message: string; at: string }> = [];
 
     if (overview.profileCompletion < 85) {
-      generated.push({ id: makeId('n'), type: 'resume_update', message: 'Resume needs update to improve shortlist chances.', at: nowIso() });
+      generated.push({ id: makeId('n'), userId, type: 'resume_update', message: 'Resume needs update to improve shortlist chances.', at: nowIso() });
     }
     if (tracker.savedJobs > 0) {
-      generated.push({ id: makeId('n'), type: 'matching_jobs', message: 'New matching jobs detected in your saved categories.', at: nowIso() });
+      generated.push({ id: makeId('n'), userId, type: 'matching_jobs', message: 'New matching jobs detected in your saved categories.', at: nowIso() });
     }
-    generated.push({ id: makeId('n'), type: 'interview_prep', message: 'Interview preparation reminder: complete 2 mock sessions this week.', at: nowIso() });
-    generated.push({ id: makeId('n'), type: 'cert_recommendation', message: 'Recommended certification track updated based on your role goals.', at: nowIso() });
-    generated.push({ id: makeId('n'), type: 'trending_skills', message: 'Trending skills this week: TypeScript, AI workflows, system design.', at: nowIso() });
-    generated.push({ id: makeId('n'), type: 'salary_improvement', message: 'Salary potential can increase with one advanced certification and project case study.', at: nowIso() });
+    generated.push({ id: makeId('n'), userId, type: 'interview_prep', message: 'Interview preparation reminder: complete 2 mock sessions this week.', at: nowIso() });
+    generated.push({ id: makeId('n'), userId, type: 'cert_recommendation', message: 'Recommended certification track updated based on your role goals.', at: nowIso() });
+    generated.push({ id: makeId('n'), userId, type: 'trending_skills', message: 'Trending skills this week: TypeScript, AI workflows, system design.', at: nowIso() });
+    generated.push({ id: makeId('n'), userId, type: 'salary_improvement', message: 'Salary potential can increase with one advanced certification and project case study.', at: nowIso() });
 
     const store = readStore();
     store.notifications = [...generated, ...store.notifications.filter((n) => n.userId === userId)].slice(0, 300);

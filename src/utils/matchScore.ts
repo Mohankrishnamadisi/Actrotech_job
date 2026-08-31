@@ -324,7 +324,7 @@ function buildStrengths(input: {
   return strengths.slice(0, 5);
 }
 
-function calculateTitleMatchScore(candidate: CandidateLike, job: JobLike): number {
+export function calculateTitleMatchScore(candidate: CandidateLike, job: JobLike): number {
   const rawJobTitle = normalizeTitle(job?.title);
   const jobTitle = stripSeniority(rawJobTitle);
   const candidateTitles = normalizeTitleArray(

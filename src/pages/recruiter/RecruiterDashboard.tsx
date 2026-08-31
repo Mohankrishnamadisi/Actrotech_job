@@ -55,7 +55,6 @@ import { RecruiterAssessmentsCenter } from '@components/recruiter/RecruiterAsses
 import { RecruiterCommunityReferralsCenter } from '@components/recruiter/RecruiterCommunityReferralsCenter';
 import { RecruiterDeveloperApiCenter } from '@components/recruiter/RecruiterDeveloperApiCenter';
 import { RecruiterExecutiveIntelligenceCenter } from '@components/recruiter/RecruiterExecutiveIntelligenceCenter';
-import { RecruiterGlobalEnterpriseCenter } from '@components/recruiter/RecruiterGlobalEnterpriseCenter';
 import PipelineBoard from '../../features/ats/PipelineBoard';
 
 
@@ -82,10 +81,6 @@ type DashboardTab =
   | 'data-warehouse'
   | 'ai-insights'
   | 'forecasting'
-  | 'global-settings'
-  | 'localization'
-  | 'compliance'
-  | 'regional-management'
   | 'analytics'
   | 'automation-center'
   | 'messages'
@@ -782,50 +777,6 @@ export const RecruiterDashboard: React.FC = () => {
           </MotionBox>
         );
 
-      case 'global-settings':
-        return (
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <RecruiterGlobalEnterpriseCenter mode="global-settings" />
-          </MotionBox>
-        );
-
-      case 'localization':
-        return (
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <RecruiterGlobalEnterpriseCenter mode="localization" />
-          </MotionBox>
-        );
-
-      case 'compliance':
-        return (
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <RecruiterGlobalEnterpriseCenter mode="compliance" />
-          </MotionBox>
-        );
-
-      case 'regional-management':
-        return (
-          <MotionBox
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <RecruiterGlobalEnterpriseCenter mode="regional-management" />
-          </MotionBox>
-        );
-
       case 'automation-center':
         return (
           <MotionBox
@@ -1133,7 +1084,21 @@ export const RecruiterDashboard: React.FC = () => {
         );
 
       default:
-        return null;
+        return (
+          <Card sx={{ borderRadius: 3, border: `1px solid ${themeColors.border}` }}>
+            <CardContent sx={{ textAlign: 'center', py: 5 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: themeColors.text.primary, mb: 0.75 }}>
+                This dashboard view is unavailable
+              </Typography>
+              <Typography variant="body2" sx={{ color: themeColors.text.secondary, mb: 2 }}>
+                Return to the overview to continue managing your hiring workflow.
+              </Typography>
+              <Button variant="contained" onClick={() => setCurrentTab('overview')}>
+                Go to Overview
+              </Button>
+            </CardContent>
+          </Card>
+        );
     }
   };
 

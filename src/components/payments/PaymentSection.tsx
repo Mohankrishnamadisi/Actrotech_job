@@ -28,10 +28,8 @@ import {
   SecurityOutlined,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import { useAuthStore } from '@store/index';
-import { paymentService, subscriptionService } from '@services/api';
 import { SUBSCRIPTION_GATEWAY_FEE_PERCENT, SUBSCRIPTION_GST_PERCENT } from '@constants/index';
+import { PaymentModal } from './PaymentModal';
 
 interface PaymentSectionProps {
   plan: {
@@ -62,11 +60,10 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
   onPaymentSuccess,
   onPaymentError,
 }) => {
-  const { user } = useAuthStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     'razorpay' | 'phonepe' | 'credit_card' | 'upi'
   >('razorpay');
-  const [loading, setLoading] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -124,43 +121,6 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
     }
     return 0;
   }, [plan]);
-
-  const handlePayment = async () => {
-    if (!user) {
-      toast.error('Please login to continue');
-      onPaymentError?.('User not authenticated');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const expiryDate = new Date();
-      expiryDate.setMonth(expiryDate.getMonth() + plan.durationMonths);
-
-      const subscription = await subscriptionService.createSubscription(
-        user.id,
-        plan.id,
-        expiryDate.toISOString()
-      );
-
-      const payment = await paymentService.createPayment(
-        user.id,
-        subscription.id,
-        totalAmount,
-        selectedPaymentMethod
-      );
-
-      toast.success('Payment successful! Premium access activated.');
-      onPaymentSuccess?.(payment);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Payment failed';
-      console.error('Payment error:', error);
-      toast.error(errorMessage);
-      onPaymentError?.(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Box sx={{ py: 4 }}>
@@ -588,8 +548,7 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           component={motion.button}
-          onClick={handlePayment}
-          disabled={loading}
+          onClick={() => setCheckoutOpen(true)}
           variant="contained"
           size="large"
           sx={{
@@ -609,17 +568,10 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
             },
           }}
         >
-          {loading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={20} sx={{ color: '#FFFFFF' }} />
-              Processing...
-            </Box>
-          ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              Proceed to Pay
-              <ArrowForward sx={{ fontSize: 20 }} />
-            </Box>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            Proceed to Pay
+            <ArrowForward sx={{ fontSize: 20 }} />
+          </Box>
         </MotionButton>
       </Box>
 
@@ -648,6 +600,15 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
           )
         )}
       </Box>
+
+      <PaymentModal
+        open={checkoutOpen}
+        plan={plan}
+        initialPaymentMethod={selectedPaymentMethod}
+        onClose={() => setCheckoutOpen(false)}
+        onSuccess={onPaymentSuccess}
+        onError={onPaymentError}
+      />
     </Box>
   );
 };

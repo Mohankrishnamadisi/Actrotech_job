@@ -40,7 +40,7 @@ import { HorizontalJobListItem } from '@components/jobs/HorizontalJobListItem';
 import { JobListSkeleton } from '@components/common/LoadingSkeleton';
 import { Error } from '@components/common/Error';
 import { jobService } from '@services/api';
-import { JOB_CATEGORIES, EMPLOYMENT_TYPES, WORK_MODES, EDUCATION_OPTIONS, FRESHNESS_OPTIONS, INDIAN_CITIES } from '@constants/index';
+import { EMPLOYMENT_TYPES, WORK_MODES, EDUCATION_OPTIONS, FRESHNESS_OPTIONS, INDIAN_CITIES } from '@constants/index';
 import type { Job } from '../types';
 
 const MotionPaper = motion(Paper);
@@ -827,7 +827,7 @@ export const Jobs: React.FC = () => {
             ) : (
               <>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 4 }}>
-                  {jobs.map((job, index) => (
+                  {jobs.map((job) => (
                     <HorizontalJobListItem
                       key={job.id}
                       job={job}

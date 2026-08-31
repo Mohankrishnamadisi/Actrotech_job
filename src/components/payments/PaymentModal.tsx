@@ -38,7 +38,7 @@ import {
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@store/index';
-import { paymentService, subscriptionService } from '@services/api';
+import { razorpayCheckout } from '@services/razorpayCheckout';
 import { SUBSCRIPTION_GATEWAY_FEE_PERCENT, SUBSCRIPTION_GST_PERCENT } from '@constants/index';
 
 interface PaymentModalProps {
@@ -52,6 +52,8 @@ interface PaymentModalProps {
   };
   onClose: () => void;
   onSuccess?: (paymentData: any) => void;
+  onError?: (reason: string) => void;
+  initialPaymentMethod?: 'razorpay' | 'phonepe' | 'credit_card' | 'upi';
 }
 
 const MotionCard = motion(Card);
@@ -61,13 +63,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   plan,
   onClose,
   onSuccess,
+  onError,
+  initialPaymentMethod = 'razorpay',
 }) => {
   const { user } = useAuthStore();
   const [activeStep, setActiveStep] = useState(0);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     'razorpay' | 'phonepe' | 'credit_card' | 'upi'
-  >('razorpay');
+  >(initialPaymentMethod);
   const [loading, setLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [cardData, setCardData] = useState({
     cardNumber: '',
@@ -100,32 +105,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
 
     setLoading(true);
+    setPaymentError('');
     try {
-      const expiryDate = new Date();
-      expiryDate.setMonth(expiryDate.getMonth() + plan.durationMonths);
-
-      const subscription = await subscriptionService.createSubscription(
-        user.id,
-        plan.id,
-        expiryDate.toISOString()
-      );
-
-      const payment = await paymentService.createPayment(
-        user.id,
-        subscription.id,
-        totalAmount,
-        selectedPaymentMethod
-      );
-
-      setActiveStep(2);
-      toast.success('Payment successful! 🎉');
-      setTimeout(() => {
+      if (selectedPaymentMethod !== 'razorpay') {
+        throw new Error('This payment method is not available yet. Please choose Razorpay.');
+      }
+      await razorpayCheckout.start(plan, (payment) => {
+        setActiveStep(2);
+        toast.success('Payment verified successfully.');
         onSuccess?.(payment);
-      }, 1500);
+      }, (reason) => {
+        setPaymentError(reason);
+        onError?.(reason);
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Payment failed';
       console.error('Payment error:', error);
+      setPaymentError(errorMessage);
       toast.error(errorMessage);
+      onError?.(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -527,6 +525,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Step 2: Review & Confirm */}
         {activeStep === 1 && (
           <Box>
+            {paymentError && (
+              <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', color: '#B91C1C' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>Payment could not be completed</Typography>
+                <Typography variant="caption">{paymentError}</Typography>
+              </Paper>
+            )}
             <Typography
               variant="subtitle2"
               sx={{

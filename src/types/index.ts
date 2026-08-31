@@ -3,6 +3,9 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  avatar_url?: string;
+  phone?: string;
+  subscriptionPlan?: string;
   role: 'job_seeker' | 'recruiter' | 'admin';
   createdAt: string;
   updatedAt: string;
