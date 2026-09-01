@@ -15,7 +15,7 @@ import { useAuthStore } from '@store/index';
 import { applicationService } from '@services/api';
 import { formatDate } from '@utils/index';
 import { ROUTES } from '@constants/index';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import '../../styles/opportunitySignalButton.css';
 
@@ -32,7 +32,6 @@ type UserApplication = {
 
 export const ApplicationsPage: React.FC = () => {
   const { user } = useAuthStore();
-  const navigate = useNavigate();
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const [applications, setApplications] = useState<UserApplication[]>([]);
@@ -40,29 +39,6 @@ export const ApplicationsPage: React.FC = () => {
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const filter = search.get('filter');
-
-  const getCurrentHashRoute = () => {
-    const hash = window.location.hash || '';
-    const route = hash.startsWith('#') ? hash.slice(1) : hash;
-    return route || '/';
-  };
-
-  const handleBackNavigation = () => {
-    if (window.history.length > 1) {
-      const beforeRoute = getCurrentHashRoute();
-      window.history.back();
-
-      window.setTimeout(() => {
-        const afterRoute = getCurrentHashRoute();
-        if (afterRoute === beforeRoute) {
-          navigate(ROUTES.DASHBOARD, { replace: true });
-        }
-      }, 180);
-      return;
-    }
-
-    navigate(ROUTES.DASHBOARD, { replace: true });
-  };
 
   useEffect(() => {
     const loadApplications = async () => {

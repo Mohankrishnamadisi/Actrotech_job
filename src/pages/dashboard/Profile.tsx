@@ -1504,7 +1504,7 @@ export const ProfilePage: React.FC = () => {
               <Grid item xs={6}>
                 <FormControl fullWidth>
                   <InputLabel>Exp. Years</InputLabel>
-                  <Select value={formData.experienceYears} label="Exp. Years"
+                  <Select value={String(formData.experienceYears)} label="Exp. Years"
                     onChange={(e: SelectChangeEvent) => setField('experienceYears', e.target.value)}>
                     {Array.from({ length: 31 }, (_, i) => i).map((y) => (
                       <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -1515,7 +1515,7 @@ export const ProfilePage: React.FC = () => {
               <Grid item xs={6}>
                 <FormControl fullWidth>
                   <InputLabel>Exp. Months</InputLabel>
-                  <Select value={formData.experienceMonths} label="Exp. Months"
+                  <Select value={String(formData.experienceMonths)} label="Exp. Months"
                     onChange={(e: SelectChangeEvent) => setField('experienceMonths', e.target.value)}>
                     {Array.from({ length: 12 }, (_, i) => i).map((m) => (
                       <MenuItem key={m} value={m}>{m}</MenuItem>

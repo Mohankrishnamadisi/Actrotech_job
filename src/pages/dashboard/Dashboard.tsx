@@ -9,7 +9,6 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Container,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -45,12 +44,9 @@ import {
   Description as DescriptionIcon,
   Download as DownloadIcon,
   EventAvailable as EventAvailableIcon,
-  ExpandMore as ExpandMoreIcon,
   FolderOpen as FolderOpenIcon,
   LocationOn as LocationOnIcon,
   Login as LogoutIcon,
-  Logout as LogoutIconOld,
-  Menu as MenuIcon,
   Notifications as NotificationsIcon,
   PeopleAlt as PeopleAltIcon,
   Person as PersonIcon,
@@ -75,10 +71,7 @@ import { useTheme } from '@mui/material/styles';
 
 import { Layout } from '@components/layout/Layout';
 import '../../styles/dashboardFixedNav.css';
-import { UnlockProButton } from '@components/common/UnlockProButton';
 import SupportWidget from '@components/common/SupportWidget';
-import { InstallApp } from '@components/InstallApp/InstallApp';
-import { supportService } from '@services/support';
 import { ROUTES } from '@constants/index';
 import { useSubscription } from '@hooks/index';
 import { useAuthStore } from '@store/index';
@@ -118,9 +111,6 @@ type SavedJobItem = {
   };
 };
 
-type DashboardSectionKey = 'applications' | 'saved' | 'resume' | 'profile' | null;
-
-const MotionCard = motion(Card);
 
 const calculateProfileStrength = (profile: any, user: any): number => {
   const checks = [
@@ -151,7 +141,6 @@ export const Dashboard: React.FC = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
-  const [ticketNotifCount, setTicketNotifCount] = useState(0);
 
   const [profile, setProfile] = useState<any | null>(null);
   const [profileCompletion, setProfileCompletion] = useState(0);
@@ -227,11 +216,6 @@ export const Dashboard: React.FC = () => {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
-
-  useEffect(() => {
-    if (!user?.id) return;
-    supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => {});
-  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -327,10 +311,6 @@ export const Dashboard: React.FC = () => {
 
     loadDashboardData();
   }, [user?.id, profile?.skills]);
-
-  const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileMenuAnchorEl(event.currentTarget);
-  };
 
   const closeProfileMenu = () => {
     setProfileMenuAnchorEl(null);
@@ -702,7 +682,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <Box className={footerVisible ? 'dashboard-page footer-visible' : 'dashboard-page'} sx={{ background: 'radial-gradient(circle at top left, rgba(59,130,246,0.08), transparent 28%), radial-gradient(circle at top right, rgba(124,58,237,0.08), transparent 26%), #F6F8FC', minHeight: '100vh', px: { xs: 1.5, md: 2.5 }, py: { xs: 2, md: 3 } }}>
+      <Box className={footerVisible ? 'dashboard-page candidate-dashboard footer-visible' : 'dashboard-page candidate-dashboard'} sx={{ background: 'radial-gradient(circle at top left, rgba(59,130,246,0.08), transparent 28%), radial-gradient(circle at top right, rgba(124,58,237,0.08), transparent 26%), #F6F8FC', minHeight: '100vh', px: { xs: 1.5, md: 2.5 }, py: { xs: 2, md: 3 } }}>
         <Drawer anchor="left" open={mobileNavOpen} onClose={() => setMobileNavOpen(false)}>
           <Box sx={{ width: 280, height: '100%', background: '#fff' }}>{renderSidebar({ drawerMode: true })}</Box>
         </Drawer>
@@ -1099,7 +1079,7 @@ export const Dashboard: React.FC = () => {
                         onClose={() => setRecruiterModalOpen(false)}
                         fullWidth
                         maxWidth="sm"
-                        slotProps={{ paper: { sx: { borderRadius: 3, overflow: 'hidden' } } }}
+                        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
                       >
                         <Box sx={{ height: 4, background: 'linear-gradient(90deg, #2563eb, #7c3aed)' }} />
                         <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>Recruiter details</DialogTitle>

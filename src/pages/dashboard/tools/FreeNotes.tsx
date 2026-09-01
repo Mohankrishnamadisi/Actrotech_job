@@ -15,7 +15,6 @@ import {
   InputLabel,
   List,
   ListItem,
-  ListItemText,
   MenuItem,
   Select,
   SelectChangeEvent,

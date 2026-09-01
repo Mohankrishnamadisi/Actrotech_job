@@ -14,7 +14,6 @@ import {
   Close as CloseIcon,
   CheckCircle as CheckCircleIcon,
   Whatshot as WhatshotIcon,
-  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -72,8 +71,6 @@ export const JobMatchNotificationCard: React.FC<JobMatchNotificationCardProps> =
   const isPremium = metadata.isPremium;
   const matchedSkills = metadata.matchedSkills || [];
   const matchedTitles = metadata.matchedTitles || [];
-  const matchType = metadata.matchType || 'skill';
-
   if (compact) {
     // Compact view for notification center
     return (
@@ -113,10 +110,10 @@ export const JobMatchNotificationCard: React.FC<JobMatchNotificationCardProps> =
               </Typography>
               {(matchedSkills.length > 0 || matchedTitles.length > 0) && (
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                  {matchedSkills.map((skill) => (
+                  {matchedSkills.map((skill: string) => (
                     <Chip key={skill} label={skill} size="small" variant="outlined" />
                   ))}
-                  {matchedTitles.map((title) => (
+                  {matchedTitles.map((title: string) => (
                     <Chip key={title} label={title} size="small" variant="outlined" />
                   ))}
                 </Box>
@@ -212,7 +209,7 @@ export const JobMatchNotificationCard: React.FC<JobMatchNotificationCardProps> =
                 Matched Skills
               </Typography>
               <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', mt: 0.5 }}>
-                {matchedSkills.map((skill) => (
+                {matchedSkills.map((skill: string) => (
                   <Chip
                     key={skill}
                     label={skill}
@@ -234,7 +231,7 @@ export const JobMatchNotificationCard: React.FC<JobMatchNotificationCardProps> =
                 Matched Profile
               </Typography>
               <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', mt: 0.5 }}>
-                {matchedTitles.map((title) => (
+                {matchedTitles.map((title: string) => (
                   <Chip
                     key={title}
                     label={title}

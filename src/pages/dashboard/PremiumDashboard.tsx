@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import {
-  Avatar,
   Badge,
   Box,
   Button,
@@ -39,14 +38,12 @@ import {
   Logout as LogoutIcon,
   Settings as SettingsIcon,
   Public as PublicIcon,
-  AccountCircle as AccountCircleIcon,
   FlightTakeoff as FlightTakeoffIcon,
   AutoAwesome as AutoAwesomeIcon,
   Insights as InsightsIcon,
   Bolt as BoltIcon,
   TrackChanges as TrackChangesIcon,
   Tune as TuneIcon,
-  ExpandMore as ExpandMoreIcon,
   StickyNote2 as StickyNote2Icon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -55,18 +52,13 @@ import toast from 'react-hot-toast';
 
 import { Layout } from '@components/layout/Layout';
 import RecruiterActivityCenter, { type RecruiterActivityQuickAction } from '@components/dashboard/RecruiterActivityCenter';
-import SupportWidget from '@components/common/SupportWidget';
-import { useThemeMode } from '@hooks/index';
 import { useAuthStore } from '@store/index';
 import { authService } from '@services/supabase';
-import { supportService } from '@services/support';
 import { userService, applicationService, savedService, notificationService, jobService } from '@services/api';
 import { messagingService } from '@services/messaging';
 import {
   getCandidateProfileViewCount,
-  getCandidateProfileViewRecruiters,
   getCandidateResumeUnlockCount,
-  getCandidateResumeUnlockRecruiters,
 } from '@utils/resumeUnlocks';
 import { ROUTES } from '@constants/index';
 import { formatDate } from '@utils/index';
@@ -120,33 +112,6 @@ type OpportunitySignal = {
   priorityScore: number;
 };
 
-type DashboardOptionKey =
-  | 'applications'
-  | 'savedJobs'
-  | 'resumeDownloads'
-  | 'profileViews'
-  | 'matchedJobs'
-  | 'remoteHub'
-  | 'editProfile'
-  | 'messages'
-  | 'notifications'
-  | 'browseJobs'
-  | 'mockInterviews'
-  | 'assessments'
-  | 'community'
-  | 'referrals'
-  | 'freeNotes'
-  | 'aiCareerHub';
-
-type DashboardOption = {
-  key: DashboardOptionKey;
-  label: string;
-  description: string;
-  value?: number;
-  action: () => void;
-  actionLabel: string;
-};
-
 type PremiumSectionKey =
   | 'applications'
   | 'savedJobs'
@@ -172,13 +137,10 @@ const sectionTabs: Array<{ key: PremiumSectionKey; label: string; icon: React.El
 
 export const PremiumDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
-  const { themeMode } = useThemeMode();
   const theme = useTheme();
   const navigate = useNavigate();
   const isDarkMode = theme.palette.mode === 'dark';
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [supportOpen, setSupportOpen] = useState(false);
-  const [ticketNotifCount, setTicketNotifCount] = useState(0);
 
   const [applicationCount, setApplicationCount] = useState(0);
   const [savedJobsCount, setSavedJobsCount] = useState(0);
@@ -201,15 +163,6 @@ export const PremiumDashboard: React.FC = () => {
   const [selectedRoleModel, setSelectedRoleModel] = useState('General');
   const [roleWeightMap, setRoleWeightMap] = useState<Record<string, DemandWeights>>({});
   const [weeklyTargets, setWeeklyTargets] = useState<WeeklyGoalTargets>({ applications: 6, interactions: 10, pipeline: 4 });
-
-  const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileMenuAnchorEl(event.currentTarget);
-  };
-
-  useEffect(() => {
-    if (!user?.id) return;
-    supportService.getUnseenAdminResponseCount(user.id).then(setTicketNotifCount).catch(() => {});
-  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -335,30 +288,6 @@ export const PremiumDashboard: React.FC = () => {
 
     fetchStats();
   }, [user?.id]);
-
-  const openInteractionModal = async (type: 'downloads' | 'views') => {
-    if (!user?.id) return;
-
-    setInteractionLoading(true);
-    setInteractionModalOpen(true);
-    setInteractionItems([]);
-
-    try {
-      if (type === 'downloads') {
-        setInteractionType('downloads');
-        setInteractionModalTitle('Recruiters who downloaded your resume');
-        const items = await getCandidateResumeUnlockRecruiters(user.id);
-        setInteractionItems(items);
-      } else {
-        setInteractionType('views');
-        setInteractionModalTitle('Recruiters who viewed your profile');
-        const items = await getCandidateProfileViewRecruiters(user.id);
-        setInteractionItems(items);
-      }
-    } finally {
-      setInteractionLoading(false);
-    }
-  };
 
   const stats = useMemo(
     () => [
@@ -911,20 +840,6 @@ export const PremiumDashboard: React.FC = () => {
                   >
                     <SettingsIcon sx={{ mr: 1, fontSize: 18 }} />
                     Settings
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      closeProfileMenu();
-                      setSupportOpen(true);
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AccountCircleIcon sx={{ fontSize: 18 }} />
-                      Customer Care
-                      {ticketNotifCount > 0 ? (
-                        <Box component="span" sx={{ bgcolor: 'error.main', color: '#fff', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, ml: 0.5 }}>{ticketNotifCount}</Box>
-                      ) : null}
-                    </Box>
                   </MenuItem>
                   <Divider />
                   <MenuItem onClick={handleSignout} sx={{ color: 'error.main' }}>

@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
-  FormControlLabel,
   Switch,
   Button,
-  Divider,
   Card,
   CardContent,
   Grid,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Paper, Stack, Typography, IconButton, Tooltip, Chip } from '@mui/material';
-import { Bookmark, BookmarkBorder, Share2 } from '@mui/icons-material';
+import { Bookmark, BookmarkBorder, Share } from '@mui/icons-material';
 import { Heart } from 'lucide-react';
 import { LearningVideo } from '@services/learningVideos';
 
@@ -210,7 +210,7 @@ export const VideoPlayerSection: React.FC<VideoPlayerSectionProps> = ({
               </Tooltip>
               <Tooltip title="Share">
                 <IconButton>
-                  <Share2 />
+                  <Share />
                 </IconButton>
               </Tooltip>
             </Stack>
