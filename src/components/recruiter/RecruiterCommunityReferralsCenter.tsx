@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -45,6 +45,10 @@ export const RecruiterCommunityReferralsCenter: React.FC<RecruiterCommunityRefer
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
   const [tab, setTab] = useState<RecruiterTab>(mode);
+
+  useEffect(() => {
+    setTab(mode);
+  }, [mode]);
   const [opportunity, setOpportunity] = useState({
     company: 'ActroTech',
     role: 'Frontend Engineer',
