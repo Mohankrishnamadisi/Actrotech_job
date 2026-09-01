@@ -35,7 +35,8 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
   const isDarkMode = theme.palette.mode === 'dark';
   const [isHovered, setIsHovered] = React.useState(false);
   const workMode = job.workMode || job.work_mode;
-  const showRemotePremium = workMode === 'Remote' && !isPremiumUser;
+  const normalizedWorkMode = String(workMode || '').trim().toLowerCase();
+  const showRemotePremium = normalizedWorkMode === 'remote' && !isPremiumUser;
   const postedDate = getTimeAgo(job.createdAt || job.created_at || new Date().toISOString());
   const skills = Array.isArray(job.skills) ? job.skills.slice(0, 3) : [];
   const skillsCount = Array.isArray(job.skills) ? job.skills.length : 0;
@@ -179,6 +180,7 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
               alignItems: 'center',
               gap: 0.6,
               mt: 0.1,
+              ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
             }}
           >
             <Box
@@ -241,11 +243,26 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
                 color: '#059669',
                 mt: 0.25,
                 letterSpacing: '-0.2px',
+                ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
               }}
             >
               💰 {salary}
             </Typography>
           )}
+
+          {job.positionsAvailable || job.positions_available ? (
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                fontSize: '0.8rem',
+                color: isDarkMode ? '#CBD5E1' : '#374151',
+                ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
+              }}
+            >
+              {showRemotePremium ? 'Positions hidden - Upgrade' : `Hiring ${job.positionsAvailable || job.positions_available} position${(job.positionsAvailable || job.positions_available) === 1 ? '' : 's'}`}
+            </Typography>
+          ) : null}
 
           {/* Posted Time + Experience */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', mt: 0.5 }}>
@@ -329,6 +346,7 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   fontWeight: 500,
+                  ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
                 }}
               >
                 {description}

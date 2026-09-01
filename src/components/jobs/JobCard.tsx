@@ -25,7 +25,8 @@ interface JobCardProps {
 
 export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, isPremiumUser = false }) => {
   const workMode = job.workMode || job.work_mode;
-  const showRemotePremium = workMode === 'Remote' && !isPremiumUser;
+  const normalizedWorkMode = String(workMode || '').trim().toLowerCase();
+  const showRemotePremium = normalizedWorkMode === 'remote' && !isPremiumUser;
   const postedDate = getTimeAgo(job.createdAt || job.created_at || new Date().toISOString());
   const skills = Array.isArray(job.skills) ? job.skills : [];
   const jobType = job.jobType || job.job_type || 'Type unavailable';
@@ -190,6 +191,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
               }}
             >
               {showRemotePremium ? 'Positions hidden - Upgrade' : `Hiring ${positions} position${positions === 1 ? '' : 's'}`}
@@ -232,6 +234,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onSave, isSaved = false, 
             lineHeight: 1.55,
             flex: '1 1 auto',
             minHeight: 0,
+            ...(showRemotePremium ? { filter: 'blur(4px)', userSelect: 'none' } : {}),
           }}
         >
           {job.description}
