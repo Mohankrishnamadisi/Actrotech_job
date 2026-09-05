@@ -41,7 +41,14 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
   const skills = Array.isArray(job.skills) ? job.skills.slice(0, 3) : [];
   const skillsCount = Array.isArray(job.skills) ? job.skills.length : 0;
   const jobType = job.jobType || job.job_type || 'Type unavailable';
-  const companyInitials = job.company_name
+  const companyName = String(job.company_name || '').trim();
+  const [logoExtensionIndex, setLogoExtensionIndex] = React.useState(0);
+  const logoCandidates = [companyName, companyName.toLowerCase()].flatMap((name) =>
+    ['png', 'jpg', 'jpeg'].map(
+      (extension) => `/logos/${encodeURIComponent(name)}.${extension}`,
+    ),
+  );
+  const companyInitials = companyName
     ?.split(' ')
     .map((w) => w[0])
     .join('')
@@ -125,13 +132,22 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
             }
           >
             <Avatar
+              src={companyName && logoExtensionIndex < logoCandidates.length ? logoCandidates[logoExtensionIndex] : undefined}
+              alt={companyName ? `${companyName} logo` : 'Company logo'}
+              imgProps={{
+                onError: () => setLogoExtensionIndex((index) => index + 1),
+              }}
               sx={{
                 width: { xs: 48, sm: 56 },
                 height: { xs: 48, sm: 56 },
-                bgcolor: 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%)',
+                bgcolor: isDarkMode ? '#334155' : '#d1d5db',
                 fontSize: { xs: '1.1rem', sm: '1.3rem' },
                 fontWeight: 700,
                 flexShrink: 0,
+                '& img': {
+                  objectFit: 'contain',
+                  backgroundColor: '#FFFFFF',
+                },
               }}
             >
               {companyInitials}
