@@ -288,7 +288,9 @@ export const Jobs: React.FC = () => {
 
   const activeFilterChips = [
     filters.keyword ? { key: 'keyword', label: `Keyword: ${filters.keyword}`, value: '' } : null,
-    ...filters.location.map((location) => ({ key: 'location', label: `Location: ${location}`, value: location })),
+    filters.location.length > 0
+      ? { key: 'location', label: `Location: ${filters.location.join(', ')}`, value: '' }
+      : null,
     filters.experience ? { key: 'experience', label: `Experience: ${filters.experience}`, value: '' } : null,
     filters.education ? { key: 'education', label: `Education: ${filters.education}`, value: '' } : null,
     filters.freshness ? { key: 'freshness', label: `Freshness: ${filters.freshness}`, value: '' } : null,
@@ -813,7 +815,9 @@ export const Jobs: React.FC = () => {
                       key={`${chip.key}-${chip.value}`}
                       label={chip.label}
                       onDelete={() => {
-                        if (chip.key === 'keyword' || chip.key === 'location') {
+                        if (chip.key === 'location') {
+                          handleFilterChange('location', []);
+                        } else if (chip.key === 'keyword') {
                           handleFilterChange(chip.key, filters[chip.key].filter((value) => value !== chip.value));
                         } else {
                           handleFilterChange(chip.key, '');
@@ -828,11 +832,6 @@ export const Jobs: React.FC = () => {
               </Box>
             </Paper>
 
-            <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {filters.keyword && <Chip color="primary" label={`Keyword: ${filters.keyword}`} size="small" />}
-              {filters.location.length > 0 && <Chip color="primary" label={`Location: ${filters.location.join(', ')}`} size="small" />}
-              {filters.experience && <Chip color="primary" label={`Experience: ${filters.experience}`} size="small" />}
-            </Box>
             {loading ? (
               <JobListSkeleton count={6} />
             ) : jobs.length === 0 ? (
