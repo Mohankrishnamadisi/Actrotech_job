@@ -17,6 +17,7 @@ import {
   TrendingUpOutlined as TrendingUpOutlinedIcon,
   BoltOutlined as BoltOutlinedIcon,
   OpenInNew as OpenInNewIcon,
+  LockOutlined as LockOutlinedIcon,
 } from '@mui/icons-material';
 import { getTimeAgo, formatJobSalary, truncateAtWord } from '@utils/index';
 import type { Job } from '../../types';
@@ -109,50 +110,58 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
             justifyContent: 'center',
           }}
         >
-          <Badge
-            overlap="circular"
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            badgeContent={
-              job.featured ? (
-                <Box
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    bgcolor: '#FCD34D',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '2px solid white',
-                  }}
-                >
-                  <BoltOutlinedIcon sx={{ fontSize: 14, color: '#92400E' }} />
-                </Box>
-              ) : null
-            }
-          >
-            <Avatar
-              src={companyName && logoExtensionIndex < logoCandidates.length ? logoCandidates[logoExtensionIndex] : undefined}
-              alt={companyName ? `${companyName} logo` : 'Company logo'}
-              imgProps={{
-                onError: () => setLogoExtensionIndex((index) => index + 1),
-              }}
-              sx={{
-                width: { xs: 48, sm: 56 },
-                height: { xs: 48, sm: 56 },
-                bgcolor: isDarkMode ? '#334155' : '#d1d5db',
-                fontSize: { xs: '1.1rem', sm: '1.3rem' },
-                fontWeight: 700,
-                flexShrink: 0,
-                '& img': {
-                  objectFit: 'contain',
-                  backgroundColor: '#FFFFFF',
-                },
-              }}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.35 }}>
+            <Badge
+              overlap="circular"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              badgeContent={
+                job.featured && !showRemotePremium ? (
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      bgcolor: '#FCD34D',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid white',
+                    }}
+                  >
+                    <BoltOutlinedIcon sx={{ fontSize: 14, color: '#92400E' }} />
+                  </Box>
+                ) : null
+              }
             >
-              {companyInitials}
-            </Avatar>
-          </Badge>
+              <Avatar
+                src={showRemotePremium ? undefined : (companyName && logoExtensionIndex < logoCandidates.length ? logoCandidates[logoExtensionIndex] : undefined)}
+                alt={showRemotePremium ? 'Premium company details' : (companyName ? `${companyName} logo` : 'Company logo')}
+                imgProps={{
+                  onError: () => setLogoExtensionIndex((index) => index + 1),
+                }}
+                sx={{
+                  width: { xs: 48, sm: 56 },
+                  height: { xs: 48, sm: 56 },
+                  bgcolor: showRemotePremium ? (isDarkMode ? '#1e3a8a' : '#dbeafe') : (isDarkMode ? '#334155' : '#d1d5db'),
+                  color: showRemotePremium ? (isDarkMode ? '#bfdbfe' : '#2563eb') : undefined,
+                  fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  '& img': {
+                    objectFit: 'contain',
+                    backgroundColor: '#FFFFFF',
+                  },
+                }}
+              >
+                {showRemotePremium ? <LockOutlinedIcon /> : companyInitials}
+              </Avatar>
+            </Badge>
+            {showRemotePremium && (
+              <Typography variant="caption" sx={{ color: isDarkMode ? '#93c5fd' : '#2563eb', fontWeight: 800, lineHeight: 1 }}>
+                Premium
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         {/* CENTER: Job Details */}
