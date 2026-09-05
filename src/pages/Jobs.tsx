@@ -45,6 +45,29 @@ import type { Job } from '../types';
 
 const MotionPaper = motion(Paper);
 
+const getMultiValues = (params: URLSearchParams, key: string, fallback: string[] = []) => {
+  const values = params.getAll(key);
+  if (values.length > 0) return values.filter(Boolean);
+  const rawValue = params.get(key);
+  if (!rawValue) return fallback;
+  return rawValue.split(',').map((value) => value.trim()).filter(Boolean);
+};
+
+const DEFAULT_LOCATIONS = [
+  'India',
+  'Hyderabad',
+  'Bengaluru',
+  'Chennai',
+  'Mumbai',
+  'Delhi',
+  'Pune',
+  'Kolkata',
+  'Coimbatore',
+  'Visakhapatnam',
+  'Noida',
+  'Gurgaon',
+];
+
 export const Jobs: React.FC = () => {
   const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -68,7 +91,7 @@ export const Jobs: React.FC = () => {
 
   const [filters, setFilters] = useState({
     keyword: searchParams.get('keyword') || '',
-    location: searchParams.get('location') || 'India',
+    location: getMultiValues(searchParams, 'location', DEFAULT_LOCATIONS),
     experience: searchParams.get('experience') || '',
     education: searchParams.get('education') || '',
     freshness: searchParams.get('freshness') || '',
@@ -115,34 +138,24 @@ export const Jobs: React.FC = () => {
 
       const params = new URLSearchParams(prev);
       params.delete('keyword');
-      if (normalizedKeyword) {
-        params.set('keyword', normalizedKeyword);
-      }
+      if (normalizedKeyword) params.set('keyword', normalizedKeyword);
       return params;
     });
   }, [debouncedKeyword, setSearchParams]);
 
   useEffect(() => {
-    const getMultiValues = (key: string) => {
-      const values = searchParams.getAll(key);
-      if (values.length > 0) return values.filter(Boolean);
-      const rawValue = searchParams.get(key);
-      if (!rawValue) return [];
-      return rawValue.split(',').map((value) => value.trim()).filter(Boolean);
-    };
-
     setFilters((previousFilters) => ({
       keyword: searchParams.get('keyword') || '',
       // Keep the default or an explicitly cleared value when the URL has no location.
       location: searchParams.has('location')
-        ? searchParams.get('location') || ''
+        ? getMultiValues(searchParams, 'location')
         : previousFilters.location,
       experience: searchParams.get('experience') || '',
       education: searchParams.get('education') || '',
       freshness: searchParams.get('freshness') || '',
-      jobType: getMultiValues('jobType'),
-      workMode: getMultiValues('workMode'),
-      category: getMultiValues('category'),
+      jobType: getMultiValues(searchParams, 'jobType'),
+      workMode: getMultiValues(searchParams, 'workMode'),
+      category: getMultiValues(searchParams, 'category'),
     }));
     setPage(1);
   }, [searchParams]);
@@ -153,7 +166,7 @@ export const Jobs: React.FC = () => {
     try {
       const params: Record<string, unknown> = {};
       if (debouncedKeyword) params.keyword = debouncedKeyword;
-      if (filters.location) params.location = filters.location;
+      if (filters.location.length > 0) params.location = filters.location;
       if (filters.experience) params.experience = filters.experience;
       if (filters.education) params.education = filters.education;
       if (filters.freshness) params.freshness = filters.freshness;
@@ -229,7 +242,7 @@ export const Jobs: React.FC = () => {
   const clearFilters = () => {
     setFilters({
       keyword: '',
-      location: '',
+      location: [],
       experience: '',
       education: '',
       freshness: '',
@@ -251,14 +264,14 @@ export const Jobs: React.FC = () => {
 
   const itemsPerPage = 12;
   const totalPages = Math.ceil(total / itemsPerPage);
-  const searchCount = [filters.keyword, filters.location].filter(Boolean).length;
+  const searchCount = (filters.keyword ? 1 : 0) + filters.location.length;
   const profileCount = [filters.experience, filters.education, filters.freshness].filter(Boolean).length;
   const jobTypeCount = filters.jobType.length;
   const workModeCount = filters.workMode.length;
   const categoryCount = filters.category.length;
   const activeFiltersCount = [
     filters.keyword,
-    filters.location,
+    ...filters.location,
     filters.experience,
     filters.education,
     filters.freshness,
@@ -275,7 +288,7 @@ export const Jobs: React.FC = () => {
 
   const activeFilterChips = [
     filters.keyword ? { key: 'keyword', label: `Keyword: ${filters.keyword}`, value: '' } : null,
-    filters.location ? { key: 'location', label: `Location: ${filters.location}`, value: '' } : null,
+    ...filters.location.map((location) => ({ key: 'location', label: `Location: ${location}`, value: location })),
     filters.experience ? { key: 'experience', label: `Experience: ${filters.experience}`, value: '' } : null,
     filters.education ? { key: 'education', label: `Education: ${filters.education}`, value: '' } : null,
     filters.freshness ? { key: 'freshness', label: `Freshness: ${filters.freshness}`, value: '' } : null,
@@ -446,10 +459,11 @@ export const Jobs: React.FC = () => {
                     />
 
                     <Autocomplete
+                      multiple
                       freeSolo
                       options={INDIAN_CITIES}
-                      inputValue={filters.location}
-                      onInputChange={(_, value) => handleFilterChange('location', value)}
+                      value={filters.location}
+                      onChange={(_, value) => handleFilterChange('location', value)}
                       filterOptions={(options, state) =>
                         options.filter((option) =>
                           option.toLowerCase().includes(state.inputValue.toLowerCase())
@@ -460,7 +474,19 @@ export const Jobs: React.FC = () => {
                           {...params}
                           fullWidth
                           placeholder="Location"
-                          sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { height: 54, fontSize: '0.97rem' } }}
+                          sx={{
+                            mb: 2.5,
+                            '& .MuiOutlinedInput-root': {
+                              minHeight: 54,
+                              height: 'auto',
+                              alignItems: 'flex-start',
+                              fontSize: '0.97rem',
+                              py: 0.5,
+                            },
+                            '& .MuiAutocomplete-input': {
+                              minWidth: 120,
+                            },
+                          }}
                         />
                       )}
                     />
@@ -734,7 +760,7 @@ export const Jobs: React.FC = () => {
 
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
                 {filters.keyword && <Chip label={filters.keyword} size="small" />}
-                {filters.location && <Chip label={filters.location} size="small" />}
+                {filters.location.length > 0 && <Chip label={filters.location.join(', ')} size="small" />}
                 {filters.experience && <Chip label={filters.experience} size="small" />}
                 {filters.education && <Chip label={filters.education} size="small" />}
               </Box>
@@ -767,7 +793,7 @@ export const Jobs: React.FC = () => {
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.2, display: 'flex', alignItems: 'center', gap: 0.6 }}>
                     <PlaceOutlinedIcon sx={{ fontSize: 18 }} />
-                    {filters.location ? `Focused on ${filters.location}` : 'All locations'}
+                    {filters.location.length > 0 ? `Focused on ${filters.location.join(', ')}` : 'All locations'}
                   </Typography>
                 </Box>
                 <Button
@@ -784,9 +810,15 @@ export const Jobs: React.FC = () => {
                 {activeFilterChips.length > 0 ? (
                   activeFilterChips.map((chip) => (
                     <Chip
-                      key={chip.key}
+                      key={`${chip.key}-${chip.value}`}
                       label={chip.label}
-                      onDelete={() => handleFilterChange(chip.key, chip.value)}
+                      onDelete={() => {
+                        if (chip.key === 'keyword' || chip.key === 'location') {
+                          handleFilterChange(chip.key, filters[chip.key].filter((value) => value !== chip.value));
+                        } else {
+                          handleFilterChange(chip.key, '');
+                        }
+                      }}
                       size="small"
                     />
                   ))
@@ -798,7 +830,7 @@ export const Jobs: React.FC = () => {
 
             <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {filters.keyword && <Chip color="primary" label={`Keyword: ${filters.keyword}`} size="small" />}
-              {filters.location && <Chip color="primary" label={`Location: ${filters.location}`} size="small" />}
+              {filters.location.length > 0 && <Chip color="primary" label={`Location: ${filters.location.join(', ')}`} size="small" />}
               {filters.experience && <Chip color="primary" label={`Experience: ${filters.experience}`} size="small" />}
             </Box>
             {loading ? (

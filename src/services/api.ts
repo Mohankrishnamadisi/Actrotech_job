@@ -324,8 +324,13 @@ export const jobService = {
     const experienceInput = filters?.experience ? String(filters.experience).trim() : '';
     const numericExperienceYears = parseNumericExperienceYears(experienceInput);
 
-    if (filters?.location) {
-      query = query.ilike('location', `%${filters.location}%`);
+    const locationTerms = (Array.isArray(filters?.location) ? filters.location : [filters?.location])
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+    if (locationTerms.length > 0) {
+      query = locationTerms.length === 1
+        ? query.ilike('location', `%${locationTerms[0]}%`)
+        : query.or(locationTerms.map((term) => `location.ilike.%${term.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`).join(','));
     }
     if (keywordInput) {
       const escapedKeyword = keywordInput.replace(/%/g, '\\%').replace(/_/g, '\\_');
