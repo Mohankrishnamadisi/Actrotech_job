@@ -327,6 +327,12 @@ export const jobService = {
     if (filters?.location) {
       query = query.ilike('location', `%${filters.location}%`);
     }
+    if (keywordInput) {
+      const escapedKeyword = keywordInput.replace(/%/g, '\\%').replace(/_/g, '\\_');
+      query = query.or(
+        `title.ilike.%${escapedKeyword}%,company_name.ilike.%${escapedKeyword}%,description.ilike.%${escapedKeyword}%,skills.cs.{${keywordInput}}`,
+      );
+    }
     if (Array.isArray(filters?.jobType) && filters.jobType.length > 0) {
       query = query.in('job_type', filters.jobType as string[]);
     } else if (filters?.jobType) {
@@ -379,7 +385,7 @@ export const jobService = {
       }
     }
 
-    const needsInMemoryFiltering = Boolean(keywordInput) || numericExperienceYears !== null;
+    const needsInMemoryFiltering = numericExperienceYears !== null;
 
     if (!needsInMemoryFiltering) {
       // Fetch a larger window for diversification (2.5x the requested limit)

@@ -68,7 +68,7 @@ export const Jobs: React.FC = () => {
 
   const [filters, setFilters] = useState({
     keyword: searchParams.get('keyword') || '',
-    location: searchParams.get('location') || '',
+    location: searchParams.get('location') || 'India',
     experience: searchParams.get('experience') || '',
     education: searchParams.get('education') || '',
     freshness: searchParams.get('freshness') || '',
@@ -131,16 +131,19 @@ export const Jobs: React.FC = () => {
       return rawValue.split(',').map((value) => value.trim()).filter(Boolean);
     };
 
-    setFilters({
+    setFilters((previousFilters) => ({
       keyword: searchParams.get('keyword') || '',
-      location: searchParams.get('location') || '',
+      // Keep the default or an explicitly cleared value when the URL has no location.
+      location: searchParams.has('location')
+        ? searchParams.get('location') || ''
+        : previousFilters.location,
       experience: searchParams.get('experience') || '',
       education: searchParams.get('education') || '',
       freshness: searchParams.get('freshness') || '',
       jobType: getMultiValues('jobType'),
       workMode: getMultiValues('workMode'),
       category: getMultiValues('category'),
-    });
+    }));
     setPage(1);
   }, [searchParams]);
 
