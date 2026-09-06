@@ -27,6 +27,17 @@ interface HorizontalJobListItemProps {
   isPremiumUser?: boolean;
 }
 
+const companyLogoAliases: Record<string, string> = {
+  genomines: 'GENOMINES.png',
+  hypotos: 'Hypatos Gmbh.png',
+  'hypotos gmbh': 'Hypatos Gmbh.png',
+  'hypertrics gmph': 'Hypertrics GmbH.jpg',
+  margo: 'MARGO.jpg',
+  nuuenegy: 'Nuuenergy.png',
+  platoapp: 'Platoapp.jpg',
+  twice: 'TWAICE.jpg',
+};
+
 export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
   job,
   isPremiumUser = false,
@@ -44,9 +55,16 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
   const jobType = job.jobType || job.job_type || 'Type unavailable';
   const companyName = String(job.company_name || '').trim();
   const [logoExtensionIndex, setLogoExtensionIndex] = React.useState(0);
-  const logoCandidates = [companyName, companyName.toLowerCase()].flatMap((name) =>
+  const logoNames = [
+    companyLogoAliases[companyName.toLowerCase()] || companyName,
+    companyName,
+    companyName.toLowerCase(),
+  ];
+  const logoCandidates = [...new Set(logoNames)].flatMap((name) =>
     ['png', 'jpg', 'jpeg'].map(
-      (extension) => `/logos/${encodeURIComponent(name)}.${extension}`,
+      (extension) => name.includes('.')
+        ? `/logos/${encodeURIComponent(name)}`
+        : `/logos/${encodeURIComponent(name)}.${extension}`,
     ),
   );
   const companyInitials = companyName
