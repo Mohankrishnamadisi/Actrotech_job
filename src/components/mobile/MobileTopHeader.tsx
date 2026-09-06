@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppBar, Badge, Box, IconButton, Toolbar } from '@mui/material';
-import { Bell as BellIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Notifications as BellIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@store/index';
 import { ROUTES } from '@constants/index';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import {
-  Briefcase as JobsIcon,
+  Work as JobsIcon,
   Home as HomeIcon,
   MoreHoriz as MoreIcon,
   Person as ProfileIcon,
