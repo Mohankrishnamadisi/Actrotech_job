@@ -129,7 +129,7 @@ export const Footer: React.FC = () => {
                 Built For Faster Hiring And Better Careers
               </Typography>
               <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.9)' }}>
-                Actro helps candidates and recruiters discover the right opportunities with modern tools, better matching, and seamless workflows.
+                Jobpoyt helps candidates and recruiters discover the right opportunities with modern tools, better matching, and seamless workflows.
               </Typography>
             </Grid>
             <Grid item xs={12} md={4}>
@@ -163,7 +163,7 @@ export const Footer: React.FC = () => {
         {shouldShowBanner && !isInstalled ? (
           <Box sx={{ mb: 3.2, position: 'relative', zIndex: 1 }}>
             <PWAInstallBanner
-              appName="Actro Jobs"
+              appName="Jobpoyt"
               description="Install for faster load, offline access, and instant recruiter updates."
               isUnsupported={isUnsupported}
               unsupportedTip={unsupportedTip}
@@ -178,7 +178,7 @@ export const Footer: React.FC = () => {
         <Grid container spacing={4} sx={{ mb: 2, position: 'relative', zIndex: 1 }}>
           <Grid item xs={12} sm={6} md={4}>
             <Typography variant="h6" sx={{ fontWeight: 750, mb: 1.5, color: '#FFFFFF' }}>
-              Actro Jobs
+              Jobpoyt
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.88)', mb: 2.2, maxWidth: 380, lineHeight: 1.75 }}>
               Discover premium hiring and job search experiences with modern analytics, growth tools, and design-forward workflows.
@@ -293,7 +293,7 @@ export const Footer: React.FC = () => {
           }}
         >
           <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.84)' }}>
-            © {currentYear} Actro Jobs. Designed for premium hiring experiences.
+            © {currentYear} Jobpoyt. Designed for premium hiring experiences.
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(226, 232, 240, 0.72)' }}>
             Modern talent marketplace for candidates and recruiters.

@@ -31,7 +31,7 @@ export const MobileFooter: React.FC = () => {
       <Container maxWidth="sm">
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-            Actro Jobs
+            Jobpoyt
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
             Find your dream job or hire top talent. A modern platform for job seekers and recruiters.
@@ -104,7 +104,7 @@ export const MobileFooter: React.FC = () => {
 
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            © {currentYear} Actro Jobs. All rights reserved.
+            © {currentYear} Jobpoyt. All rights reserved.
           </Typography>
         </Box>
       </Container>

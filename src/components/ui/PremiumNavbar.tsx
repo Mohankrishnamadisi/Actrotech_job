@@ -20,7 +20,7 @@ export const PremiumNavbar: React.FC = () => {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,var(--color-primary),var(--color-secondary))', boxShadow: '0 8px 28px rgba(79,70,229,0.16)' }} />
-          <div style={{ fontWeight: 800, color: 'var(--color-dark)', fontSize: 18 }}>Actro</div>
+          <div style={{ fontWeight: 800, color: 'var(--color-dark)', fontSize: 18 }}>Jobpoyt</div>
         </Link>
 
         <nav style={{ display: 'flex', gap: 18, alignItems: 'center' }}>

@@ -287,7 +287,7 @@ export const RecruiterDashboard: React.FC = () => {
               >
                 <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800, color: themeColors.text.primary }}>🎉 Welcome to Actro Jobs</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: themeColors.text.primary }}>🎉 Welcome to Jobpoyt</Typography>
                     <Typography variant="body2" sx={{ color: themeColors.text.secondary, mt: 0.5 }}>
                       You have received 15 Free Job Posts and 150 Free Resume Views. Start hiring today — no subscription required.
                     </Typography>
@@ -307,7 +307,7 @@ export const RecruiterDashboard: React.FC = () => {
             {welcomeUsage.claimed && (
               <Card sx={{ mb: 3, borderRadius: 3, border: `1px solid ${themeColors.border}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96))' }}>
                 <CardContent>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: themeColors.text.primary }}>Welcome to Actro Jobs</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 800, color: themeColors.text.primary }}>Welcome to Jobpoyt</Typography>
                   <Typography variant="body2" sx={{ color: themeColors.text.secondary, mb: 2 }}>
                     Start hiring with your complimentary recruiter benefits.
                   </Typography>

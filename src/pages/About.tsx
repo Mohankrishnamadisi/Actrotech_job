@@ -7,12 +7,12 @@ export const About: React.FC = () => {
     <Layout>
       <Container maxWidth="md" sx={{ py: 6 }}>
         <Typography variant="h2" sx={{ fontWeight: 700, mb: 4 }}>
-          About Actro Jobs
+          About Jobpoyt
         </Typography>
 
         <Box sx={{ color: 'text.secondary', lineHeight: 1.8, '& p': { mb: 3 } }}>
           <Typography variant="body1" component="p">
-            Actro Jobs is a modern job portal platform designed to connect talented professionals with leading companies across India. We believe in making job search simple, transparent, and accessible to everyone.
+            Jobpoyt is a modern job portal platform designed to connect talented professionals with leading companies across India. We believe in making job search simple, transparent, and accessible to everyone.
           </Typography>
 
           <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary', mt: 4, mb: 2 }}>

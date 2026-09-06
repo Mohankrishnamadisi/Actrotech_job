@@ -858,7 +858,7 @@ export const Home: React.FC = () => {
               Ready to start your job search?
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Join thousands of job seekers who have found their dream jobs on Actro Jobs.
+              Join thousands of job seekers who have found their dream jobs on Jobpoyt.
             </Typography>
           </Box>
           <MotionButton

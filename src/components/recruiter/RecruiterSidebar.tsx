@@ -163,8 +163,8 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
           component="button"
           type="button"
           onClick={() => navigate('/')}
-          aria-label="Go to Actro home"
-          title="Go to Actro home"
+          aria-label="Go to Jobpoyt home"
+          title="Go to Jobpoyt home"
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -180,8 +180,8 @@ export const RecruiterSidebar: React.FC<RecruiterSidebarProps> = ({
         >
           <Box
             component="img"
-            src="/white actro.png.png"
-            alt="Actro"
+            src="/white%20jobpoyt.png.png"
+            alt="Jobpoyt"
             sx={{
               display: 'block',
               width: 'auto',

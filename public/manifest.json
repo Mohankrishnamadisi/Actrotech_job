@@ -1,7 +1,7 @@
 {
-  "name": "Actro Jobs",
-  "short_name": "ActroJobs",
-  "description": "Find the right job faster with Actro Jobs. Install the app for a mobile-friendly experience.",
+  "name": "Jobpoyt",
+  "short_name": "Jobpoyt",
+  "description": "Find the right job faster with Jobpoyt. Install the app for a mobile-friendly experience.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -9,7 +9,7 @@
   "background_color": "#ffffff",
   "scope": "/",
   "icons": [
-    { "src": "/actrotitle.png", "sizes": "550x526", "type": "image/png", "purpose": "any" },
+    { "src": "/jobpoyttitle.png", "sizes": "550x526", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512x512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }

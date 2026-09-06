@@ -14,8 +14,8 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
   const isDarkMode = theme.palette.mode === 'dark';
   const sizes = {
     small: { width: 120, height: 36 },
-    medium: { width: 150, height: 46 },
-    large: { width: 210, height: 60 },
+    medium: { width: 170, height: 56 },
+    large: { width: 200, height: 60 },
   };
 
   const { width, height } = sizes[size];
@@ -43,8 +43,8 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
       {showText && (
         <Box
           component="img"
-          src="/job_logo.png"
-          alt="Actro Jobs"
+          src={isDarkMode ? '/white%20jobpoyt.png.png' : '/Jobpoyt.png'}
+          alt="Jobpoyt"
           sx={{
             width: { xs: Math.min(width, 140), sm: width },
             height,

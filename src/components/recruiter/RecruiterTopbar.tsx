@@ -49,7 +49,7 @@ const MotionBox = motion(Box);
 
 export const RecruiterTopbar: React.FC<RecruiterTopbarProps> = ({
   recruiterLogo,
-  companyName = 'Actro Jobs',
+  companyName = 'Jobpoyt',
   notificationCount = 0,
   unreadMessagesCount = 0,
   credits = 0,
