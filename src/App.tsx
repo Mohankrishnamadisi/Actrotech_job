@@ -1,10 +1,12 @@
 ﻿import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { Box, CircularProgress, CssBaseline } from '@mui/material';
+import { Box, CircularProgress, CssBaseline, useMediaQuery } from '@mui/material';
 import { Toaster, toast } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence } from 'framer-motion';
+
+import { MobileAppShell } from '@components/mobile';
 
 import { getTheme } from './styles/theme';
 import { useAuthStore } from '@store/index';
@@ -367,6 +369,7 @@ const AnimatedRoutes: React.FC = () => {
 const AppContent: React.FC = () => {
   const { themeMode, setThemeMode } = useThemeMode();
   const { setUser, setLoading, user } = useAuthStore();
+  const isMobileView = useMediaQuery('(max-width: 767.95px)');
 
   useNotificationAlerts(user?.id || null);
 
@@ -572,7 +575,13 @@ const AppContent: React.FC = () => {
       <CssBaseline />
       <Toaster position="top-center" />
       <Router>
-        <AnimatedRoutes />
+        {isMobileView ? (
+          <MobileAppShell>
+            <AnimatedRoutes />
+          </MobileAppShell>
+        ) : (
+          <AnimatedRoutes />
+        )}
       </Router>
     </ThemeProvider>
   );

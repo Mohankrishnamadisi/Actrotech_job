@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useTheme, useMediaQuery } from '@mui/material';
+import { useMediaQuery } from '@mui/material';
 
 export const useMobileDetect = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
-  
+  const isMobile = useMediaQuery('(max-width: 767.95px)');
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023.95px)');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
   return {
     isMobile,
     isTablet,
