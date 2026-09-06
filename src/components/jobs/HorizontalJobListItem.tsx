@@ -36,6 +36,7 @@ const companyLogoAliases: Record<string, string> = {
   nuuenegy: 'Nuuenergy.png',
   platoapp: 'Platoapp.jpg',
   twice: 'TWAICE.jpg',
+  capgemini: 'Capgemini.png',
 };
 
 export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
@@ -55,10 +56,14 @@ export const HorizontalJobListItem: React.FC<HorizontalJobListItemProps> = ({
   const jobType = job.jobType || job.job_type || 'Type unavailable';
   const companyName = String(job.company_name || '').trim();
   const [logoExtensionIndex, setLogoExtensionIndex] = React.useState(0);
+  const normalizedCompanyName = companyName.toLowerCase().replace(/\s+/g, ' ');
+  const logoAliasKey = Object.keys(companyLogoAliases).find(
+    (alias) => normalizedCompanyName === alias || normalizedCompanyName.startsWith(`${alias} `),
+  );
   const logoNames = [
-    companyLogoAliases[companyName.toLowerCase()] || companyName,
+    logoAliasKey ? companyLogoAliases[logoAliasKey] : companyName,
     companyName,
-    companyName.toLowerCase(),
+    normalizedCompanyName,
   ];
   const logoCandidates = [...new Set(logoNames)].flatMap((name) =>
     ['png', 'jpg', 'jpeg'].map(
